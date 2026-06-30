@@ -146,7 +146,7 @@
         .skeleton-card { margin: 0 18px 16px; padding: 16px 18px; display: flex; gap: 14px; border: 1px solid var(--border-dim); border-radius: var(--radius-lg); background: var(--bg-surface); }
         .skeleton-avatar { width: 44px; height: 44px; border-radius: 50%; flex-shrink: 0; }
         .skeleton-lines { flex:1; display:flex; flex-direction:column; gap:8px; }
-        .skeleton-line { height: 11px; border-radius: 6px; }
+        .skeleton-line height: 11px; border-radius: 6px; }
 
         .overlay-modal { position: fixed; inset: 0; background: rgba(20, 22, 26, 0.4); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); display: none; align-items: flex-end; justify-content: center; z-index: 200; }
         .overlay-modal.active { display: flex; }
@@ -674,11 +674,9 @@
 
                 const postsArray = [];
                 snapshot.forEach((child) => postsArray.push({ id: child.key, ...child.val() }));
-
-                // Chronological feed (newest first), like Facebook's "Most Recent" view.
-                // Likes/dislikes don't affect order — only timestamp does, so new posts
-                // always land at the top instead of being randomly shuffled down.
-                postsArray.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+                
+                // RESTORED: Standard reverse-chronological sorting logic (Newest first)
+                postsArray.sort((a, b) => b.timestamp - a.timestamp);
 
                 postsArray.forEach(post => {
                     const likes = post.likes || {};

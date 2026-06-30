@@ -31,8 +31,17 @@
         }
 
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-        html, body { height: 100%; font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg-body); color: var(--text-main); -webkit-font-smoothing: antialiased; }
+        
+        /* FIX: Enforce strictly 100vh to ensure internal scrollbars activate instead of pushing elements off-screen */
+        html, body { 
+            height: 100vh; 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            background: var(--bg-body); 
+            color: var(--text-main); 
+            -webkit-font-smoothing: antialiased; 
+        }
         body { overflow: hidden; }
+        
         body, div, span, button, nav, aside, main, header, h1, h2, h3, p, label, i {
             -webkit-touch-callout: none;
             -webkit-user-select: none;
@@ -51,7 +60,8 @@
         .display-font { font-family: 'Fraunces', serif; }
         button, input, textarea { font-family: inherit; }
 
-        .app-wrapper { display: flex; max-width: 1250px; margin: 0 auto; height: 100%; }
+        /* FIX: Lock the app wrapper to the viewport height */
+        .app-wrapper { display: flex; max-width: 1250px; margin: 0 auto; height: 100vh; }
 
         .sidebar { width: 264px; padding: 28px 20px; display: flex; flex-direction: column; justify-content: space-between; border-right: 1px solid var(--border-dim); flex-shrink: 0; }
         .brand-logo { font-size: 23px; font-weight: 700; letter-spacing: -0.5px; color: var(--text-main); display: flex; align-items: center; gap: 10px; margin-bottom: 34px; }
@@ -68,14 +78,15 @@
         .user-avatar { width: 42px; height: 42px; border-radius: 50%; object-fit: cover; background: var(--bg-sunken); flex-shrink: 0; cursor: pointer; border: 2px solid var(--bg-surface); box-shadow: 0 0 0 1px var(--border-dim); transition: opacity 0.2s; }
         .user-avatar:hover { opacity: 0.85; }
 
-        .feed-container { flex: 1; min-width: 0; max-width: 600px; border-right: 1px solid var(--border-dim); display: flex; flex-direction: column; height: 100%; background: var(--bg-body); }
+        /* FIX: Lock the feed container to 100vh so the inner element handles scrolling */
+        .feed-container { flex: 1; min-width: 0; max-width: 600px; border-right: 1px solid var(--border-dim); display: flex; flex-direction: column; height: 100vh; background: var(--bg-body); }
+        
         .header-sticky { position: sticky; top: 0; background: rgba(250, 249, 246, 0.85); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); padding: 18px 22px; border-bottom: 1px solid var(--border-dim); display: flex; justify-content: space-between; align-items: center; z-index: 10; }
         .header-sticky h1 { font-size: 18px; font-weight: 700; letter-spacing: -0.3px; }
         .scrollable-stream { flex: 1; overflow-y: auto; scroll-behavior: smooth; -webkit-overflow-scrolling: touch; }
         .scrollable-stream::-webkit-scrollbar { width: 6px; }
         .scrollable-stream::-webkit-scrollbar-thumb { background: var(--border-dim); border-radius: 3px; }
 
-        /* Structural fixes for clean vertical sequential stacking */
         #posts-stream-target {
             display: flex;
             flex-direction: column;
@@ -87,6 +98,7 @@
             flex-direction: column;
             gap: 12px;
             width: 100%;
+            scroll-behavior: smooth;
         }
 
         .composer { margin: 18px 18px 8px; padding: 18px 18px 14px; border: 1px solid var(--border-dim); border-radius: var(--radius-lg); display: flex; gap: 14px; background: var(--bg-surface); box-shadow: var(--shadow-card); transition: box-shadow 0.2s ease, border-color 0.2s ease; }
@@ -221,16 +233,15 @@
         }
 
         @media (max-width: 700px) {
-            body { overflow: auto; }
-            .app-wrapper { display: block; height: auto; min-height: 100%; }
+            body { overflow: hidden; } /* Ensure body doesn't cause page-level scroll on mobile */
+            .app-wrapper { display: block; height: 100vh; }
             .sidebar { display: none; }
-            .feed-container { border-right: none; height: auto; min-height: 100vh; max-width: none; }
-            .scrollable-stream { overflow-y: visible; height: auto; }
+            .feed-container { border-right: none; height: 100vh; max-width: none; }
+            .scrollable-stream { overflow-y: auto; height: 100%; padding-bottom: 78px; }
             .header-sticky { padding: 14px 16px; }
             .composer { margin: 14px 12px 6px; padding: 14px 14px 10px; border-radius: var(--radius-md); }
             .post-card { margin: 0 12px 14px; padding: 14px; }
             .bottom-nav { display: flex; }
-            .scrollable-stream { padding-bottom: 78px; }
         }
 
         @media (min-width: 701px) and (max-width: 980px) { .bottom-nav { display: none; } }
@@ -663,7 +674,23 @@
 
                 const postsArray = [];
                 snapshot.forEach((child) => postsArray.push({ id: child.key, ...child.val() }));
-                postsArray.sort((a, b) => b.timestamp - a.timestamp);
+                
+                // FIX: Algorithm sorting logic combining Likes, Randomness, and Recency
+                postsArray.sort((a, b) => {
+                    const likesA = a.likes ? Object.keys(a.likes).length : 0;
+                    const likesB = b.likes ? Object.keys(b.likes).length : 0;
+                    
+                    const randomFactorA = Math.random() * 2;
+                    const randomFactorB = Math.random() * 2;
+                    
+                    const timeFactorA = a.timestamp / 10000000000;
+                    const timeFactorB = b.timestamp / 10000000000;
+
+                    const scoreA = (likesA * 3) + randomFactorA + timeFactorA; 
+                    const scoreB = (likesB * 3) + randomFactorB + timeFactorB;
+
+                    return scoreB - scoreA; 
+                });
 
                 postsArray.forEach(post => {
                     const likes = post.likes || {};
@@ -791,7 +818,9 @@
 
                 const replies = [];
                 snap.forEach(child => replies.push({ replyId: child.key, ...child.val() }));
-                replies.sort((a,b) => a.timestamp - b.timestamp);
+                
+                // FIX: Sort comments newest-first so they stack visually without requiring scroll or deletion
+                replies.sort((a,b) => b.timestamp - a.timestamp);
 
                 replies.forEach(c => {
                     const isOwner = c.uid === currentUser.uid;
@@ -904,13 +933,18 @@
                 const msgs = [];
                 snap.forEach(child => msgs.push(child.val()));
                 msgs.sort((a,b) => a.timestamp - b.timestamp);
+                
                 msgs.forEach(m => {
                     const bubble = document.createElement('div');
                     bubble.className = 'chat-thread-bubble ' + (m.uid === currentUser.uid ? 'mine' : 'theirs');
                     bubble.innerText = m.text;
                     list.appendChild(bubble);
                 });
-                body.scrollTop = body.scrollHeight;
+
+                // FIX: Force scroll to the bottom of the chat after the DOM finishes painting
+                setTimeout(() => {
+                    body.scrollTop = body.scrollHeight;
+                }, 50);
             });
         }
 
@@ -921,7 +955,9 @@
             const pairId = chatPairId(currentUser.uid, activeChatPartnerUid);
             push(ref(database, `chats/${pairId}/messages`), {
                 text: txt, uid: currentUser.uid, timestamp: Date.now()
-            }).then(() => { input.value = ''; });
+            }).then(() => { 
+                input.value = ''; 
+            });
         });
 
         window.closeMessages = function() {

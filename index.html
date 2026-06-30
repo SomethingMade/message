@@ -675,21 +675,24 @@
                 const postsArray = [];
                 snapshot.forEach((child) => postsArray.push({ id: child.key, ...child.val() }));
                 
-                // FIX: Algorithm sorting logic combining Likes, Randomness, and Recency
+                // FIX: Deterministic sort — newest first, then by likes, stable ID tie-breaker
                 postsArray.sort((a, b) => {
                     const likesA = a.likes ? Object.keys(a.likes).length : 0;
                     const likesB = b.likes ? Object.keys(b.likes).length : 0;
                     
-                    const randomFactorA = Math.random() * 2;
-                    const randomFactorB = Math.random() * 2;
+                    // Deterministic tie-breaker using post ID (stable sort)
+                    const idCompare = a.id.localeCompare(b.id);
                     
-                    const timeFactorA = a.timestamp / 10000000000;
-                    const timeFactorB = b.timestamp / 10000000000;
-
-                    const scoreA = (likesA * 3) + randomFactorA + timeFactorA; 
-                    const scoreB = (likesB * 3) + randomFactorB + timeFactorB;
-
-                    return scoreB - scoreA; 
+                    // Primary: timestamp (newest first)
+                    const timeDiff = b.timestamp - a.timestamp;
+                    if (Math.abs(timeDiff) > 3600000) return timeDiff; // > 1 hour apart: sort by time
+                    
+                    // Secondary: likes (more likes first)
+                    const likeDiff = likesB - likesA;
+                    if (likeDiff !== 0) return likeDiff;
+                    
+                    // Tertiary: stable deterministic sort by ID
+                    return idCompare;
                 });
 
                 postsArray.forEach(post => {
@@ -819,8 +822,12 @@
                 const replies = [];
                 snap.forEach(child => replies.push({ replyId: child.key, ...child.val() }));
                 
-                // FIX: Sort comments newest-first so they stack visually without requiring scroll or deletion
-                replies.sort((a,b) => b.timestamp - a.timestamp);
+                // FIX: Sort comments newest-first with stable deterministic tie-breaker
+                replies.sort((a, b) => {
+                    const timeDiff = b.timestamp - a.timestamp;
+                    if (timeDiff !== 0) return timeDiff;
+                    return (a.replyId || '').localeCompare(b.replyId || '');
+                });
 
                 replies.forEach(c => {
                     const isOwner = c.uid === currentUser.uid;

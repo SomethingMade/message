@@ -4,30 +4,42 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#ffffff">
-    <title>Ona - Social Network</title>
+    <title>Lumina - Social Stream</title>
     
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     
     <style>
-        /* ── Modern Light Theme Variables ── */
+        /* ── Modern Dark Orange Theme Variables ── */
         :root {
             --bg-body: #F0F2F5;
             --bg-surface: #FFFFFF;
-            --primary-blue: #1877F2;
-            --primary-hover: #166FE5;
+            --primary-orange: #E65100; /* Dark Orange */
+            --primary-hover: #BF360C;
             --text-primary: #050505;
             --text-secondary: #65676B;
             --border-dim: #CED0D4;
             --hover-overlay: rgba(0, 0, 0, 0.05);
             --radius-md: 8px;
-            --radius-lg: 12px;
+            --radius-pill: 50px; /* Pill Shape Enforcement */
             --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.1);
             --shadow-modal: 0 12px 28px rgba(0, 0, 0, 0.2);
         }
 
-        /* ── Core Global Resets ── */
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        /* ── Global Anti-Highlight & Selection Resets ── */
+        *, *::before, *::after { 
+            box-sizing: border-box; margin: 0; padding: 0; 
+            /* Disable long-press highlight and text selection everywhere */
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+        
+        /* Re-enable text selection ONLY for input fields */
+        input, textarea {
+            -webkit-user-select: text;
+            user-select: text;
+        }
+
         html, body { 
             height: 100%; 
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
@@ -35,6 +47,13 @@
             color: var(--text-primary); 
             -webkit-font-smoothing: antialiased; 
             overflow-y: scroll;
+        }
+
+        /* ── SVG Icon Defaults ── */
+        .svg-icon {
+            width: 24px; height: 24px;
+            stroke: currentColor; stroke-width: 2;
+            stroke-linecap: round; stroke-linejoin: round; fill: none;
         }
 
         /* ── Top Navigation Bar ── */
@@ -47,132 +66,132 @@
         
         .nav-left { display: flex; align-items: center; gap: 10px; width: 300px; }
         .brand-logo { 
-            width: 40px; height: 40px; border-radius: 50%; background: var(--primary-blue); 
-            color: white; display: flex; align-items: center; justify-content: center; font-size: 24px; text-decoration: none;
+            color: var(--primary-orange); 
+            font-size: 28px; font-weight: 800; letter-spacing: -1px;
+            text-decoration: none;
         }
+        
         .search-bar {
-            background: #F0F2F5; border-radius: 50px; padding: 8px 16px; display: flex; align-items: center; gap: 8px; flex: 1; color: var(--text-secondary);
+            background: #F0F2F5; border-radius: var(--radius-pill); padding: 8px 16px; display: flex; align-items: center; gap: 8px; flex: 1; color: var(--text-secondary);
         }
         .search-bar input { border: none; background: transparent; outline: none; width: 100%; font-size: 15px; }
 
         .nav-center { display: flex; gap: 8px; height: 100%; }
-        .nav-tab { width: 110px; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 24px; color: var(--text-secondary); cursor: pointer; border-bottom: 3px solid transparent; transition: 0.2s; }
-        .nav-tab:hover { background: var(--hover-overlay); border-radius: 8px; margin: 4px 0; height: 48px; }
-        .nav-tab.active { color: var(--primary-blue); border-bottom-color: var(--primary-blue); border-radius: 0; margin: 0; height: 100%; background: transparent; }
+        .nav-tab { width: 110px; height: 100%; display: flex; align-items: center; justify-content: center; color: var(--text-secondary); cursor: pointer; border-bottom: 3px solid transparent; transition: 0.2s; }
+        .nav-tab:hover { background: var(--hover-overlay); border-radius: var(--radius-md); margin: 4px 0; height: 48px; }
+        .nav-tab.active { color: var(--primary-orange); border-bottom-color: var(--primary-orange); border-radius: 0; margin: 0; height: 100%; background: transparent; }
+        .nav-tab.active .svg-icon { stroke: var(--primary-orange); }
 
         .nav-right { display: flex; align-items: center; gap: 12px; width: 300px; justify-content: flex-end; }
-        .icon-btn { width: 40px; height: 40px; border-radius: 50%; background: #E4E6EB; display: flex; align-items: center; justify-content: center; font-size: 18px; color: var(--text-primary); cursor: pointer; border: none; transition: background 0.2s; }
+        .icon-btn { width: 40px; height: 40px; border-radius: var(--radius-pill); background: #E4E6EB; display: flex; align-items: center; justify-content: center; color: var(--text-primary); cursor: pointer; border: none; transition: background 0.2s; }
         .icon-btn:hover { background: #D8DADF; }
-        .nav-profile { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; cursor: pointer; border: 1px solid var(--border-dim); }
+        .nav-profile { width: 40px; height: 40px; border-radius: var(--radius-pill); object-fit: cover; cursor: pointer; border: 1px solid var(--border-dim); }
+
+        /* ── Mobile Bottom Navigation (SVG Based) ── */
+        .mobile-bottom-nav {
+            display: none; position: fixed; bottom: 0; left: 0; right: 0;
+            height: 60px; background: var(--bg-surface);
+            border-top: 1px solid var(--border-dim);
+            z-index: 100; justify-content: space-around; align-items: center;
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+        .mobile-nav-item {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            flex: 1; height: 100%; color: var(--text-secondary); cursor: pointer;
+        }
+        .mobile-nav-item.active { color: var(--primary-orange); }
 
         /* ── Application Structural Grid ── */
         .app-wrapper {
-            display: grid;
-            padding-top: 76px; /* 56px Nav + 20px Spacing */
-            max-width: 100%;
-            margin: 0 auto;
-            grid-template-columns: 1fr;
-            gap: 20px;
+            display: grid; padding-top: 76px; max-width: 100%; margin: 0 auto;
+            grid-template-columns: 1fr; gap: 20px;
         }
 
         /* ── Sidebars ── */
         .left-sidebar, .right-sidebar { display: none; flex-direction: column; position: sticky; top: 76px; height: calc(100vh - 76px); overflow-y: auto; padding: 0 8px; }
-        .left-sidebar::-webkit-scrollbar, .right-sidebar::-webkit-scrollbar { width: 8px; }
-        .left-sidebar:hover::-webkit-scrollbar-thumb, .right-sidebar:hover::-webkit-scrollbar-thumb { background: var(--border-dim); border-radius: 4px; }
-        
-        .sidebar-item { display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: var(--radius-md); font-weight: 500; font-size: 15px; cursor: pointer; transition: background 0.2s; color: var(--text-primary); }
+        .sidebar-item { display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: var(--radius-pill); font-weight: 500; font-size: 15px; cursor: pointer; transition: background 0.2s; color: var(--text-primary); }
         .sidebar-item:hover { background: var(--hover-overlay); }
-        .sidebar-item img, .sidebar-item .icon-circle { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; }
-        .sidebar-item .icon-circle { background: #E4E6EB; display: flex; align-items: center; justify-content: center; color: var(--text-primary); font-size: 20px; }
+        .sidebar-item img { width: 36px; height: 36px; border-radius: var(--radius-pill); object-fit: cover; pointer-events: none; }
+        .icon-circle { width: 36px; height: 36px; border-radius: var(--radius-pill); background: #E4E6EB; display: flex; align-items: center; justify-content: center; color: var(--text-primary); }
 
-        /* ── Center Timeline Feed Stream ── */
+        /* ── Center Timeline Feed ── */
         .feed-container { max-width: 680px; width: 100%; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; padding: 0 16px; }
 
-        /* Composer Card */
-        .composer-card { background: var(--bg-surface); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); padding: 12px 16px 10px; }
+        /* Composer */
+        .composer-card { background: var(--bg-surface); border-radius: var(--radius-md); box-shadow: var(--shadow-sm); padding: 12px 16px 10px; }
         .composer-top { display: flex; gap: 8px; align-items: center; border-bottom: 1px solid var(--border-dim); padding-bottom: 12px; margin-bottom: 12px; }
-        .composer-input-btn { flex: 1; background: #F0F2F5; border-radius: 50px; padding: 10px 16px; font-size: 17px; color: var(--text-secondary); cursor: pointer; transition: background 0.2s; border: none; text-align: left; outline: none; }
+        .composer-input-btn { flex: 1; background: #F0F2F5; border-radius: var(--radius-pill); padding: 10px 16px; font-size: 15px; color: var(--text-secondary); cursor: pointer; border: none; text-align: left; outline: none; }
         .composer-input-btn:hover { background: #E4E6EB; }
-        .composer-actions { display: flex; justify-content: space-between; }
-        .composer-action-btn { flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 8px; border-radius: var(--radius-md); font-weight: 600; font-size: 15px; color: var(--text-secondary); cursor: pointer; transition: background 0.2s; }
-        .composer-action-btn:hover { background: var(--hover-overlay); }
-
-        /* Post Render Card */
-        .post-card { background: var(--bg-surface); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); padding: 12px 16px 4px; display: flex; flex-direction: column; }
-        .post-header { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; }
-        .post-author-img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 1px solid var(--border-dim); }
-        .post-header-text { display: flex; flex-direction: column; }
-        .post-author-name { font-weight: 600; font-size: 15px; color: var(--text-primary); }
-        .post-time { font-size: 13px; color: var(--text-secondary); }
         
-        .post-text { font-size: 15px; line-height: 1.5; color: var(--text-primary); margin-bottom: 12px; white-space: pre-wrap; word-break: break-word; }
-        .post-media-container { margin: 0 -16px 12px; }
-        .post-attached-media { width: 100%; max-height: 500px; object-fit: cover; }
-        
-        .post-stats { display: flex; justify-content: space-between; padding-bottom: 10px; border-bottom: 1px solid var(--border-dim); color: var(--text-secondary); font-size: 15px; }
-        .post-actions-row { display: flex; justify-content: space-between; padding: 4px 0; }
-        .action-icon-group { flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 6px; border-radius: var(--radius-md); font-weight: 600; font-size: 15px; color: var(--text-secondary); cursor: pointer; transition: background 0.2s; }
-        .action-icon-group:hover { background: var(--hover-overlay); }
-        .action-icon-group.liked { color: var(--primary-blue); }
-
-        /* ── Modals & Overlays (Create Post & Comments) ── */
-        .overlay-modal { position: fixed; inset: 0; background: rgba(255,255,255,0.8); display: none; align-items: center; justify-content: center; z-index: 200; padding: 16px; }
-        .overlay-modal.active { display: flex; }
-        .modal-sheet { background: var(--bg-surface); width: 100%; max-width: 500px; border-radius: var(--radius-lg); box-shadow: var(--shadow-modal); display: flex; flex-direction: column; max-height: 85vh; border: 1px solid var(--border-dim); animation: modalIn 0.2s ease-out; }
-        @keyframes modalIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-        
-        .modal-header { padding: 16px; border-bottom: 1px solid var(--border-dim); display: flex; justify-content: center; align-items: center; position: relative; }
-        .modal-header h3 { font-size: 20px; font-weight: 700; margin: 0; }
-        .modal-close-btn { position: absolute; right: 16px; background: #E4E6EB; border: none; width: 36px; height: 36px; border-radius: 50%; font-size: 18px; cursor: pointer; color: var(--text-secondary); }
-        .modal-close-btn:hover { background: #D8DADF; }
-        
-        .modal-body { padding: 16px; overflow-y: auto; flex: 1; }
-        
-        /* Create Post Specifics */
-        #composer-modal-text { width: 100%; border: none; outline: none; font-size: 24px; resize: none; min-height: 120px; margin-bottom: 12px; font-family: inherit; }
-        .media-preview-box { display: none; position: relative; border-radius: var(--radius-md); overflow: hidden; border: 1px solid var(--border-dim); margin-bottom: 12px; max-height: 300px; }
-        .media-preview-box img { width: 100%; height: 100%; object-fit: cover; }
-        .clear-preview-btn { position: absolute; top: 8px; right: 8px; background: white; border: 1px solid var(--border-dim); width: 32px; height: 32px; border-radius: 50%; cursor: pointer; box-shadow: var(--shadow-sm); }
-        .add-to-post { border: 1px solid var(--border-dim); border-radius: var(--radius-md); padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; box-shadow: var(--shadow-sm); margin-bottom: 16px; }
-        .add-to-post-icons { display: flex; gap: 16px; font-size: 24px; }
-        .add-to-post-icons i { cursor: pointer; }
-        
-        .btn-primary { background: var(--primary-blue); color: white; border: none; padding: 10px; border-radius: var(--radius-md); font-weight: 600; font-size: 15px; cursor: pointer; width: 100%; transition: background 0.2s; }
+        /* Generic Pill Buttons */
+        .btn-primary { background: var(--primary-orange); color: white; border: none; padding: 10px 20px; border-radius: var(--radius-pill); font-weight: 600; font-size: 15px; cursor: pointer; width: 100%; transition: background 0.2s; }
         .btn-primary:hover { background: var(--primary-hover); }
         .btn-primary:disabled { background: #E4E6EB; color: #BCC0C4; cursor: not-allowed; }
 
-        /* Comment Specifics */
+        /* Post Render Card */
+        .post-card { background: var(--bg-surface); border-radius: var(--radius-md); box-shadow: var(--shadow-sm); padding: 12px 16px 4px; display: flex; flex-direction: column; }
+        .post-header { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; }
+        .post-author-img { width: 40px; height: 40px; border-radius: var(--radius-pill); object-fit: cover; border: 1px solid var(--border-dim); pointer-events: none; }
+        .post-author-name { font-weight: 600; font-size: 15px; color: var(--text-primary); }
+        .post-time { font-size: 13px; color: var(--text-secondary); }
+        .post-text { font-size: 15px; line-height: 1.5; margin-bottom: 12px; white-space: pre-wrap; word-break: break-word; }
+        .post-attached-media { width: 100%; max-height: 500px; object-fit: cover; border-radius: var(--radius-md); pointer-events: none; }
+        
+        .post-stats { display: flex; justify-content: space-between; padding-bottom: 10px; border-bottom: 1px solid var(--border-dim); color: var(--text-secondary); font-size: 14px; margin-top: 10px; }
+        
+        .post-actions-row { display: flex; justify-content: space-between; padding: 4px 0; }
+        .action-icon-group { flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 8px; border-radius: var(--radius-pill); font-weight: 600; font-size: 14px; color: var(--text-secondary); cursor: pointer; transition: 0.2s; }
+        .action-icon-group:hover { background: var(--hover-overlay); }
+        .action-icon-group .svg-icon { width: 20px; height: 20px; }
+        
+        /* Active States for Like/Dislike */
+        .action-icon-group.active-like { color: var(--primary-orange); background: rgba(230, 81, 0, 0.08); }
+        .action-icon-group.active-like .svg-icon { fill: var(--primary-orange); stroke: var(--primary-orange); }
+        .action-icon-group.active-dislike { color: #d32f2f; background: rgba(211, 47, 47, 0.08); }
+        .action-icon-group.active-dislike .svg-icon { fill: #d32f2f; stroke: #d32f2f; }
+
+        /* ── Modals & Overlays ── */
+        .overlay-modal { position: fixed; inset: 0; background: rgba(255,255,255,0.9); display: none; align-items: center; justify-content: center; z-index: 200; padding: 16px; }
+        .overlay-modal.active { display: flex; }
+        .modal-sheet { background: var(--bg-surface); width: 100%; max-width: 500px; border-radius: var(--radius-md); box-shadow: var(--shadow-modal); display: flex; flex-direction: column; max-height: 85vh; border: 1px solid var(--border-dim); }
+        
+        .modal-header { padding: 16px; border-bottom: 1px solid var(--border-dim); display: flex; justify-content: center; align-items: center; position: relative; }
+        .modal-close-btn { position: absolute; right: 16px; background: #E4E6EB; border: none; width: 36px; height: 36px; border-radius: var(--radius-pill); font-size: 18px; cursor: pointer; color: var(--text-secondary); display:flex; align-items:center; justify-content:center; }
+        .modal-close-btn:hover { background: #D8DADF; }
+        
+        .modal-body { padding: 16px; overflow-y: auto; flex: 1; }
+        #composer-modal-text { width: 100%; border: none; outline: none; font-size: 20px; resize: none; min-height: 120px; margin-bottom: 12px; font-family: inherit; }
+        
+        .media-preview-box { display: none; position: relative; border-radius: var(--radius-md); overflow: hidden; border: 1px solid var(--border-dim); margin-bottom: 12px; max-height: 300px; }
+        .media-preview-box img { width: 100%; height: 100%; object-fit: cover; }
+        .clear-preview-btn { position: absolute; top: 8px; right: 8px; background: white; border: 1px solid var(--border-dim); width: 32px; height: 32px; border-radius: var(--radius-pill); cursor: pointer; box-shadow: var(--shadow-sm); display:flex; align-items:center; justify-content:center; }
+        
         .comment-entry-box { display: flex; gap: 8px; padding: 12px 16px; border-top: 1px solid var(--border-dim); }
-        .comment-input-wrap { flex: 1; background: #F0F2F5; border-radius: 18px; display: flex; align-items: center; padding: 8px 12px; }
+        .comment-input-wrap { flex: 1; background: #F0F2F5; border-radius: var(--radius-pill); display: flex; align-items: center; padding: 8px 16px; }
         .comment-input-wrap input { width: 100%; background: transparent; border: none; outline: none; font-size: 15px; }
 
-        /* ── Auth Gate ── */
-        .auth-gate { position: fixed; inset: 0; background: var(--bg-body); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 20px; }
-        .auth-card { background: var(--bg-surface); padding: 24px; border-radius: var(--radius-md); box-shadow: var(--shadow-modal); width: 100%; max-width: 400px; text-align: center; }
-        .auth-input { width: 100%; padding: 14px; border: 1px solid var(--border-dim); border-radius: var(--radius-md); font-size: 17px; margin-bottom: 12px; outline: none; }
-        .auth-input:focus { border-color: var(--primary-blue); box-shadow: 0 0 0 2px #E7F3FF; }
-        
-        #toast-box { position: fixed; bottom: 20px; left: 20px; z-index: 500; display: flex; flex-direction: column; gap: 8px; }
-        .toast { background: #333; color: white; padding: 12px 20px; border-radius: var(--radius-md); font-size: 14px; box-shadow: var(--shadow-modal); animation: toastIn 0.3s; }
-        @keyframes toastIn { from { transform: translateX(-20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        /* Auth Gate */
+        .auth-gate { position: fixed; inset: 0; background: var(--bg-body); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 20px; flex-direction: column;}
+        .auth-card { background: var(--bg-surface); padding: 32px 24px; border-radius: var(--radius-md); box-shadow: var(--shadow-modal); width: 100%; max-width: 400px; text-align: center; }
+        .auth-input { width: 100%; padding: 14px; border: 1px solid var(--border-dim); border-radius: var(--radius-pill); font-size: 15px; margin-bottom: 12px; outline: none; }
+        .auth-input:focus { border-color: var(--primary-orange); }
 
-        /* ── Responsive Architecture ── */
-        /* Tablet Layout (2 Columns) */
+        #toast-box { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); z-index: 500; display: flex; flex-direction: column; gap: 8px; }
+        .toast { background: #333; color: white; padding: 12px 24px; border-radius: var(--radius-pill); font-size: 14px; box-shadow: var(--shadow-modal); }
+
+        /* Responsive Architecture */
         @media (min-width: 768px) {
             .app-wrapper { grid-template-columns: 280px 1fr; max-width: 1000px; }
             .left-sidebar { display: flex; }
-            .nav-center { display: flex; } /* Show tabs on tablet+ */
         }
-        
-        /* Desktop Layout (3 Columns) */
         @media (min-width: 1100px) {
             .app-wrapper { grid-template-columns: 280px 1fr 280px; max-width: 1400px; justify-content: center; }
             .right-sidebar { display: flex; }
         }
-
-        /* Mobile specific adjustments */
         @media (max-width: 767px) {
-            .nav-center, .nav-left .search-bar { display: none; }
+            .top-navbar .nav-center, .nav-left .search-bar { display: none; }
+            .mobile-bottom-nav { display: flex; }
+            .app-wrapper { padding-bottom: 80px; }
             .nav-left { width: auto; }
             .nav-right { width: auto; flex: 1; }
         }
@@ -180,135 +199,111 @@
 </head>
 <body>
 
+    <!-- ── Authentication Gate ── -->
     <div id="auth-screen" class="auth-gate">
-        <div style="margin-bottom: 30px;">
-            <h1 style="color: var(--primary-blue); font-size: 48px; font-weight: 700; margin:0; letter-spacing: -1.5px;">Ona</h1>
-            <p style="font-size: 20px; color: var(--text-primary); margin-top: 8px;">Connect with friends and the world around you on Ona.</p>
+        <div style="margin-bottom: 30px; text-align:center;">
+            <div class="brand-logo" style="font-size: 48px;">Lumina</div>
+            <p style="font-size: 18px; color: var(--text-primary); margin-top: 8px;">Connect differently.</p>
         </div>
         <div class="auth-card">
             <input type="email" id="login-email" class="auth-input" placeholder="Email address">
             <input type="password" id="login-pass" class="auth-input" placeholder="Password">
-            <button class="btn-primary" id="action-login" style="font-size: 20px; padding: 12px;">Log In</button>
-            <div style="color: var(--primary-blue); margin: 16px 0; cursor: pointer;">Forgotten password?</div>
-            <hr style="border: 0; border-top: 1px solid var(--border-dim); margin-bottom: 20px;">
-            <button class="btn-primary" id="action-signup" style="background: #42b72a; max-width: 200px; margin: 0 auto; display: block;">Create new account</button>
-            <button class="btn-primary" id="action-google" style="background: #fff; color: #333; border: 1px solid var(--border-dim); margin-top: 16px; display:flex; align-items:center; justify-content:center; gap:8px;">
+            <button class="btn-primary" id="action-login">Log In</button>
+            <hr style="border: 0; border-top: 1px solid var(--border-dim); margin: 24px 0;">
+            <button class="btn-primary" id="action-google" style="background: #fff; color: #333; border: 1px solid var(--border-dim); display:flex; align-items:center; justify-content:center; gap:8px;">
                 <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" style="width:18px" alt=""> Continue with Google
             </button>
         </div>
     </div>
 
+    <!-- ── Top Navigation Bar ── -->
     <nav class="top-navbar">
         <div class="nav-left">
-            <a href="#" class="brand-logo"><i class="fa-solid fa-atom"></i></a>
-            <div class="search-bar">
-                <i class="fa-solid fa-search"></i>
-                <input type="text" placeholder="Search Ona">
+            <a href="#" class="brand-logo">Lumina</a>
+        </div>
+        <div class="nav-center">
+            <div class="nav-tab active">
+                <svg class="svg-icon" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+            </div>
+            <div class="nav-tab">
+                <svg class="svg-icon" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
             </div>
         </div>
-        
-        <div class="nav-center">
-            <div class="nav-tab active"><i class="fa-solid fa-house"></i></div>
-            <div class="nav-tab"><i class="fa-solid fa-user-group"></i></div>
-            <div class="nav-tab"><i class="fa-solid fa-store"></i></div>
-        </div>
-
         <div class="nav-right">
-            <button class="icon-btn" title="Menu"><i class="fa-solid fa-bars"></i></button>
-            <button class="icon-btn" title="Messenger"><i class="fa-brands fa-facebook-messenger"></i></button>
-            <button class="icon-btn" title="Notifications"><i class="fa-solid fa-bell"></i></button>
-            <label style="cursor:pointer;" title="Change Profile Picture">
-                <img id="nav-profile-pic" src="https://ui-avatars.com/api/?name=User&background=1877F2&color=fff" class="nav-profile">
+            <label style="cursor:pointer;">
+                <img id="nav-profile-pic" src="https://ui-avatars.com/api/?name=U&background=E65100&color=fff" class="nav-profile">
                 <input type="file" id="avatar-input" accept="image/*" style="display:none;">
             </label>
         </div>
     </nav>
 
+    <!-- ── Mobile Bottom Navigation (SVG) ── -->
+    <nav class="mobile-bottom-nav">
+        <div class="mobile-nav-item active">
+            <svg class="svg-icon" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+        </div>
+        <div class="mobile-nav-item">
+            <svg class="svg-icon" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg>
+        </div>
+        <div class="mobile-nav-item">
+            <svg class="svg-icon" viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
+        </div>
+        <div class="mobile-nav-item" id="mobile-logout-trigger">
+            <svg class="svg-icon" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+        </div>
+    </nav>
+
+    <!-- ── Application Framework ── -->
     <div class="app-wrapper">
-        
+        <!-- Left Sidebar -->
         <aside class="left-sidebar">
             <div class="sidebar-item">
-                <img id="sidebar-profile-pic" src="https://ui-avatars.com/api/?name=User&background=1877F2&color=fff" alt="">
+                <img id="sidebar-profile-pic" src="https://ui-avatars.com/api/?name=U&background=E65100&color=fff" alt="">
                 <span id="sidebar-profile-name">Loading...</span>
             </div>
-            <div class="sidebar-item"><div class="icon-circle" style="color: #1877F2;"><i class="fa-solid fa-user-group"></i></div> Friends</div>
-            <div class="sidebar-item"><div class="icon-circle" style="color: #2ABBA7;"><i class="fa-solid fa-users"></i></div> Groups</div>
-            <div class="sidebar-item"><div class="icon-circle" style="color: #E22756;"><i class="fa-solid fa-store"></i></div> Marketplace</div>
-            <div class="sidebar-item"><div class="icon-circle" style="color: #21A2DF;"><i class="fa-solid fa-tv"></i></div> Watch</div>
-            <div class="sidebar-item"><div class="icon-circle" style="color: #8C52FF;"><i class="fa-solid fa-clock-rotate-left"></i></div> Memories</div>
-            <hr style="border:0; border-top: 1px solid var(--border-dim); margin: 8px 0;">
-            <div class="sidebar-item" id="logout-trigger"><div class="icon-circle"><i class="fa-solid fa-arrow-right-from-bracket"></i></div> Log Out</div>
+            <div class="sidebar-item" id="logout-trigger"><div class="icon-circle"><svg class="svg-icon" viewBox="0 0 24 24" style="width:18px;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg></div> Log Out</div>
         </aside>
 
+        <!-- Center Feed Workspace -->
         <main class="feed-container">
-            
             <div class="composer-card">
-                <div class="composer-top">
-                    <img id="composer-avatar" src="https://ui-avatars.com/api/?name=User&background=1877F2&color=fff" class="post-author-img">
+                <div class="composer-top" style="border:none; margin:0; padding:0;">
+                    <img id="composer-avatar" src="https://ui-avatars.com/api/?name=U&background=E65100&color=fff" class="post-author-img">
                     <button class="composer-input-btn" onclick="openComposerModal()">What's on your mind?</button>
                 </div>
-                <div class="composer-actions">
-                    <div class="composer-action-btn" style="color: #F3425F;"><i class="fa-solid fa-video"></i> Live video</div>
-                    <div class="composer-action-btn" style="color: #45BD62;" onclick="openComposerModal()"><i class="fa-regular fa-images"></i> Photo/video</div>
-                    <div class="composer-action-btn" style="color: #F7B928;"><i class="fa-regular fa-face-smile"></i> Feeling/activity</div>
-                </div>
             </div>
-
             <div id="posts-stream-target" style="display: flex; flex-direction: column; gap: 16px;"></div>
         </main>
 
-        <aside class="right-sidebar">
-            <h3 style="color: var(--text-secondary); font-size: 15px; margin: 12px 12px 8px;">Sponsored</h3>
-            <div class="sidebar-item" style="align-items: flex-start;">
-                <img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=100&q=80" style="border-radius: 8px; width:100px; height:100px; object-fit: cover;">
-                <div>
-                    <div style="font-weight: 600;">Premium Sneakers</div>
-                    <div style="font-size: 13px; color: var(--text-secondary);">store.example.com</div>
-                </div>
-            </div>
-            <hr style="border:0; border-top: 1px solid var(--border-dim); margin: 12px 0;">
-            <h3 style="color: var(--text-secondary); font-size: 15px; margin: 0 12px 12px;">Contacts</h3>
-            <div class="sidebar-item"><img src="https://ui-avatars.com/api/?name=Sarah+J" alt=""> Sarah Jenkins</div>
-            <div class="sidebar-item"><img src="https://ui-avatars.com/api/?name=Mike+R" alt=""> Mike Roberts</div>
-            <div class="sidebar-item"><img src="https://ui-avatars.com/api/?name=Emily+W" alt=""> Emily Wang</div>
-        </aside>
+        <aside class="right-sidebar"></aside>
     </div>
 
+    <!-- ── Modals ── -->
     <div id="composer-modal" class="overlay-modal">
         <div class="modal-sheet">
             <div class="modal-header">
                 <h3>Create post</h3>
-                <button class="modal-close-btn" onclick="closeComposerModal()"><i class="fa-solid fa-xmark"></i></button>
+                <button class="modal-close-btn" onclick="closeComposerModal()">
+                    <svg class="svg-icon" viewBox="0 0 24 24" style="width:20px;"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
             </div>
             <div class="modal-body">
-                <div class="post-header" style="margin-bottom: 16px;">
-                    <img id="modal-author-img" src="https://ui-avatars.com/api/?name=User&background=1877F2&color=fff" class="post-author-img">
-                    <div class="post-header-text">
-                        <span class="post-author-name" id="modal-author-name">Loading...</span>
-                        <span style="font-size: 13px; background: #E4E6EB; padding: 2px 8px; border-radius: 6px; font-weight:600; display:inline-flex; align-items:center; gap:4px; width:fit-content; margin-top:4px;"><i class="fa-solid fa-earth-americas"></i> Public</span>
-                    </div>
-                </div>
-                
-                <textarea id="composer-text" id="composer-modal-text" placeholder="What's on your mind?" style="width: 100%; border: none; outline: none; font-size: 24px; resize: none; min-height: 120px; margin-bottom: 12px; font-family: inherit;"></textarea>
+                <textarea id="composer-modal-text" placeholder="What's on your mind?"></textarea>
                 
                 <div id="preview-box" class="media-preview-box">
-                    <button class="clear-preview-btn" id="clear-media-btn"><i class="fa-solid fa-xmark"></i></button>
+                    <button class="clear-preview-btn" id="clear-media-btn">
+                        <svg class="svg-icon" viewBox="0 0 24 24" style="width:16px; stroke:black;"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    </button>
                     <img id="media-img-target" src="">
                 </div>
 
-                <div class="add-to-post">
-                    <span style="font-weight: 600;">Add to your post</span>
-                    <div class="add-to-post-icons">
-                        <label style="color: #45BD62; cursor: pointer;">
-                            <i class="fa-solid fa-images"></i>
-                            <input type="file" id="post-media-file" accept="image/*,video/*" style="display:none;">
-                        </label>
-                        <i class="fa-solid fa-user-tag" style="color: #1877F2;"></i>
-                        <i class="fa-regular fa-face-smile" style="color: #F7B928;"></i>
-                        <i class="fa-solid fa-location-dot" style="color: #F5533D;"></i>
-                    </div>
+                <div style="display:flex; justify-content:space-between; align-items:center; border: 1px solid var(--border-dim); border-radius: var(--radius-pill); padding: 12px 16px; margin-bottom: 16px;">
+                    <span style="font-weight: 600;">Attach media</span>
+                    <label style="color: #45BD62; cursor: pointer;">
+                        <svg class="svg-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                        <input type="file" id="post-media-file" accept="image/*,video/*" style="display:none;">
+                    </label>
                 </div>
-                
                 <button class="btn-primary" id="submit-post-btn">Post</button>
             </div>
         </div>
@@ -317,16 +312,18 @@
     <div id="comments-modal" class="overlay-modal">
         <div class="modal-sheet">
             <div class="modal-header">
-                <h3>Comments</h3>
-                <button class="modal-close-btn" onclick="closeCommentThread()"><i class="fa-solid fa-xmark"></i></button>
+                <h3>Replies</h3>
+                <button class="modal-close-btn" onclick="closeCommentThread()">
+                    <svg class="svg-icon" viewBox="0 0 24 24" style="width:20px;"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
             </div>
-            <div class="modal-body" id="modal-comments-target">
-                </div>
+            <div class="modal-body" id="modal-comments-target"></div>
             <div class="comment-entry-box">
-                <img id="comment-user-avatar" src="https://ui-avatars.com/api/?name=User&background=1877F2&color=fff" class="post-author-img" style="width: 36px; height: 36px;">
                 <div class="comment-input-wrap">
-                    <input type="text" id="comment-text-input" placeholder="Write a comment...">
-                    <i class="fa-solid fa-paper-plane" id="submit-reply-btn" style="color: var(--primary-blue); cursor: pointer; padding: 4px;"></i>
+                    <input type="text" id="comment-text-input" placeholder="Write a reply...">
+                    <div id="submit-reply-btn" style="color: var(--primary-orange); cursor: pointer; display:flex; align-items:center;">
+                        <svg class="svg-icon" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                    </div>
                 </div>
             </div>
         </div>
@@ -334,12 +331,12 @@
 
     <div id="toast-box"></div>
 
+    <!-- ── Firebase & Core Logic ── -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getAuth, GoogleAuthProvider, signInWithPopup, signOut as fbSignOut, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-        import { getDatabase, ref, push, set, get, update, onValue } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+        import { getAuth, GoogleAuthProvider, signInWithPopup, signOut as fbSignOut, onAuthStateChanged, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        import { getDatabase, ref, push, set, get, update, onValue, remove } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
-        // Verified Native Database and Authentication Configurations 
         const firebaseConfig = {
             apiKey: "AIzaSyBQSPwpVbGrdCuOoyitAeWQHIeipj2MgIY",
             authDomain: "newstart-64c43.firebaseapp.com",
@@ -369,10 +366,9 @@
             t.className = 'toast';
             t.innerText = msg;
             box.appendChild(t);
-            setTimeout(() => t.remove(), 4000);
+            setTimeout(() => t.remove(), 3000);
         }
 
-        // Modal Controllers
         window.openComposerModal = () => document.getElementById('composer-modal').classList.add('active');
         window.closeComposerModal = () => document.getElementById('composer-modal').classList.remove('active');
 
@@ -382,11 +378,9 @@
             formData.append("upload_preset", CLOUDINARY_PRESET);
             try {
                 const response = await fetch(CLOUDINARY_URL, { method: "POST", body: formData });
-                if (!response.ok) throw new Error("Cloudinary upload failed");
                 const data = await response.json();
                 return data.secure_url;
             } catch (err) {
-                console.error(err);
                 toast("Media processing failed.");
                 return null;
             }
@@ -409,26 +403,15 @@
             const userRef = ref(database, `users/${user.uid}`);
             onValue(userRef, async (snap) => {
                 let p = snap.exists() ? snap.val() : {};
-                let forcedUpdates = false;
-
-                if (!p.name) { p.name = user.displayName || 'Ona User'; forcedUpdates = true; }
-                if (!p.photoURL) { p.photoURL = user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&background=1877F2&color=fff`; forcedUpdates = true; }
-
+                if (!p.name) p.name = user.displayName || 'Lumina User';
+                if (!p.photoURL) p.photoURL = user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&background=E65100&color=fff`;
                 userProfile = p;
-                if (forcedUpdates) await update(userRef, { name: p.name, photoURL: p.photoURL });
+                await update(userRef, { name: p.name, photoURL: p.photoURL });
                 
-                // Update all profile UI elements
-                const avatarElements = ['nav-profile-pic', 'sidebar-profile-pic', 'composer-avatar', 'modal-author-img', 'comment-user-avatar'];
-                avatarElements.forEach(id => {
-                    const el = document.getElementById(id);
-                    if(el) el.src = p.photoURL;
+                ['nav-profile-pic', 'sidebar-profile-pic', 'composer-avatar'].forEach(id => {
+                    if(document.getElementById(id)) document.getElementById(id).src = p.photoURL;
                 });
-                
-                const nameElements = ['sidebar-profile-name', 'modal-author-name'];
-                nameElements.forEach(id => {
-                    const el = document.getElementById(id);
-                    if(el) el.innerText = p.name;
-                });
+                if(document.getElementById('sidebar-profile-name')) document.getElementById('sidebar-profile-name').innerText = p.name;
             });
         }
 
@@ -439,40 +422,22 @@
             signInWithEmailAndPassword(auth, em, pa).catch(e => toast(e.message));
         });
 
-        document.getElementById('action-signup').addEventListener('click', () => {
-            const em = document.getElementById('login-email').value.trim();
-            const pa = document.getElementById('login-pass').value;
-            if(!em || !pa) return toast("Please complete form");
-            createUserWithEmailAndPassword(auth, em, pa).catch(e => toast(e.message));
-        });
-
-        document.getElementById('action-google').addEventListener('click', () => {
-            signInWithPopup(auth, provider).catch(e => toast(e.message));
-        });
-
-        document.getElementById('logout-trigger').addEventListener('click', () => {
-            fbSignOut(auth).then(() => window.location.reload());
-        });
+        document.getElementById('action-google').addEventListener('click', () => signInWithPopup(auth, provider));
+        document.getElementById('logout-trigger').addEventListener('click', () => fbSignOut(auth));
+        document.getElementById('mobile-logout-trigger').addEventListener('click', () => fbSignOut(auth));
 
         document.getElementById('avatar-input').addEventListener('change', async (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
-            toast("Updating profile picture...");
-            const cloudUrl = await uploadMediaFile(file);
-            if (cloudUrl && currentUser) {
-                await update(ref(database, `users/${currentUser.uid}`), { photoURL: cloudUrl });
-                toast("Profile updated.");
-            }
+            if (!e.target.files[0]) return;
+            toast("Updating picture...");
+            const cloudUrl = await uploadMediaFile(e.target.files[0]);
+            if (cloudUrl && currentUser) update(ref(database, `users/${currentUser.uid}`), { photoURL: cloudUrl });
         });
 
         document.getElementById('post-media-file').addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (file) {
-                selectedMediaBlob = file;
-                document.getElementById('media-img-target').src = URL.createObjectURL(file);
+            if (e.target.files[0]) {
+                selectedMediaBlob = e.target.files[0];
+                document.getElementById('media-img-target').src = URL.createObjectURL(selectedMediaBlob);
                 document.getElementById('preview-box').style.display = 'block';
-                // Adjust textarea size dynamically to fit within modal
-                document.getElementById('composer-text').style.minHeight = '60px'; 
             }
         });
 
@@ -480,173 +445,167 @@
             selectedMediaBlob = null;
             document.getElementById('post-media-file').value = '';
             document.getElementById('preview-box').style.display = 'none';
-            document.getElementById('composer-text').style.minHeight = '120px';
         });
 
         document.getElementById('submit-post-btn').addEventListener('click', async () => {
-            const textVal = document.getElementById('composer-text').value.trim();
+            const textVal = document.getElementById('composer-modal-text').value.trim();
             if (!textVal && !selectedMediaBlob) return toast("Post cannot be empty.");
 
             const btn = document.getElementById('submit-post-btn');
             btn.disabled = true;
             btn.innerText = "Posting...";
 
-            let resolvedMediaUrl = null;
-            if (selectedMediaBlob) {
-                resolvedMediaUrl = await uploadMediaFile(selectedMediaBlob);
-            }
-
             const postObject = {
                 text: textVal,
-                mediaUrl: resolvedMediaUrl || "",
+                mediaUrl: selectedMediaBlob ? await uploadMediaFile(selectedMediaBlob) : "",
                 uid: currentUser.uid,
                 authorName: userProfile.name,
                 authorAvatar: userProfile.photoURL,
-                timestamp: Date.now(),
-                likesCount: 0
+                timestamp: Date.now()
             };
 
             push(ref(database, 'social_posts'), postObject).then(() => {
-                document.getElementById('composer-text').value = '';
+                document.getElementById('composer-modal-text').value = '';
                 document.getElementById('clear-media-btn').click();
-                btn.disabled = false;
-                btn.innerText = "Post";
                 closeComposerModal();
-                toast("Posted successfully!");
-            }).catch(() => {
+            }).finally(() => {
                 btn.disabled = false;
                 btn.innerText = "Post";
             });
         });
 
         function attachRealtimeTimelineFeed() {
-            const streamTarget = document.getElementById('posts-stream-target');
             onValue(ref(database, 'social_posts'), (snapshot) => {
+                const streamTarget = document.getElementById('posts-stream-target');
                 streamTarget.innerHTML = '';
                 if (!snapshot.exists()) return;
 
                 const postsArray = [];
-                snapshot.forEach((child) => { postsArray.push({ id: child.key, ...child.val() }); });
+                snapshot.forEach(child => postsArray.push({ id: child.key, ...child.val() }));
                 postsArray.sort((a, b) => b.timestamp - a.timestamp);
 
                 postsArray.forEach(post => {
                     const card = document.createElement('div');
                     card.className = 'post-card';
                     
-                    const mediaTag = post.mediaUrl ? `<div class="post-media-container"><img src="${post.mediaUrl}" class="post-attached-media"></div>` : '';
-                    
-                    // Simple relative time calculation
+                    const mediaTag = post.mediaUrl ? `<img src="${post.mediaUrl}" class="post-attached-media">` : '';
                     const diffMins = Math.round((Date.now() - post.timestamp)/60000);
                     const timeString = diffMins < 60 ? `${diffMins}m` : (diffMins < 1440 ? `${Math.floor(diffMins/60)}h` : new Date(post.timestamp).toLocaleDateString());
 
                     card.innerHTML = `
                         <div class="post-header">
                             <img src="${post.authorAvatar}" class="post-author-img">
-                            <div class="post-header-text">
-                                <span class="post-author-name">${post.authorName}</span>
-                                <span class="post-time">${timeString} · <i class="fa-solid fa-earth-americas" style="font-size:11px;"></i></span>
+                            <div>
+                                <div class="post-author-name">${post.authorName}</div>
+                                <div class="post-time">${timeString}</div>
                             </div>
                         </div>
                         <div class="post-text">${escapeHtml(post.text)}</div>
                         ${mediaTag}
-                        
                         <div class="post-stats">
-                            <div><i class="fa-solid fa-thumbs-up" style="color:var(--primary-blue); background:#e7f3ff; border-radius:50%; padding:4px; font-size:10px;"></i> <span id="like-count-display-${post.id}">${post.likesCount || 0}</span></div>
-                            <div><span id="comment-count-display-${post.id}">0</span> comments</div>
+                            <div>
+                                <span id="like-count-display-${post.id}">0</span> Likes • 
+                                <span id="dislike-count-display-${post.id}">0</span> Dislikes
+                            </div>
+                            <div><span id="comment-count-display-${post.id}">0</span> replies</div>
                         </div>
-                        
                         <div class="post-actions-row">
                             <div class="action-icon-group" id="like-trigger-${post.id}">
-                                <i class="fa-regular fa-thumbs-up"></i> Like
+                                <svg class="svg-icon" viewBox="0 0 24 24"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path></svg> Like
+                            </div>
+                            <div class="action-icon-group" id="dislike-trigger-${post.id}">
+                                <svg class="svg-icon" viewBox="0 0 24 24"><path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h3a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-3"></path></svg> Dislike
                             </div>
                             <div class="action-icon-group" id="comment-trigger-${post.id}">
-                                <i class="fa-regular fa-comment"></i> Comment
-                            </div>
-                            <div class="action-icon-group">
-                                <i class="fa-solid fa-share"></i> Share
+                                <svg class="svg-icon" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg> Reply
                             </div>
                         </div>
                     `;
-
                     streamTarget.appendChild(card);
 
-                    // Listeners for counters
-                    onValue(ref(database, `post_replies/${post.id}`), (replySnap) => {
-                        const count = replySnap.exists() ? replySnap.size : 0;
-                        const el = document.getElementById(`comment-count-display-${post.id}`);
-                        if(el) el.innerText = count;
+                    // Logic for strictly tracking unique Likes / Dislikes
+                    const interactionsRef = ref(database, `post_interactions/${post.id}`);
+                    onValue(interactionsRef, (snap) => {
+                        let likes = 0, dislikes = 0, userAction = null;
+                        if(snap.exists()) {
+                            snap.forEach(child => {
+                                if(child.val() === 'like') likes++;
+                                else if(child.val() === 'dislike') dislikes++;
+                                if(currentUser && child.key === currentUser.uid) userAction = child.val();
+                            });
+                        }
+                        
+                        document.getElementById(`like-count-display-${post.id}`).innerText = likes;
+                        document.getElementById(`dislike-count-display-${post.id}`).innerText = dislikes;
+                        
+                        const lBtn = document.getElementById(`like-trigger-${post.id}`);
+                        const dBtn = document.getElementById(`dislike-trigger-${post.id}`);
+                        
+                        lBtn.classList.remove('active-like');
+                        dBtn.classList.remove('active-dislike');
+                        if(userAction === 'like') lBtn.classList.add('active-like');
+                        if(userAction === 'dislike') dBtn.classList.add('active-dislike');
                     });
 
-                    // Interactive Hooks
+                    document.getElementById(`like-trigger-${post.id}`).addEventListener('click', () => toggleInteraction(post.id, 'like'));
+                    document.getElementById(`dislike-trigger-${post.id}`).addEventListener('click', () => toggleInteraction(post.id, 'dislike'));
                     document.getElementById(`comment-trigger-${post.id}`).addEventListener('click', () => openCommentThread(post.id));
-                    document.getElementById(`like-trigger-${post.id}`).addEventListener('click', function() {
-                        const newLikes = (post.likesCount || 0) + 1;
-                        this.classList.add('liked');
-                        this.querySelector('i').classList.replace('fa-regular', 'fa-solid');
-                        update(ref(database, `social_posts/${post.id}`), { likesCount: newLikes });
+
+                    onValue(ref(database, `post_replies/${post.id}`), (replySnap) => {
+                        if(document.getElementById(`comment-count-display-${post.id}`)) {
+                            document.getElementById(`comment-count-display-${post.id}`).innerText = replySnap.exists() ? replySnap.size : 0;
+                        }
                     });
                 });
             });
         }
 
+        async function toggleInteraction(postId, actionType) {
+            if(!currentUser) return;
+            const refPath = ref(database, `post_interactions/${postId}/${currentUser.uid}`);
+            const snap = await get(refPath);
+            if (snap.val() === actionType) remove(refPath);
+            else set(refPath, actionType);
+        }
+
         window.openCommentThread = function(postId) {
             activeTargetThreadId = postId;
             document.getElementById('comments-modal').classList.add('active');
-            const target = document.getElementById('modal-comments-target');
-            
             onValue(ref(database, `post_replies/${postId}`), (snap) => {
+                const target = document.getElementById('modal-comments-target');
                 target.innerHTML = '';
-                if(!snap.exists()) {
-                    target.innerHTML = `<p style="color:var(--text-secondary); text-align:center; padding:20px;">No comments yet. Be the first to comment.</p>`;
-                    return;
-                }
+                if(!snap.exists()) return;
                 snap.forEach(child => {
                     const c = child.val();
-                    const replyRow = document.createElement('div');
-                    replyRow.style.display = 'flex';
-                    replyRow.style.gap = '8px';
-                    replyRow.style.marginBottom = '12px';
-                    
-                    replyRow.innerHTML = `
+                    const r = document.createElement('div');
+                    r.style.display = 'flex'; r.style.gap = '8px'; r.style.marginBottom = '12px';
+                    r.innerHTML = `
                         <img src="${c.avatar}" class="post-author-img" style="width:32px; height:32px;">
-                        <div style="background: #F0F2F5; padding: 8px 12px; border-radius: 18px; max-width: 85%;">
-                            <div style="font-weight: 600; font-size: 13px; color: var(--text-primary);">${c.author}</div>
-                            <div style="font-size: 14px; color: var(--text-primary); word-break: break-word;">${escapeHtml(c.text)}</div>
-                        </div>
-                    `;
-                    target.appendChild(replyRow);
+                        <div style="background: #F0F2F5; padding: 8px 12px; border-radius: 18px;">
+                            <div style="font-weight: 600; font-size: 13px;">${c.author}</div>
+                            <div style="font-size: 14px;">${escapeHtml(c.text)}</div>
+                        </div>`;
+                    target.appendChild(r);
                 });
-                // Auto scroll to bottom of comments
                 target.scrollTop = target.scrollHeight;
             });
         };
 
-        window.closeCommentThread = function() {
+        window.closeCommentThread = () => {
             document.getElementById('comments-modal').classList.remove('active');
             activeTargetThreadId = null;
         };
 
         document.getElementById('submit-reply-btn').addEventListener('click', submitReply);
-        document.getElementById('comment-text-input').addEventListener('keypress', (e) => {
-            if(e.key === 'Enter') submitReply();
-        });
+        document.getElementById('comment-text-input').addEventListener('keypress', (e) => { if(e.key === 'Enter') submitReply(); });
 
         function submitReply() {
             const input = document.getElementById('comment-text-input');
-            const txt = input.value.trim();
-            if(!txt || !activeTargetThreadId) return;
-
-            const replyObject = {
-                text: txt,
-                uid: currentUser.uid,
-                author: userProfile.name,
-                avatar: userProfile.photoURL,
-                timestamp: Date.now()
-            };
-
-            push(ref(database, `post_replies/${activeTargetThreadId}`), replyObject).then(() => {
-                input.value = '';
-            });
+            if(!input.value.trim() || !activeTargetThreadId) return;
+            push(ref(database, `post_replies/${activeTargetThreadId}`), {
+                text: input.value.trim(), uid: currentUser.uid,
+                author: userProfile.name, avatar: userProfile.photoURL, timestamp: Date.now()
+            }).then(() => input.value = '');
         }
 
         function escapeHtml(str) {

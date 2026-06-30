@@ -83,7 +83,7 @@
         
         .header-sticky { position: sticky; top: 0; background: rgba(250, 249, 246, 0.85); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); padding: 18px 22px; border-bottom: 1px solid var(--border-dim); display: flex; justify-content: space-between; align-items: center; z-index: 10; }
         .header-sticky h1 { font-size: 18px; font-weight: 700; letter-spacing: -0.3px; }
-        .scrollable-stream { flex: 1; overflow-y: auto; scroll-behavior: smooth; -webkit-overflow-scrolling: touch; }
+        .scrollable-stream { flex: 1; min-height: 0; overflow-y: auto; scroll-behavior: smooth; -webkit-overflow-scrolling: touch; }
         .scrollable-stream::-webkit-scrollbar { width: 6px; }
         .scrollable-stream::-webkit-scrollbar-thumb { background: var(--border-dim); border-radius: 3px; }
 
@@ -237,7 +237,7 @@
             .app-wrapper { display: block; height: 100vh; }
             .sidebar { display: none; }
             .feed-container { border-right: none; height: 100vh; max-width: none; }
-            .scrollable-stream { overflow-y: auto; height: 100%; padding-bottom: 78px; }
+            .scrollable-stream { overflow-y: auto; height: 100%; min-height: 0; padding-bottom: 78px; }
             .header-sticky { padding: 14px 16px; }
             .composer { margin: 14px 12px 6px; padding: 14px 14px 10px; border-radius: var(--radius-md); }
             .post-card { margin: 0 12px 14px; padding: 14px; }

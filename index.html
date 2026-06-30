@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#0f172a">
+    <title>Ona - Professional Social Stream</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        /* ── Design System Variables (Executive Slate & Sapphire) ── */
+        :root {
+            --bg-body: #0f172a;
+            --bg-surface: #1e293b;
+            --accent-blue: #2563eb;
+            --accent-gradient: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border-dim: #334155;
+            --radius-lg: 16px;
+            --radius-md: 12px;
+            --radius-pill: 9999px;
+        }
+
+        /* ── Core Global Resets ── */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html, body { height: 100%; font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg-body); color: var(--text-main); overflow: hidden; -webkit-font-smoothing: antialiased; }
+
+        /* ── Application Structural Grid ── */
+        .app-wrapper {
+            display: flex;
+            max-width: 1250px;
+            margin: 0 auto;
+            height: 100%;
+        }
+
+        /* Left Column Profile & Structural Links */
+        .sidebar {
+            width: 275px;
+            padding: 28px 24px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            border-right: 1px solid var(--border-dim);
+        }
+
+        .brand-logo { 
+            font-size: 26px; 
+            font-weight: 800; 
+            letter-spacing: -0.5px;
+            background: var(--accent-gradient); 
+            -webkit-background-clip: text; 
+            -webkit-text-fill-color: transparent; 
+            display: flex; 
+            align-items: center; 
+            gap: 12px; 
+            margin-bottom: 36px; 
+        }
+        
+        .nav-links { display: flex; flex-direction: column; gap: 14px; }
+        .nav-item { display: flex; align-items: center; gap: 16px; padding: 14px 20px; border-radius: var(--radius-pill); color: var(--text-main); font-weight: 600; text-decoration: none; transition: all 0.2s ease; cursor: pointer; }
+        .nav-item:hover, .nav-item.active { background: rgba(255, 255, 255, 0.04); color: var(--accent-blue); }
+
+        /* Center Column Timeline Feed Stream */
+        .feed-container {
+            flex: 1;
+            max-width: 620px;
+            border-right: 1px solid var(--border-dim);
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            background: rgba(30, 41, 59, 0.2);
+        }
+
+        .header-sticky {
+            position: sticky; top: 0; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+            padding: 20px; border-bottom: 1px solid var(--border-dim); display: flex; justify-content: space-between; align-items: center; z-index: 10;
+        }
+        .header-sticky h1 { font-size: 20px; font-weight: 700; letter-spacing: -0.5px; }
+
+        .scrollable-stream { flex: 1; overflow-y: auto; scroll-behavior: smooth; }
+        .scrollable-stream::-webkit-scrollbar { width: 6px; }
+        .scrollable-stream::-webkit-scrollbar-thumb { background: var(--border-dim); border-radius: 3px; }
+
+        /* ── Unified Media Composer Card ── */
+        .composer { padding: 24px; border-bottom: 1px solid var(--border-dim); display: flex; gap: 16px; background: var(--bg-surface); border-radius: 0; position: relative; }
+        .user-avatar { width: 46px; height: 46px; border-radius: 50%; object-fit: cover; background: #334155; flex-shrink: 0; cursor: pointer; border: 2px solid transparent; transition: border-color 0.2s; }
+        .user-avatar:hover { border-color: var(--accent-blue); }
+        
+        .composer-body { flex: 1; }
+        .composer-input { width: 100%; background: transparent; border: none; outline: none; color: var(--text-main); font-size: 16px; font-family: inherit; resize: none; min-height: 55px; line-height: 1.6; }
+        
+        /* Interactive Upload Target Preview */
+        .media-preview-box { display: none; margin-top: 14px; position: relative; border-radius: var(--radius-md); overflow: hidden; border: 1px solid var(--border-dim); max-height: 300px; }
+        .media-preview-box img { width: 100%; height: 100%; object-fit: cover; }
+        .clear-preview-btn { position: absolute; top: 12px; right: 12px; background: rgba(15, 23, 42, 0.8); color: white; border: none; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px); transition: transform 0.2s; }
+        .clear-preview-btn:hover { transform: scale(1.05); }
+
+        .composer-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 16px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.03); }
+        .tool-btn { color: var(--accent-blue); background: none; border: none; width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 19px; cursor: pointer; transition: background 0.2s; }
+        .tool-btn:hover { background: rgba(37, 99, 235, 0.1); }
+        
+        .btn-primary { background: var(--accent-gradient); color: white; border: none; padding: 10px 24px; border-radius: var(--radius-pill); font-weight: 600; font-size: 14px; cursor: pointer; transition: opacity 0.2s, transform 0.1s; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2); }
+        .btn-primary:active { transform: scale(0.98); }
+        .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* ── Render Engine Timeline Templates ── */
+        .post-card { padding: 24px; border-bottom: 1px solid var(--border-dim); display: flex; gap: 16px; background: var(--bg-surface); transition: background-color 0.2s; }
+        .post-card:hover { background-color: rgba(30, 41, 59, 0.8); }
+        .post-main { flex: 1; }
+        .post-meta { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+        .author-name { font-weight: 700; color: var(--text-main); font-size: 15px; }
+        .author-handle { color: var(--text-muted); font-size: 13px; }
+        .post-time { color: var(--text-muted); font-size: 13px; }
+        .post-text { font-size: 15px; line-height: 1.6; color: #e2e8f0; white-space: pre-wrap; word-break: break-word; margin-bottom: 14px; }
+        .post-attached-media { width: 100%; border-radius: var(--radius-lg); border: 1px solid var(--border-dim); max-height: 380px; object-fit: cover; margin-bottom: 14px; }
+        
+        .post-actions-row { display: flex; gap: 48px; color: var(--text-muted); margin-top: 10px; }
+        .action-icon-group { display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer; transition: color 0.2s; }
+        .action-icon-group:hover { color: var(--accent-blue); }
+        .action-icon-group.liked { color: #f43f5e; }
+
+        /* ── Thread Interactions Slide Sheet Modal ── */
+        .overlay-modal { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); display: none; align-items: center; justify-content: center; z-index: 200; padding: 16px; }
+        .overlay-modal.active { display: flex; }
+        .modal-sheet { background: var(--bg-surface); width: 100%; max-width: 560px; border-radius: 24px; border: 1px solid var(--border-dim); display: flex; flex-direction: column; max-height: 82vh; animation: modalUp 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+        @keyframes modalUp { from { transform: translateY(16px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        
+        .modal-header { padding: 20px 24px; border-bottom: 1px solid var(--border-dim); display: flex; justify-content: space-between; align-items: center; }
+        .modal-body { padding: 24px; overflow-y: auto; flex: 1; }
+        .comment-entry-box { display: flex; gap: 14px; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border-dim); }
+
+        /* ── System Status Indicators (Toasts) ── */
+        #toast-box { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%); z-index: 500; display: flex; flex-direction: column; gap: 10px; }
+        .toast { background: #0f172a; color: white; padding: 14px 28px; border-radius: var(--radius-md); font-size: 14px; font-weight: 500; border-left: 4px solid var(--accent-blue); border-top: 1px solid var(--border-dim); border-right: 1px solid var(--border-dim); border-bottom: 1px solid var(--border-dim); box-shadow: 0 20px 25px -5px rgba(0,0,0,0.4); animation: toastIn 0.25s cubic-bezier(0.16, 1, 0.3, 1); }
+        @keyframes toastIn { from { transform: translateY(15px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        /* Identity Authentication Gate */
+        .auth-gate { position: fixed; inset: 0; background: var(--bg-body); z-index: 1000; display: flex; align-items: center; justify-content: center; flex-direction: column; padding: 20px; }
+        .auth-card { background: var(--bg-surface); border: 1px solid var(--border-dim); padding: 40px 32px; border-radius: 28px; width: 100%; max-width: 420px; text-align: center; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); }
+        .auth-input { width: 100%; padding: 14px 18px; background: rgba(15, 23, 42, 0.4); border: 1px solid var(--border-dim); border-radius: var(--radius-md); color: white; margin-bottom: 14px; outline: none; font-family: inherit; font-size: 15px; transition: border-color 0.2s; }
+        .auth-input:focus { border-color: var(--accent-blue); }
+        .auth-btn-row { display: flex; flex-direction: column; gap: 10px; margin-top: 20px; }
+
+        /* Device Adaptation Rules */
+        @media (max-width: 768px) {
+            .sidebar { width: 78px; padding: 20px 8px; align-items: center; }
+            .sidebar span, .brand-logo h2 { display: none; }
+            .app-wrapper { width: 100%; }
+            .post-actions-row { gap: 32px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="auth-screen" class="auth-gate">
+        <div class="auth-card">
+            <div class="brand-logo" style="justify-content: center;">
+                <i class="fa-solid fa-atom"></i><h2>Ona</h2>
+            </div>
+            <p style="color: var(--text-muted); margin-bottom: 28px; font-size: 14px; line-height: 1.5;">Access your clean social feed space.</p>
+            <input type="email" id="login-email" class="auth-input" placeholder="Email Address">
+            <input type="password" id="login-pass" class="auth-input" placeholder="Password">
+            
+            <div class="auth-btn-row">
+                <button class="btn-primary" id="action-login" style="width:100%">Sign In</button>
+                <button class="btn-primary" id="action-signup" style="width:100%; background: transparent; border: 1px solid var(--border-dim); box-shadow: none;">Create Account</button>
+                <div style="color: var(--text-muted); font-size: 13px; margin: 6px 0;">or</div>
+                <button class="btn-primary" id="action-google" style="width:100%; background: #ffffff; color: #0f172a; display:flex; align-items:center; justify-content:center; gap:10px; box-shadow: none;">
+                    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" style="width:18px" alt=""> Continue with Google
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="app-wrapper">
+        
+        <aside class="sidebar">
+            <div class="nav-stack">
+                <div class="brand-logo"><i class="fa-solid fa-atom"></i><h2>Ona</h2></div>
+                <nav class="nav-links">
+                    <div class="nav-item active"><i class="fa-solid fa-house"></i><span>Feed</span></div>
+                    <div class="nav-item" id="logout-trigger"><i class="fa-solid fa-arrow-right-from-bracket"></i><span>Logout</span></div>
+                </nav>
+            </div>
+            <div style="display:flex; align-items:center; gap:14px; padding: 4px;">
+                <label style="position:relative; cursor:pointer;" title="Change Profile Picture">
+                    <img id="my-profile-avatar" src="https://ui-avatars.com/api/?name=Ona+User&background=2563eb&color=fff" class="user-avatar">
+                    <input type="file" id="avatar-input" accept="image/*" style="display:none;">
+                </label>
+                <div style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                    <div id="my-profile-name" style="font-weight:700; font-size:14px; color: var(--text-main);">Loading...</div>
+                    <div id="my-profile-handle" style="color:var(--text-muted); font-size:12px;">@user</div>
+                </div>
+            </div>
+        </aside>
+
+        <main class="feed-container">
+            <div class="header-sticky">
+                <h1>Stream Pipeline</h1>
+                <i class="fa-solid fa-bolt-lightning" style="color: var(--accent-blue)"></i>
+            </div>
+
+            <div class="scrollable-stream">
+                <div class="composer">
+                    <img id="composer-user-avatar" src="https://ui-avatars.com/api/?name=Ona+User&background=2563eb&color=fff" class="user-avatar">
+                    <div class="composer-body">
+                        <textarea id="composer-text" class="composer-input" placeholder="What's on your mind? Share text or high-res media..."></textarea>
+                        
+                        <div id="preview-box" class="media-preview-box">
+                            <button class="clear-preview-btn" id="clear-media-btn"><i class="fa-solid fa-xmark"></i></button>
+                            <img id="media-img-target" src="">
+                        </div>
+
+                        <div class="composer-footer">
+                            <div class="composer-tools">
+                                <label class="tool-btn" title="Attach Media Image">
+                                    <i class="fa-regular fa-image"></i>
+                                    <input type="file" id="post-media-file" accept="image/*,video/*" style="display:none;">
+                                </label>
+                            </div>
+                            <button class="btn-primary" id="submit-post-btn">Post</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="posts-stream-target"></div>
+            </div>
+        </main>
+    </div>
+
+    <div id="comments-modal" class="overlay-modal">
+        <div class="modal-sheet">
+            <div class="modal-header">
+                <h3 style="font-size:16px; font-weight:700;">Discussion Thread</h3>
+                <button class="clear-preview-btn" onclick="closeCommentThread()" style="position:static;"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body" id="modal-comments-target">
+                </div>
+            <div style="padding: 16px 24px; border-top: 1px solid var(--border-dim); background: rgba(15, 23, 42, 0.2);">
+                <div class="comment-entry-box" style="margin-top:0; padding-top:0; border-top:none;">
+                    <textarea id="comment-text-input" class="composer-input" placeholder="Post your reply to this stream..." style="min-height:42px; font-size:15px;"></textarea>
+                    <button class="btn-primary" id="submit-reply-btn" style="align-self: flex-end; padding: 8px 20px;">Reply</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast-box"></div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getAuth, GoogleAuthProvider, signInWithPopup, signOut as fbSignOut, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        import { getDatabase, ref, push, set, get, update, onValue } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+
+        // Verified Native Database and Authentication Configurations 
+        const firebaseConfig = {
+            apiKey: "AIzaSyBQSPwpVbGrdCuOoyitAeWQHIeipj2MgIY",
+            authDomain: "newstart-64c43.firebaseapp.com",
+            databaseURL: "https://newstart-64c43-default-rtdb.firebaseio.com",
+            projectId: "newstart-64c43",
+            storageBucket: "newstart-64c43.firebasestorage.app",
+            messagingSenderId: "941619830061",
+            appId: "1:941619830061:web:de9e0f791eb8f6eacf87a4"
+        };
+
+        // Unsigned High-Performance Cloudinary Assets Routing Endpoints
+        const CLOUDINARY_URL = "https://api.cloudinary.com/v1_1/dmod7co6g/image/upload";
+        const CLOUDINARY_PRESET = "pace_unsigned"; 
+
+        const fbApp = initializeApp(firebaseConfig);
+        const auth = getAuth(fbApp);
+        const database = getDatabase(fbApp);
+        const provider = new GoogleAuthProvider();
+
+        // Reactive Application State Holders
+        let currentUser = null;
+        let userProfile = {};
+        let selectedMediaBlob = null;
+        let activeTargetThreadId = null;
+
+        function toast(msg) {
+            const box = document.getElementById('toast-box');
+            const t = document.createElement('div');
+            t.className = 'toast';
+            t.innerText = msg;
+            box.appendChild(t);
+            setTimeout(() => t.remove(), 4000);
+        }
+
+        // Direct Cloudinary REST Upload Engine (Bypasses Widget Dependencies)
+        async function uploadMediaFile(file) {
+            const formData = new FormData();
+            formData.append("file", file);
+            formData.append("upload_preset", CLOUDINARY_PRESET);
+
+            try {
+                const response = await fetch(CLOUDINARY_URL, {
+                    method: "POST",
+                    body: formData
+                });
+                if (!response.ok) throw new Error("Cloudinary pipeline authentication error.");
+                const data = await response.json();
+                return data.secure_url;
+            } catch (err) {
+                console.error(err);
+                toast("Media processing framework error.");
+                return null;
+            }
+        }
+
+        // Realtime User Authentication Flow Controller
+        onAuthStateChanged(auth, async (user) => {
+            const gate = document.getElementById('auth-screen');
+            if (user) {
+                currentUser = user;
+                gate.style.display = 'none';
+                listenToUserProfile(user);
+                attachRealtimeTimelineFeed();
+            } else {
+                currentUser = null;
+                gate.style.display = 'flex';
+            }
+        });
+
+        function listenToUserProfile(user) {
+            const userRef = ref(database, `users/${user.uid}`);
+            onValue(userRef, async (snap) => {
+                let p = snap.exists() ? snap.val() : {};
+                let forcedUpdates = false;
+
+                if (!p.name) { p.name = user.displayName || 'Ona User'; forcedUpdates = true; }
+                if (!p.photoURL) { p.photoURL = user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&background=2563eb&color=fff`; forcedUpdates = true; }
+                if (!p.handle) { p.handle = `@user_${user.uid.slice(0, 5)}`; forcedUpdates = true; }
+
+                userProfile = p;
+                if (forcedUpdates) {
+                    await update(userRef, { name: p.name, photoURL: p.photoURL, handle: p.handle });
+                }
+                
+                // Synchronize Structural UI Interface Elements
+                document.getElementById('my-profile-avatar').src = p.photoURL;
+                document.getElementById('composer-user-avatar').src = p.photoURL;
+                document.getElementById('my-profile-name').innerText = p.name;
+                document.getElementById('my-profile-handle').innerText = p.handle;
+            });
+        }
+
+        // Native Authentication Action Assertions
+        document.getElementById('action-login').addEventListener('click', () => {
+            const em = document.getElementById('login-email').value.trim();
+            const pa = document.getElementById('login-pass').value;
+            if(!em || !pa) return toast("Form fields cannot be blank.");
+            signInWithEmailAndPassword(auth, em, pa).catch(e => toast(e.message));
+        });
+
+        document.getElementById('action-signup').addEventListener('click', () => {
+            const em = document.getElementById('login-email').value.trim();
+            const pa = document.getElementById('login-pass').value;
+            if(!em || !pa) return toast("Please complete your parameters.");
+            createUserWithEmailAndPassword(auth, em, pa).catch(e => toast(e.message));
+        });
+
+        document.getElementById('action-google').addEventListener('click', () => {
+            signInWithPopup(auth, provider).catch(e => toast(e.message));
+        });
+
+        document.getElementById('logout-trigger').addEventListener('click', () => {
+            fbSignOut(auth).then(() => window.location.reload());
+        });
+
+        // Dynamic Profile Image Swap Pipeline
+        document.getElementById('avatar-input').addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            toast("Syncing new avatar data...");
+            const cloudUrl = await uploadMediaFile(file);
+            if (cloudUrl && currentUser) {
+                await update(ref(database, `users/${currentUser.uid}`), { photoURL: cloudUrl });
+                toast("Avatar synced to cloud node repository.");
+            }
+        });
+
+        // Composer Input File Handling Logic
+        document.getElementById('post-media-file').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                selectedMediaBlob = file;
+                document.getElementById('media-img-target').src = URL.createObjectURL(file);
+                document.getElementById('preview-box').style.display = 'block';
+            }
+        });
+
+        document.getElementById('clear-media-btn').addEventListener('click', () => {
+            selectedMediaBlob = null;
+            document.getElementById('post-media-file').value = '';
+            document.getElementById('preview-box').style.display = 'none';
+        });
+
+        // Transmit Unified Stream Element Object
+        document.getElementById('submit-post-btn').addEventListener('click', async () => {
+            const textVal = document.getElementById('composer-text').value.trim();
+            if (!textVal && !selectedMediaBlob) return toast("Stream elements require content parameters.");
+
+            const btn = document.getElementById('submit-post-btn');
+            btn.disabled = true;
+            btn.innerText = "Dispatching...";
+
+            let resolvedMediaUrl = null;
+            if (selectedMediaBlob) {
+                resolvedMediaUrl = await uploadMediaFile(selectedMediaBlob);
+            }
+
+            const postsRef = ref(database, 'social_posts');
+            const postObject = {
+                text: textVal,
+                mediaUrl: resolvedMediaUrl || "",
+                uid: currentUser.uid,
+                authorName: userProfile.name,
+                authorHandle: userProfile.handle,
+                authorAvatar: userProfile.photoURL,
+                timestamp: Date.now(),
+                likesCount: 0
+            };
+
+            push(postsRef, postObject).then(() => {
+                document.getElementById('composer-text').value = '';
+                document.getElementById('clear-media-btn').click();
+                btn.disabled = false;
+                btn.innerText = "Post";
+                toast("Stream payload dispatched.");
+            }).catch(() => {
+                btn.disabled = false;
+                btn.innerText = "Post";
+            });
+        });
+
+        // Live Bi-directional DB Core Loop Listener
+        function attachRealtimeTimelineFeed() {
+            const streamTarget = document.getElementById('posts-stream-target');
+            onValue(ref(database, 'social_posts'), (snapshot) => {
+                streamTarget.innerHTML = '';
+                if (!snapshot.exists()) return;
+
+                const postsArray = [];
+                snapshot.forEach((child) => {
+                    postsArray.push({ id: child.key, ...child.val() });
+                });
+
+                // Sort reverse chronologically
+                postsArray.sort((a, b) => b.timestamp - a.timestamp);
+
+                postsArray.forEach(post => {
+                    const card = document.createElement('div');
+                    card.className = 'post-card';
+                    
+                    const mediaTag = post.mediaUrl ? `<img src="${post.mediaUrl}" class="post-attached-media" alt="Attached Stream Data">` : '';
+                    const timeString = new Date(post.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+                    card.innerHTML = `
+                        <img src="${post.authorAvatar}" class="user-avatar" alt="User node profile logo">
+                        <div class="post-main">
+                            <div class="post-meta">
+                                <span class="author-name">${post.authorName}</span>
+                                <span class="author-handle">${post.authorHandle}</span>
+                                <span class="post-time">· ${timeString}</span>
+                            </div>
+                            <div class="post-text">${escapeHtml(post.text)}</div>
+                            ${mediaTag}
+                            <div class="post-actions-row">
+                                <div class="action-icon-group" id="comment-trigger-${post.id}">
+                                    <i class="fa-regular fa-comment"></i> <span id="comment-count-${post.id}">0</span>
+                                </div>
+                                <div class="action-icon-group" id="like-trigger-${post.id}">
+                                    <i class="fa-regular fa-heart"></i> <span>${post.likesCount || 0}</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+
+                    streamTarget.appendChild(card);
+
+                    // Dynamic Sub-Path Counter Resolution for replies sub-nodes
+                    onValue(ref(database, `post_replies/${post.id}`), (replySnap) => {
+                        const countEl = document.getElementById(`comment-count-${post.id}`);
+                        if(countEl) countEl.innerText = replySnap.exists() ? replySnap.size : 0;
+                    });
+
+                    // Direct Interactive Core Operations Hooks
+                    document.getElementById(`comment-trigger-${post.id}`).addEventListener('click', () => openCommentThread(post.id));
+                    document.getElementById(`like-trigger-${post.id}`).addEventListener('click', () => {
+                        const newLikes = (post.likesCount || 0) + 1;
+                        update(ref(database, `social_posts/${post.id}`), { likesCount: newLikes });
+                    });
+                });
+            });
+        }
+
+        // Relational Node Comment Database Pipelines Manager
+        window.openCommentThread = function(postId) {
+            activeTargetThreadId = postId;
+            document.getElementById('comments-modal').classList.add('active');
+            const target = document.getElementById('modal-comments-target');
+            
+            onValue(ref(database, `post_replies/${postId}`), (snap) => {
+                target.innerHTML = '';
+                if(!snap.exists()) {
+                    target.innerHTML = `<p style="color:var(--text-muted); text-align:center; padding:32px 20px; font-size:14px;">This discussion pipeline is empty. Post a reply below.</p>`;
+                    return;
+                }
+                snap.forEach(child => {
+                    const c = child.val();
+                    const replyRow = document.createElement('div');
+                    replyRow.className = 'post-card';
+                    replyRow.style.padding = '16px 0';
+                    replyRow.style.background = 'transparent';
+                    replyRow.style.borderBottom = '1px solid rgba(255,255,255,0.04)';
+                    replyRow.innerHTML = `
+                        <img src="${c.avatar}" class="user-avatar" style="width:34px; height:34px;">
+                        <div class="post-main">
+                            <div class="post-meta">
+                                <span class="author-name" style="font-size:14px;">${c.author}</span>
+                                <span class="author-handle" style="font-size:12px;">${c.handle}</span>
+                            </div>
+                            <div class="post-text" style="font-size:14px; margin-bottom:0; color:#cbd5e1;">${escapeHtml(c.text)}</div>
+                        </div>
+                    `;
+                    target.appendChild(replyRow);
+                });
+            });
+        };
+
+        window.closeCommentThread = function() {
+            document.getElementById('comments-modal').classList.remove('active');
+            activeTargetThreadId = null;
+        };
+
+        document.getElementById('submit-reply-btn').addEventListener('click', () => {
+            const input = document.getElementById('comment-text-input');
+            const txt = input.value.trim();
+            if(!txt || !activeTargetThreadId) return;
+
+            const replyObject = {
+                text: txt,
+                uid: currentUser.uid,
+                author: userProfile.name,
+                handle: userProfile.handle,
+                avatar: userProfile.photoURL,
+                timestamp: Date.now()
+            };
+
+            push(ref(database, `post_replies/${activeTargetThreadId}`), replyObject).then(() => {
+                input.value = '';
+            });
+        });
+
+        // HTML Clean Sanitizer System Helper
+        function escapeHtml(str) {
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+    </script>
+</body>
+</html>

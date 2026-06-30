@@ -9,6 +9,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;500;600;700&display=swap" rel="stylesheet">
     
+    <script type="module" src="https://cdn.jsdelivr.net/npm/emoji-picker-element@1.21.3/index.js"></script>
+    
     <style>
         /* ── Modern Light Theme Variables ── */
         :root {
@@ -193,9 +195,14 @@
         .media-preview-box { display: none; position: relative; border-radius: var(--radius-md); overflow: hidden; border: 1px solid var(--border-dim); margin-bottom: 12px; max-height: 300px; }
         .media-preview-box img { width: 100%; height: 100%; object-fit: cover; }
         .clear-preview-btn { position: absolute; top: 8px; right: 8px; background: white; border: 1px solid var(--border-dim); width: 32px; height: 32px; border-radius: 50%; cursor: pointer; box-shadow: var(--shadow-sm); }
-        .add-to-post { border: 1px solid var(--border-dim); border-radius: var(--radius-md); padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; box-shadow: var(--shadow-sm); margin-bottom: 16px; }
+        .add-to-post { border: 1px solid var(--border-dim); border-radius: var(--radius-md); padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; box-shadow: var(--shadow-sm); margin-bottom: 16px; position: relative; }
         .add-to-post-icons { display: flex; gap: 16px; font-size: 24px; }
         .add-to-post-icons i { cursor: pointer; }
+
+        /* Custom Dropdown Tag Item Styles */
+        .tag-user-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; cursor: pointer; transition: background 0.2s; font-size: 14px; color: var(--text-primary); border-bottom: 1px solid var(--border-dim); }
+        .tag-user-item:last-child { border-bottom: none; }
+        .tag-user-item:hover { background: var(--hover-overlay); }
         
         .btn-primary { background: var(--primary-orange); color: white; border: none; padding: 10px; border-radius: var(--radius-md); font-weight: 600; font-size: 15px; cursor: pointer; width: 100%; transition: background 0.2s; }
         .btn-primary:hover { background: var(--primary-hover); }
@@ -250,7 +257,6 @@
 </head>
 <body>
 
-    <!-- Splash Screen overlay -->
     <div id="splash-screen" class="splash-screen">
         <h1 style="color: var(--primary-orange); font-size: 48px; font-weight: 700; margin:0; letter-spacing: -1.5px;">Lumina</h1>
         <div class="loading-dots">
@@ -258,7 +264,6 @@
         </div>
     </div>
 
-    <!-- Auth Gate overlay (hidden by default initially) -->
     <div id="auth-screen" class="auth-gate">
         <div style="margin-bottom: 30px;">
             <h1 style="color: var(--primary-orange); font-size: 48px; font-weight: 700; margin:0; letter-spacing: -1.5px;">Lumina</h1>
@@ -277,7 +282,6 @@
         </div>
     </div>
 
-    <!-- Main App Navigation -->
     <nav class="top-navbar">
         <div class="nav-left">
             <button class="hamburger-btn" onclick="toggleDrawer()"><i class="fa-solid fa-bars"></i></button>
@@ -295,7 +299,6 @@
         </div>
 
         <div class="nav-right">
-            <button class="icon-btn" title="Menu"><i class="fa-solid fa-bars"></i></button>
             <button class="icon-btn" title="Messenger"><i class="fa-brands fa-facebook-messenger"></i></button>
             <button class="icon-btn" title="Notifications"><i class="fa-solid fa-bell"></i></button>
             <label style="cursor:pointer;" title="Change Profile Picture">
@@ -305,7 +308,6 @@
         </div>
     </nav>
 
-    <!-- Navigation Drawer -->
     <div id="drawer-overlay" class="drawer-overlay" onclick="toggleDrawer()"></div>
     <div id="drawer-content" class="drawer-content">
         <div style="display: flex; justify-content: space-between; align-items: center; padding: 0 12px 16px; border-bottom: 1px solid var(--border-dim); margin-bottom: 12px;">
@@ -360,7 +362,6 @@
         </aside>
     </div>
 
-    <!-- Modals -->
     <div id="composer-modal" class="overlay-modal">
         <div class="modal-sheet">
             <div class="modal-header">
@@ -390,9 +391,15 @@
                             <i class="fa-solid fa-images"></i>
                             <input type="file" id="post-media-file" accept="image/*,video/*" style="display:none;">
                         </label>
-                        <i class="fa-solid fa-user-tag" style="color: var(--primary-orange);"></i>
-                        <i class="fa-regular fa-face-smile" style="color: #F7B928;"></i>
-                        <i class="fa-solid fa-location-dot" style="color: #F5533D;"></i>
+                        <i class="fa-solid fa-user-tag" id="tag-users-btn" style="color: var(--primary-orange); cursor: pointer;" title="Tag People"></i>
+                        <i class="fa-regular fa-face-smile" id="emoji-picker-btn" style="color: #F7B928; cursor: pointer;" title="Emojis"></i>
+                        <i class="fa-solid fa-location-dot" style="color: #F5533D; cursor: pointer;"></i>
+                    </div>
+
+                    <div id="tag-users-dropdown" style="display: none; position: absolute; bottom: 110%; right: 40px; background: var(--bg-surface); border: 1px solid var(--border-dim); border-radius: var(--radius-md); box-shadow: var(--shadow-modal); max-height: 250px; overflow-y: auto; width: 220px; z-index: 100;"></div>
+                    
+                    <div id="emoji-picker-container" style="display: none; position: absolute; bottom: 110%; right: 0px; z-index: 100; box-shadow: var(--shadow-modal); border-radius: var(--radius-lg); overflow: hidden; border: 1px solid var(--border-dim);">
+                        <emoji-picker class="light"></emoji-picker>
                     </div>
                 </div>
                 
@@ -419,7 +426,6 @@
         </div>
     </div>
 
-    <!-- Custom Alert/Confirm Modal -->
     <div id="custom-confirm-modal" class="overlay-modal" style="z-index: 2000;">
         <div class="modal-sheet confirm-modal-sheet">
             <h3 id="confirm-title" class="confirm-title">Confirm</h3>
@@ -475,7 +481,11 @@
 
         // Global UI Functions
         window.openComposerModal = () => document.getElementById('composer-modal').classList.add('active');
-        window.closeComposerModal = () => document.getElementById('composer-modal').classList.remove('active');
+        window.closeComposerModal = () => {
+            document.getElementById('composer-modal').classList.remove('active');
+            document.getElementById('emoji-picker-container').style.display = 'none';
+            document.getElementById('tag-users-dropdown').style.display = 'none';
+        }
         
         window.toggleDrawer = () => {
             const overlay = document.getElementById('drawer-overlay');
@@ -509,13 +519,13 @@
             closeConfirm();
         };
 
-        // Context Menu Click Handling
+        // Context Menu Click Handling & dropdown auto-closing logic
         document.addEventListener('click', (e) => {
-            // Close dropdowns if click is outside
+            // Close post dropdowns if click is outside
             if (!e.target.closest('.post-context-menu')) {
                 document.querySelectorAll('.context-dropdown.active').forEach(el => el.classList.remove('active'));
             }
-            // Toggle dropdown
+            // Toggle post dropdown
             if (e.target.closest('.context-trigger')) {
                 const menuWrapper = e.target.closest('.post-context-menu');
                 const dropdown = menuWrapper.querySelector('.context-dropdown');
@@ -526,7 +536,86 @@
                 
                 if (!wasActive) dropdown.classList.add('active');
             }
+
+            // Close Tag and Emoji dropdowns if clicked outside
+            if (!e.target.closest('#tag-users-btn') && !e.target.closest('#tag-users-dropdown')) {
+                const tagDropdown = document.getElementById('tag-users-dropdown');
+                if (tagDropdown) tagDropdown.style.display = 'none';
+            }
+            if (!e.target.closest('#emoji-picker-btn') && !e.target.closest('#emoji-picker-container') && !e.target.closest('emoji-picker')) {
+                const emojiPicker = document.getElementById('emoji-picker-container');
+                if (emojiPicker) emojiPicker.style.display = 'none';
+            }
         });
+
+        // ── Tags and Emojis Handlers ──
+        document.getElementById('tag-users-btn').addEventListener('click', () => {
+            const dropdown = document.getElementById('tag-users-dropdown');
+            const emojiContainer = document.getElementById('emoji-picker-container');
+            
+            // Close emoji picker if it's currently open
+            if(emojiContainer) emojiContainer.style.display = 'none';
+
+            if (dropdown.style.display === 'block') {
+                dropdown.style.display = 'none';
+                return;
+            }
+            dropdown.style.display = 'block';
+            dropdown.innerHTML = '<div style="padding: 12px; text-align: center; color: var(--text-secondary); font-size: 13px;">Loading users...</div>';
+            
+            // Fetch users logic
+            get(ref(database, 'users')).then(snap => {
+                dropdown.innerHTML = '';
+                if(snap.exists()){
+                    let usersFound = false;
+                    snap.forEach(child => {
+                        // Prevent user from tagging themselves
+                        if (child.key !== currentUser.uid) {
+                            usersFound = true;
+                            const u = child.val();
+                            const div = document.createElement('div');
+                            div.className = 'tag-user-item';
+                            div.innerHTML = `<img src="${u.photoURL}" style="width:28px; height:28px; border-radius:50%; object-fit: cover;"> <span style="font-weight:500;">${escapeHtml(u.name)}</span>`;
+                            
+                            // On click, append @user to textarea
+                            div.onclick = () => {
+                                const textarea = document.getElementById('composer-text');
+                                textarea.value += `@${u.name} `;
+                                dropdown.style.display = 'none';
+                                textarea.focus();
+                            };
+                            dropdown.appendChild(div);
+                        }
+                    });
+                    
+                    if (!usersFound) {
+                        dropdown.innerHTML = '<div style="padding: 12px; text-align: center; color: var(--text-secondary); font-size: 13px;">No other users found.</div>';
+                    }
+                } else {
+                    dropdown.innerHTML = '<div style="padding: 12px; text-align: center; color: var(--text-secondary); font-size: 13px;">No users available.</div>';
+                }
+            }).catch(err => {
+                dropdown.innerHTML = '<div style="padding: 12px; text-align: center; color: var(--text-secondary); font-size: 13px;">Error loading users.</div>';
+            });
+        });
+
+        document.getElementById('emoji-picker-btn').addEventListener('click', () => {
+            const container = document.getElementById('emoji-picker-container');
+            const tagDropdown = document.getElementById('tag-users-dropdown');
+            
+            // Close tag dropdown if it's currently open
+            if(tagDropdown) tagDropdown.style.display = 'none';
+
+            container.style.display = container.style.display === 'none' ? 'block' : 'none';
+        });
+
+        document.querySelector('emoji-picker').addEventListener('emoji-click', event => {
+            const textarea = document.getElementById('composer-text');
+            textarea.value += event.detail.unicode;
+            document.getElementById('emoji-picker-container').style.display = 'none';
+            textarea.focus();
+        });
+
 
         async function uploadMediaFile(file) {
             const formData = new FormData();

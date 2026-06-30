@@ -39,7 +39,6 @@
             -webkit-touch-callout: none;
         }
         
-        /* Re-enable selection for inputs to maintain usability */
         input, textarea {
             -webkit-user-select: auto;
             -khtml-user-select: auto;
@@ -49,7 +48,6 @@
             -webkit-touch-callout: default;
         }
 
-        /* Prevent image dragging and ghosting */
         img {
             -webkit-user-drag: none;
             -khtml-user-drag: none;
@@ -137,7 +135,7 @@
         }
 
         /* ── Center Timeline Feed Stream ── */
-        .feed-container { max-width: 680px; width: 100%; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; padding: 0 16px; }
+        .feed-container { max-width: 680px; width: 100%; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; padding: 0 16px; position: relative;}
 
         /* Composer Card */
         .composer-card { background: var(--bg-surface); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); padding: 12px 16px 10px; }
@@ -168,14 +166,54 @@
         .context-dropdown button.danger { color: #DC3545; }
 
         .post-text { font-size: 15px; line-height: 1.5; color: var(--text-primary); margin-bottom: 12px; white-space: pre-wrap; word-break: break-word; }
+        
+        /* Media / Video Styles */
         .post-media-container { margin: 0 -16px 12px; }
         .post-attached-media { width: 100%; max-height: 500px; object-fit: cover; }
         
+        .video-wrapper {
+            position: relative;
+            margin: 0 -16px 12px;
+            display: flex;
+            justify-content: center;
+            background: #000;
+        }
+        .post-attached-media.video {
+            object-fit: contain; 
+            max-height: 500px;
+        }
+        .video-spinner {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid var(--primary-orange);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            display: none;
+            z-index: 10;
+            pointer-events: none;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
         .post-stats { display: flex; justify-content: space-between; padding-bottom: 10px; border-bottom: 1px solid var(--border-dim); color: var(--text-secondary); font-size: 15px; }
         .post-actions-row { display: flex; justify-content: space-between; padding: 4px 0; }
         .action-icon-group { flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 6px; border-radius: var(--radius-md); font-weight: 600; font-size: 15px; color: var(--text-secondary); cursor: pointer; transition: background 0.2s; }
         .action-icon-group:hover { background: var(--hover-overlay); }
         .action-icon-group.liked { color: var(--primary-orange); }
+
+        /* Scroll Anchor for Infinite Load */
+        .scroll-anchor {
+            height: 20px;
+            width: 100%;
+            margin-top: 10px;
+        }
 
         /* ── Modals & Overlays (Create Post & Comments) ── */
         .overlay-modal { position: fixed; inset: 0; background: rgba(255,255,255,0.8); display: none; align-items: center; justify-content: center; z-index: 200; padding: 16px; }
@@ -193,13 +231,12 @@
         /* Create Post Specifics */
         #composer-modal-text { width: 100%; border: none; outline: none; font-size: 24px; resize: none; min-height: 120px; margin-bottom: 12px; font-family: inherit; }
         .media-preview-box { display: none; position: relative; border-radius: var(--radius-md); overflow: hidden; border: 1px solid var(--border-dim); margin-bottom: 12px; max-height: 300px; }
-        .media-preview-box img { width: 100%; height: 100%; object-fit: cover; }
-        .clear-preview-btn { position: absolute; top: 8px; right: 8px; background: white; border: 1px solid var(--border-dim); width: 32px; height: 32px; border-radius: 50%; cursor: pointer; box-shadow: var(--shadow-sm); }
+        .media-preview-box img, .media-preview-box video { width: 100%; height: 100%; object-fit: cover; max-height: 300px;}
+        .clear-preview-btn { position: absolute; top: 8px; right: 8px; background: white; border: 1px solid var(--border-dim); width: 32px; height: 32px; border-radius: 50%; cursor: pointer; box-shadow: var(--shadow-sm); z-index: 10; }
         .add-to-post { border: 1px solid var(--border-dim); border-radius: var(--radius-md); padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; box-shadow: var(--shadow-sm); margin-bottom: 16px; position: relative; }
         .add-to-post-icons { display: flex; gap: 16px; font-size: 24px; }
         .add-to-post-icons i { cursor: pointer; }
 
-        /* Custom Dropdown Tag Item Styles */
         .tag-user-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; cursor: pointer; transition: background 0.2s; font-size: 14px; color: var(--text-primary); border-bottom: 1px solid var(--border-dim); }
         .tag-user-item:last-child { border-bottom: none; }
         .tag-user-item:hover { background: var(--hover-overlay); }
@@ -235,19 +272,14 @@
         @keyframes toastIn { from { transform: translateX(-20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 
         /* ── Responsive Architecture ── */
-        /* Tablet Layout */
         @media (min-width: 768px) {
             .app-wrapper { grid-template-columns: 1fr; max-width: 680px; }
             .nav-center { display: flex; } 
         }
-        
-        /* Desktop Layout */
         @media (min-width: 1100px) {
             .app-wrapper { grid-template-columns: 680px 280px; max-width: 1000px; justify-content: center; }
             .right-sidebar { display: flex; }
         }
-
-        /* Mobile specific adjustments */
         @media (max-width: 767px) {
             .nav-center, .nav-left .search-bar { display: none; }
             .nav-left { width: auto; }
@@ -343,7 +375,8 @@
             </div>
 
             <div id="posts-stream-target" style="display: flex; flex-direction: column; gap: 16px;"></div>
-        </main>
+            
+            </main>
 
         <aside class="right-sidebar">
             <h3 style="color: var(--text-secondary); font-size: 15px; margin: 12px 12px 8px;">Sponsored</h3>
@@ -379,10 +412,7 @@
                 
                 <textarea id="composer-text" placeholder="What's on your mind?" style="width: 100%; border: none; outline: none; font-size: 24px; resize: none; min-height: 120px; margin-bottom: 12px; font-family: inherit;"></textarea>
                 
-                <div id="preview-box" class="media-preview-box">
-                    <button class="clear-preview-btn" id="clear-media-btn"><i class="fa-solid fa-xmark"></i></button>
-                    <img id="media-img-target" src="">
-                </div>
+                <div id="preview-box" class="media-preview-box"></div>
 
                 <div class="add-to-post">
                     <span style="font-weight: 600;">Add to your post</span>
@@ -442,7 +472,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getAuth, GoogleAuthProvider, signInWithPopup, signOut as fbSignOut, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-        import { getDatabase, ref, push, set, get, update, onValue, remove } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+        import { getDatabase, ref, push, set, get, update, onValue, remove, query, orderByChild, limitToLast } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBQSPwpVbGrdCuOoyitAeWQHIeipj2MgIY",
@@ -454,7 +484,8 @@
             appId: "1:941619830061:web:de9e0f791eb8f6eacf87a4"
         };
 
-        const CLOUDINARY_URL = "https://api.cloudinary.com/v1_1/dqkujefxj/image/upload";
+        // Use /auto/upload to handle both images and videos dynamically 
+        const CLOUDINARY_URL = "https://api.cloudinary.com/v1_1/dqkujefxj/auto/upload";
         const CLOUDINARY_PRESET = "banter_box"; 
 
         const fbApp = initializeApp(firebaseConfig);
@@ -465,10 +496,14 @@
         let currentUser = null;
         let userProfile = {};
         let selectedMediaBlob = null;
+        let selectedMediaType = null;
         let activeTargetThreadId = null;
         let activePostOwnerId = null;
         let currentCommentsUnsubscribe = null;
         let confirmActionCallback = null;
+        
+        let currentFeedLimit = 5;
+        let feedUnsubscribe = null;
 
         function toast(msg) {
             const box = document.getElementById('toast-box');
@@ -496,7 +531,7 @@
                 setTimeout(() => overlay.style.display = 'none', 300);
             } else {
                 overlay.style.display = 'block';
-                void overlay.offsetWidth; // Reflow
+                void overlay.offsetWidth; 
                 overlay.classList.add('active');
                 content.classList.add('active');
             }
@@ -519,25 +554,18 @@
             closeConfirm();
         };
 
-        // Context Menu Click Handling & dropdown auto-closing logic
         document.addEventListener('click', (e) => {
-            // Close post dropdowns if click is outside
             if (!e.target.closest('.post-context-menu')) {
                 document.querySelectorAll('.context-dropdown.active').forEach(el => el.classList.remove('active'));
             }
-            // Toggle post dropdown
             if (e.target.closest('.context-trigger')) {
                 const menuWrapper = e.target.closest('.post-context-menu');
                 const dropdown = menuWrapper.querySelector('.context-dropdown');
                 const wasActive = dropdown.classList.contains('active');
-                
-                // Close all others first
                 document.querySelectorAll('.context-dropdown.active').forEach(el => el.classList.remove('active'));
-                
                 if (!wasActive) dropdown.classList.add('active');
             }
 
-            // Close Tag and Emoji dropdowns if clicked outside
             if (!e.target.closest('#tag-users-btn') && !e.target.closest('#tag-users-dropdown')) {
                 const tagDropdown = document.getElementById('tag-users-dropdown');
                 if (tagDropdown) tagDropdown.style.display = 'none';
@@ -548,12 +576,10 @@
             }
         });
 
-        // ── Tags and Emojis Handlers ──
+        // Tags and Emojis Handlers 
         document.getElementById('tag-users-btn').addEventListener('click', () => {
             const dropdown = document.getElementById('tag-users-dropdown');
             const emojiContainer = document.getElementById('emoji-picker-container');
-            
-            // Close emoji picker if it's currently open
             if(emojiContainer) emojiContainer.style.display = 'none';
 
             if (dropdown.style.display === 'block') {
@@ -563,13 +589,11 @@
             dropdown.style.display = 'block';
             dropdown.innerHTML = '<div style="padding: 12px; text-align: center; color: var(--text-secondary); font-size: 13px;">Loading users...</div>';
             
-            // Fetch users logic
             get(ref(database, 'users')).then(snap => {
                 dropdown.innerHTML = '';
                 if(snap.exists()){
                     let usersFound = false;
                     snap.forEach(child => {
-                        // Prevent user from tagging themselves
                         if (child.key !== currentUser.uid) {
                             usersFound = true;
                             const u = child.val();
@@ -577,7 +601,6 @@
                             div.className = 'tag-user-item';
                             div.innerHTML = `<img src="${u.photoURL}" style="width:28px; height:28px; border-radius:50%; object-fit: cover;"> <span style="font-weight:500;">${escapeHtml(u.name)}</span>`;
                             
-                            // On click, append @user to textarea
                             div.onclick = () => {
                                 const textarea = document.getElementById('composer-text');
                                 textarea.value += `@${u.name} `;
@@ -587,10 +610,7 @@
                             dropdown.appendChild(div);
                         }
                     });
-                    
-                    if (!usersFound) {
-                        dropdown.innerHTML = '<div style="padding: 12px; text-align: center; color: var(--text-secondary); font-size: 13px;">No other users found.</div>';
-                    }
+                    if (!usersFound) dropdown.innerHTML = '<div style="padding: 12px; text-align: center; color: var(--text-secondary); font-size: 13px;">No other users found.</div>';
                 } else {
                     dropdown.innerHTML = '<div style="padding: 12px; text-align: center; color: var(--text-secondary); font-size: 13px;">No users available.</div>';
                 }
@@ -602,10 +622,7 @@
         document.getElementById('emoji-picker-btn').addEventListener('click', () => {
             const container = document.getElementById('emoji-picker-container');
             const tagDropdown = document.getElementById('tag-users-dropdown');
-            
-            // Close tag dropdown if it's currently open
             if(tagDropdown) tagDropdown.style.display = 'none';
-
             container.style.display = container.style.display === 'none' ? 'block' : 'none';
         });
 
@@ -615,7 +632,6 @@
             document.getElementById('emoji-picker-container').style.display = 'none';
             textarea.focus();
         });
-
 
         async function uploadMediaFile(file) {
             const formData = new FormData();
@@ -708,21 +724,39 @@
             }
         });
 
+        const clearMediaSelection = () => {
+            selectedMediaBlob = null;
+            selectedMediaType = null;
+            document.getElementById('post-media-file').value = '';
+            document.getElementById('preview-box').innerHTML = '';
+            document.getElementById('preview-box').style.display = 'none';
+            document.getElementById('composer-text').style.minHeight = '120px';
+        };
+
         document.getElementById('post-media-file').addEventListener('change', (e) => {
             const file = e.target.files[0];
             if (file) {
                 selectedMediaBlob = file;
-                document.getElementById('media-img-target').src = URL.createObjectURL(file);
-                document.getElementById('preview-box').style.display = 'block';
+                selectedMediaType = file.type.startsWith('video/') ? 'video' : 'image';
+                
+                const previewBox = document.getElementById('preview-box');
+                previewBox.innerHTML = '<button class="clear-preview-btn" id="clear-media-btn"><i class="fa-solid fa-xmark"></i></button>';
+                
+                if(selectedMediaType === 'video') {
+                    const vid = document.createElement('video');
+                    vid.src = URL.createObjectURL(file);
+                    vid.controls = true;
+                    previewBox.appendChild(vid);
+                } else {
+                    const img = document.createElement('img');
+                    img.src = URL.createObjectURL(file);
+                    previewBox.appendChild(img);
+                }
+                
+                document.getElementById('clear-media-btn').addEventListener('click', clearMediaSelection);
+                previewBox.style.display = 'block';
                 document.getElementById('composer-text').style.minHeight = '60px'; 
             }
-        });
-
-        document.getElementById('clear-media-btn').addEventListener('click', () => {
-            selectedMediaBlob = null;
-            document.getElementById('post-media-file').value = '';
-            document.getElementById('preview-box').style.display = 'none';
-            document.getElementById('composer-text').style.minHeight = '120px';
         });
 
         document.getElementById('submit-post-btn').addEventListener('click', async () => {
@@ -741,6 +775,7 @@
             const postObject = {
                 text: textVal,
                 mediaUrl: resolvedMediaUrl || "",
+                mediaType: resolvedMediaUrl ? selectedMediaType : "",
                 uid: currentUser.uid,
                 authorName: userProfile.name,
                 authorAvatar: userProfile.photoURL,
@@ -751,7 +786,7 @@
 
             push(ref(database, 'social_posts'), postObject).then(() => {
                 document.getElementById('composer-text').value = '';
-                document.getElementById('clear-media-btn').click();
+                clearMediaSelection();
                 btn.disabled = false;
                 btn.innerText = "Post";
                 closeComposerModal();
@@ -762,9 +797,35 @@
             });
         });
 
+        // Infinite Scroll & Intersection Observers
+        const infiniteScrollObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    currentFeedLimit += 5;
+                    attachRealtimeTimelineFeed();
+                }
+            });
+        }, { rootMargin: "200px" });
+
+        const videoPlaybackObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                const video = entry.target;
+                if (entry.isIntersecting) {
+                    video.play().catch(e => console.log("Autoplay prevented by browser.", e));
+                } else {
+                    video.pause();
+                }
+            });
+        }, { threshold: 0.5 }); // Play when 50% of the video is visible in the viewport
+
         function attachRealtimeTimelineFeed() {
             const streamTarget = document.getElementById('posts-stream-target');
-            onValue(ref(database, 'social_posts'), (snapshot) => {
+            
+            if (feedUnsubscribe) feedUnsubscribe();
+
+            const feedQuery = query(ref(database, 'social_posts'), orderByChild('timestamp'), limitToLast(currentFeedLimit));
+
+            feedUnsubscribe = onValue(feedQuery, (snapshot) => {
                 streamTarget.innerHTML = '';
                 if (!snapshot.exists()) return;
 
@@ -776,7 +837,19 @@
                     const card = document.createElement('div');
                     card.className = 'post-card';
                     
-                    const mediaTag = post.mediaUrl ? `<div class="post-media-container"><img src="${post.mediaUrl}" class="post-attached-media"></div>` : '';
+                    let mediaTag = '';
+                    if (post.mediaUrl) {
+                        if (post.mediaType === 'video' || post.mediaUrl.match(/\.(mp4|webm|mov|ogg)$/i)) {
+                            mediaTag = `
+                                <div class="video-wrapper">
+                                    <div class="video-spinner"></div>
+                                    <video src="${post.mediaUrl}" class="post-attached-media video" loop muted playsinline controls preload="auto"></video>
+                                </div>
+                            `;
+                        } else {
+                            mediaTag = `<div class="post-media-container"><img src="${post.mediaUrl}" class="post-attached-media"></div>`;
+                        }
+                    }
                     
                     const diffMins = Math.round((Date.now() - post.timestamp)/60000);
                     const timeString = diffMins < 60 ? `${diffMins}m` : (diffMins < 1440 ? `${Math.floor(diffMins/60)}h` : new Date(post.timestamp).toLocaleDateString());
@@ -792,7 +865,6 @@
                         </div>
                     ` : '';
 
-                    // Check Single Like Logic
                     const postLikesObj = post.likes || {};
                     const hasLiked = !!postLikesObj[currentUser.uid];
                     const likeClass = hasLiked ? 'liked' : '';
@@ -832,7 +904,16 @@
 
                     streamTarget.appendChild(card);
 
-                    // Add Delete Event Listener for Context Menu
+                    // Setup video observers and spinner events
+                    const videos = card.querySelectorAll('video.post-attached-media');
+                    videos.forEach(vid => {
+                        videoPlaybackObserver.observe(vid);
+                        const spinner = vid.parentElement.querySelector('.video-spinner');
+                        vid.addEventListener('waiting', () => { if(spinner) spinner.style.display = 'block'; });
+                        vid.addEventListener('playing', () => { if(spinner) spinner.style.display = 'none'; });
+                        vid.addEventListener('canplay', () => { if(spinner) spinner.style.display = 'none'; });
+                    });
+
                     if (post.uid === currentUser.uid) {
                         const delBtn = card.querySelector(`.delete-post-btn`);
                         if(delBtn) {
@@ -854,27 +935,29 @@
 
                     document.getElementById(`comment-trigger-${post.id}`).addEventListener('click', () => openCommentThread(post.id, post.uid));
                     
-                    // Single Like Database Execution
                     document.getElementById(`like-trigger-${post.id}`).addEventListener('click', function() {
                         const postRef = ref(database, `social_posts/${post.id}`);
                         get(postRef).then(snap => {
                             if (!snap.exists()) return;
                             const p = snap.val();
                             const currentLikesObj = p.likes || {};
+                            if (currentLikesObj[currentUser.uid]) delete currentLikesObj[currentUser.uid];
+                            else currentLikesObj[currentUser.uid] = true;
                             
-                            if (currentLikesObj[currentUser.uid]) {
-                                delete currentLikesObj[currentUser.uid];
-                            } else {
-                                currentLikesObj[currentUser.uid] = true;
-                            }
-                            
-                            update(postRef, { 
-                                likes: currentLikesObj, 
-                                likesCount: Object.keys(currentLikesObj).length 
-                            });
+                            update(postRef, { likes: currentLikesObj, likesCount: Object.keys(currentLikesObj).length });
                         });
                     });
                 });
+
+                // Re-append and observe the infinite scroll anchor at the bottom of the feed
+                let anchor = document.getElementById('feed-scroll-anchor');
+                if (!anchor) {
+                    anchor = document.createElement('div');
+                    anchor.id = 'feed-scroll-anchor';
+                    anchor.className = 'scroll-anchor';
+                    document.querySelector('.feed-container').appendChild(anchor);
+                }
+                infiniteScrollObserver.observe(anchor);
             });
         }
 
@@ -974,11 +1057,9 @@
             }
         };
 
-        // Delegated event listener for comment interactions
         document.getElementById('modal-comments-target').addEventListener('click', async (e) => {
             if (!activeTargetThreadId) return;
 
-            // Delete Comment
             if (e.target.closest('.del-comment')) {
                 const replyId = e.target.closest('.del-comment').dataset.id;
                 showConfirm("Delete Comment", "Are you sure you want to delete this comment?", async () => {
@@ -987,7 +1068,6 @@
                 });
             }
             
-            // Delete Nested Reply
             if (e.target.closest('.del-nested-comment')) {
                 const btn = e.target.closest('.del-nested-comment');
                 const rId = btn.dataset.reply;
@@ -998,7 +1078,6 @@
                 });
             }
 
-            // Single Like Logic for Comments
             if (e.target.closest('.like-comment-btn')) {
                 const replyId = e.target.closest('.like-comment-btn').dataset.id;
                 const commentRef = ref(database, `post_replies/${activeTargetThreadId}/${replyId}`);
@@ -1008,39 +1087,25 @@
                     const c = snap.val();
                     const cLikesObj = c.likes || {};
                     
-                    if (cLikesObj[currentUser.uid]) {
-                        delete cLikesObj[currentUser.uid];
-                    } else {
-                        cLikesObj[currentUser.uid] = true;
-                    }
+                    if (cLikesObj[currentUser.uid]) delete cLikesObj[currentUser.uid];
+                    else cLikesObj[currentUser.uid] = true;
                     
-                    update(commentRef, { 
-                        likes: cLikesObj, 
-                        likesCount: Object.keys(cLikesObj).length 
-                    });
+                    update(commentRef, { likes: cLikesObj, likesCount: Object.keys(cLikesObj).length });
                 });
             }
 
-            // Show Reply Box
             if (e.target.closest('.reply-comment-btn')) {
                 const replyId = e.target.closest('.reply-comment-btn').dataset.id;
                 const box = document.getElementById(`reply-input-box-${replyId}`);
                 box.style.display = box.style.display === 'none' ? 'flex' : 'none';
             }
 
-            // Submit Nested Reply
             if (e.target.closest('.submit-nested-reply')) {
                 const replyId = e.target.closest('.submit-nested-reply').dataset.id;
                 const input = document.getElementById(`nested-input-${replyId}`);
                 const text = input.value.trim();
                 if(text) {
-                    const nestedObj = {
-                        text: text,
-                        uid: currentUser.uid,
-                        author: userProfile.name,
-                        avatar: userProfile.photoURL,
-                        timestamp: Date.now()
-                    };
+                    const nestedObj = { text: text, uid: currentUser.uid, author: userProfile.name, avatar: userProfile.photoURL, timestamp: Date.now() };
                     await push(ref(database, `post_replies/${activeTargetThreadId}/${replyId}/replies`), nestedObj);
                     input.value = '';
                     document.getElementById(`reply-input-box-${replyId}`).style.display = 'none';

@@ -674,23 +674,11 @@
 
                 const postsArray = [];
                 snapshot.forEach((child) => postsArray.push({ id: child.key, ...child.val() }));
-                
-                // FIX: Algorithm sorting logic combining Likes, Randomness, and Recency
-                postsArray.sort((a, b) => {
-                    const likesA = a.likes ? Object.keys(a.likes).length : 0;
-                    const likesB = b.likes ? Object.keys(b.likes).length : 0;
-                    
-                    const randomFactorA = Math.random() * 2;
-                    const randomFactorB = Math.random() * 2;
-                    
-                    const timeFactorA = a.timestamp / 10000000000;
-                    const timeFactorB = b.timestamp / 10000000000;
 
-                    const scoreA = (likesA * 3) + randomFactorA + timeFactorA; 
-                    const scoreB = (likesB * 3) + randomFactorB + timeFactorB;
-
-                    return scoreB - scoreA; 
-                });
+                // Chronological feed (newest first), like Facebook's "Most Recent" view.
+                // Likes/dislikes don't affect order — only timestamp does, so new posts
+                // always land at the top instead of being randomly shuffled down.
+                postsArray.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
 
                 postsArray.forEach(post => {
                     const likes = post.likes || {};

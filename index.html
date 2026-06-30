@@ -26,8 +26,35 @@
             --shadow-modal: 0 12px 28px rgba(0, 0, 0, 0.2);
         }
 
-        /* ── Core Global Resets ── */
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        /* ── Core Global Resets & Anti-Highlight/Selection ── */
+        *, *::before, *::after { 
+            box-sizing: border-box; margin: 0; padding: 0; 
+            -webkit-user-select: none;
+            -khtml-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none;
+        }
+        
+        /* Re-enable selection for inputs to maintain usability */
+        input, textarea {
+            -webkit-user-select: auto;
+            -khtml-user-select: auto;
+            -moz-user-select: auto;
+            -ms-user-select: auto;
+            user-select: auto;
+            -webkit-touch-callout: default;
+        }
+
+        /* Prevent image dragging and ghosting */
+        img {
+            -webkit-user-drag: none;
+            -khtml-user-drag: none;
+            -moz-user-drag: none;
+            -o-user-drag: none;
+        }
+
         html, body { 
             height: 100%; 
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
@@ -35,6 +62,23 @@
             color: var(--text-primary); 
             -webkit-font-smoothing: antialiased; 
             overflow-y: scroll;
+        }
+
+        /* ── Splash Screen Loading Animation ── */
+        .splash-screen {
+            position: fixed; inset: 0; background: var(--bg-body); z-index: 9999;
+            display: flex; align-items: center; justify-content: center; flex-direction: column;
+        }
+        .loading-dots { display: flex; gap: 8px; margin-top: 20px; }
+        .loading-dots span {
+            width: 14px; height: 14px; background-color: var(--primary-orange);
+            border-radius: 50%; animation: bounce 1.4s infinite ease-in-out both;
+        }
+        .loading-dots span:nth-child(1) { animation-delay: -0.32s; }
+        .loading-dots span:nth-child(2) { animation-delay: -0.16s; }
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1); }
         }
 
         /* ── Top Navigation Bar ── */
@@ -174,7 +218,7 @@
         .btn-danger:hover { background: #C82333; }
 
         /* ── Auth Gate ── */
-        .auth-gate { position: fixed; inset: 0; background: var(--bg-body); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 20px; }
+        .auth-gate { position: fixed; inset: 0; background: var(--bg-body); z-index: 1000; display: none; align-items: center; justify-content: center; padding: 20px; }
         .auth-card { background: var(--bg-surface); padding: 24px; border-radius: var(--radius-md); box-shadow: var(--shadow-modal); width: 100%; max-width: 400px; text-align: center; }
         .auth-input { width: 100%; padding: 14px; border: 1px solid var(--border-dim); border-radius: var(--radius-md); font-size: 17px; margin-bottom: 12px; outline: none; }
         .auth-input:focus { border-color: var(--primary-orange); box-shadow: 0 0 0 2px rgba(255,140,0,0.2); }
@@ -206,6 +250,15 @@
 </head>
 <body>
 
+    <!-- Splash Screen overlay -->
+    <div id="splash-screen" class="splash-screen">
+        <h1 style="color: var(--primary-orange); font-size: 48px; font-weight: 700; margin:0; letter-spacing: -1.5px;">Lumina</h1>
+        <div class="loading-dots">
+            <span></span><span></span><span></span>
+        </div>
+    </div>
+
+    <!-- Auth Gate overlay (hidden by default initially) -->
     <div id="auth-screen" class="auth-gate">
         <div style="margin-bottom: 30px;">
             <h1 style="color: var(--primary-orange); font-size: 48px; font-weight: 700; margin:0; letter-spacing: -1.5px;">Lumina</h1>
@@ -492,14 +545,18 @@
         }
 
         onAuthStateChanged(auth, async (user) => {
+            const splash = document.getElementById('splash-screen');
             const gate = document.getElementById('auth-screen');
+            
             if (user) {
                 currentUser = user;
+                splash.style.display = 'none';
                 gate.style.display = 'none';
                 listenToUserProfile(user);
                 attachRealtimeTimelineFeed();
             } else {
                 currentUser = null;
+                splash.style.display = 'none';
                 gate.style.display = 'flex';
             }
         });
@@ -599,7 +656,8 @@
                 authorName: userProfile.name,
                 authorAvatar: userProfile.photoURL,
                 timestamp: Date.now(),
-                likesCount: 0
+                likesCount: 0,
+                likes: {}
             };
 
             push(ref(database, 'social_posts'), postObject).then(() => {
@@ -645,6 +703,12 @@
                         </div>
                     ` : '';
 
+                    // Check Single Like Logic
+                    const postLikesObj = post.likes || {};
+                    const hasLiked = !!postLikesObj[currentUser.uid];
+                    const likeClass = hasLiked ? 'liked' : '';
+                    const likeIcon = hasLiked ? 'fa-solid' : 'fa-regular';
+
                     card.innerHTML = `
                         <div class="post-header">
                             <div class="post-header-left">
@@ -665,8 +729,8 @@
                         </div>
                         
                         <div class="post-actions-row">
-                            <div class="action-icon-group" id="like-trigger-${post.id}">
-                                <i class="fa-regular fa-thumbs-up"></i> Like
+                            <div class="action-icon-group ${likeClass}" id="like-trigger-${post.id}">
+                                <i class="${likeIcon} fa-thumbs-up"></i> Like
                             </div>
                             <div class="action-icon-group" id="comment-trigger-${post.id}">
                                 <i class="fa-regular fa-comment"></i> Comment
@@ -700,11 +764,26 @@
                     });
 
                     document.getElementById(`comment-trigger-${post.id}`).addEventListener('click', () => openCommentThread(post.id, post.uid));
+                    
+                    // Single Like Database Execution
                     document.getElementById(`like-trigger-${post.id}`).addEventListener('click', function() {
-                        const newLikes = (post.likesCount || 0) + 1;
-                        this.classList.add('liked');
-                        this.querySelector('i').classList.replace('fa-regular', 'fa-solid');
-                        update(ref(database, `social_posts/${post.id}`), { likesCount: newLikes });
+                        const postRef = ref(database, `social_posts/${post.id}`);
+                        get(postRef).then(snap => {
+                            if (!snap.exists()) return;
+                            const p = snap.val();
+                            const currentLikesObj = p.likes || {};
+                            
+                            if (currentLikesObj[currentUser.uid]) {
+                                delete currentLikesObj[currentUser.uid];
+                            } else {
+                                currentLikesObj[currentUser.uid] = true;
+                            }
+                            
+                            update(postRef, { 
+                                likes: currentLikesObj, 
+                                likesCount: Object.keys(currentLikesObj).length 
+                            });
+                        });
                     });
                 });
             });
@@ -727,7 +806,11 @@
                 snap.forEach(child => {
                     const replyId = child.key;
                     const c = child.val();
-                    const likes = c.likesCount || 0;
+                    
+                    const commentLikesObj = c.likes || {};
+                    const likesCount = c.likesCount || 0;
+                    const userLikedComment = !!commentLikesObj[currentUser.uid];
+                    const likeColor = userLikedComment ? 'color:var(--primary-orange)' : '';
                     
                     const replyRow = document.createElement('div');
                     replyRow.style.display = 'flex';
@@ -772,7 +855,7 @@
                                     <div style="font-size: 14px; color: var(--text-primary); word-break: break-word;">${escapeHtml(c.text)}</div>
                                 </div>
                                 <div style="font-size: 12px; font-weight: 600; color: var(--text-secondary); margin: 4px 0 0 12px; display:flex; gap:12px; align-items:center;">
-                                    <span class="like-comment-btn" data-id="${replyId}" style="cursor:pointer; ${likes>0?'color:var(--primary-orange)':''}"><i class="fa-solid fa-thumbs-up"></i> ${likes > 0 ? likes : 'Like'}</span>
+                                    <span class="like-comment-btn" data-id="${replyId}" style="cursor:pointer; ${likeColor}"><i class="${userLikedComment ? 'fa-solid' : 'fa-regular'} fa-thumbs-up"></i> ${likesCount > 0 ? likesCount : 'Like'}</span>
                                     <span class="reply-comment-btn" data-id="${replyId}" style="cursor:pointer;">Reply</span>
                                     ${delCommentBtn}
                                 </div>
@@ -826,13 +909,26 @@
                 });
             }
 
-            // Like Comment
+            // Single Like Logic for Comments
             if (e.target.closest('.like-comment-btn')) {
                 const replyId = e.target.closest('.like-comment-btn').dataset.id;
-                const likeRef = ref(database, `post_replies/${activeTargetThreadId}/${replyId}/likesCount`);
-                get(likeRef).then(snap => {
-                    const currentLikes = snap.val() || 0;
-                    update(ref(database, `post_replies/${activeTargetThreadId}/${replyId}`), { likesCount: currentLikes + 1 });
+                const commentRef = ref(database, `post_replies/${activeTargetThreadId}/${replyId}`);
+                
+                get(commentRef).then(snap => {
+                    if (!snap.exists()) return;
+                    const c = snap.val();
+                    const cLikesObj = c.likes || {};
+                    
+                    if (cLikesObj[currentUser.uid]) {
+                        delete cLikesObj[currentUser.uid];
+                    } else {
+                        cLikesObj[currentUser.uid] = true;
+                    }
+                    
+                    update(commentRef, { 
+                        likes: cLikesObj, 
+                        likesCount: Object.keys(cLikesObj).length 
+                    });
                 });
             }
 
@@ -879,7 +975,8 @@
                 author: userProfile.name,
                 avatar: userProfile.photoURL,
                 timestamp: Date.now(),
-                likesCount: 0
+                likesCount: 0,
+                likes: {}
             };
 
             push(ref(database, `post_replies/${activeTargetThreadId}`), replyObject).then(() => {

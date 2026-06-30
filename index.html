@@ -75,6 +75,20 @@
         .scrollable-stream::-webkit-scrollbar { width: 6px; }
         .scrollable-stream::-webkit-scrollbar-thumb { background: var(--border-dim); border-radius: 3px; }
 
+        /* Structural fixes for clean vertical sequential stacking */
+        #posts-stream-target {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+        }
+
+        #messages-modal-body {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            width: 100%;
+        }
+
         .composer { margin: 18px 18px 8px; padding: 18px 18px 14px; border: 1px solid var(--border-dim); border-radius: var(--radius-lg); display: flex; gap: 14px; background: var(--bg-surface); box-shadow: var(--shadow-card); transition: box-shadow 0.2s ease, border-color 0.2s ease; }
         .composer:focus-within { border-color: #f3c8ab; box-shadow: 0 0 0 4px var(--accent-dim), var(--shadow-card); }
         .composer-body { flex: 1; min-width: 0; }
@@ -146,13 +160,11 @@
         .chat-list-item { display:flex; align-items:center; gap: 12px; padding: 11px 4px; cursor:pointer; border-radius: var(--radius-md); transition: background .18s; }
         .chat-list-item:hover { background: var(--bg-sunken); }
 
-        /* Chat thread: explicit vertical column stack, WhatsApp style */
         .chat-thread-list { display: flex; flex-direction: column; gap: 8px; padding: 4px 0; }
         .chat-thread-bubble { max-width: 75%; padding: 9px 14px; border-radius: 16px; font-size: 14px; line-height:1.4; word-break: break-word; align-self: flex-start; }
         .chat-thread-bubble.mine { background: var(--accent-gradient); color:white; align-self: flex-end; border-bottom-right-radius:4px; }
         .chat-thread-bubble.theirs { background: var(--bg-sunken); color: var(--text-main); align-self: flex-start; border-bottom-left-radius:4px; }
 
-        /* Comments thread: explicit vertical list, each comment row aligned avatar + content */
         .comments-list { display: flex; flex-direction: column; gap: 0; }
         .comment-row { display: flex; gap: 12px; padding: 14px 0; border-bottom: 1px solid var(--border-soft); align-items: flex-start; }
         .comment-row:last-child { border-bottom: none; }
@@ -162,7 +174,6 @@
         .comment-row .comment-top-line .author-name { font-size: 14px; }
         .comment-row .post-options-btn { margin-left: auto; flex-shrink: 0; }
 
-        /* Custom alert / confirm dialog (replaces native alert/confirm) */
         .confirm-overlay { position: fixed; inset: 0; background: rgba(20, 22, 26, 0.45); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 600; padding: 20px; }
         .confirm-overlay.active { display: flex; }
         .confirm-card { background: var(--bg-surface); width: 100%; max-width: 360px; border-radius: var(--radius-lg); border: 1px solid var(--border-dim); padding: 24px 22px 18px; box-shadow: var(--shadow-pop); animation: modalUp 0.22s cubic-bezier(0.16, 1, 0.3, 1); text-align: center; }
@@ -708,7 +719,6 @@
 
                     streamTarget.appendChild(card);
 
-                    // Live-bind author identity so name/handle/avatar updates propagate to existing posts instantly
                     onValue(ref(database, `users/${post.uid}`), (uSnap) => {
                         if (!uSnap.exists()) return;
                         const u = uSnap.val();
@@ -782,7 +792,7 @@
                 const replies = [];
                 snap.forEach(child => replies.push({ replyId: child.key, ...child.val() }));
                 replies.sort((a,b) => a.timestamp - b.timestamp);
-                // Render every reply in the thread, no truncation
+
                 replies.forEach(c => {
                     const isOwner = c.uid === currentUser.uid;
                     const replyRow = document.createElement('div');
@@ -937,7 +947,6 @@
             return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
         }
 
-        // Suppress long-press context menu / callout everywhere except text inputs
         document.addEventListener('contextmenu', (e) => {
             const tag = e.target.tagName;
             if (tag === 'INPUT' || tag === 'TEXTAREA') return;

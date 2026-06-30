@@ -48,7 +48,9 @@
             -webkit-touch-callout: default;
         }
 
-        img {
+        /* Prevent long press context menu on media */
+        img, video, .clickable-user {
+            -webkit-touch-callout: none !important;
             -webkit-user-drag: none;
             -khtml-user-drag: none;
             -moz-user-drag: none;
@@ -76,10 +78,7 @@
         }
         .loading-dots span:nth-child(1) { animation-delay: -0.32s; }
         .loading-dots span:nth-child(2) { animation-delay: -0.16s; }
-        @keyframes bounce {
-            0%, 80%, 100% { transform: scale(0); }
-            40% { transform: scale(1); }
-        }
+        @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
 
         /* ── Top Navigation Bar ── */
         .top-navbar {
@@ -92,11 +91,9 @@
         .nav-left { display: flex; align-items: center; gap: 12px; width: 320px; }
         .hamburger-btn { background: transparent; border: none; font-size: 20px; color: var(--text-secondary); cursor: pointer; padding: 8px; border-radius: 50%; transition: background 0.2s; }
         .hamburger-btn:hover { background: var(--hover-overlay); }
-        .brand-text { font-size: 24px; font-weight: 700; color: var(--primary-orange); text-decoration: none; letter-spacing: -0.5px; margin-right: 8px; }
+        .brand-text { font-size: 24px; font-weight: 700; color: var(--primary-orange); text-decoration: none; letter-spacing: -0.5px; margin-right: 8px; cursor: pointer; }
         
-        .search-bar {
-            background: #F0F2F5; border-radius: 50px; padding: 8px 16px; display: flex; align-items: center; gap: 8px; flex: 1; color: var(--text-secondary);
-        }
+        .search-bar { background: #F0F2F5; border-radius: 50px; padding: 8px 16px; display: flex; align-items: center; gap: 8px; flex: 1; color: var(--text-secondary); }
         .search-bar input { border: none; background: transparent; outline: none; width: 100%; font-size: 15px; }
 
         .nav-center { display: flex; gap: 8px; height: 100%; }
@@ -110,16 +107,9 @@
         .nav-profile { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; cursor: pointer; border: 1px solid var(--border-dim); }
 
         /* ── Navigation Drawer ── */
-        .drawer-overlay {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000;
-            display: none; opacity: 0; transition: opacity 0.3s ease;
-        }
+        .drawer-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; display: none; opacity: 0; transition: opacity 0.3s ease; }
         .drawer-overlay.active { display: block; opacity: 1; }
-        .drawer-content {
-            position: fixed; top: 0; left: -300px; width: 280px; height: 100%;
-            background: var(--bg-surface); z-index: 1001; box-shadow: var(--shadow-modal);
-            transition: left 0.3s ease; overflow-y: auto; padding: 16px 8px;
-        }
+        .drawer-content { position: fixed; top: 0; left: -300px; width: 280px; height: 100%; background: var(--bg-surface); z-index: 1001; box-shadow: var(--shadow-modal); transition: left 0.3s ease; overflow-y: auto; padding: 16px 8px; }
         .drawer-content.active { left: 0; }
         
         .sidebar-item { display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: var(--radius-md); font-weight: 500; font-size: 15px; cursor: pointer; transition: background 0.2s; color: var(--text-primary); }
@@ -129,16 +119,23 @@
         .right-sidebar { display: none; flex-direction: column; position: sticky; top: 76px; height: calc(100vh - 76px); overflow-y: auto; padding: 0 8px; }
 
         /* ── Application Structural Grid ── */
-        .app-wrapper {
-            display: grid; padding-top: 76px; max-width: 100%; margin: 0 auto;
-            grid-template-columns: 1fr; gap: 20px;
-        }
+        .app-wrapper { display: grid; padding-top: 76px; max-width: 100%; margin: 0 auto; grid-template-columns: 1fr; gap: 20px; }
+        .feed-container { max-width: 680px; width: 100%; margin: 0 auto; padding: 0 16px; position: relative; }
+        
+        /* View Sections */
+        .view-section { display: none; flex-direction: column; gap: 16px; }
+        .view-section.active { display: flex; }
 
-        /* ── Center Timeline Feed Stream ── */
-        .feed-container { max-width: 680px; width: 100%; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; padding: 0 16px; position: relative;}
+        /* ── Profile View ── */
+        .profile-card { background: var(--bg-surface); border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-sm); margin-bottom: 4px; }
+        .profile-cover { width: 100%; height: 250px; background-color: #E4E6EB; background-size: cover; background-position: center; position: relative; }
+        .profile-info-section { padding: 16px 24px 24px; position: relative; text-align: center; margin-top: -80px; }
+        .profile-avatar-large { width: 150px; height: 150px; border-radius: 50%; border: 4px solid var(--bg-surface); object-fit: cover; background: white; margin: 0 auto 12px; position: relative; z-index: 2; box-shadow: var(--shadow-sm); }
+        .profile-display-name { font-size: 28px; font-weight: 700; margin-bottom: 4px; }
+        .profile-bio-text { font-size: 15px; color: var(--text-secondary); margin-bottom: 20px; max-width: 400px; margin-left: auto; margin-right: auto; line-height: 1.4; }
 
         /* Composer Card */
-        .composer-card { background: var(--bg-surface); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); padding: 12px 16px 10px; }
+        .composer-card { background: var(--bg-surface); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); padding: 12px 16px 10px; margin-bottom: 16px; }
         .composer-top { display: flex; gap: 8px; align-items: center; border-bottom: 1px solid var(--border-dim); padding-bottom: 12px; margin-bottom: 12px; }
         .composer-input-btn { flex: 1; background: #F0F2F5; border-radius: 50px; padding: 10px 16px; font-size: 17px; color: var(--text-secondary); cursor: pointer; transition: background 0.2s; border: none; text-align: left; outline: none; }
         .composer-input-btn:hover { background: #E4E6EB; }
@@ -149,10 +146,11 @@
         /* Post Render Card */
         .post-card { background: var(--bg-surface); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); padding: 12px 16px 4px; display: flex; flex-direction: column; }
         .post-header { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; justify-content: space-between; position: relative; }
-        .post-header-left { display: flex; gap: 10px; align-items: center; }
+        .post-header-left { display: flex; gap: 10px; align-items: center; cursor: pointer; }
         .post-author-img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 1px solid var(--border-dim); }
         .post-header-text { display: flex; flex-direction: column; }
         .post-author-name { font-weight: 600; font-size: 15px; color: var(--text-primary); }
+        .post-author-name:hover { text-decoration: underline; }
         .post-time { font-size: 13px; color: var(--text-secondary); }
         
         /* Context Menu Styles */
@@ -167,40 +165,23 @@
 
         .post-text { font-size: 15px; line-height: 1.5; color: var(--text-primary); margin-bottom: 12px; white-space: pre-wrap; word-break: break-word; }
         
-        /* Media / Video Styles */
-        .post-media-container { margin: 0 -16px 12px; }
+        /* Media & Custom Video Controls */
+        .post-media-container { margin: 0 -16px 12px; display: flex; justify-content: center; background: #000; }
         .post-attached-media { width: 100%; max-height: 500px; object-fit: cover; }
+        .post-attached-media.video { object-fit: contain; }
         
-        .video-wrapper {
-            position: relative;
-            margin: 0 -16px 12px;
-            display: flex;
-            justify-content: center;
-            background: #000;
-        }
-        .post-attached-media.video {
-            object-fit: contain; 
-            max-height: 500px;
-        }
-        .video-spinner {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            border: 4px solid rgba(255, 255, 255, 0.3);
-            border-top: 4px solid var(--primary-orange);
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            display: none;
-            z-index: 10;
-            pointer-events: none;
-        }
-        @keyframes spin {
-            0% { transform: translate(-50%, -50%) rotate(0deg); }
-            100% { transform: translate(-50%, -50%) rotate(360deg); }
-        }
+        .custom-video-wrapper { position: relative; margin: 0 -16px 12px; display: flex; justify-content: center; background: #000; }
+        .custom-controls { position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(transparent, rgba(0,0,0,0.7)); display: flex; align-items: center; gap: 12px; padding: 20px 16px 12px; opacity: 0; transition: opacity 0.3s; z-index: 10; }
+        .custom-video-wrapper:hover .custom-controls, .custom-video-wrapper:active .custom-controls { opacity: 1; }
+        .custom-controls button { background: none; border: none; color: white; cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center; width: 30px; height: 30px; }
+        .custom-controls button:hover { color: var(--primary-orange); }
+        
+        .seek-bar { flex: 1; cursor: pointer; height: 6px; -webkit-appearance: none; background: rgba(255,255,255,0.4); border-radius: 4px; outline: none; }
+        .seek-bar::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; background: var(--primary-orange); border-radius: 50%; box-shadow: 0 0 4px rgba(0,0,0,0.5); }
+        .seek-bar::-moz-range-thumb { width: 14px; height: 14px; background: var(--primary-orange); border-radius: 50%; box-shadow: 0 0 4px rgba(0,0,0,0.5); border: none; }
+        
+        .video-spinner { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); border: 4px solid rgba(255, 255, 255, 0.3); border-top: 4px solid var(--primary-orange); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; display: none; z-index: 5; pointer-events: none; }
+        @keyframes spin { 0% { transform: translate(-50%, -50%) rotate(0deg); } 100% { transform: translate(-50%, -50%) rotate(360deg); } }
 
         .post-stats { display: flex; justify-content: space-between; padding-bottom: 10px; border-bottom: 1px solid var(--border-dim); color: var(--text-secondary); font-size: 15px; }
         .post-actions-row { display: flex; justify-content: space-between; padding: 4px 0; }
@@ -208,14 +189,9 @@
         .action-icon-group:hover { background: var(--hover-overlay); }
         .action-icon-group.liked { color: var(--primary-orange); }
 
-        /* Scroll Anchor for Infinite Load */
-        .scroll-anchor {
-            height: 20px;
-            width: 100%;
-            margin-top: 10px;
-        }
+        .scroll-anchor { height: 20px; width: 100%; margin-top: 10px; }
 
-        /* ── Modals & Overlays (Create Post & Comments) ── */
+        /* ── Modals & Overlays ── */
         .overlay-modal { position: fixed; inset: 0; background: rgba(255,255,255,0.8); display: none; align-items: center; justify-content: center; z-index: 200; padding: 16px; }
         .overlay-modal.active { display: flex; }
         .modal-sheet { background: var(--bg-surface); width: 100%; max-width: 600px; border-radius: var(--radius-lg); box-shadow: var(--shadow-modal); display: flex; flex-direction: column; max-height: 85vh; border: 1px solid var(--border-dim); animation: modalIn 0.2s ease-out; }
@@ -228,50 +204,33 @@
         
         .modal-body { padding: 16px; overflow-y: auto; flex: 1; }
         
-        /* Create Post Specifics */
-        #composer-modal-text { width: 100%; border: none; outline: none; font-size: 24px; resize: none; min-height: 120px; margin-bottom: 12px; font-family: inherit; }
+        #composer-modal-text, #edit-profile-bio { width: 100%; border: none; outline: none; font-size: 16px; resize: none; font-family: inherit; margin-bottom: 12px; }
+        #composer-modal-text { font-size: 24px; min-height: 120px; }
         .media-preview-box { display: none; position: relative; border-radius: var(--radius-md); overflow: hidden; border: 1px solid var(--border-dim); margin-bottom: 12px; max-height: 300px; }
         .media-preview-box img, .media-preview-box video { width: 100%; height: 100%; object-fit: cover; max-height: 300px;}
         .clear-preview-btn { position: absolute; top: 8px; right: 8px; background: white; border: 1px solid var(--border-dim); width: 32px; height: 32px; border-radius: 50%; cursor: pointer; box-shadow: var(--shadow-sm); z-index: 10; }
-        .add-to-post { border: 1px solid var(--border-dim); border-radius: var(--radius-md); padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; box-shadow: var(--shadow-sm); margin-bottom: 16px; position: relative; }
-        .add-to-post-icons { display: flex; gap: 16px; font-size: 24px; }
-        .add-to-post-icons i { cursor: pointer; }
-
-        .tag-user-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; cursor: pointer; transition: background 0.2s; font-size: 14px; color: var(--text-primary); border-bottom: 1px solid var(--border-dim); }
-        .tag-user-item:last-child { border-bottom: none; }
-        .tag-user-item:hover { background: var(--hover-overlay); }
         
         .btn-primary { background: var(--primary-orange); color: white; border: none; padding: 10px; border-radius: var(--radius-md); font-weight: 600; font-size: 15px; cursor: pointer; width: 100%; transition: background 0.2s; }
         .btn-primary:hover { background: var(--primary-hover); }
         .btn-primary:disabled { background: #E4E6EB; color: #BCC0C4; cursor: not-allowed; }
+        
+        .btn-secondary { background: #E4E6EB; color: var(--text-primary); border: none; padding: 10px; border-radius: var(--radius-md); font-weight: 600; font-size: 15px; cursor: pointer; transition: background 0.2s; display: inline-flex; align-items: center; gap: 8px; justify-content: center;}
+        .btn-secondary:hover { background: #D8DADF; }
 
-        /* Comment Specifics */
-        .comment-entry-box { display: flex; gap: 8px; padding: 12px 16px; border-top: 1px solid var(--border-dim); }
-        .comment-input-wrap { flex: 1; background: #F0F2F5; border-radius: 18px; display: flex; align-items: center; padding: 8px 12px; }
-        .comment-input-wrap input { width: 100%; background: transparent; border: none; outline: none; font-size: 15px; }
-        .like-comment-btn:hover, .reply-comment-btn:hover { text-decoration: underline; }
-
-        /* Custom Confirm Modal */
-        .confirm-modal-sheet { max-width: 350px; text-align: center; padding: 24px 24px 16px; }
-        .confirm-title { font-size: 20px; font-weight: 700; margin-bottom: 8px; color: var(--text-primary); }
-        .confirm-msg { color: var(--text-secondary); margin-bottom: 24px; font-size: 15px; line-height: 1.4; }
-        .confirm-actions { display: flex; gap: 12px; justify-content: center; }
-        .btn-cancel { flex: 1; background: #E4E6EB; color: var(--text-primary); border: none; padding: 10px; border-radius: var(--radius-md); font-weight: 600; cursor: pointer; transition: 0.2s; font-size: 15px; }
-        .btn-cancel:hover { background: #D8DADF; }
-        .btn-danger { flex: 1; background: #DC3545; color: white; border: none; padding: 10px; border-radius: var(--radius-md); font-weight: 600; cursor: pointer; transition: 0.2s; font-size: 15px; }
-        .btn-danger:hover { background: #C82333; }
-
-        /* ── Auth Gate ── */
+        /* Auth Gate */
         .auth-gate { position: fixed; inset: 0; background: var(--bg-body); z-index: 1000; display: none; align-items: center; justify-content: center; padding: 20px; }
         .auth-card { background: var(--bg-surface); padding: 24px; border-radius: var(--radius-md); box-shadow: var(--shadow-modal); width: 100%; max-width: 400px; text-align: center; }
-        .auth-input { width: 100%; padding: 14px; border: 1px solid var(--border-dim); border-radius: var(--radius-md); font-size: 17px; margin-bottom: 12px; outline: none; }
-        .auth-input:focus { border-color: var(--primary-orange); box-shadow: 0 0 0 2px rgba(255,140,0,0.2); }
+        .auth-input, .edit-input { width: 100%; padding: 14px; border: 1px solid var(--border-dim); border-radius: var(--radius-md); font-size: 16px; margin-bottom: 12px; outline: none; }
+        .auth-input:focus, .edit-input:focus { border-color: var(--primary-orange); box-shadow: 0 0 0 2px rgba(255,140,0,0.2); }
         
+        /* Edit Profile Specifics */
+        .edit-profile-field { margin-bottom: 16px; text-align: left; }
+        .edit-profile-field label { display: block; font-weight: 600; margin-bottom: 6px; font-size: 14px; color: var(--text-secondary); }
+
         #toast-box { position: fixed; bottom: 20px; left: 20px; z-index: 500; display: flex; flex-direction: column; gap: 8px; }
         .toast { background: #333; color: white; padding: 12px 20px; border-radius: var(--radius-md); font-size: 14px; box-shadow: var(--shadow-modal); animation: toastIn 0.3s; }
         @keyframes toastIn { from { transform: translateX(-20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 
-        /* ── Responsive Architecture ── */
         @media (min-width: 768px) {
             .app-wrapper { grid-template-columns: 1fr; max-width: 680px; }
             .nav-center { display: flex; } 
@@ -291,9 +250,7 @@
 
     <div id="splash-screen" class="splash-screen">
         <h1 style="color: var(--primary-orange); font-size: 48px; font-weight: 700; margin:0; letter-spacing: -1.5px;">Lumina</h1>
-        <div class="loading-dots">
-            <span></span><span></span><span></span>
-        </div>
+        <div class="loading-dots"><span></span><span></span><span></span></div>
     </div>
 
     <div id="auth-screen" class="auth-gate">
@@ -305,10 +262,8 @@
             <input type="email" id="login-email" class="auth-input" placeholder="Email address">
             <input type="password" id="login-pass" class="auth-input" placeholder="Password">
             <button class="btn-primary" id="action-login" style="font-size: 20px; padding: 12px;">Log In</button>
-            <div style="color: var(--primary-orange); margin: 16px 0; cursor: pointer;">Forgotten password?</div>
-            <hr style="border: 0; border-top: 1px solid var(--border-dim); margin-bottom: 20px;">
-            <button class="btn-primary" id="action-signup" style="background: #42b72a; max-width: 200px; margin: 0 auto; display: block;">Create new account</button>
-            <button class="btn-primary" id="action-google" style="background: #fff; color: #333; border: 1px solid var(--border-dim); margin-top: 16px; display:flex; align-items:center; justify-content:center; gap:8px;">
+            <hr style="border: 0; border-top: 1px solid var(--border-dim); margin: 20px 0;">
+            <button class="btn-primary" id="action-google" style="background: #fff; color: #333; border: 1px solid var(--border-dim); display:flex; align-items:center; justify-content:center; gap:8px;">
                 <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" style="width:18px" alt=""> Continue with Google
             </button>
         </div>
@@ -317,44 +272,29 @@
     <nav class="top-navbar">
         <div class="nav-left">
             <button class="hamburger-btn" onclick="toggleDrawer()"><i class="fa-solid fa-bars"></i></button>
-            <a href="#" class="brand-text">Lumina</a>
-            <div class="search-bar">
-                <i class="fa-solid fa-search"></i>
-                <input type="text" placeholder="Search Lumina">
-            </div>
+            <a onclick="switchView('home')" class="brand-text">Lumina</a>
         </div>
-        
         <div class="nav-center">
-            <div class="nav-tab active"><i class="fa-solid fa-house"></i></div>
+            <div class="nav-tab active" onclick="switchView('home')"><i class="fa-solid fa-house"></i></div>
             <div class="nav-tab"><i class="fa-solid fa-user-group"></i></div>
             <div class="nav-tab"><i class="fa-solid fa-store"></i></div>
         </div>
-
         <div class="nav-right">
-            <button class="icon-btn" title="Messenger"><i class="fa-brands fa-facebook-messenger"></i></button>
             <button class="icon-btn" title="Notifications"><i class="fa-solid fa-bell"></i></button>
-            <label style="cursor:pointer;" title="Change Profile Picture">
-                <img id="nav-profile-pic" src="https://ui-avatars.com/api/?name=User&background=FF8C00&color=fff" class="nav-profile">
-                <input type="file" id="avatar-input" accept="image/*" style="display:none;">
-            </label>
+            <img id="nav-profile-pic" src="https://ui-avatars.com/api/?name=User&background=FF8C00&color=fff" class="nav-profile" onclick="openProfile(currentUser.uid)">
         </div>
     </nav>
 
     <div id="drawer-overlay" class="drawer-overlay" onclick="toggleDrawer()"></div>
     <div id="drawer-content" class="drawer-content">
         <div style="display: flex; justify-content: space-between; align-items: center; padding: 0 12px 16px; border-bottom: 1px solid var(--border-dim); margin-bottom: 12px;">
-            <span class="brand-text">Lumina</span>
+            <span class="brand-text" onclick="switchView('home')">Lumina</span>
             <button class="icon-btn" style="width: 32px; height: 32px;" onclick="toggleDrawer()"><i class="fa-solid fa-xmark"></i></button>
         </div>
-        <div class="sidebar-item">
+        <div class="sidebar-item" onclick="openProfile(currentUser.uid)">
             <img id="drawer-profile-pic" src="https://ui-avatars.com/api/?name=User&background=FF8C00&color=fff" alt="">
             <span id="drawer-profile-name">Loading...</span>
         </div>
-        <div class="sidebar-item"><div class="icon-circle" style="color: var(--primary-orange);"><i class="fa-solid fa-user-group"></i></div> Friends</div>
-        <div class="sidebar-item"><div class="icon-circle" style="color: #2ABBA7;"><i class="fa-solid fa-users"></i></div> Groups</div>
-        <div class="sidebar-item"><div class="icon-circle" style="color: #E22756;"><i class="fa-solid fa-store"></i></div> Marketplace</div>
-        <div class="sidebar-item"><div class="icon-circle" style="color: #21A2DF;"><i class="fa-solid fa-tv"></i></div> Watch</div>
-        <div class="sidebar-item"><div class="icon-circle" style="color: #8C52FF;"><i class="fa-solid fa-clock-rotate-left"></i></div> Memories</div>
         <hr style="border:0; border-top: 1px solid var(--border-dim); margin: 8px 0;">
         <div class="sidebar-item" id="drawer-logout-trigger"><div class="icon-circle"><i class="fa-solid fa-arrow-right-from-bracket"></i></div> Log Out</div>
     </div>
@@ -362,39 +302,52 @@
     <div class="app-wrapper">
         <main class="feed-container">
             
-            <div class="composer-card">
-                <div class="composer-top">
-                    <img id="composer-avatar" src="https://ui-avatars.com/api/?name=User&background=FF8C00&color=fff" class="post-author-img">
-                    <button class="composer-input-btn" onclick="openComposerModal()">What's on your mind?</button>
+            <!-- HOME VIEW -->
+            <div id="app-home-view" class="view-section active">
+                <div class="composer-card">
+                    <div class="composer-top">
+                        <img id="composer-avatar" src="https://ui-avatars.com/api/?name=User&background=FF8C00&color=fff" class="post-author-img">
+                        <button class="composer-input-btn" onclick="openComposerModal()">What's on your mind?</button>
+                    </div>
                 </div>
-                <div class="composer-actions">
-                    <div class="composer-action-btn" style="color: #F3425F;"><i class="fa-solid fa-video"></i> Live video</div>
-                    <div class="composer-action-btn" style="color: #45BD62;" onclick="openComposerModal()"><i class="fa-regular fa-images"></i> Photo/video</div>
-                    <div class="composer-action-btn" style="color: #F7B928;"><i class="fa-regular fa-face-smile"></i> Feeling/activity</div>
-                </div>
+                <div id="posts-stream-target" style="display: flex; flex-direction: column; gap: 16px;"></div>
+                <div id="home-scroll-anchor" class="scroll-anchor"></div>
             </div>
 
-            <div id="posts-stream-target" style="display: flex; flex-direction: column; gap: 16px;"></div>
-            
-            </main>
+            <!-- PROFILE VIEW -->
+            <div id="app-profile-view" class="view-section">
+                <div class="profile-card">
+                    <div class="profile-cover" id="profile-cover-display"></div>
+                    <div class="profile-info-section">
+                        <img id="profile-avatar-display" src="" class="profile-avatar-large">
+                        <h2 class="profile-display-name" id="profile-name-display">Loading...</h2>
+                        <p class="profile-bio-text" id="profile-bio-display"></p>
+                        <button class="btn-secondary" id="edit-profile-btn" style="display: none; margin: 0 auto;" onclick="openEditProfileModal()">
+                            <i class="fa-solid fa-pen"></i> Edit Profile
+                        </button>
+                    </div>
+                </div>
+                <div class="composer-card" id="profile-composer-card" style="display: none;">
+                    <div class="composer-top">
+                        <img id="profile-composer-avatar" src="" class="post-author-img">
+                        <button class="composer-input-btn" onclick="openComposerModal()">Write a post...</button>
+                    </div>
+                </div>
+                <div id="profile-posts-stream-target" style="display: flex; flex-direction: column; gap: 16px;"></div>
+            </div>
 
+        </main>
+        
         <aside class="right-sidebar">
             <h3 style="color: var(--text-secondary); font-size: 15px; margin: 12px 12px 8px;">Sponsored</h3>
             <div class="sidebar-item" style="align-items: flex-start;">
                 <img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=100&q=80" style="border-radius: 8px; width:100px; height:100px; object-fit: cover;">
-                <div>
-                    <div style="font-weight: 600;">Premium Sneakers</div>
-                    <div style="font-size: 13px; color: var(--text-secondary);">store.example.com</div>
-                </div>
+                <div><div style="font-weight: 600;">Premium Sneakers</div><div style="font-size: 13px; color: var(--text-secondary);">store.example.com</div></div>
             </div>
-            <hr style="border:0; border-top: 1px solid var(--border-dim); margin: 12px 0;">
-            <h3 style="color: var(--text-secondary); font-size: 15px; margin: 0 12px 12px;">Contacts</h3>
-            <div class="sidebar-item"><img src="https://ui-avatars.com/api/?name=Sarah+J&background=FF8C00&color=fff" alt=""> Sarah Jenkins</div>
-            <div class="sidebar-item"><img src="https://ui-avatars.com/api/?name=Mike+R&background=FF8C00&color=fff" alt=""> Mike Roberts</div>
-            <div class="sidebar-item"><img src="https://ui-avatars.com/api/?name=Emily+W&background=FF8C00&color=fff" alt=""> Emily Wang</div>
         </aside>
     </div>
 
+    <!-- CREATE POST MODAL -->
     <div id="composer-modal" class="overlay-modal">
         <div class="modal-sheet">
             <div class="modal-header">
@@ -402,67 +355,55 @@
                 <button class="modal-close-btn" onclick="closeComposerModal()"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <div class="modal-body">
-                <div class="post-header" style="margin-bottom: 16px;">
-                    <img id="modal-author-img" src="https://ui-avatars.com/api/?name=User&background=FF8C00&color=fff" class="post-author-img">
-                    <div class="post-header-text">
-                        <span class="post-author-name" id="modal-author-name">Loading...</span>
-                        <span style="font-size: 13px; background: #E4E6EB; padding: 2px 8px; border-radius: 6px; font-weight:600; display:inline-flex; align-items:center; gap:4px; width:fit-content; margin-top:4px;"><i class="fa-solid fa-earth-americas"></i> Public</span>
-                    </div>
-                </div>
-                
-                <textarea id="composer-text" placeholder="What's on your mind?" style="width: 100%; border: none; outline: none; font-size: 24px; resize: none; min-height: 120px; margin-bottom: 12px; font-family: inherit;"></textarea>
-                
+                <textarea id="composer-text" placeholder="What's on your mind?"></textarea>
                 <div id="preview-box" class="media-preview-box"></div>
-
-                <div class="add-to-post">
+                <div style="border: 1px solid var(--border-dim); border-radius: var(--radius-md); padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
                     <span style="font-weight: 600;">Add to your post</span>
-                    <div class="add-to-post-icons">
-                        <label style="color: #45BD62; cursor: pointer;">
-                            <i class="fa-solid fa-images"></i>
-                            <input type="file" id="post-media-file" accept="image/*,video/*" style="display:none;">
-                        </label>
-                        <i class="fa-solid fa-user-tag" id="tag-users-btn" style="color: var(--primary-orange); cursor: pointer;" title="Tag People"></i>
-                        <i class="fa-regular fa-face-smile" id="emoji-picker-btn" style="color: #F7B928; cursor: pointer;" title="Emojis"></i>
-                        <i class="fa-solid fa-location-dot" style="color: #F5533D; cursor: pointer;"></i>
-                    </div>
-
-                    <div id="tag-users-dropdown" style="display: none; position: absolute; bottom: 110%; right: 40px; background: var(--bg-surface); border: 1px solid var(--border-dim); border-radius: var(--radius-md); box-shadow: var(--shadow-modal); max-height: 250px; overflow-y: auto; width: 220px; z-index: 100;"></div>
-                    
-                    <div id="emoji-picker-container" style="display: none; position: absolute; bottom: 110%; right: 0px; z-index: 100; box-shadow: var(--shadow-modal); border-radius: var(--radius-lg); overflow: hidden; border: 1px solid var(--border-dim);">
-                        <emoji-picker class="light"></emoji-picker>
-                    </div>
+                    <label style="color: #45BD62; cursor: pointer; font-size: 24px;">
+                        <i class="fa-solid fa-images"></i>
+                        <input type="file" id="post-media-file" accept="image/*,video/*" style="display:none;">
+                    </label>
                 </div>
-                
                 <button class="btn-primary" id="submit-post-btn">Post</button>
             </div>
         </div>
     </div>
 
-    <div id="comments-modal" class="overlay-modal">
+    <!-- EDIT PROFILE MODAL -->
+    <div id="edit-profile-modal" class="overlay-modal">
         <div class="modal-sheet">
             <div class="modal-header">
-                <h3>Comments</h3>
-                <button class="modal-close-btn" onclick="closeCommentThread()"><i class="fa-solid fa-xmark"></i></button>
+                <h3>Edit Profile</h3>
+                <button class="modal-close-btn" onclick="closeEditProfileModal()"><i class="fa-solid fa-xmark"></i></button>
             </div>
-            <div class="modal-body" id="modal-comments-target">
+            <div class="modal-body">
+                <div class="edit-profile-field">
+                    <label>Profile Picture</label>
+                    <div style="display: flex; align-items: center; gap: 16px;">
+                        <img id="edit-avatar-preview" src="" style="width: 60px; height: 60px; border-radius: 50%; object-fit: cover; border: 1px solid var(--border-dim);">
+                        <label class="btn-secondary" style="cursor: pointer;">
+                            Change <input type="file" id="edit-avatar-input" accept="image/*" style="display:none;">
+                        </label>
+                    </div>
                 </div>
-            <div class="comment-entry-box">
-                <img id="comment-user-avatar" src="https://ui-avatars.com/api/?name=User&background=FF8C00&color=fff" class="post-author-img" style="width: 36px; height: 36px;">
-                <div class="comment-input-wrap">
-                    <input type="text" id="comment-text-input" placeholder="Write a comment...">
-                    <i class="fa-solid fa-paper-plane" id="submit-reply-btn" style="color: var(--primary-orange); cursor: pointer; padding: 4px;"></i>
+                <div class="edit-profile-field">
+                    <label>Cover Photo</label>
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                        <div id="edit-cover-preview" style="width: 100%; height: 100px; background-color: #E4E6EB; background-size: cover; background-position: center; border-radius: var(--radius-md);"></div>
+                        <label class="btn-secondary" style="width: fit-content; cursor: pointer;">
+                            Change <input type="file" id="edit-cover-input" accept="image/*" style="display:none;">
+                        </label>
+                    </div>
                 </div>
-            </div>
-        </div>
-    </div>
-
-    <div id="custom-confirm-modal" class="overlay-modal" style="z-index: 2000;">
-        <div class="modal-sheet confirm-modal-sheet">
-            <h3 id="confirm-title" class="confirm-title">Confirm</h3>
-            <p id="confirm-msg" class="confirm-msg">Are you sure?</p>
-            <div class="confirm-actions">
-                <button class="btn-cancel" onclick="closeConfirm()">Cancel</button>
-                <button class="btn-danger" onclick="executeConfirm()">Delete</button>
+                <div class="edit-profile-field">
+                    <label>Display Name</label>
+                    <input type="text" id="edit-name-input" class="edit-input">
+                </div>
+                <div class="edit-profile-field">
+                    <label>Bio</label>
+                    <textarea id="edit-bio-input" class="edit-input" style="min-height: 80px; resize: none;"></textarea>
+                </div>
+                <button class="btn-primary" id="save-profile-btn">Save Changes</button>
             </div>
         </div>
     </div>
@@ -471,20 +412,16 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getAuth, GoogleAuthProvider, signInWithPopup, signOut as fbSignOut, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-        import { getDatabase, ref, push, set, get, update, onValue, remove, query, orderByChild, limitToLast } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+        import { getAuth, GoogleAuthProvider, signInWithPopup, signOut as fbSignOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        import { getDatabase, ref, push, set, get, update, onValue, remove, query, orderByChild, limitToLast, equalTo } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBQSPwpVbGrdCuOoyitAeWQHIeipj2MgIY",
             authDomain: "newstart-64c43.firebaseapp.com",
             databaseURL: "https://newstart-64c43-default-rtdb.firebaseio.com",
-            projectId: "newstart-64c43",
-            storageBucket: "newstart-64c43.firebasestorage.app",
-            messagingSenderId: "941619830061",
-            appId: "1:941619830061:web:de9e0f791eb8f6eacf87a4"
+            projectId: "newstart-64c43"
         };
 
-        // Use /auto/upload to handle both images and videos dynamically 
         const CLOUDINARY_URL = "https://api.cloudinary.com/v1_1/dqkujefxj/auto/upload";
         const CLOUDINARY_PRESET = "banter_box"; 
 
@@ -497,13 +434,21 @@
         let userProfile = {};
         let selectedMediaBlob = null;
         let selectedMediaType = null;
-        let activeTargetThreadId = null;
-        let activePostOwnerId = null;
-        let currentCommentsUnsubscribe = null;
-        let confirmActionCallback = null;
-        
-        let currentFeedLimit = 5;
+        let currentFeedLimit = 10;
         let feedUnsubscribe = null;
+        let activeProfileUid = null;
+        let profileFeedUnsubscribe = null;
+
+        // Pending profile edits
+        let pendingAvatarBlob = null;
+        let pendingCoverBlob = null;
+
+        // Prevent Context Menu on Media Globally
+        document.addEventListener('contextmenu', event => {
+            if (event.target.tagName === 'IMG' || event.target.tagName === 'VIDEO' || event.target.closest('.clickable-user')) {
+                event.preventDefault();
+            }
+        });
 
         function toast(msg) {
             const box = document.getElementById('toast-box');
@@ -514,14 +459,6 @@
             setTimeout(() => t.remove(), 4000);
         }
 
-        // Global UI Functions
-        window.openComposerModal = () => document.getElementById('composer-modal').classList.add('active');
-        window.closeComposerModal = () => {
-            document.getElementById('composer-modal').classList.remove('active');
-            document.getElementById('emoji-picker-container').style.display = 'none';
-            document.getElementById('tag-users-dropdown').style.display = 'none';
-        }
-        
         window.toggleDrawer = () => {
             const overlay = document.getElementById('drawer-overlay');
             const content = document.getElementById('drawer-content');
@@ -537,101 +474,23 @@
             }
         };
 
-        window.showConfirm = (title, message, callback) => {
-            document.getElementById('confirm-title').innerText = title;
-            document.getElementById('confirm-msg').innerText = message;
-            confirmActionCallback = callback;
-            document.getElementById('custom-confirm-modal').classList.add('active');
-        };
-        
-        window.closeConfirm = () => {
-            document.getElementById('custom-confirm-modal').classList.remove('active');
-            confirmActionCallback = null;
-        };
-        
-        window.executeConfirm = () => {
-            if(confirmActionCallback) confirmActionCallback();
-            closeConfirm();
+        window.openComposerModal = () => document.getElementById('composer-modal').classList.add('active');
+        window.closeComposerModal = () => {
+            document.getElementById('composer-modal').classList.remove('active');
+            clearMediaSelection();
         };
 
-        document.addEventListener('click', (e) => {
-            if (!e.target.closest('.post-context-menu')) {
-                document.querySelectorAll('.context-dropdown.active').forEach(el => el.classList.remove('active'));
+        window.switchView = (viewName) => {
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+            if(viewName === 'home') {
+                document.getElementById('app-home-view').classList.add('active');
+                activeProfileUid = null;
+                attachRealtimeTimelineFeed();
+            } else if (viewName === 'profile') {
+                document.getElementById('app-profile-view').classList.add('active');
             }
-            if (e.target.closest('.context-trigger')) {
-                const menuWrapper = e.target.closest('.post-context-menu');
-                const dropdown = menuWrapper.querySelector('.context-dropdown');
-                const wasActive = dropdown.classList.contains('active');
-                document.querySelectorAll('.context-dropdown.active').forEach(el => el.classList.remove('active'));
-                if (!wasActive) dropdown.classList.add('active');
-            }
-
-            if (!e.target.closest('#tag-users-btn') && !e.target.closest('#tag-users-dropdown')) {
-                const tagDropdown = document.getElementById('tag-users-dropdown');
-                if (tagDropdown) tagDropdown.style.display = 'none';
-            }
-            if (!e.target.closest('#emoji-picker-btn') && !e.target.closest('#emoji-picker-container') && !e.target.closest('emoji-picker')) {
-                const emojiPicker = document.getElementById('emoji-picker-container');
-                if (emojiPicker) emojiPicker.style.display = 'none';
-            }
-        });
-
-        // Tags and Emojis Handlers 
-        document.getElementById('tag-users-btn').addEventListener('click', () => {
-            const dropdown = document.getElementById('tag-users-dropdown');
-            const emojiContainer = document.getElementById('emoji-picker-container');
-            if(emojiContainer) emojiContainer.style.display = 'none';
-
-            if (dropdown.style.display === 'block') {
-                dropdown.style.display = 'none';
-                return;
-            }
-            dropdown.style.display = 'block';
-            dropdown.innerHTML = '<div style="padding: 12px; text-align: center; color: var(--text-secondary); font-size: 13px;">Loading users...</div>';
-            
-            get(ref(database, 'users')).then(snap => {
-                dropdown.innerHTML = '';
-                if(snap.exists()){
-                    let usersFound = false;
-                    snap.forEach(child => {
-                        if (child.key !== currentUser.uid) {
-                            usersFound = true;
-                            const u = child.val();
-                            const div = document.createElement('div');
-                            div.className = 'tag-user-item';
-                            div.innerHTML = `<img src="${u.photoURL}" style="width:28px; height:28px; border-radius:50%; object-fit: cover;"> <span style="font-weight:500;">${escapeHtml(u.name)}</span>`;
-                            
-                            div.onclick = () => {
-                                const textarea = document.getElementById('composer-text');
-                                textarea.value += `@${u.name} `;
-                                dropdown.style.display = 'none';
-                                textarea.focus();
-                            };
-                            dropdown.appendChild(div);
-                        }
-                    });
-                    if (!usersFound) dropdown.innerHTML = '<div style="padding: 12px; text-align: center; color: var(--text-secondary); font-size: 13px;">No other users found.</div>';
-                } else {
-                    dropdown.innerHTML = '<div style="padding: 12px; text-align: center; color: var(--text-secondary); font-size: 13px;">No users available.</div>';
-                }
-            }).catch(err => {
-                dropdown.innerHTML = '<div style="padding: 12px; text-align: center; color: var(--text-secondary); font-size: 13px;">Error loading users.</div>';
-            });
-        });
-
-        document.getElementById('emoji-picker-btn').addEventListener('click', () => {
-            const container = document.getElementById('emoji-picker-container');
-            const tagDropdown = document.getElementById('tag-users-dropdown');
-            if(tagDropdown) tagDropdown.style.display = 'none';
-            container.style.display = container.style.display === 'none' ? 'block' : 'none';
-        });
-
-        document.querySelector('emoji-picker').addEventListener('emoji-click', event => {
-            const textarea = document.getElementById('composer-text');
-            textarea.value += event.detail.unicode;
-            document.getElementById('emoji-picker-container').style.display = 'none';
-            textarea.focus();
-        });
+            window.scrollTo(0,0);
+        };
 
         async function uploadMediaFile(file) {
             const formData = new FormData();
@@ -652,13 +511,12 @@
         onAuthStateChanged(auth, async (user) => {
             const splash = document.getElementById('splash-screen');
             const gate = document.getElementById('auth-screen');
-            
             if (user) {
                 currentUser = user;
                 splash.style.display = 'none';
                 gate.style.display = 'none';
                 listenToUserProfile(user);
-                attachRealtimeTimelineFeed();
+                switchView('home');
             } else {
                 currentUser = null;
                 splash.style.display = 'none';
@@ -674,63 +532,40 @@
 
                 if (!p.name) { p.name = user.displayName || 'Lumina User'; forcedUpdates = true; }
                 if (!p.photoURL) { p.photoURL = user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&background=FF8C00&color=fff`; forcedUpdates = true; }
+                if (!p.coverURL) { p.coverURL = 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=800&q=80'; forcedUpdates = true;}
 
                 userProfile = p;
-                if (forcedUpdates) await update(userRef, { name: p.name, photoURL: p.photoURL });
+                if (forcedUpdates) await update(userRef, { name: p.name, photoURL: p.photoURL, coverURL: p.coverURL });
                 
-                const avatarElements = ['nav-profile-pic', 'drawer-profile-pic', 'composer-avatar', 'modal-author-img', 'comment-user-avatar'];
-                avatarElements.forEach(id => {
+                ['nav-profile-pic', 'drawer-profile-pic', 'composer-avatar', 'profile-composer-avatar'].forEach(id => {
                     const el = document.getElementById(id);
                     if(el) el.src = p.photoURL;
                 });
                 
-                const nameElements = ['drawer-profile-name', 'modal-author-name'];
-                nameElements.forEach(id => {
+                ['drawer-profile-name'].forEach(id => {
                     const el = document.getElementById(id);
                     if(el) el.innerText = p.name;
                 });
+
+                // Update active profile view if it's the current user
+                if (activeProfileUid === currentUser.uid) {
+                    populateProfileHeader(p, true);
+                }
             });
         }
 
-        document.getElementById('action-login').addEventListener('click', () => {
-            const em = document.getElementById('login-email').value.trim();
-            const pa = document.getElementById('login-pass').value;
-            if(!em || !pa) return toast("Enter valid credentials");
-            signInWithEmailAndPassword(auth, em, pa).catch(e => toast(e.message));
-        });
+        document.getElementById('action-login').addEventListener('click', () => { toast("Please use Google Sign-in for demo"); });
+        document.getElementById('action-google').addEventListener('click', () => { signInWithPopup(auth, provider).catch(e => toast(e.message)); });
+        document.getElementById('drawer-logout-trigger').addEventListener('click', () => fbSignOut(auth).then(() => window.location.reload()));
 
-        document.getElementById('action-signup').addEventListener('click', () => {
-            const em = document.getElementById('login-email').value.trim();
-            const pa = document.getElementById('login-pass').value;
-            if(!em || !pa) return toast("Please complete form");
-            createUserWithEmailAndPassword(auth, em, pa).catch(e => toast(e.message));
-        });
-
-        document.getElementById('action-google').addEventListener('click', () => {
-            signInWithPopup(auth, provider).catch(e => toast(e.message));
-        });
-
-        const logoutAction = () => fbSignOut(auth).then(() => window.location.reload());
-        document.getElementById('drawer-logout-trigger').addEventListener('click', logoutAction);
-
-        document.getElementById('avatar-input').addEventListener('change', async (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
-            toast("Updating profile picture...");
-            const cloudUrl = await uploadMediaFile(file);
-            if (cloudUrl && currentUser) {
-                await update(ref(database, `users/${currentUser.uid}`), { photoURL: cloudUrl });
-                toast("Profile updated.");
-            }
-        });
-
+        /* Media Upload logic for Posts */
         const clearMediaSelection = () => {
             selectedMediaBlob = null;
             selectedMediaType = null;
             document.getElementById('post-media-file').value = '';
             document.getElementById('preview-box').innerHTML = '';
             document.getElementById('preview-box').style.display = 'none';
-            document.getElementById('composer-text').style.minHeight = '120px';
+            document.getElementById('composer-text').value = '';
         };
 
         document.getElementById('post-media-file').addEventListener('change', (e) => {
@@ -738,10 +573,8 @@
             if (file) {
                 selectedMediaBlob = file;
                 selectedMediaType = file.type.startsWith('video/') ? 'video' : 'image';
-                
                 const previewBox = document.getElementById('preview-box');
                 previewBox.innerHTML = '<button class="clear-preview-btn" id="clear-media-btn"><i class="fa-solid fa-xmark"></i></button>';
-                
                 if(selectedMediaType === 'video') {
                     const vid = document.createElement('video');
                     vid.src = URL.createObjectURL(file);
@@ -752,10 +585,8 @@
                     img.src = URL.createObjectURL(file);
                     previewBox.appendChild(img);
                 }
-                
                 document.getElementById('clear-media-btn').addEventListener('click', clearMediaSelection);
                 previewBox.style.display = 'block';
-                document.getElementById('composer-text').style.minHeight = '60px'; 
             }
         });
 
@@ -764,13 +595,10 @@
             if (!textVal && !selectedMediaBlob) return toast("Post cannot be empty.");
 
             const btn = document.getElementById('submit-post-btn');
-            btn.disabled = true;
-            btn.innerText = "Posting...";
+            btn.disabled = true; btn.innerText = "Posting...";
 
             let resolvedMediaUrl = null;
-            if (selectedMediaBlob) {
-                resolvedMediaUrl = await uploadMediaFile(selectedMediaBlob);
-            }
+            if (selectedMediaBlob) resolvedMediaUrl = await uploadMediaFile(selectedMediaBlob);
 
             const postObject = {
                 text: textVal,
@@ -785,362 +613,299 @@
             };
 
             push(ref(database, 'social_posts'), postObject).then(() => {
-                document.getElementById('composer-text').value = '';
                 clearMediaSelection();
-                btn.disabled = false;
-                btn.innerText = "Post";
+                btn.disabled = false; btn.innerText = "Post";
                 closeComposerModal();
                 toast("Posted successfully!");
-            }).catch(() => {
-                btn.disabled = false;
-                btn.innerText = "Post";
-            });
+            }).catch(() => { btn.disabled = false; btn.innerText = "Post"; });
         });
 
-        // Infinite Scroll & Intersection Observers
+        /* View & Profile Handling */
+        window.openProfile = async (uid) => {
+            toggleDrawer(); // Close drawer if open
+            const drawerOverlay = document.getElementById('drawer-overlay');
+            if(drawerOverlay.classList.contains('active')) {
+                drawerOverlay.classList.remove('active');
+                document.getElementById('drawer-content').classList.remove('active');
+                drawerOverlay.style.display = 'none';
+            }
+
+            activeProfileUid = uid;
+            switchView('profile');
+            
+            document.getElementById('profile-name-display').innerText = "Loading...";
+            document.getElementById('profile-bio-display').innerText = "";
+            document.getElementById('edit-profile-btn').style.display = 'none';
+            document.getElementById('profile-composer-card').style.display = 'none';
+
+            // Fetch user info
+            const uSnap = await get(ref(database, `users/${uid}`));
+            const profileData = uSnap.exists() ? uSnap.val() : { name: "Unknown User", photoURL: "https://ui-avatars.com/api/?name=User" };
+            
+            populateProfileHeader(profileData, uid === currentUser.uid);
+            loadProfileFeed(uid);
+        };
+
+        function populateProfileHeader(data, isCurrentUser) {
+            document.getElementById('profile-name-display').innerText = data.name || "User";
+            document.getElementById('profile-bio-display').innerText = data.bio || "";
+            document.getElementById('profile-avatar-display').src = data.photoURL;
+            document.getElementById('profile-cover-display').style.backgroundImage = `url(${data.coverURL || 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=800&q=80'})`;
+            
+            if (isCurrentUser) {
+                document.getElementById('edit-profile-btn').style.display = 'inline-flex';
+                document.getElementById('profile-composer-card').style.display = 'block';
+            }
+        }
+
+        /* Edit Profile Modal Logic */
+        window.openEditProfileModal = () => {
+            document.getElementById('edit-name-input').value = userProfile.name || "";
+            document.getElementById('edit-bio-input').value = userProfile.bio || "";
+            document.getElementById('edit-avatar-preview').src = userProfile.photoURL || "";
+            document.getElementById('edit-cover-preview').style.backgroundImage = `url(${userProfile.coverURL || ''})`;
+            
+            pendingAvatarBlob = null;
+            pendingCoverBlob = null;
+            document.getElementById('edit-avatar-input').value = '';
+            document.getElementById('edit-cover-input').value = '';
+
+            document.getElementById('edit-profile-modal').classList.add('active');
+        };
+
+        window.closeEditProfileModal = () => {
+            document.getElementById('edit-profile-modal').classList.remove('active');
+        };
+
+        document.getElementById('edit-avatar-input').addEventListener('change', (e) => {
+            if(e.target.files[0]) {
+                pendingAvatarBlob = e.target.files[0];
+                document.getElementById('edit-avatar-preview').src = URL.createObjectURL(pendingAvatarBlob);
+            }
+        });
+
+        document.getElementById('edit-cover-input').addEventListener('change', (e) => {
+            if(e.target.files[0]) {
+                pendingCoverBlob = e.target.files[0];
+                document.getElementById('edit-cover-preview').style.backgroundImage = `url(${URL.createObjectURL(pendingCoverBlob)})`;
+            }
+        });
+
+        document.getElementById('save-profile-btn').addEventListener('click', async () => {
+            const btn = document.getElementById('save-profile-btn');
+            btn.disabled = true; btn.innerText = "Saving...";
+
+            let newAvatarUrl = userProfile.photoURL;
+            let newCoverUrl = userProfile.coverURL;
+            const newName = document.getElementById('edit-name-input').value.trim();
+            const newBio = document.getElementById('edit-bio-input').value.trim();
+
+            if (pendingAvatarBlob) {
+                const avUrl = await uploadMediaFile(pendingAvatarBlob);
+                if(avUrl) newAvatarUrl = avUrl;
+            }
+            if (pendingCoverBlob) {
+                const cvUrl = await uploadMediaFile(pendingCoverBlob);
+                if(cvUrl) newCoverUrl = cvUrl;
+            }
+
+            if(newName) {
+                await update(ref(database, `users/${currentUser.uid}`), {
+                    name: newName, bio: newBio, photoURL: newAvatarUrl, coverURL: newCoverUrl
+                });
+                toast("Profile updated successfully.");
+                closeEditProfileModal();
+            } else {
+                toast("Name cannot be empty.");
+            }
+            
+            btn.disabled = false; btn.innerText = "Save Changes";
+        });
+
+        /* Feed Rendering & Custom Video Observers */
+        const videoPlaybackObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                const video = entry.target;
+                if (entry.isIntersecting) {
+                    video.play().catch(e => console.log("Autoplay prevented.", e));
+                } else {
+                    video.pause();
+                }
+            });
+        }, { threshold: 0.5 });
+
         const infiniteScrollObserver = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
-                if (entry.isIntersecting) {
+                if (entry.isIntersecting && !activeProfileUid) {
                     currentFeedLimit += 5;
                     attachRealtimeTimelineFeed();
                 }
             });
         }, { rootMargin: "200px" });
 
-        const videoPlaybackObserver = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                const video = entry.target;
-                if (entry.isIntersecting) {
-                    video.play().catch(e => console.log("Autoplay prevented by browser.", e));
-                } else {
-                    video.pause();
-                }
-            });
-        }, { threshold: 0.5 }); // Play when 50% of the video is visible in the viewport
-
         function attachRealtimeTimelineFeed() {
-            const streamTarget = document.getElementById('posts-stream-target');
-            
             if (feedUnsubscribe) feedUnsubscribe();
-
+            const streamTarget = document.getElementById('posts-stream-target');
             const feedQuery = query(ref(database, 'social_posts'), orderByChild('timestamp'), limitToLast(currentFeedLimit));
 
             feedUnsubscribe = onValue(feedQuery, (snapshot) => {
-                streamTarget.innerHTML = '';
-                if (!snapshot.exists()) return;
-
-                const postsArray = [];
-                snapshot.forEach((child) => { postsArray.push({ id: child.key, ...child.val() }); });
-                postsArray.sort((a, b) => b.timestamp - a.timestamp);
-
-                postsArray.forEach(post => {
-                    const card = document.createElement('div');
-                    card.className = 'post-card';
-                    
-                    let mediaTag = '';
-                    if (post.mediaUrl) {
-                        if (post.mediaType === 'video' || post.mediaUrl.match(/\.(mp4|webm|mov|ogg)$/i)) {
-                            mediaTag = `
-                                <div class="video-wrapper">
-                                    <div class="video-spinner"></div>
-                                    <video src="${post.mediaUrl}" class="post-attached-media video" loop muted playsinline controls preload="auto"></video>
-                                </div>
-                            `;
-                        } else {
-                            mediaTag = `<div class="post-media-container"><img src="${post.mediaUrl}" class="post-attached-media"></div>`;
-                        }
-                    }
-                    
-                    const diffMins = Math.round((Date.now() - post.timestamp)/60000);
-                    const timeString = diffMins < 60 ? `${diffMins}m` : (diffMins < 1440 ? `${Math.floor(diffMins/60)}h` : new Date(post.timestamp).toLocaleDateString());
-
-                    const contextMenuHTML = (post.uid === currentUser.uid) ? `
-                        <div class="post-context-menu">
-                            <button class="context-trigger"><i class="fa-solid fa-ellipsis-v"></i></button>
-                            <div class="context-dropdown">
-                                <button class="danger delete-post-btn" data-id="${post.id}">
-                                    <i class="fa-solid fa-trash"></i> Delete Post
-                                </button>
-                            </div>
-                        </div>
-                    ` : '';
-
-                    const postLikesObj = post.likes || {};
-                    const hasLiked = !!postLikesObj[currentUser.uid];
-                    const likeClass = hasLiked ? 'liked' : '';
-                    const likeIcon = hasLiked ? 'fa-solid' : 'fa-regular';
-
-                    card.innerHTML = `
-                        <div class="post-header">
-                            <div class="post-header-left">
-                                <img src="${post.authorAvatar}" class="post-author-img">
-                                <div class="post-header-text">
-                                    <span class="post-author-name">${post.authorName}</span>
-                                    <span class="post-time">${timeString} · <i class="fa-solid fa-earth-americas" style="font-size:11px;"></i></span>
-                                </div>
-                            </div>
-                            ${contextMenuHTML}
-                        </div>
-                        <div class="post-text">${escapeHtml(post.text)}</div>
-                        ${mediaTag}
-                        
-                        <div class="post-stats">
-                            <div><i class="fa-solid fa-thumbs-up" style="color:var(--primary-orange); background:rgba(255,140,0,0.1); border-radius:50%; padding:4px; font-size:10px;"></i> <span id="like-count-display-${post.id}">${post.likesCount || 0}</span></div>
-                            <div><span id="comment-count-display-${post.id}">0</span> comments</div>
-                        </div>
-                        
-                        <div class="post-actions-row">
-                            <div class="action-icon-group ${likeClass}" id="like-trigger-${post.id}">
-                                <i class="${likeIcon} fa-thumbs-up"></i> Like
-                            </div>
-                            <div class="action-icon-group" id="comment-trigger-${post.id}">
-                                <i class="fa-regular fa-comment"></i> Comment
-                            </div>
-                            <div class="action-icon-group">
-                                <i class="fa-solid fa-share"></i> Share
-                            </div>
-                        </div>
-                    `;
-
-                    streamTarget.appendChild(card);
-
-                    // Setup video observers and spinner events
-                    const videos = card.querySelectorAll('video.post-attached-media');
-                    videos.forEach(vid => {
-                        videoPlaybackObserver.observe(vid);
-                        const spinner = vid.parentElement.querySelector('.video-spinner');
-                        vid.addEventListener('waiting', () => { if(spinner) spinner.style.display = 'block'; });
-                        vid.addEventListener('playing', () => { if(spinner) spinner.style.display = 'none'; });
-                        vid.addEventListener('canplay', () => { if(spinner) spinner.style.display = 'none'; });
-                    });
-
-                    if (post.uid === currentUser.uid) {
-                        const delBtn = card.querySelector(`.delete-post-btn`);
-                        if(delBtn) {
-                            delBtn.addEventListener('click', () => {
-                                showConfirm("Delete Post", "Are you sure you want to delete this post? This action cannot be undone.", async () => {
-                                    await remove(ref(database, `social_posts/${post.id}`));
-                                    await remove(ref(database, `post_replies/${post.id}`));
-                                    toast("Post deleted.");
-                                });
-                            });
-                        }
-                    }
-
-                    onValue(ref(database, `post_replies/${post.id}`), (replySnap) => {
-                        const count = replySnap.exists() ? replySnap.size : 0;
-                        const el = document.getElementById(`comment-count-display-${post.id}`);
-                        if(el) el.innerText = count;
-                    });
-
-                    document.getElementById(`comment-trigger-${post.id}`).addEventListener('click', () => openCommentThread(post.id, post.uid));
-                    
-                    document.getElementById(`like-trigger-${post.id}`).addEventListener('click', function() {
-                        const postRef = ref(database, `social_posts/${post.id}`);
-                        get(postRef).then(snap => {
-                            if (!snap.exists()) return;
-                            const p = snap.val();
-                            const currentLikesObj = p.likes || {};
-                            if (currentLikesObj[currentUser.uid]) delete currentLikesObj[currentUser.uid];
-                            else currentLikesObj[currentUser.uid] = true;
-                            
-                            update(postRef, { likes: currentLikesObj, likesCount: Object.keys(currentLikesObj).length });
-                        });
-                    });
-                });
-
-                // Re-append and observe the infinite scroll anchor at the bottom of the feed
-                let anchor = document.getElementById('feed-scroll-anchor');
+                if(activeProfileUid) return; // Prevent overwriting if user quickly switched views
+                renderPostsFromSnapshot(snapshot, streamTarget);
+                
+                let anchor = document.getElementById('home-scroll-anchor');
                 if (!anchor) {
                     anchor = document.createElement('div');
-                    anchor.id = 'feed-scroll-anchor';
+                    anchor.id = 'home-scroll-anchor';
                     anchor.className = 'scroll-anchor';
-                    document.querySelector('.feed-container').appendChild(anchor);
+                    document.getElementById('app-home-view').appendChild(anchor);
                 }
                 infiniteScrollObserver.observe(anchor);
             });
         }
 
-        window.openCommentThread = function(postId, postOwnerUid) {
-            activeTargetThreadId = postId;
-            activePostOwnerId = postOwnerUid;
-            document.getElementById('comments-modal').classList.add('active');
-            const target = document.getElementById('modal-comments-target');
+        function loadProfileFeed(uid) {
+            if (profileFeedUnsubscribe) profileFeedUnsubscribe();
+            const streamTarget = document.getElementById('profile-posts-stream-target');
+            streamTarget.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-secondary);">Loading posts...</div>';
             
-            if(currentCommentsUnsubscribe) currentCommentsUnsubscribe();
-
-            currentCommentsUnsubscribe = onValue(ref(database, `post_replies/${postId}`), (snap) => {
-                target.innerHTML = '';
-                if(!snap.exists()) {
-                    target.innerHTML = `<p style="color:var(--text-secondary); text-align:center; padding:20px;">No comments yet. Be the first to comment.</p>`;
+            // Querying posts specifically for this user
+            const profileQuery = query(ref(database, 'social_posts'), orderByChild('uid'), equalTo(uid));
+            
+            profileFeedUnsubscribe = onValue(profileQuery, (snapshot) => {
+                if(activeProfileUid !== uid) return; // Ignore if switched to another profile
+                if(!snapshot.exists()) {
+                    streamTarget.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-secondary);">No posts yet.</div>';
                     return;
                 }
-                snap.forEach(child => {
-                    const replyId = child.key;
-                    const c = child.val();
-                    
-                    const commentLikesObj = c.likes || {};
-                    const likesCount = c.likesCount || 0;
-                    const userLikedComment = !!commentLikesObj[currentUser.uid];
-                    const likeColor = userLikedComment ? 'color:var(--primary-orange)' : '';
-                    
-                    const replyRow = document.createElement('div');
-                    replyRow.style.display = 'flex';
-                    replyRow.style.gap = '8px';
-                    replyRow.style.marginBottom = '12px';
-                    
-                    const delCommentBtn = (c.uid === currentUser.uid || activePostOwnerId === currentUser.uid)
-                        ? `<i class="fa-solid fa-trash del-comment" data-id="${replyId}" style="cursor:pointer; color: #DC3545; margin-left: 8px;" title="Delete"></i>`
-                        : '';
+                renderPostsFromSnapshot(snapshot, streamTarget);
+            });
+        }
 
-                    let nestedRepliesHtml = '';
-                    if (c.replies) {
-                        Object.entries(c.replies).forEach(([nId, nRep]) => {
-                            const nestedDelBtn = (nRep.uid === currentUser.uid || activePostOwnerId === currentUser.uid)
-                                ? `<i class="fa-solid fa-trash del-nested-comment" data-reply="${replyId}" data-nested="${nId}" style="cursor:pointer; color: #DC3545; font-size: 11px; margin-left: 6px;" title="Delete"></i>`
-                                : '';
+        function renderPostsFromSnapshot(snapshot, targetElement) {
+            targetElement.innerHTML = '';
+            if (!snapshot.exists()) return;
 
-                            nestedRepliesHtml += `
-                                <div style="display:flex; gap:8px; margin-top:8px;">
-                                    <img src="${nRep.avatar}" style="width:24px; height:24px; border-radius:50%;">
-                                    <div>
-                                        <div style="background:#E4E6EB; padding:6px 10px; border-radius:12px; font-size:13px; display:inline-block;">
-                                            <strong>${nRep.author}</strong> ${escapeHtml(nRep.text)}
-                                        </div>
-                                        <div style="font-size: 11px; margin-left: 8px; margin-top: 2px;">
-                                            ${nestedDelBtn}
-                                        </div>
-                                    </div>
-                                </div>
-                            `;
-                        });
-                    }
+            const postsArray = [];
+            snapshot.forEach((child) => { postsArray.push({ id: child.key, ...child.val() }); });
+            postsArray.sort((a, b) => b.timestamp - a.timestamp);
 
-                    replyRow.innerHTML = `
-                        <div style="display:flex; gap:8px; width: 100%;">
-                            <img src="${c.avatar}" class="post-author-img" style="width:32px; height:32px;">
-                            <div style="flex:1;">
-                                <div style="background: #F0F2F5; padding: 8px 12px; border-radius: 18px; display: inline-block;">
-                                    <div style="font-weight: 600; font-size: 13px; color: var(--text-primary); display:flex; justify-content:space-between; align-items:center;">
-                                        ${c.author}
-                                    </div>
-                                    <div style="font-size: 14px; color: var(--text-primary); word-break: break-word;">${escapeHtml(c.text)}</div>
-                                </div>
-                                <div style="font-size: 12px; font-weight: 600; color: var(--text-secondary); margin: 4px 0 0 12px; display:flex; gap:12px; align-items:center;">
-                                    <span class="like-comment-btn" data-id="${replyId}" style="cursor:pointer; ${likeColor}"><i class="${userLikedComment ? 'fa-solid' : 'fa-regular'} fa-thumbs-up"></i> ${likesCount > 0 ? likesCount : 'Like'}</span>
-                                    <span class="reply-comment-btn" data-id="${replyId}" style="cursor:pointer;">Reply</span>
-                                    ${delCommentBtn}
-                                </div>
-                                <div class="nested-replies-container" style="margin-top: 8px; margin-left: 12px;">
-                                    ${nestedRepliesHtml}
-                                </div>
-                                <div id="reply-input-box-${replyId}" style="display:none; margin-top: 8px; margin-left: 12px; gap:8px;">
-                                    <input type="text" id="nested-input-${replyId}" placeholder="Reply to ${c.author}..." style="flex:1; border-radius:12px; border:1px solid var(--border-dim); padding:4px 8px; outline:none; font-size:13px;">
-                                    <button class="submit-nested-reply" data-id="${replyId}" style="background:var(--primary-orange); color:white; border:none; border-radius:12px; padding:4px 12px; font-weight: 600; cursor:pointer;">Send</button>
+            postsArray.forEach(post => {
+                const card = document.createElement('div');
+                card.className = 'post-card';
+                
+                let mediaTag = '';
+                if (post.mediaUrl) {
+                    if (post.mediaType === 'video' || post.mediaUrl.match(/\.(mp4|webm|mov|ogg)$/i)) {
+                        mediaTag = `
+                            <div class="custom-video-wrapper">
+                                <div class="video-spinner"></div>
+                                <video src="${post.mediaUrl}" class="post-attached-media video" loop muted playsinline preload="auto"></video>
+                                <div class="custom-controls">
+                                    <button class="play-pause-btn"><i class="fa-solid fa-play"></i></button>
+                                    <input type="range" class="seek-bar" value="0" min="0" step="0.1">
+                                    <button class="mute-btn"><i class="fa-solid fa-volume-xmark"></i></button>
                                 </div>
                             </div>
-                        </div>
-                    `;
-                    target.appendChild(replyRow);
-                });
-                target.scrollTop = target.scrollHeight;
-            });
-        };
-
-        window.closeCommentThread = function() {
-            document.getElementById('comments-modal').classList.remove('active');
-            activeTargetThreadId = null;
-            activePostOwnerId = null;
-            if(currentCommentsUnsubscribe) {
-                currentCommentsUnsubscribe();
-                currentCommentsUnsubscribe = null;
-            }
-        };
-
-        document.getElementById('modal-comments-target').addEventListener('click', async (e) => {
-            if (!activeTargetThreadId) return;
-
-            if (e.target.closest('.del-comment')) {
-                const replyId = e.target.closest('.del-comment').dataset.id;
-                showConfirm("Delete Comment", "Are you sure you want to delete this comment?", async () => {
-                    await remove(ref(database, `post_replies/${activeTargetThreadId}/${replyId}`));
-                    toast("Comment deleted.");
-                });
-            }
-            
-            if (e.target.closest('.del-nested-comment')) {
-                const btn = e.target.closest('.del-nested-comment');
-                const rId = btn.dataset.reply;
-                const nId = btn.dataset.nested;
-                showConfirm("Delete Reply", "Are you sure you want to delete this reply?", async () => {
-                    await remove(ref(database, `post_replies/${activeTargetThreadId}/${rId}/replies/${nId}`));
-                    toast("Reply deleted.");
-                });
-            }
-
-            if (e.target.closest('.like-comment-btn')) {
-                const replyId = e.target.closest('.like-comment-btn').dataset.id;
-                const commentRef = ref(database, `post_replies/${activeTargetThreadId}/${replyId}`);
-                
-                get(commentRef).then(snap => {
-                    if (!snap.exists()) return;
-                    const c = snap.val();
-                    const cLikesObj = c.likes || {};
-                    
-                    if (cLikesObj[currentUser.uid]) delete cLikesObj[currentUser.uid];
-                    else cLikesObj[currentUser.uid] = true;
-                    
-                    update(commentRef, { likes: cLikesObj, likesCount: Object.keys(cLikesObj).length });
-                });
-            }
-
-            if (e.target.closest('.reply-comment-btn')) {
-                const replyId = e.target.closest('.reply-comment-btn').dataset.id;
-                const box = document.getElementById(`reply-input-box-${replyId}`);
-                box.style.display = box.style.display === 'none' ? 'flex' : 'none';
-            }
-
-            if (e.target.closest('.submit-nested-reply')) {
-                const replyId = e.target.closest('.submit-nested-reply').dataset.id;
-                const input = document.getElementById(`nested-input-${replyId}`);
-                const text = input.value.trim();
-                if(text) {
-                    const nestedObj = { text: text, uid: currentUser.uid, author: userProfile.name, avatar: userProfile.photoURL, timestamp: Date.now() };
-                    await push(ref(database, `post_replies/${activeTargetThreadId}/${replyId}/replies`), nestedObj);
-                    input.value = '';
-                    document.getElementById(`reply-input-box-${replyId}`).style.display = 'none';
+                        `;
+                    } else {
+                        mediaTag = `<div class="post-media-container"><img src="${post.mediaUrl}" class="post-attached-media"></div>`;
+                    }
                 }
-            }
-        });
+                
+                const diffMins = Math.round((Date.now() - post.timestamp)/60000);
+                const timeString = diffMins < 60 ? `${diffMins}m` : (diffMins < 1440 ? `${Math.floor(diffMins/60)}h` : new Date(post.timestamp).toLocaleDateString());
 
-        document.getElementById('submit-reply-btn').addEventListener('click', submitReply);
-        document.getElementById('comment-text-input').addEventListener('keypress', (e) => {
-            if(e.key === 'Enter') submitReply();
-        });
+                const postLikesObj = post.likes || {};
+                const hasLiked = !!postLikesObj[currentUser.uid];
+                
+                card.innerHTML = `
+                    <div class="post-header">
+                        <div class="post-header-left clickable-user" data-uid="${post.uid}">
+                            <img src="${post.authorAvatar}" class="post-author-img">
+                            <div class="post-header-text">
+                                <span class="post-author-name">${escapeHtml(post.authorName)}</span>
+                                <span class="post-time">${timeString}</span>
+                            </div>
+                        </div>
+                        ${post.uid === currentUser.uid ? `
+                        <div class="post-context-menu">
+                            <button class="context-trigger"><i class="fa-solid fa-ellipsis-v"></i></button>
+                            <div class="context-dropdown">
+                                <button class="danger delete-post-btn" data-id="${post.id}"><i class="fa-solid fa-trash"></i> Delete Post</button>
+                            </div>
+                        </div>` : ''}
+                    </div>
+                    <div class="post-text">${escapeHtml(post.text)}</div>
+                    ${mediaTag}
+                    <div class="post-stats">
+                        <div><i class="fa-solid fa-thumbs-up" style="color:var(--primary-orange);"></i> ${post.likesCount || 0}</div>
+                        <div>0 comments</div>
+                    </div>
+                    <div class="post-actions-row">
+                        <div class="action-icon-group like-trigger ${hasLiked ? 'liked' : ''}" data-id="${post.id}"><i class="${hasLiked ? 'fa-solid' : 'fa-regular'} fa-thumbs-up"></i> Like</div>
+                        <div class="action-icon-group"><i class="fa-regular fa-comment"></i> Comment</div>
+                    </div>
+                `;
 
-        function submitReply() {
-            const input = document.getElementById('comment-text-input');
-            const txt = input.value.trim();
-            if(!txt || !activeTargetThreadId) return;
+                targetElement.appendChild(card);
 
-            const replyObject = {
-                text: txt,
-                uid: currentUser.uid,
-                author: userProfile.name,
-                avatar: userProfile.photoURL,
-                timestamp: Date.now(),
-                likesCount: 0,
-                likes: {}
-            };
+                // Initialize Video Custom Controls
+                const videos = card.querySelectorAll('video.post-attached-media');
+                videos.forEach(vid => {
+                    videoPlaybackObserver.observe(vid);
+                    const wrapper = vid.closest('.custom-video-wrapper');
+                    const playBtn = wrapper.querySelector('.play-pause-btn');
+                    const muteBtn = wrapper.querySelector('.mute-btn');
+                    const seekBar = wrapper.querySelector('.seek-bar');
+                    const spinner = wrapper.querySelector('.video-spinner');
 
-            push(ref(database, `post_replies/${activeTargetThreadId}`), replyObject).then(() => {
-                input.value = '';
+                    vid.addEventListener('waiting', () => { if(spinner) spinner.style.display = 'block'; });
+                    vid.addEventListener('playing', () => { 
+                        if(spinner) spinner.style.display = 'none'; 
+                        playBtn.innerHTML = '<i class="fa-solid fa-pause"></i>';
+                    });
+                    vid.addEventListener('pause', () => playBtn.innerHTML = '<i class="fa-solid fa-play"></i>');
+                    
+                    vid.addEventListener('timeupdate', () => {
+                        if(vid.duration) seekBar.value = (vid.currentTime / vid.duration) * 100;
+                    });
+
+                    playBtn.addEventListener('click', (e) => { e.stopPropagation(); if(vid.paused) vid.play(); else vid.pause(); });
+                    muteBtn.addEventListener('click', (e) => { e.stopPropagation(); vid.muted = !vid.muted; muteBtn.innerHTML = vid.muted ? '<i class="fa-solid fa-volume-xmark"></i>' : '<i class="fa-solid fa-volume-high"></i>'; });
+                    seekBar.addEventListener('input', (e) => { e.stopPropagation(); vid.currentTime = (seekBar.value / 100) * vid.duration; });
+                });
+
+                // Post Actions
+                const delBtn = card.querySelector(`.delete-post-btn`);
+                if(delBtn) delBtn.addEventListener('click', async () => {
+                    await remove(ref(database, `social_posts/${post.id}`));
+                    toast("Post deleted.");
+                });
+
+                card.querySelector('.like-trigger').addEventListener('click', function() {
+                    const postRef = ref(database, `social_posts/${post.id}`);
+                    get(postRef).then(snap => {
+                        if (!snap.exists()) return;
+                        const p = snap.val();
+                        const cLikes = p.likes || {};
+                        if (cLikes[currentUser.uid]) delete cLikes[currentUser.uid];
+                        else cLikes[currentUser.uid] = true;
+                        update(postRef, { likes: cLikes, likesCount: Object.keys(cLikes).length });
+                    });
+                });
             });
         }
 
-        function escapeHtml(str) {
-            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
-        }
+        // Global click listener for Profile Navigation
+        document.addEventListener('click', (e) => {
+            const userClick = e.target.closest('.clickable-user');
+            if (userClick) {
+                const uid = userClick.getAttribute('data-uid');
+                if (uid) openProfile(uid);
+            }
+        });
+
+        function escapeHtml(str) { return (str||'').replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;"); }
     </script>
 </body>
 </html>

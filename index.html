@@ -33,6 +33,20 @@
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
         html, body { height: 100%; font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg-body); color: var(--text-main); -webkit-font-smoothing: antialiased; }
         body { overflow: hidden; }
+        body, div, span, button, nav, aside, main, header, h1, h2, h3, p, label, i {
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+        input, textarea {
+            -webkit-touch-callout: default;
+            -webkit-user-select: text;
+            -moz-user-select: text;
+            -ms-user-select: text;
+            user-select: text;
+        }
         img { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; -webkit-user-drag: none; -khtml-user-drag: none; -moz-user-drag: none; }
         .display-font { font-family: 'Fraunces', serif; }
         button, input, textarea { font-family: inherit; }
@@ -110,13 +124,13 @@
 
         .overlay-modal { position: fixed; inset: 0; background: rgba(20, 22, 26, 0.4); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); display: none; align-items: flex-end; justify-content: center; z-index: 200; }
         .overlay-modal.active { display: flex; }
-        .modal-sheet { background: var(--bg-surface); width: 100%; max-width: 560px; border-radius: 24px 24px 0 0; border: 1px solid var(--border-dim); border-bottom: none; display: flex; flex-direction: column; max-height: 85vh; animation: modalUp 0.3s cubic-bezier(0.16, 1, 0.3, 1); box-shadow: var(--shadow-pop); }
+        .modal-sheet { background: var(--bg-surface); width: 100%; max-width: 560px; height: 92vh; max-height: 92vh; border-radius: 24px 24px 0 0; border: 1px solid var(--border-dim); border-bottom: none; display: flex; flex-direction: column; animation: modalUp 0.3s cubic-bezier(0.16, 1, 0.3, 1); box-shadow: var(--shadow-pop); overscroll-behavior: contain; }
         @keyframes modalUp { from { transform: translateY(24px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         .sheet-grabber { width: 38px; height: 4px; background: var(--border-dim); border-radius: 4px; margin: 10px auto 0; }
 
         .modal-header { padding: 14px 22px 16px; border-bottom: 1px solid var(--border-dim); display: flex; justify-content: space-between; align-items: center; }
         .modal-header h3 { font-size: 16px; font-weight: 700; }
-        .modal-body { padding: 8px 22px 22px; overflow-y: auto; flex: 1; }
+        .modal-body { padding: 8px 22px 22px; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; flex: 1; min-height: 0; }
         .comment-entry-box { display: flex; gap: 12px; align-items: flex-end; padding: 14px 22px; border-top: 1px solid var(--border-dim); background: var(--bg-sunken); }
         .modal-close-btn { position:static; background: var(--bg-sunken); color: var(--text-main); border:none; width:32px; height:32px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; transition: background .18s; }
         .modal-close-btn:hover { background: var(--border-dim); }
@@ -351,8 +365,8 @@
             appId: "1:941619830061:web:de9e0f791eb8f6eacf87a4"
         };
 
-        const CLOUDINARY_URL = "https://api.cloudinary.com/v1_1/dmod7co6g/image/upload";
-        const CLOUDINARY_PRESET = "pace_unsigned";
+        const CLOUDINARY_URL = "https://api.cloudinary.com/v1_1/dqkujefxj/image/upload";
+        const CLOUDINARY_PRESET = "banter_box";
 
         const fbApp = initializeApp(firebaseConfig);
         const auth = getAuth(fbApp);
@@ -847,6 +861,13 @@
         function escapeHtml(str) {
             return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
         }
+
+        // Suppress long-press context menu / callout everywhere except text inputs
+        document.addEventListener('contextmenu', (e) => {
+            const tag = e.target.tagName;
+            if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+            e.preventDefault();
+        });
 
         (function setupNavAutoHide() {
             const nav = document.getElementById('bottom-nav');

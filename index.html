@@ -145,9 +145,38 @@
 
         .chat-list-item { display:flex; align-items:center; gap: 12px; padding: 11px 4px; cursor:pointer; border-radius: var(--radius-md); transition: background .18s; }
         .chat-list-item:hover { background: var(--bg-sunken); }
-        .chat-thread-bubble { max-width: 75%; padding: 9px 14px; border-radius: 16px; font-size: 14px; line-height:1.4; margin-bottom:8px; word-break: break-word; }
-        .chat-thread-bubble.mine { background: var(--accent-gradient); color:white; margin-left:auto; border-bottom-right-radius:4px; }
-        .chat-thread-bubble.theirs { background: var(--bg-sunken); color: var(--text-main); margin-right:auto; border-bottom-left-radius:4px; }
+
+        /* Chat thread: explicit vertical column stack, WhatsApp style */
+        .chat-thread-list { display: flex; flex-direction: column; gap: 8px; padding: 4px 0; }
+        .chat-thread-bubble { max-width: 75%; padding: 9px 14px; border-radius: 16px; font-size: 14px; line-height:1.4; word-break: break-word; align-self: flex-start; }
+        .chat-thread-bubble.mine { background: var(--accent-gradient); color:white; align-self: flex-end; border-bottom-right-radius:4px; }
+        .chat-thread-bubble.theirs { background: var(--bg-sunken); color: var(--text-main); align-self: flex-start; border-bottom-left-radius:4px; }
+
+        /* Comments thread: explicit vertical list, each comment row aligned avatar + content */
+        .comments-list { display: flex; flex-direction: column; gap: 0; }
+        .comment-row { display: flex; gap: 12px; padding: 14px 0; border-bottom: 1px solid var(--border-soft); align-items: flex-start; }
+        .comment-row:last-child { border-bottom: none; }
+        .comment-row .user-avatar { flex-shrink: 0; }
+        .comment-row .comment-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+        .comment-row .comment-top-line { display: flex; align-items: center; gap: 6px; }
+        .comment-row .comment-top-line .author-name { font-size: 14px; }
+        .comment-row .post-options-btn { margin-left: auto; flex-shrink: 0; }
+
+        /* Custom alert / confirm dialog (replaces native alert/confirm) */
+        .confirm-overlay { position: fixed; inset: 0; background: rgba(20, 22, 26, 0.45); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 600; padding: 20px; }
+        .confirm-overlay.active { display: flex; }
+        .confirm-card { background: var(--bg-surface); width: 100%; max-width: 360px; border-radius: var(--radius-lg); border: 1px solid var(--border-dim); padding: 24px 22px 18px; box-shadow: var(--shadow-pop); animation: modalUp 0.22s cubic-bezier(0.16, 1, 0.3, 1); text-align: center; }
+        .confirm-icon { width: 46px; height: 46px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 14px; font-size: 18px; }
+        .confirm-icon.danger { background: #fef2f2; color: #b91c1c; }
+        .confirm-icon.info { background: var(--accent-dim); color: var(--accent); }
+        .confirm-title { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
+        .confirm-message { font-size: 14px; color: var(--text-muted); line-height: 1.5; margin-bottom: 20px; }
+        .confirm-btn-row { display: flex; gap: 10px; }
+        .confirm-btn-row button { flex: 1; padding: 11px 0; border-radius: var(--radius-pill); font-weight: 700; font-size: 14px; cursor: pointer; border: none; transition: opacity .15s, transform .1s; }
+        .confirm-btn-row button:active { transform: scale(0.97); }
+        .confirm-btn-cancel { background: var(--bg-sunken); color: var(--text-main); }
+        .confirm-btn-ok { background: var(--accent-gradient); color: white; box-shadow: 0 6px 16px -4px rgba(194, 65, 12, 0.45); }
+        .confirm-btn-ok.danger { background: #dc2626; box-shadow: 0 6px 16px -4px rgba(220, 38, 38, 0.45); }
 
         #toast-box { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%); z-index: 500; display: flex; flex-direction: column; gap: 10px; align-items:center; }
         .toast { background: var(--text-main); color: white; padding: 12px 22px; border-radius: var(--radius-pill); font-size: 13.5px; font-weight: 600; box-shadow: 0 14px 30px -10px rgba(0,0,0,0.35); animation: toastIn 0.25s cubic-bezier(0.16, 1, 0.3, 1); }
@@ -348,6 +377,18 @@
         </div>
     </div>
 
+    <div id="confirm-overlay" class="confirm-overlay">
+        <div class="confirm-card">
+            <div class="confirm-icon" id="confirm-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+            <div class="confirm-title" id="confirm-title">Are you sure?</div>
+            <div class="confirm-message" id="confirm-message">This action cannot be undone.</div>
+            <div class="confirm-btn-row">
+                <button class="confirm-btn-cancel" id="confirm-cancel-btn">Cancel</button>
+                <button class="confirm-btn-ok" id="confirm-ok-btn">Confirm</button>
+            </div>
+        </div>
+    </div>
+
     <div id="toast-box"></div>
 
     <script type="module">
@@ -366,7 +407,7 @@
         };
 
         const CLOUDINARY_URL = "https://api.cloudinary.com/v1_1/dqkujefxj/image/upload";
-        const CLOUDINARY_PRESET = "banter_box";
+        const CLOUDINARY_PRESET = "pace_unsigned";
 
         const fbApp = initializeApp(firebaseConfig);
         const auth = getAuth(fbApp);
@@ -386,6 +427,40 @@
             t.innerText = msg;
             box.appendChild(t);
             setTimeout(() => t.remove(), 4000);
+        }
+
+        function customConfirm(message, opts = {}) {
+            const { title = 'Are you sure?', okLabel = 'Confirm', danger = true } = opts;
+            return new Promise((resolve) => {
+                const overlay = document.getElementById('confirm-overlay');
+                const okBtn = document.getElementById('confirm-ok-btn');
+                const cancelBtn = document.getElementById('confirm-cancel-btn');
+                const icon = document.getElementById('confirm-icon');
+
+                document.getElementById('confirm-title').innerText = title;
+                document.getElementById('confirm-message').innerText = message;
+                okBtn.innerText = okLabel;
+                okBtn.className = 'confirm-btn-ok' + (danger ? ' danger' : '');
+                icon.className = 'confirm-icon ' + (danger ? 'danger' : 'info');
+                icon.innerHTML = `<i class="fa-solid ${danger ? 'fa-triangle-exclamation' : 'fa-circle-info'}"></i>`;
+
+                overlay.classList.add('active');
+
+                function cleanup(result) {
+                    overlay.classList.remove('active');
+                    okBtn.removeEventListener('click', onOk);
+                    cancelBtn.removeEventListener('click', onCancel);
+                    overlay.removeEventListener('click', onOverlayClick);
+                    resolve(result);
+                }
+                function onOk() { cleanup(true); }
+                function onCancel() { cleanup(false); }
+                function onOverlayClick(e) { if (e.target === overlay) cleanup(false); }
+
+                okBtn.addEventListener('click', onOk);
+                cancelBtn.addEventListener('click', onCancel);
+                overlay.addEventListener('click', onOverlayClick);
+            });
         }
 
         function formatTimestamp(ts) {
@@ -654,8 +729,9 @@
                     document.getElementById(`comment-trigger-${post.id}`).addEventListener('click', () => openCommentThread(post.id));
 
                     if (isOwner) {
-                        document.getElementById(`delete-post-${post.id}`).addEventListener('click', () => {
-                            if (!confirm("Delete this post? This can't be undone.")) return;
+                        document.getElementById(`delete-post-${post.id}`).addEventListener('click', async () => {
+                            const ok = await customConfirm("Delete this post? This can't be undone.", { title: 'Delete post', okLabel: 'Delete' });
+                            if (!ok) return;
                             remove(ref(database, `social_posts/${post.id}`));
                             remove(ref(database, `post_replies/${post.id}`));
                             toast("Post deleted.");
@@ -699,6 +775,10 @@
                     target.innerHTML = `<p style="color:var(--text-muted); text-align:center; padding:32px 20px; font-size:14px;">This discussion pipeline is empty. Post a reply below.</p>`;
                     return;
                 }
+                const list = document.createElement('div');
+                list.className = 'comments-list';
+                target.appendChild(list);
+
                 const replies = [];
                 snap.forEach(child => replies.push({ replyId: child.key, ...child.val() }));
                 replies.sort((a,b) => a.timestamp - b.timestamp);
@@ -706,30 +786,21 @@
                 replies.forEach(c => {
                     const isOwner = c.uid === currentUser.uid;
                     const replyRow = document.createElement('div');
-                    replyRow.style.display = 'flex';
-                    replyRow.style.gap = '12px';
-                    replyRow.style.padding = '12px 0';
-                    replyRow.style.borderBottom = '1px solid var(--border-soft)';
+                    replyRow.className = 'comment-row';
                     replyRow.innerHTML = `
                         <img id="reply-avatar-${c.replyId}" src="${c.avatar}" class="user-avatar" style="width:34px; height:34px;">
-                        <div class="post-main">
-                            <div class="post-meta">
-                                <span class="author-name" id="reply-author-${c.replyId}" style="font-size:14px;">${c.author}</span>
-                                ${isOwner ? `<button class="post-options-btn" id="delete-reply-${c.replyId}" title="Delete reply" style="margin-left:auto; width:26px; height:26px;"><i class="fa-regular fa-trash-can" style="font-size:13px;"></i></button>` : ''}
-                            </div>
-                            <div class="post-sub-meta" style="margin-bottom:4px;">
-                                <span class="author-handle" id="reply-handle-${c.replyId}" style="font-size:12px;">${c.handle}</span>
+                        <div class="comment-main">
+                            <div class="comment-top-line">
+                                <span class="author-name" id="reply-author-${c.replyId}">${c.author}</span>
+                                <span class="author-handle" id="reply-handle-${c.replyId}">${c.handle}</span>
                                 <span class="post-time-dot">&bull;</span>
                                 <span class="post-time">${formatTimestamp(c.timestamp)}</span>
+                                ${isOwner ? `<button class="post-options-btn" id="delete-reply-${c.replyId}" title="Delete reply" style="width:26px; height:26px;"><i class="fa-regular fa-trash-can" style="font-size:13px;"></i></button>` : ''}
                             </div>
-                            <div class="post-text" style="font-size:14px; margin-bottom:0; color:#374151;">${escapeHtml(c.text)}</div>
+                            <div class="post-text" style="font-size:14px; margin-bottom:0; margin-top:2px; color:#374151;">${escapeHtml(c.text)}</div>
                         </div>
                     `;
-                    if (isOwner) {
-                        replyRow.querySelector('.post-meta').style.alignItems = 'center';
-                        replyRow.querySelector('.post-meta').style.flexDirection = 'row';
-                    }
-                    target.appendChild(replyRow);
+                    list.appendChild(replyRow);
 
                     onValue(ref(database, `users/${c.uid}`), (uSnap) => {
                         if (!uSnap.exists()) return;
@@ -743,8 +814,9 @@
                     });
 
                     if (isOwner) {
-                        document.getElementById(`delete-reply-${c.replyId}`).addEventListener('click', () => {
-                            if (!confirm("Delete this reply?")) return;
+                        document.getElementById(`delete-reply-${c.replyId}`).addEventListener('click', async () => {
+                            const ok = await customConfirm("Delete this reply?", { title: 'Delete reply', okLabel: 'Delete' });
+                            if (!ok) return;
                             remove(ref(database, `post_replies/${postId}/${c.replyId}`));
                             toast("Reply deleted.");
                         });
@@ -816,6 +888,9 @@
             onValue(ref(database, `chats/${pairId}/messages`), (snap) => {
                 body.innerHTML = '';
                 if (!snap.exists()) { body.innerHTML = `<p style="color:var(--text-muted); text-align:center; padding:24px; font-size:14px;">Say hello to ${partnerProfile.name}.</p>`; return; }
+                const list = document.createElement('div');
+                list.className = 'chat-thread-list';
+                body.appendChild(list);
                 const msgs = [];
                 snap.forEach(child => msgs.push(child.val()));
                 msgs.sort((a,b) => a.timestamp - b.timestamp);
@@ -823,7 +898,7 @@
                     const bubble = document.createElement('div');
                     bubble.className = 'chat-thread-bubble ' + (m.uid === currentUser.uid ? 'mine' : 'theirs');
                     bubble.innerText = m.text;
-                    body.appendChild(bubble);
+                    list.appendChild(bubble);
                 });
                 body.scrollTop = body.scrollHeight;
             });

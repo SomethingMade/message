@@ -32,6 +32,7 @@
 
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
         
+        /* FIX: Enforce strictly 100vh to ensure internal scrollbars activate instead of pushing elements off-screen */
         html, body { 
             height: 100vh; 
             font-family: 'Plus Jakarta Sans', sans-serif; 
@@ -59,6 +60,7 @@
         .display-font { font-family: 'Fraunces', serif; }
         button, input, textarea { font-family: inherit; }
 
+        /* FIX: Lock the app wrapper to the viewport height */
         .app-wrapper { display: flex; max-width: 1250px; margin: 0 auto; height: 100vh; }
 
         .sidebar { width: 264px; padding: 28px 20px; display: flex; flex-direction: column; justify-content: space-between; border-right: 1px solid var(--border-dim); flex-shrink: 0; }
@@ -76,11 +78,12 @@
         .user-avatar { width: 42px; height: 42px; border-radius: 50%; object-fit: cover; background: var(--bg-sunken); flex-shrink: 0; cursor: pointer; border: 2px solid var(--bg-surface); box-shadow: 0 0 0 1px var(--border-dim); transition: opacity 0.2s; }
         .user-avatar:hover { opacity: 0.85; }
 
+        /* FIX: Lock the feed container to 100vh so the inner element handles scrolling */
         .feed-container { flex: 1; min-width: 0; max-width: 600px; border-right: 1px solid var(--border-dim); display: flex; flex-direction: column; height: 100vh; background: var(--bg-body); }
         
         .header-sticky { position: sticky; top: 0; background: rgba(250, 249, 246, 0.85); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); padding: 18px 22px; border-bottom: 1px solid var(--border-dim); display: flex; justify-content: space-between; align-items: center; z-index: 10; }
         .header-sticky h1 { font-size: 18px; font-weight: 700; letter-spacing: -0.3px; }
-        .scrollable-stream { flex: 1; min-height: 0; overflow-y: auto; scroll-behavior: smooth; -webkit-overflow-scrolling: touch; }
+        .scrollable-stream { flex: 1; overflow-y: auto; scroll-behavior: smooth; -webkit-overflow-scrolling: touch; }
         .scrollable-stream::-webkit-scrollbar { width: 6px; }
         .scrollable-stream::-webkit-scrollbar-thumb { background: var(--border-dim); border-radius: 3px; }
 
@@ -230,11 +233,11 @@
         }
 
         @media (max-width: 700px) {
-            body { overflow: hidden; }
+            body { overflow: hidden; } /* Ensure body doesn't cause page-level scroll on mobile */
             .app-wrapper { display: block; height: 100vh; }
             .sidebar { display: none; }
             .feed-container { border-right: none; height: 100vh; max-width: none; }
-            .scrollable-stream { overflow-y: auto; height: 100%; min-height: 0; padding-bottom: 78px; }
+            .scrollable-stream { overflow-y: auto; height: 100%; padding-bottom: 78px; }
             .header-sticky { padding: 14px 16px; }
             .composer { margin: 14px 12px 6px; padding: 14px 14px 10px; border-radius: var(--radius-md); }
             .post-card { margin: 0 12px 14px; padding: 14px; }
@@ -247,7 +250,6 @@
 </head>
 <body>
 
-    <!-- All your HTML content remains unchanged -->
     <div id="auth-screen" class="auth-gate">
         <div class="auth-card">
             <div class="brand-logo display-font" style="justify-content: center; font-size:26px;">
@@ -269,7 +271,7 @@
     </div>
 
     <div class="app-wrapper">
-        <!-- Sidebar and Feed Container (unchanged) -->
+
         <aside class="sidebar">
             <div class="nav-stack">
                 <div class="brand-logo display-font"><i class="fa-solid fa-atom"></i><span>Ona</span></div>
@@ -332,7 +334,6 @@
         </main>
     </div>
 
-    <!-- Bottom nav, modals, etc. (unchanged) -->
     <nav class="bottom-nav" id="bottom-nav">
         <button class="bn-item active"><i class="fa-solid fa-house"></i></button>
         <button class="bn-item" id="bn-messages-trigger"><i class="fa-regular fa-paper-plane"></i><span class="bn-badge" id="bn-msg-badge" style="display:none;"></span></button>
@@ -341,7 +342,6 @@
         <button class="bn-item" id="bn-profile-trigger"><img id="bn-profile-avatar" class="bn-avatar" src="https://ui-avatars.com/api/?name=Ona+User&background=c2410c&color=fff"></button>
     </nav>
 
-    <!-- Modals and overlays unchanged -->
     <div id="comments-modal" class="overlay-modal">
         <div class="modal-sheet">
             <div class="sheet-grabber"></div>
@@ -416,7 +416,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getAuth, GoogleAuthProvider, signInWithPopup, signOut as fbSignOut, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-        import { getDatabase, ref, push, update, remove, onValue } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+        import { getDatabase, ref, push, set, get, update, remove, onValue, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBQSPwpVbGrdCuOoyitAeWQHIeipj2MgIY",
@@ -451,7 +451,6 @@
             setTimeout(() => t.remove(), 4000);
         }
 
-        // ... (customConfirm, formatTimestamp, uploadMediaFile functions remain unchanged) ...
         function customConfirm(message, opts = {}) {
             const { title = 'Are you sure?', okLabel = 'Confirm', danger = true } = opts;
             return new Promise((resolve) => {
@@ -557,7 +556,6 @@
             });
         }
 
-        // ... (all event listeners for login, signup, post submission, etc. remain unchanged) ...
         document.getElementById('action-login').addEventListener('click', () => {
             const em = document.getElementById('login-email').value.trim();
             const pa = document.getElementById('login-pass').value;
@@ -580,7 +578,51 @@
         document.getElementById('logout-trigger').addEventListener('click', doLogout);
         document.getElementById('settings-logout-btn').addEventListener('click', doLogout);
 
-        // ... (other UI handlers unchanged) ...
+        document.getElementById('bn-compose-btn').addEventListener('click', () => {
+            document.getElementById('composer-text').focus();
+            document.getElementById('scroll-region').scrollIntoView({behavior:'smooth'});
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+
+        document.getElementById('bn-profile-trigger').addEventListener('click', () => document.getElementById('avatar-input').click());
+
+        function openSettings() { document.getElementById('settings-modal').classList.add('active'); }
+        document.getElementById('sb-settings-trigger').addEventListener('click', openSettings);
+        document.getElementById('bn-settings-trigger').addEventListener('click', openSettings);
+        document.getElementById('settings-save-btn').addEventListener('click', async () => {
+            const name = document.getElementById('settings-name-input').value.trim();
+            const handle = document.getElementById('settings-handle-input').value.trim();
+            if (!name || !handle) return toast("Name and handle can't be empty.");
+            await update(ref(database, `users/${currentUser.uid}`), { name, handle: handle.startsWith('@') ? handle : '@' + handle.replace('@','') });
+            toast("Profile updated.");
+            document.getElementById('settings-modal').classList.remove('active');
+        });
+
+        document.getElementById('avatar-input').addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            toast("Syncing new avatar data...");
+            const cloudUrl = await uploadMediaFile(file);
+            if (cloudUrl && currentUser) {
+                await update(ref(database, `users/${currentUser.uid}`), { photoURL: cloudUrl });
+                toast("Avatar synced to cloud node repository.");
+            }
+        });
+
+        document.getElementById('post-media-file').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                selectedMediaBlob = file;
+                document.getElementById('media-img-target').src = URL.createObjectURL(file);
+                document.getElementById('preview-box').style.display = 'block';
+            }
+        });
+
+        document.getElementById('clear-media-btn').addEventListener('click', () => {
+            selectedMediaBlob = null;
+            document.getElementById('post-media-file').value = '';
+            document.getElementById('preview-box').style.display = 'none';
+        });
 
         document.getElementById('submit-post-btn').addEventListener('click', async () => {
             const textVal = document.getElementById('composer-text').value.trim();
@@ -618,7 +660,6 @@
             });
         });
 
-        // FIXED FUNCTION - This was the main problem area
         function attachRealtimeTimelineFeed() {
             const streamTarget = document.getElementById('posts-stream-target');
             const skeleton = document.getElementById('skeleton-stream');
@@ -626,7 +667,6 @@
             onValue(ref(database, 'social_posts'), (snapshot) => {
                 skeleton.style.display = 'none';
                 streamTarget.innerHTML = '';
-                
                 if (!snapshot.exists()) {
                     streamTarget.innerHTML = `<div style="padding:48px 22px; text-align:center; color:var(--text-muted);"><i class="fa-regular fa-comment-dots" style="font-size:26px; color:var(--text-faint); margin-bottom:10px; display:block;"></i>Nothing in the stream yet. Be the first to post.</div>`;
                     return;
@@ -635,16 +675,21 @@
                 const postsArray = [];
                 snapshot.forEach((child) => postsArray.push({ id: child.key, ...child.val() }));
                 
-                // FIXED: Proper newest-first sorting
+                // FIX: Algorithm sorting logic combining Likes, Randomness, and Recency
                 postsArray.sort((a, b) => {
-                    const timeDiff = (b.timestamp || 0) - (a.timestamp || 0);
-                    if (timeDiff !== 0) return timeDiff;
-                    
                     const likesA = a.likes ? Object.keys(a.likes).length : 0;
                     const likesB = b.likes ? Object.keys(b.likes).length : 0;
-                    if (likesB !== likesA) return likesB - likesA;
                     
-                    return (a.id || '').localeCompare(b.id || '');
+                    const randomFactorA = Math.random() * 2;
+                    const randomFactorB = Math.random() * 2;
+                    
+                    const timeFactorA = a.timestamp / 10000000000;
+                    const timeFactorB = b.timestamp / 10000000000;
+
+                    const scoreA = (likesA * 3) + randomFactorA + timeFactorA; 
+                    const scoreB = (likesB * 3) + randomFactorB + timeFactorB;
+
+                    return scoreB - scoreA; 
                 });
 
                 postsArray.forEach(post => {
@@ -667,30 +712,30 @@
 
                     card.innerHTML = `
                         <div class="post-card-header">
-                            <img id="post-author-avatar-\( {post.id}" src=" \){post.authorAvatar}" class="user-avatar" alt="User node profile logo">
+                            <img id="post-author-avatar-${post.id}" src="${post.authorAvatar}" class="user-avatar" alt="User node profile logo">
                             <div class="post-main">
                                 <div class="post-meta">
-                                    <span class="author-name" id="post-author-name-\( {post.id}"> \){post.authorName}</span>
+                                    <span class="author-name" id="post-author-name-${post.id}">${post.authorName}</span>
                                     <div class="post-sub-meta">
-                                        <span class="author-handle" id="post-author-handle-\( {post.id}"> \){post.authorHandle}</span>
+                                        <span class="author-handle" id="post-author-handle-${post.id}">${post.authorHandle}</span>
                                         <span class="post-time-dot">&bull;</span>
                                         <span class="post-time">${formatTimestamp(post.timestamp)}</span>
                                     </div>
                                 </div>
                             </div>
-                            \( {isOwner ? `<button class="post-options-btn" id="delete-post- \){post.id}" title="Delete post"><i class="fa-regular fa-trash-can"></i></button>` : ''}
+                            ${isOwner ? `<button class="post-options-btn" id="delete-post-${post.id}" title="Delete post"><i class="fa-regular fa-trash-can"></i></button>` : ''}
                         </div>
                         <div class="post-text">${escapeHtml(post.text)}</div>
                         ${mediaTag}
                         <div class="post-engagement-summary">
-                            <span id="reaction-summary-\( {post.id}"> \){reactionParts.join('&nbsp;&nbsp;')}</span>
+                            <span id="reaction-summary-${post.id}">${reactionParts.join('&nbsp;&nbsp;')}</span>
                             <span id="comment-count-summary-${post.id}">0 comments</span>
                         </div>
                         <div class="post-actions-row">
-                            <div class="action-icon-group \( {iLiked ? 'liked' : ''}" id="like-trigger- \){post.id}">
+                            <div class="action-icon-group ${iLiked ? 'liked' : ''}" id="like-trigger-${post.id}">
                                 <i class="fa-${iLiked ? 'solid' : 'regular'} fa-thumbs-up"></i> Like
                             </div>
-                            <div class="action-icon-group \( {iDisliked ? 'disliked' : ''}" id="dislike-trigger- \){post.id}">
+                            <div class="action-icon-group ${iDisliked ? 'disliked' : ''}" id="dislike-trigger-${post.id}">
                                 <i class="fa-${iDisliked ? 'solid' : 'regular'} fa-thumbs-down"></i> Dislike
                             </div>
                             <div class="action-icon-group" id="comment-trigger-${post.id}">
@@ -701,7 +746,6 @@
 
                     streamTarget.appendChild(card);
 
-                    // User profile live updates
                     onValue(ref(database, `users/${post.uid}`), (uSnap) => {
                         if (!uSnap.exists()) return;
                         const u = uSnap.val();
@@ -713,11 +757,10 @@
                         if (avatarEl && u.photoURL) avatarEl.src = u.photoURL;
                     });
 
-                    // Comment count
                     onValue(ref(database, `post_replies/${post.id}`), (replySnap) => {
                         const countEl = document.getElementById(`comment-count-summary-${post.id}`);
                         const n = replySnap.exists() ? replySnap.size : 0;
-                        if(countEl) countEl.innerText = `\( {n} comment \){n === 1 ? '' : 's'}`;
+                        if(countEl) countEl.innerText = `${n} comment${n === 1 ? '' : 's'}`;
                     });
 
                     document.getElementById(`comment-trigger-${post.id}`).addEventListener('click', () => openCommentThread(post.id));
@@ -735,10 +778,10 @@
                     document.getElementById(`like-trigger-${post.id}`).addEventListener('click', () => {
                         const updates = {};
                         if (iLiked) {
-                            updates[`social_posts/\( {post.id}/likes/ \){currentUser.uid}`] = null;
+                            updates[`social_posts/${post.id}/likes/${currentUser.uid}`] = null;
                         } else {
-                            updates[`social_posts/\( {post.id}/likes/ \){currentUser.uid}`] = true;
-                            updates[`social_posts/\( {post.id}/dislikes/ \){currentUser.uid}`] = null;
+                            updates[`social_posts/${post.id}/likes/${currentUser.uid}`] = true;
+                            updates[`social_posts/${post.id}/dislikes/${currentUser.uid}`] = null;
                         }
                         update(ref(database), updates);
                     });
@@ -746,23 +789,17 @@
                     document.getElementById(`dislike-trigger-${post.id}`).addEventListener('click', () => {
                         const updates = {};
                         if (iDisliked) {
-                            updates[`social_posts/\( {post.id}/dislikes/ \){currentUser.uid}`] = null;
+                            updates[`social_posts/${post.id}/dislikes/${currentUser.uid}`] = null;
                         } else {
-                            updates[`social_posts/\( {post.id}/dislikes/ \){currentUser.uid}`] = true;
-                            updates[`social_posts/\( {post.id}/likes/ \){currentUser.uid}`] = null;
+                            updates[`social_posts/${post.id}/dislikes/${currentUser.uid}`] = true;
+                            updates[`social_posts/${post.id}/likes/${currentUser.uid}`] = null;
                         }
                         update(ref(database), updates);
                     });
                 });
-
-                // Scroll to top so newest post is visible
-                setTimeout(() => {
-                    document.getElementById('scroll-region').scrollTop = 0;
-                }, 100);
             });
         }
 
-        // Rest of your functions (openCommentThread, messages, etc.) remain the same
         window.openCommentThread = function(postId) {
             activeTargetThreadId = postId;
             document.getElementById('comments-modal').classList.add('active');
@@ -782,25 +819,22 @@
                 const replies = [];
                 snap.forEach(child => replies.push({ replyId: child.key, ...child.val() }));
                 
-                replies.sort((a, b) => {
-                    const timeDiff = b.timestamp - a.timestamp;
-                    if (timeDiff !== 0) return timeDiff;
-                    return (a.replyId || '').localeCompare(b.replyId || '');
-                });
+                // FIX: Sort comments newest-first so they stack visually without requiring scroll or deletion
+                replies.sort((a,b) => b.timestamp - a.timestamp);
 
                 replies.forEach(c => {
                     const isOwner = c.uid === currentUser.uid;
                     const replyRow = document.createElement('div');
                     replyRow.className = 'comment-row';
                     replyRow.innerHTML = `
-                        <img id="reply-avatar-\( {c.replyId}" src=" \){c.avatar}" class="user-avatar" style="width:34px; height:34px;">
+                        <img id="reply-avatar-${c.replyId}" src="${c.avatar}" class="user-avatar" style="width:34px; height:34px;">
                         <div class="comment-main">
                             <div class="comment-top-line">
-                                <span class="author-name" id="reply-author-\( {c.replyId}"> \){c.author}</span>
-                                <span class="author-handle" id="reply-handle-\( {c.replyId}"> \){c.handle}</span>
+                                <span class="author-name" id="reply-author-${c.replyId}">${c.author}</span>
+                                <span class="author-handle" id="reply-handle-${c.replyId}">${c.handle}</span>
                                 <span class="post-time-dot">&bull;</span>
                                 <span class="post-time">${formatTimestamp(c.timestamp)}</span>
-                                \( {isOwner ? `<button class="post-options-btn" id="delete-reply- \){c.replyId}" title="Delete reply" style="width:26px; height:26px;"><i class="fa-regular fa-trash-can" style="font-size:13px;"></i></button>` : ''}
+                                ${isOwner ? `<button class="post-options-btn" id="delete-reply-${c.replyId}" title="Delete reply" style="width:26px; height:26px;"><i class="fa-regular fa-trash-can" style="font-size:13px;"></i></button>` : ''}
                             </div>
                             <div class="post-text" style="font-size:14px; margin-bottom:0; margin-top:2px; color:#374151;">${escapeHtml(c.text)}</div>
                         </div>
@@ -822,7 +856,7 @@
                         document.getElementById(`delete-reply-${c.replyId}`).addEventListener('click', async () => {
                             const ok = await customConfirm("Delete this reply?", { title: 'Delete reply', okLabel: 'Delete' });
                             if (!ok) return;
-                            remove(ref(database, `post_replies/\( {postId}/ \){c.replyId}`));
+                            remove(ref(database, `post_replies/${postId}/${c.replyId}`));
                             toast("Reply deleted.");
                         });
                     }
@@ -907,6 +941,7 @@
                     list.appendChild(bubble);
                 });
 
+                // FIX: Force scroll to the bottom of the chat after the DOM finishes painting
                 setTimeout(() => {
                     body.scrollTop = body.scrollHeight;
                 }, 50);
@@ -954,7 +989,6 @@
             e.preventDefault();
         });
 
-        // ... rest of your bottom nav auto-hide code ...
         (function setupNavAutoHide() {
             const nav = document.getElementById('bottom-nav');
             let lastY = 0;

@@ -232,6 +232,17 @@
         .full-page-view .modal-close-btn { position: static; }
         .friend-count-pill { font-size: 14px; color: var(--text-secondary); font-weight: 600; margin-bottom: 12px; cursor: default; }
         .friend-action-btn.is-friend { background: #E4E6EB !important; color: var(--text-primary) !important; }
+
+        /* ── TikTok-style Profile Media Grid ── */
+        .profile-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; width: 100%; }
+        .profile-grid-tile { position: relative; aspect-ratio: 1 / 1; overflow: hidden; cursor: pointer; background: #ECECEC; }
+        .profile-grid-tile img, .profile-grid-tile video { width: 100%; height: 100%; object-fit: cover; display: block; pointer-events: none; }
+        .profile-grid-tile .tile-play-icon { position: absolute; top: 6px; left: 6px; color: #fff; font-size: 13px; text-shadow: 0 1px 3px rgba(0,0,0,0.6); }
+        .profile-grid-tile .tile-stats { position: absolute; bottom: 6px; left: 6px; color: #fff; font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 4px; text-shadow: 0 1px 3px rgba(0,0,0,0.6); }
+        .profile-grid-tile .tile-gradient { position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.45) 0%, rgba(0,0,0,0) 35%); pointer-events: none; }
+        .profile-grid-tile.text-tile { background: var(--bg-surface); padding: 10px; display: flex; align-items: center; justify-content: center; }
+        .profile-grid-tile.text-tile p { font-size: 12px; color: var(--text-primary); line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical; overflow: hidden; margin: 0; text-align: center; }
+        .profile-feed-back-bar { display: flex; align-items: center; gap: 10px; padding: 12px 16px; background: var(--bg-surface); border-bottom: 1px solid var(--border-dim); font-weight: 600; cursor: pointer; }
         @keyframes modalIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
         
         .modal-header { padding: 16px; border-bottom: 1px solid var(--border-dim); display: flex; justify-content: center; align-items: center; position: relative; }
@@ -462,7 +473,11 @@
                     <div id="profile-friend-count" class="friend-count-pill"></div>
                     <div id="profile-actions" style="margin-bottom: 8px;"></div>
                 </div>
-                <div id="profile-timeline-target" style="padding: 16px; flex: 1; display: flex; flex-direction: column; gap: 16px; max-width: 680px; width: 100%; margin: 0 auto;"></div>
+                <div id="profile-grid-target" class="profile-grid"></div>
+                <div id="profile-feed-back-bar" class="profile-feed-back-bar" style="display:none;" onclick="showProfileGrid()">
+                    <i class="fa-solid fa-arrow-left"></i> Back to grid
+                </div>
+                <div id="profile-timeline-target" style="display:none; padding: 16px; flex: 1; flex-direction: column; gap: 16px; max-width: 680px; width: 100%; margin: 0 auto;"></div>
             </div>
         </div>
 
@@ -1264,21 +1279,126 @@
             }
         };
 
+        const profileGridTiles = new Map(); // postId -> tile element (profile grid)
+
+        // Build a single TikTok-style grid tile for a post
+        function createGridTileElement(post) {
+            const tile = document.createElement('div');
+            tile.className = 'profile-grid-tile';
+            tile.id = `grid-tile-${post.id}`;
+
+            const likeCount = post.likesCount || 0;
+
+            if (post.mediaUrl && (post.mediaType === 'video' || post.mediaUrl.match(/\.(mp4|webm|mov|ogg)$/i))) {
+                tile.innerHTML = `
+                    <video src="${post.mediaUrl}" muted playsinline preload="metadata"></video>
+                    <div class="tile-gradient"></div>
+                    <i class="fa-solid fa-play tile-play-icon"></i>
+                    <div class="tile-stats"><i class="fa-solid fa-thumbs-up"></i> <span class="tile-like-count">${likeCount}</span></div>
+                `;
+            } else if (post.mediaUrl) {
+                tile.innerHTML = `
+                    <img src="${post.mediaUrl}" loading="lazy">
+                    <div class="tile-gradient"></div>
+                    <div class="tile-stats"><i class="fa-solid fa-thumbs-up"></i> <span class="tile-like-count">${likeCount}</span></div>
+                `;
+            } else {
+                tile.classList.add('text-tile');
+                tile.innerHTML = `
+                    <p>${escapeHtml(post.text || '')}</p>
+                    <div class="tile-stats" style="position:absolute; bottom:6px; left:6px; color: var(--text-secondary); text-shadow:none;"><i class="fa-solid fa-thumbs-up"></i> <span class="tile-like-count">${likeCount}</span></div>
+                `;
+            }
+
+            tile.addEventListener('click', () => showProfileDetailFeed(post.id));
+
+            const thumbVideo = tile.querySelector('video');
+            if (thumbVideo) {
+                // Some browsers show a blank/black frame with only preload="metadata";
+                // nudging currentTime forces the first real frame to render as a thumbnail.
+                thumbVideo.addEventListener('loadedmetadata', () => {
+                    try { thumbVideo.currentTime = 0.1; } catch (e) {}
+                }, { once: true });
+            }
+
+            return tile;
+        }
+
+        function updateGridTileElement(tile, post) {
+            const countEl = tile.querySelector('.tile-like-count');
+            if (countEl) countEl.innerText = post.likesCount || 0;
+        }
+
+        function reconcileGrid(container, postsArray, renderedMap) {
+            const currentIds = new Set(postsArray.map(p => p.id));
+            renderedMap.forEach((el, id) => {
+                if (!currentIds.has(id)) { el.remove(); renderedMap.delete(id); }
+            });
+
+            let prevEl = null;
+            postsArray.forEach(post => {
+                let tile = renderedMap.get(post.id);
+                if (!tile) {
+                    tile = createGridTileElement(post);
+                    renderedMap.set(post.id, tile);
+                    if (prevEl) prevEl.after(tile);
+                    else container.prepend(tile);
+                } else {
+                    updateGridTileElement(tile, post);
+                    const expectedPrevSibling = prevEl ? prevEl.nextElementSibling : container.firstElementChild;
+                    if (expectedPrevSibling !== tile) {
+                        if (prevEl) prevEl.after(tile);
+                        else container.prepend(tile);
+                    }
+                }
+                prevEl = tile;
+            });
+        }
+
+        // Switch back to the grid view (pausing whatever is playing in the detail feed)
+        window.showProfileGrid = () => {
+            document.querySelectorAll('#profile-timeline-target video').forEach(v => v.pause());
+            document.getElementById('profile-timeline-target').style.display = 'none';
+            document.getElementById('profile-feed-back-bar').style.display = 'none';
+            document.getElementById('profile-grid-target').style.display = 'grid';
+        };
+
+        // Open the TikTok-style detail feed, scrolled to the tapped post
+        window.showProfileDetailFeed = (postId) => {
+            document.getElementById('profile-grid-target').style.display = 'none';
+            const timelineTarget = document.getElementById('profile-timeline-target');
+            const backBar = document.getElementById('profile-feed-back-bar');
+            timelineTarget.style.display = 'flex';
+            backBar.style.display = 'flex';
+
+            const card = profileRenderedCards.get(postId);
+            if (card) {
+                card.scrollIntoView({ block: 'start' });
+            }
+        };
+
         function loadProfileTimeline(uid) {
+            const gridTarget = document.getElementById('profile-grid-target');
             const target = document.getElementById('profile-timeline-target');
-            target.innerHTML = '<div style="text-align:center; padding: 20px;"><span class="loading-dots"><span></span><span></span><span></span></span></div>';
+            gridTarget.innerHTML = '<div style="grid-column: 1 / -1; text-align:center; padding: 20px;"><span class="loading-dots"><span></span><span></span><span></span></span></div>';
+            target.innerHTML = '';
             profileRenderedCards.clear();
+            profileGridTiles.clear();
+
+            // Always start on the grid, like opening a TikTok profile
+            showProfileGrid();
             
             if(profileFeedUnsubscribe) profileFeedUnsubscribe();
             
             const q = query(ref(database, 'social_posts'), orderByChild('uid'), equalTo(uid));
             let firstLoad = true;
             profileFeedUnsubscribe = onValue(q, (snapshot) => {
-                if (firstLoad) { target.innerHTML = ''; firstLoad = false; }
+                if (firstLoad) { gridTarget.innerHTML = ''; firstLoad = false; }
 
                 if(!snapshot.exists()) {
-                    target.innerHTML = '<div id="profile-empty-state" style="text-align:center; color:var(--text-secondary); padding:20px;">No posts to show yet.</div>';
+                    gridTarget.innerHTML = '<div id="profile-empty-state" style="grid-column: 1 / -1; text-align:center; color:var(--text-secondary); padding:20px;">No posts to show yet.</div>';
                     profileRenderedCards.clear();
+                    profileGridTiles.clear();
                     return;
                 }
                 const emptyState = document.getElementById('profile-empty-state');
@@ -1288,6 +1408,7 @@
                 snapshot.forEach(c => posts.push({id: c.key, ...c.val()}));
                 posts.sort((a, b) => b.timestamp - a.timestamp);
 
+                reconcileGrid(gridTarget, posts, profileGridTiles);
                 reconcilePosts(target, posts, profileRenderedCards);
             });
         }

@@ -371,6 +371,11 @@
             .auth-card { box-shadow: none; padding: 0; }
             .auth-title-container h1 { font-size: 40px !important; }
             .auth-title-container p { font-size: 16px !important; }
+            
+            /* Mobile Full-Width Post Cards Optimization */
+            .feed-container { padding: 0; gap: 8px; }
+            .composer-card { border-radius: 0; box-shadow: none; border-bottom: 1px solid var(--border-dim); border-left: none; border-right: none;}
+            .post-card { border-radius: 0; box-shadow: none; border-top: 1px solid var(--border-dim); border-bottom: 1px solid var(--border-dim); border-left: none; border-right: none;}
         }
     </style>
 </head>
@@ -740,8 +745,8 @@
             }
         });
 
-        // Tags and Emojis Handlers 
-        document.getElementById('tag-users-btn').addEventListener('click', () => {
+        // Tags and Emojis Handlers (Updated to fetch from User's Following/Friends List)
+        document.getElementById('tag-users-btn').addEventListener('click', async () => {
             const dropdown = document.getElementById('tag-users-dropdown');
             const emojiContainer = document.getElementById('emoji-picker-container');
             if(emojiContainer) emojiContainer.style.display = 'none';
@@ -751,16 +756,26 @@
                 return;
             }
             dropdown.style.display = 'block';
-            dropdown.innerHTML = '<div style="padding: 12px; text-align: center; color: var(--text-secondary); font-size: 13px;">Loading users...</div>';
+            dropdown.innerHTML = '<div style="padding: 12px; text-align: center; color: var(--text-secondary); font-size: 13px;">Loading friends...</div>';
             
-            get(ref(database, 'users')).then(snap => {
-                dropdown.innerHTML = '';
-                if(snap.exists()){
-                    let usersFound = false;
-                    snap.forEach(child => {
-                        if (child.key !== currentUser.uid) {
-                            usersFound = true;
-                            const u = child.val();
+            try {
+                const myProfileSnap = await get(ref(database, `users/${currentUser.uid}`));
+                if(myProfileSnap.exists()) {
+                    const myFollowing = myProfileSnap.val().following || {};
+                    const followingUids = Object.keys(myFollowing);
+                    
+                    dropdown.innerHTML = '';
+                    if(followingUids.length === 0) {
+                        dropdown.innerHTML = '<div style="padding: 12px; text-align: center; color: var(--text-secondary); font-size: 13px;">Follow users to tag them!</div>';
+                        return;
+                    }
+                    
+                    let foundFriends = false;
+                    for (const uid of followingUids) {
+                        const uSnap = await get(ref(database, `users/${uid}`));
+                        if (uSnap.exists()) {
+                            foundFriends = true;
+                            const u = uSnap.val();
                             const div = document.createElement('div');
                             div.className = 'tag-user-item';
                             div.innerHTML = `<img src="${u.photoURL}" class="no-long-press" style="width:28px; height:28px; border-radius:50%; object-fit: cover;"> <span style="font-weight:500;">${escapeHtml(u.name)}</span>`;
@@ -773,14 +788,17 @@
                             };
                             dropdown.appendChild(div);
                         }
-                    });
-                    if (!usersFound) dropdown.innerHTML = '<div style="padding: 12px; text-align: center; color: var(--text-secondary); font-size: 13px;">No other users found.</div>';
+                    }
+                    
+                    if (!foundFriends) {
+                        dropdown.innerHTML = '<div style="padding: 12px; text-align: center; color: var(--text-secondary); font-size: 13px;">No friends found.</div>';
+                    }
                 } else {
-                    dropdown.innerHTML = '<div style="padding: 12px; text-align: center; color: var(--text-secondary); font-size: 13px;">No users available.</div>';
+                    dropdown.innerHTML = '<div style="padding: 12px; text-align: center; color: var(--text-secondary); font-size: 13px;">No friends found.</div>';
                 }
-            }).catch(err => {
-                dropdown.innerHTML = '<div style="padding: 12px; text-align: center; color: var(--text-secondary); font-size: 13px;">Error loading users.</div>';
-            });
+            } catch(err) {
+                dropdown.innerHTML = '<div style="padding: 12px; text-align: center; color: var(--text-secondary); font-size: 13px;">Error loading friends.</div>';
+            }
         });
 
         document.getElementById('emoji-picker-btn').addEventListener('click', () => {

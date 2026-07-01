@@ -471,8 +471,7 @@
             <img id="drawer-profile-pic" class="no-long-press" src="https://ui-avatars.com/api/?name=User&background=FF8C00&color=fff" alt="">
             <span id="drawer-profile-name">Loading...</span>
         </div>
-        <div class="sidebar-item"><div class="icon-circle" style="color: var(--primary-orange);"><i class="fa-solid fa-user-group"></i></div> Friends</div>
-        <div class="sidebar-item"><div class="icon-circle" style="color: #2ABBA7;"><i class="fa-solid fa-users"></i></div> Groups</div>
+        <div class="sidebar-item" id="drawer-browse-users"><div class="icon-circle" style="color: var(--primary-orange);"><i class="fa-solid fa-users"></i></div> Browse Users</div>
         <div class="sidebar-item"><div class="icon-circle" style="color: #E22756;"><i class="fa-solid fa-store"></i></div> Marketplace</div>
         <div class="sidebar-item"><div class="icon-circle" style="color: #21A2DF;"><i class="fa-solid fa-tv"></i></div> Watch</div>
         <div class="sidebar-item"><div class="icon-circle" style="color: #8C52FF;"><i class="fa-solid fa-clock-rotate-left"></i></div> Memories</div>
@@ -507,10 +506,10 @@
                 </div>
             </div>
             <hr style="border:0; border-top: 1px solid var(--border-dim); margin: 12px 0;">
-            <h3 style="color: var(--text-secondary); font-size: 15px; margin: 0 12px 12px;">Contacts</h3>
-            <div class="sidebar-item"><img class="no-long-press" src="https://ui-avatars.com/api/?name=Sarah+J&background=FF8C00&color=fff" alt=""> Sarah Jenkins</div>
-            <div class="sidebar-item"><img class="no-long-press" src="https://ui-avatars.com/api/?name=Mike+R&background=FF8C00&color=fff" alt=""> Mike Roberts</div>
-            <div class="sidebar-item"><img class="no-long-press" src="https://ui-avatars.com/api/?name=Emily+W&background=FF8C00&color=fff" alt=""> Emily Wang</div>
+            <h3 style="color: var(--text-secondary); font-size: 15px; margin: 0 12px 12px;">Discover</h3>
+            <div class="sidebar-item" onclick="openBrowseUsers()" style="justify-content: center; color: var(--primary-orange); border: 1px solid var(--border-dim);">
+                <i class="fa-solid fa-magnifying-glass"></i> Browse & Search Users
+            </div>
         </aside>
     </div>
 
@@ -654,6 +653,23 @@
                 <button class="btn-cancel" onclick="closeConfirm()">Cancel</button>
                 <button class="btn-danger" onclick="executeConfirm()">Delete</button>
             </div>
+        </div>
+    </div>
+
+    <div id="browse-users-modal" class="overlay-modal" style="z-index: 1200;">
+        <div class="modal-sheet" style="max-height: 80vh;">
+            <div class="modal-header">
+                <h3>Discover Users</h3>
+                <button class="modal-close-btn" onclick="closeBrowseUsers()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div style="padding: 12px 16px; border-bottom: 1px solid var(--border-dim);">
+                <div class="search-bar" style="background: #F0F2F5; border-radius: 50px; padding: 10px 16px; display: flex; align-items: center; gap: 8px;">
+                    <i class="fa-solid fa-search" style="color: var(--text-secondary);"></i>
+                    <input type="text" id="user-search-input" placeholder="Search by name..." style="border: none; background: transparent; outline: none; width: 100%; font-size: 15px;">
+                </div>
+            </div>
+            <div class="modal-body" id="browse-users-list" style="padding: 0; overflow-y: auto;">
+                </div>
         </div>
     </div>
 
@@ -897,6 +913,81 @@
             if(confirmActionCallback) confirmActionCallback();
             closeConfirm();
         };
+        
+        // ── Browse & Search Users Logic ──
+        window.openBrowseUsers = async () => {
+            document.getElementById('browse-users-modal').classList.add('active');
+            const listTarget = document.getElementById('browse-users-list');
+            listTarget.innerHTML = '<div style="text-align:center; padding:40px;"><div class="auth-spinner-circle" style="margin: 0 auto; width:30px; height:30px;"></div></div>';
+            
+            try {
+                const usersSnap = await get(ref(database, 'users'));
+                if (usersSnap.exists()) {
+                    window.allUsersCache = [];
+                    usersSnap.forEach(child => {
+                        window.allUsersCache.push({ id: child.key, ...child.val() });
+                    });
+                    
+                    // Default sort by follower count
+                    window.allUsersCache.sort((a, b) => Object.keys(b.followers || {}).length - Object.keys(a.followers || {}).length);
+                    renderBrowseUsers(window.allUsersCache);
+                } else {
+                    listTarget.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-secondary);">No users found.</div>';
+                }
+            } catch (err) {
+                console.error(err);
+                listTarget.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-secondary);">Error loading users.</div>';
+            }
+        };
+        
+        window.closeBrowseUsers = () => {
+            document.getElementById('browse-users-modal').classList.remove('active');
+        };
+
+        function renderBrowseUsers(usersArray) {
+            const listTarget = document.getElementById('browse-users-list');
+            listTarget.innerHTML = '';
+            
+            if(usersArray.length === 0) {
+                 listTarget.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-secondary);">No matches found.</div>';
+                 return;
+            }
+
+            usersArray.forEach(u => {
+                const el = document.createElement('div');
+                const followerCount = Object.keys(u.followers || {}).length;
+                el.className = 'sidebar-item profile-link';
+                el.dataset.uid = u.id;
+                el.style.borderBottom = '1px solid var(--border-dim)';
+                el.style.borderRadius = '0';
+                el.style.padding = '12px 16px';
+                el.innerHTML = `
+                    <img src="${u.photoURL || 'https://ui-avatars.com/api/?name=User'}" class="no-long-press" style="width: 44px; height: 44px; border-radius: 50%; object-fit: cover; border: 1px solid var(--border-dim);">
+                    <div style="display:flex; flex-direction:column;">
+                        <span style="font-weight: 600; font-size: 15px; color: var(--text-primary);">${u.name}</span>
+                        <span style="font-size: 13px; color: var(--text-secondary);">${followerCount} Follower${followerCount !== 1 ? 's' : ''}</span>
+                    </div>
+                `;
+                el.onclick = () => {
+                    closeBrowseUsers();
+                    openProfileSheet(u.id);
+                };
+                listTarget.appendChild(el);
+            });
+        }
+
+        document.getElementById('drawer-browse-users').addEventListener('click', () => { 
+            toggleDrawer(); 
+            openBrowseUsers(); 
+        });
+
+        document.getElementById('user-search-input').addEventListener('input', (e) => {
+            const query = e.target.value.toLowerCase().trim();
+            if(window.allUsersCache) {
+                const filtered = window.allUsersCache.filter(u => u.name && u.name.toLowerCase().includes(query));
+                renderBrowseUsers(filtered);
+            }
+        });
 
         document.addEventListener('click', (e) => {
             if (!e.target.closest('.post-context-menu')) {
@@ -1544,7 +1635,15 @@
 
                 const postsArray = [];
                 snapshot.forEach((child) => { postsArray.push({ id: child.key, ...child.val() }); });
-                postsArray.sort((a, b) => b.timestamp - a.timestamp);
+                
+                // X/Twitter-style algorithm: Weighs popularity (likes), recency, and randomness
+                postsArray.sort((a, b) => {
+                    const recencyA = a.timestamp / 1000000000;
+                    const recencyB = b.timestamp / 1000000000;
+                    const scoreA = (a.likesCount || 0) * 50 + recencyA + (Math.random() * 10);
+                    const scoreB = (b.likesCount || 0) * 50 + recencyB + (Math.random() * 10);
+                    return scoreB - scoreA;
+                });
 
                 reconcilePosts(streamTarget, postsArray, feedRenderedCards);
 

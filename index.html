@@ -225,8 +225,11 @@
         .modal-sheet { background: var(--bg-surface); width: 100%; max-width: 600px; border-radius: var(--radius-lg); box-shadow: var(--shadow-modal); display: flex; flex-direction: column; max-height: 85vh; border: 1px solid var(--border-dim); animation: modalIn 0.2s ease-out; }
 
         /* ── Profile View: Full-Width / Full-Screen ── */
-        #profile-modal { padding: 0; }
-        #profile-modal .modal-sheet { max-width: 100%; width: 100%; height: 100%; max-height: 100%; border-radius: 0; border: none; }
+        /* ── Profile View: True Full-Screen Page (not a modal dialog) ── */
+        .full-page-view { position: fixed; inset: 0; background: var(--bg-body); z-index: 500; display: flex; flex-direction: column; visibility: hidden; transform: translateX(100%); transition: transform 0.25s ease; }
+        .full-page-view.active { visibility: visible; transform: translateX(0); }
+        .full-page-view .modal-header { justify-content: flex-start; gap: 12px; background: var(--bg-surface); flex-shrink: 0; }
+        .full-page-view .modal-close-btn { position: static; }
         .friend-count-pill { font-size: 14px; color: var(--text-secondary); font-weight: 600; margin-bottom: 12px; cursor: default; }
         .friend-action-btn.is-friend { background: #E4E6EB !important; color: var(--text-primary) !important; }
         @keyframes modalIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
@@ -441,29 +444,27 @@
         </div>
     </div>
 
-    <div id="profile-modal" class="overlay-modal" style="z-index: 500;">
-        <div class="modal-sheet" style="max-height: 95vh; height: 95vh; display: flex; flex-direction: column;">
-            <div class="modal-header">
-                <h3 id="profile-modal-header-title">Profile</h3>
-                <button class="modal-close-btn" onclick="closeProfileView()"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-            <div class="modal-body" style="padding: 0; display: flex; flex-direction: column; overflow-y: auto; background: var(--bg-body);">
-                <div style="background: var(--bg-surface); padding: 24px; display: flex; flex-direction: column; align-items: center; box-shadow: var(--shadow-sm); z-index: 1; position: relative;">
-                    <div style="position: relative;">
-                        <img id="profile-view-avatar" class="no-long-press" style="width: 140px; height: 140px; border-radius: 50%; object-fit: cover; border: 4px solid white; box-shadow: var(--shadow-sm);">
-                        <label id="profile-avatar-upload-label" style="display: none; position: absolute; bottom: 5px; right: 5px; background: #E4E6EB; border-radius: 50%; width: 36px; height: 36px; align-items: center; justify-content: center; cursor: pointer; box-shadow: var(--shadow-sm); border: 1px solid var(--border-dim); transition: 0.2s;">
-                            <i class="fa-solid fa-camera" style="color: var(--text-primary); font-size: 16px;"></i>
-                            <input type="file" id="profile-avatar-update" style="display:none;" accept="image/*">
-                        </label>
-                    </div>
-                    <h2 id="profile-view-name" style="margin-top: 16px; margin-bottom: 4px; font-size: 28px; letter-spacing: -0.5px;">Loading...</h2>
+    <div id="profile-modal" class="full-page-view">
+        <div class="modal-header">
+            <button class="modal-close-btn" onclick="closeProfileView()"><i class="fa-solid fa-arrow-left"></i></button>
+            <h3 id="profile-modal-header-title">Profile</h3>
+        </div>
+        <div class="modal-body" style="padding: 0; display: flex; flex-direction: column; overflow-y: auto; background: var(--bg-body); flex: 1;">
+            <div style="background: var(--bg-surface); padding: 24px; display: flex; flex-direction: column; align-items: center; box-shadow: var(--shadow-sm); z-index: 1; position: relative;">
+                <div style="position: relative;">
+                    <img id="profile-view-avatar" class="no-long-press" style="width: 140px; height: 140px; border-radius: 50%; object-fit: cover; border: 4px solid white; box-shadow: var(--shadow-sm);">
+                    <label id="profile-avatar-upload-label" style="display: none; position: absolute; bottom: 5px; right: 5px; background: #E4E6EB; border-radius: 50%; width: 36px; height: 36px; align-items: center; justify-content: center; cursor: pointer; box-shadow: var(--shadow-sm); border: 1px solid var(--border-dim); transition: 0.2s;">
+                        <i class="fa-solid fa-camera" style="color: var(--text-primary); font-size: 16px;"></i>
+                        <input type="file" id="profile-avatar-update" style="display:none;" accept="image/*">
+                    </label>
+                </div>
+                <h2 id="profile-view-name" style="margin-top: 16px; margin-bottom: 4px; font-size: 28px; letter-spacing: -0.5px;">Loading...</h2>
                     <div id="profile-friend-count" class="friend-count-pill"></div>
                     <div id="profile-actions" style="margin-bottom: 8px;"></div>
                 </div>
                 <div id="profile-timeline-target" style="padding: 16px; flex: 1; display: flex; flex-direction: column; gap: 16px; max-width: 680px; width: 100%; margin: 0 auto;"></div>
             </div>
         </div>
-    </div>
 
     <div id="comments-modal" class="overlay-modal" style="z-index: 600;">
         <div class="modal-sheet">
@@ -531,6 +532,7 @@
         let feedUnsubscribe = null;
         let profileFeedUnsubscribe = null;
         let userWantsVideoSound = false; // once true, newly rendered videos start unmuted
+        let currentlyPlayingVideo = null; // only one video (feed OR profile) plays at a time
 
         // Anti-Long Press logic for Mobile Devices natively via JS contextmenu interception
         document.addEventListener('contextmenu', e => {
@@ -1043,8 +1045,19 @@
                     userWantsVideoSound = !video.muted;
                 });
 
-                video.addEventListener('play', () => { playIcon.className = 'fa-solid fa-pause'; });
-                video.addEventListener('pause', () => { playIcon.className = 'fa-solid fa-play'; });
+                video.addEventListener('play', () => {
+                    playIcon.className = 'fa-solid fa-pause';
+                    // Only one video plays at a time — if a different video (feed or profile)
+                    // starts playing, stop whatever was previously playing anywhere in the app.
+                    if (currentlyPlayingVideo && currentlyPlayingVideo !== video) {
+                        currentlyPlayingVideo.pause();
+                    }
+                    currentlyPlayingVideo = video;
+                });
+                video.addEventListener('pause', () => {
+                    playIcon.className = 'fa-solid fa-play';
+                    if (currentlyPlayingVideo === video) currentlyPlayingVideo = null;
+                });
                 
                 video.addEventListener('timeupdate', () => {
                     if(!video.duration) return;
@@ -1154,6 +1167,11 @@
         window.openProfileView = (uid) => {
             const modal = document.getElementById('profile-modal');
             modal.classList.add('active');
+
+            // The profile is now a full-screen page covering the feed, but the feed's
+            // videos are still technically "in the viewport" underneath it, so the
+            // IntersectionObserver won't pause them on its own — stop them explicitly.
+            document.querySelectorAll('#posts-stream-target video').forEach(v => v.pause());
             
             document.getElementById('profile-view-name').innerText = "Loading...";
             document.getElementById('profile-friend-count').innerText = '';
@@ -1225,6 +1243,15 @@
                 profileFeedUnsubscribe();
                 profileFeedUnsubscribe = null;
             }
+            // Stop any video that was playing on the profile page
+            document.querySelectorAll('#profile-timeline-target video').forEach(v => v.pause());
+
+            // Re-trigger the intersection observer for feed videos so ones currently
+            // in view resume autoplay now that the profile page is gone.
+            document.querySelectorAll('#posts-stream-target .custom-video-wrapper video').forEach(v => {
+                videoPlaybackObserver.unobserve(v);
+                videoPlaybackObserver.observe(v);
+            });
         };
 
         window.editProfileName = () => {

@@ -224,35 +224,64 @@
         .overlay-modal.active { display: flex; }
         .modal-sheet { background: var(--bg-surface); width: 100%; max-width: 600px; border-radius: var(--radius-lg); box-shadow: var(--shadow-modal); display: flex; flex-direction: column; max-height: 85vh; border: 1px solid var(--border-dim); animation: modalIn 0.2s ease-out; }
 
-        /* ── Profile View: Full-Width / Full-Screen ── */
-        /* ── Profile View: True Full-Screen Page (not a modal dialog) ── */
-        .full-page-view { position: fixed; inset: 0; background: var(--bg-body); z-index: 500; display: flex; flex-direction: column; visibility: hidden; transform: translateX(100%); transition: transform 0.25s ease; }
-        .full-page-view.active { visibility: visible; transform: translateX(0); }
-        .full-page-view .modal-header { justify-content: flex-start; gap: 12px; background: var(--bg-surface); flex-shrink: 0; }
-        .full-page-view .modal-close-btn { position: static; }
-        .friend-count-pill { font-size: 14px; color: var(--text-secondary); font-weight: 600; margin-bottom: 12px; cursor: default; }
-        .friend-action-btn.is-friend { background: #E4E6EB !important; color: var(--text-primary) !important; }
+        /* ── Profile Bottom Sheet Presentation UI ── */
+        .profile-sheet-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 998;
+            display: none; opacity: 0; transition: opacity 0.3s ease;
+        }
+        .profile-sheet-overlay.active { display: block; opacity: 1; }
 
-        /* ── TikTok-style Profile Media Grid ── */
-        .profile-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; width: 100%; }
-        .profile-grid-tile { position: relative; aspect-ratio: 1 / 1; overflow: hidden; cursor: pointer; background: #ECECEC; }
-        .profile-grid-tile img, .profile-grid-tile video { width: 100%; height: 100%; object-fit: cover; display: block; pointer-events: none; }
-        .profile-grid-tile .tile-play-icon { position: absolute; top: 6px; left: 6px; color: #fff; font-size: 13px; text-shadow: 0 1px 3px rgba(0,0,0,0.6); }
-        .profile-grid-tile .tile-stats { position: absolute; bottom: 6px; left: 6px; color: #fff; font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 4px; text-shadow: 0 1px 3px rgba(0,0,0,0.6); }
-        .profile-grid-tile .tile-gradient { position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.45) 0%, rgba(0,0,0,0) 35%); pointer-events: none; }
-        .profile-grid-tile.text-tile { background: var(--bg-surface); padding: 10px; display: flex; align-items: center; justify-content: center; }
-        .profile-grid-tile.text-tile p { font-size: 12px; color: var(--text-primary); line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical; overflow: hidden; margin: 0; text-align: center; }
-        .profile-feed-back-bar { display: flex; align-items: center; gap: 10px; padding: 12px 16px; background: var(--bg-surface); border-bottom: 1px solid var(--border-dim); font-weight: 600; cursor: pointer; }
+        .profile-bottom-sheet {
+            position: fixed; bottom: 0; left: 50%; transform: translate(-50%, 100%);
+            width: 100%; max-width: 600px; height: 80vh; background: var(--bg-surface);
+            z-index: 999; border-top-left-radius: 24px; border-top-right-radius: 24px;
+            box-shadow: 0 -10px 30px rgba(0,0,0,0.15); display: flex; flex-direction: column;
+            transition: transform 0.3s cubic-bezier(0.1, 0.76, 0.55, 0.94); overflow: hidden;
+        }
+        .profile-bottom-sheet.active { transform: translate(-50%, 0); }
+
+        .sheet-handle { width: 50px; height: 5px; background: #BCC0C4; border-radius: 10px; margin: 12px auto 4px; flex-shrink: 0; }
+        .sheet-header { padding: 4px 16px; display: flex; justify-content: flex-end; align-items: center; }
+        .sheet-close-btn { background: #E4E6EB; border: none; width: 32px; height: 32px; border-radius: 50%; font-size: 16px; cursor: pointer; color: var(--text-secondary); display: flex; align-items: center; justify-content: center; }
+        .sheet-body { flex: 1; overflow-y: auto; padding-bottom: 32px; }
+
+        /* Cover Image Context Framework */
+        .profile-cover-box { width: 100%; height: 180px; position: relative; background: #E4E6EB; overflow: hidden; }
+        .profile-cover-img { width: 100%; height: 100%; object-fit: cover; }
+        .cover-upload-btn {
+            position: absolute; right: 12px; bottom: 12px; background: rgba(0,0,0,0.65);
+            color: white; border: none; padding: 6px 12px; border-radius: 6px;
+            font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; backdrop-filter: blur(4px);
+        }
+
+        .profile-avatar-placement { display: flex; flex-direction: column; align-items: center; margin-top: -55px; position: relative; padding: 0 16px; text-align: center; }
+        .profile-sheet-avatar { width: 110px; height: 110px; border-radius: 50%; object-fit: cover; border: 4px solid var(--bg-surface); box-shadow: var(--shadow-sm); background: #FFF; }
+        .avatar-upload-icon { position: absolute; transform: translate(35px, 75px); background: #E4E6EB; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 1px solid var(--border-dim); box-shadow: var(--shadow-sm); }
+
+        .profile-meta-details { margin-top: 12px; padding: 0 24px; text-align: center; }
+        .profile-sheet-name { font-size: 26px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.5px; }
+        .profile-sheet-bio { font-size: 15px; color: var(--text-secondary); margin-top: 8px; line-height: 1.45; word-break: break-word; max-width: 450px; margin-left: auto; margin-right: auto; }
+        
+        .profile-sheet-stats { display: flex; justify-content: center; gap: 24px; margin-top: 16px; font-size: 15px; color: var(--text-secondary); }
+        .profile-sheet-stats strong { color: var(--text-primary); font-weight: 600; }
+
+        .profile-sheet-actions { display: flex; justify-content: center; gap: 12px; margin-top: 22px; padding: 0 24px; }
+        .btn-sheet-action { flex: 1; max-width: 180px; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 16px; border-radius: 8px; font-weight: 600; font-size: 15px; cursor: pointer; border: none; transition: background 0.2s; }
+        .btn-sheet-primary { background: var(--primary-orange); color: white; }
+        .btn-sheet-primary:hover { background: var(--primary-hover); }
+        .btn-sheet-secondary { background: #E4E6EB; color: var(--text-primary); }
+        .btn-sheet-secondary:hover { background: #D8DADF; }
+        .btn-sheet-action.is-active { background: #CED0D4; color: var(--text-primary); }
+
         @keyframes modalIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
         
         .modal-header { padding: 16px; border-bottom: 1px solid var(--border-dim); display: flex; justify-content: center; align-items: center; position: relative; }
         .modal-header h3 { font-size: 20px; font-weight: 700; margin: 0; }
-        .modal-close-btn { position: absolute; right: 16px; background: #E4E6EB; border: none; width: 36px; height: 36px; border-radius: 50%; font-size: 18px; cursor: pointer; color: var(--text-secondary); }
+        .modal-close-btn { position: absolute; right: 16px; background: #E4E6EB; border: none; width: 36px; height: 36px; border-radius: 50%; font-size: 18px; cursor: pointer; color: var(--text-secondary); display: flex; align-items: center; justify-content: center; }
         .modal-close-btn:hover { background: #D8DADF; }
         .modal-body { padding: 16px; overflow-y: auto; flex: 1; }
         
         /* Create Post Specifics */
-        #composer-modal-text { width: 100%; border: none; outline: none; font-size: 24px; resize: none; min-height: 120px; margin-bottom: 12px; font-family: inherit; }
         .media-preview-box { display: none; position: relative; border-radius: var(--radius-md); overflow: hidden; border: 1px solid var(--border-dim); margin-bottom: 12px; max-height: 300px; }
         .media-preview-box img, .media-preview-box video { width: 100%; height: 100%; object-fit: cover; max-height: 300px;}
         .clear-preview-btn { position: absolute; top: 8px; right: 8px; background: white; border: 1px solid var(--border-dim); width: 32px; height: 32px; border-radius: 50%; cursor: pointer; box-shadow: var(--shadow-sm); z-index: 10; }
@@ -455,31 +484,49 @@
         </div>
     </div>
 
-    <div id="profile-modal" class="full-page-view">
-        <div class="modal-header">
-            <button class="modal-close-btn" onclick="closeProfileView()"><i class="fa-solid fa-arrow-left"></i></button>
-            <h3 id="profile-modal-header-title">Profile</h3>
+    <!-- ── Profile Bottom Sheet Presentation Layer ── -->
+    <div id="profile-sheet-overlay" class="profile-sheet-overlay" onclick="closeProfileSheet()"></div>
+    <div id="profile-bottom-sheet" class="profile-bottom-sheet">
+        <div class="sheet-handle"></div>
+        <div class="sheet-header">
+            <button class="sheet-close-btn" onclick="closeProfileSheet()"><i class="fa-solid fa-xmark"></i></button>
         </div>
-        <div class="modal-body" style="padding: 0; display: flex; flex-direction: column; overflow-y: auto; background: var(--bg-body); flex: 1;">
-            <div style="background: var(--bg-surface); padding: 24px; display: flex; flex-direction: column; align-items: center; box-shadow: var(--shadow-sm); z-index: 1; position: relative;">
-                <div style="position: relative;">
-                    <img id="profile-view-avatar" class="no-long-press" style="width: 140px; height: 140px; border-radius: 50%; object-fit: cover; border: 4px solid white; box-shadow: var(--shadow-sm);">
-                    <label id="profile-avatar-upload-label" style="display: none; position: absolute; bottom: 5px; right: 5px; background: #E4E6EB; border-radius: 50%; width: 36px; height: 36px; align-items: center; justify-content: center; cursor: pointer; box-shadow: var(--shadow-sm); border: 1px solid var(--border-dim); transition: 0.2s;">
-                        <i class="fa-solid fa-camera" style="color: var(--text-primary); font-size: 16px;"></i>
+        <div class="sheet-body">
+            <!-- Dynamic Cover image module box -->
+            <div class="profile-cover-box">
+                <img id="profile-view-cover" class="profile-cover-img no-long-press" src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&q=80">
+                <label id="profile-cover-upload-label" class="cover-upload-btn" style="display: none;">
+                    <i class="fa-solid fa-camera"></i> Edit Cover
+                    <input type="file" id="profile-cover-update" style="display: none;" accept="image/*">
+                </label>
+            </div>
+
+            <!-- Avatar reposition wrapper -->
+            <div class="profile-avatar-placement">
+                <div style="position: relative; display: inline-block;">
+                    <img id="profile-view-avatar" class="profile-sheet-avatar no-long-press" src="https://ui-avatars.com/api/?name=User&background=FF8C00&color=fff">
+                    <label id="profile-avatar-upload-label" class="avatar-upload-icon" style="display: none;">
+                        <i class="fa-solid fa-camera" style="color: var(--text-primary); font-size: 14px;"></i>
                         <input type="file" id="profile-avatar-update" style="display:none;" accept="image/*">
                     </label>
                 </div>
-                <h2 id="profile-view-name" style="margin-top: 16px; margin-bottom: 4px; font-size: 28px; letter-spacing: -0.5px;">Loading...</h2>
-                    <div id="profile-friend-count" class="friend-count-pill"></div>
-                    <div id="profile-actions" style="margin-bottom: 8px;"></div>
-                </div>
-                <div id="profile-grid-target" class="profile-grid"></div>
-                <div id="profile-feed-back-bar" class="profile-feed-back-bar" style="display:none;" onclick="showProfileGrid()">
-                    <i class="fa-solid fa-arrow-left"></i> Back to grid
-                </div>
-                <div id="profile-timeline-target" style="display:none; padding: 16px; flex: 1; flex-direction: column; gap: 16px; max-width: 680px; width: 100%; margin: 0 auto;"></div>
             </div>
+
+            <!-- Descriptive Meta Content Target Blocks -->
+            <div class="profile-meta-details">
+                <h2 id="profile-view-name" class="profile-sheet-name">Loading User...</h2>
+                <p id="profile-view-bio" class="profile-sheet-bio">No details or bio provided yet.</p>
+                
+                <div class="profile-sheet-stats">
+                    <span><strong id="profile-followers-count">0</strong> Followers</span>
+                    <span><strong id="profile-following-count">0</strong> Following</span>
+                </div>
+            </div>
+
+            <!-- Interactive Action Panel (Follow, Message, Profile Details Mutation) -->
+            <div id="profile-sheet-actions" class="profile-sheet-actions"></div>
         </div>
+    </div>
 
     <div id="comments-modal" class="overlay-modal" style="z-index: 600;">
         <div class="modal-sheet">
@@ -545,9 +592,9 @@
         
         let currentFeedLimit = 5;
         let feedUnsubscribe = null;
-        let profileFeedUnsubscribe = null;
-        let userWantsVideoSound = false; // once true, newly rendered videos start unmuted
-        let currentlyPlayingVideo = null; // only one video (feed OR profile) plays at a time
+        let userWantsVideoSound = false; 
+        let currentlyPlayingVideo = null;
+        let activeSheetUidListener = null;
 
         // Anti-Long Press logic for Mobile Devices natively via JS contextmenu interception
         document.addEventListener('contextmenu', e => {
@@ -562,7 +609,7 @@
             if(link) {
                 let uid = link.dataset.uid;
                 if(uid === "CURRENT_USER" && currentUser) uid = currentUser.uid;
-                if(uid) openProfileView(uid);
+                if(uid) openProfileSheet(uid);
             }
         });
 
@@ -774,7 +821,7 @@
         const logoutAction = () => fbSignOut(auth).then(() => window.location.reload());
         document.getElementById('drawer-logout-trigger').addEventListener('click', logoutAction);
 
-        // Upload Profile Avatar logic via Modal
+        // Upload Profile Avatar logic via Modal Profile Sheet
         document.getElementById('profile-avatar-update').addEventListener('change', async (e) => {
             const file = e.target.files[0];
             if (!file) return;
@@ -783,7 +830,20 @@
             if (cloudUrl && currentUser) {
                 await update(ref(database, `users/${currentUser.uid}`), { photoURL: cloudUrl });
                 document.getElementById('profile-view-avatar').src = cloudUrl;
-                toast("Profile updated successfully.");
+                toast("Profile avatar updated successfully.");
+            }
+        });
+
+        // Dynamic Upload Profile Cover Image logic
+        document.getElementById('profile-cover-update').addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            toast("Uploading cover image...");
+            const cloudUrl = await uploadMediaFile(file);
+            if (cloudUrl && currentUser) {
+                await update(ref(database, `users/${currentUser.uid}`), { coverURL: cloudUrl });
+                document.getElementById('profile-view-cover').src = cloudUrl;
+                toast("Cover image updated successfully.");
             }
         });
 
@@ -793,7 +853,6 @@
             document.getElementById('post-media-file').value = '';
             document.getElementById('preview-box').innerHTML = '';
             document.getElementById('preview-box').style.display = 'none';
-            document.getElementById('composer-text').style.minHeight = '120px';
         };
 
         document.getElementById('post-media-file').addEventListener('change', (e) => {
@@ -818,7 +877,6 @@
                 
                 document.getElementById('clear-media-btn').addEventListener('click', clearMediaSelection);
                 previewBox.style.display = 'block';
-                document.getElementById('composer-text').style.minHeight = '60px'; 
             }
         });
 
@@ -997,8 +1055,6 @@
             return card;
         }
 
-        // Patch an existing post card in place (likes, live text) without touching
-        // its video/media elements, so playback and mute state survive real-time updates.
         function updatePostElement(card, post) {
             const postLikesObj = post.likes || {};
             const hasLiked = !!postLikesObj[currentUser.uid];
@@ -1038,9 +1094,8 @@
                 const muteIcon = muteBtn.querySelector('i');
                 const spinner = wrapper.querySelector('.video-spinner');
 
-                // Apply the user's current sound preference to this newly-rendered video
                 video.muted = !userWantsVideoSound;
-                muteIcon.className = video.muted ? 'fa-solid fa-volume-xmark' : 'fa-solid fa-volume-high';
+                if (muteIcon) muteIcon.className = video.muted ? 'fa-solid fa-volume-xmark' : 'fa-solid fa-volume-high';
                 
                 video.addEventListener('click', () => {
                     if (video.paused) video.play(); else video.pause();
@@ -1055,15 +1110,11 @@
                     e.stopPropagation();
                     video.muted = !video.muted;
                     muteIcon.className = video.muted ? 'fa-solid fa-volume-xmark' : 'fa-solid fa-volume-high';
-                    // Remember the preference so future videos in the feed start in the
-                    // same state (e.g. once unmuted, subsequently loaded videos play with sound).
                     userWantsVideoSound = !video.muted;
                 });
 
                 video.addEventListener('play', () => {
                     playIcon.className = 'fa-solid fa-pause';
-                    // Only one video plays at a time — if a different video (feed or profile)
-                    // starts playing, stop whatever was previously playing anywhere in the app.
                     if (currentlyPlayingVideo && currentlyPlayingVideo !== video) {
                         currentlyPlayingVideo.pause();
                     }
@@ -1096,6 +1147,7 @@
                 videoPlaybackObserver.observe(video);
             });
         }
+        
         function formatTime(sec) {
             if(isNaN(sec)) return "0:00";
             const m = Math.floor(sec / 60);
@@ -1103,20 +1155,11 @@
             return `${m}:${s}`;
         }
 
-        // Maps tracking rendered post cards so we can patch them in-place instead of
-        // wiping and rebuilding the whole feed (which used to interrupt video playback,
-        // reset mute state, and re-subscribe duplicate comment-count listeners on every
-        // like/comment anywhere in the feed).
-        const feedRenderedCards = new Map();      // postId -> card element (main feed)
-        const profileRenderedCards = new Map();   // postId -> card element (profile timeline)
+        const feedRenderedCards = new Map();
 
-        // Diff `postsArray` (already sorted newest-first) against `renderedMap` and patch
-        // `container` in place: add new cards, remove gone ones, update changed ones,
-        // and reorder only when necessary. Never touches unrelated cards.
         function reconcilePosts(container, postsArray, renderedMap) {
             const currentIds = new Set(postsArray.map(p => p.id));
 
-            // Remove cards for posts that no longer exist
             renderedMap.forEach((el, id) => {
                 if (!currentIds.has(id)) {
                     if (el._commentsUnsub) el._commentsUnsub();
@@ -1136,7 +1179,6 @@
                     initCustomVideos(card);
                 } else {
                     updatePostElement(card, post);
-                    // Keep DOM order in sync with sort order without recreating nodes
                     const expectedPrevSibling = prevEl ? prevEl.nextElementSibling : container.firstElementChild;
                     if (expectedPrevSibling !== card) {
                         if (prevEl) prevEl.after(card);
@@ -1147,7 +1189,6 @@
             });
         }
 
-        // Timeline Attachment 
         function attachRealtimeTimelineFeed() {
             const streamTarget = document.getElementById('posts-stream-target');
             if (feedUnsubscribe) feedUnsubscribe();
@@ -1178,239 +1219,125 @@
             });
         }
 
-        // Open/Close and Manage Profile View 
-        window.openProfileView = (uid) => {
-            const modal = document.getElementById('profile-modal');
-            modal.classList.add('active');
-
-            // The profile is now a full-screen page covering the feed, but the feed's
-            // videos are still technically "in the viewport" underneath it, so the
-            // IntersectionObserver won't pause them on its own — stop them explicitly.
-            document.querySelectorAll('#posts-stream-target video').forEach(v => v.pause());
+        // ── Open and Present Profile Bottom Sheet ──
+        window.openProfileSheet = (uid) => {
+            document.getElementById('profile-sheet-overlay').classList.add('active');
+            document.getElementById('profile-bottom-sheet').classList.add('active');
             
-            document.getElementById('profile-view-name').innerText = "Loading...";
-            document.getElementById('profile-friend-count').innerText = '';
-            const actionsDiv = document.getElementById('profile-actions');
-            actionsDiv.innerHTML = '';
+            // Explicitly pause stream videos running beneath background
+            document.querySelectorAll('#posts-stream-target video').forEach(v => v.pause());
 
-            const uploadLabel = document.getElementById('profile-avatar-upload-label');
-            uploadLabel.style.display = (uid === currentUser.uid) ? 'flex' : 'none';
+            const isMe = (uid === currentUser.uid);
 
-            get(ref(database, `users/${uid}`)).then(snap => {
-                const userObj = snap.exists() ? snap.val() : {name: 'Unknown User', photoURL: 'https://ui-avatars.com/api/?name=U'};
-                document.getElementById('profile-view-name').innerText = userObj.name;
-                document.getElementById('profile-view-avatar').src = userObj.photoURL;
+            // Toggle visibility nodes based on privileges
+            document.getElementById('profile-avatar-upload-label').style.display = isMe ? 'flex' : 'none';
+            document.getElementById('profile-cover-upload-label').style.display = isMe ? 'block' : 'none';
 
-                if(uid === currentUser.uid) {
-                    actionsDiv.innerHTML = `<button class="btn-primary" onclick="editProfileName()" style="width: auto; padding: 8px 16px; border-radius: 20px;"><i class="fa-solid fa-pen"></i> Edit Profile Name</button>`;
+            if (activeSheetUidListener) activeSheetUidListener();
+
+            // Establish real-time sync for target profile sheet user details
+            activeSheetUidListener = onValue(ref(database, `users/${uid}`), (snap) => {
+                const data = snap.exists() ? snap.val() : {};
+                
+                document.getElementById('profile-view-name').innerText = data.name || "Lumina User";
+                document.getElementById('profile-view-avatar').src = data.photoURL || `https://ui-avatars.com/api/?name=User`;
+                document.getElementById('profile-view-bio').innerText = data.bio || "No details or bio provided yet.";
+                
+                // Fallback default image for profile cover
+                document.getElementById('profile-view-cover').src = data.coverURL || "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&q=80";
+
+                const followersObj = data.followers || {};
+                const followingObj = data.following || {};
+                
+                document.getElementById('profile-followers-count').innerText = Object.keys(followersObj).length;
+                document.getElementById('profile-following-count').innerText = Object.keys(followingObj).length;
+
+                const actionsArea = document.getElementById('profile-sheet-actions');
+                actionsArea.innerHTML = '';
+
+                if(isMe) {
+                    // Current User controls
+                    const editBioBtn = document.createElement('button');
+                    editBioBtn.className = "btn-sheet-action btn-sheet-secondary";
+                    editBioBtn.innerHTML = `<i class="fa-solid fa-signature"></i> Edit Bio`;
+                    editBioBtn.onclick = () => editMyProfileBio();
+
+                    const editNameBtn = document.createElement('button');
+                    editNameBtn.className = "btn-sheet-action btn-sheet-secondary";
+                    editNameBtn.innerHTML = `<i class="fa-solid fa-pen"></i> Edit Name`;
+                    editNameBtn.onclick = () => editMyProfileName();
+
+                    actionsArea.appendChild(editNameBtn);
+                    actionsArea.appendChild(editBioBtn);
                 } else {
-                    actionsDiv.innerHTML = `<button class="btn-primary friend-action-btn" id="friend-toggle-btn" style="width: auto; padding: 8px 16px; border-radius: 20px;"><i class="fa-solid fa-user-plus"></i> Add Friend</button>`;
-                    get(ref(database, `users/${currentUser.uid}/friends/${uid}`)).then(fs => {
-                        setFriendButtonState(fs.exists());
-                    });
-                    document.getElementById('friend-toggle-btn').addEventListener('click', () => toggleFriend(uid));
+                    // Visitor Context Controls
+                    const followBtn = document.createElement('button');
+                    const hasFollowed = !!followersObj[currentUser.uid];
+                    followBtn.className = hasFollowed ? "btn-sheet-action btn-sheet-secondary is-active" : "btn-sheet-action btn-sheet-primary";
+                    followBtn.innerHTML = hasFollowed ? `<i class="fa-solid fa-user-check"></i> Following` : `<i class="fa-solid fa-user-plus"></i> Follow`;
+                    followBtn.onclick = () => toggleFollowAction(uid, hasFollowed);
+
+                    const msgBtn = document.createElement('button');
+                    msgBtn.className = "btn-sheet-action btn-sheet-secondary";
+                    msgBtn.innerHTML = `<i class="fa-regular fa-comment-dots"></i> Message`;
+                    msgBtn.onclick = () => {
+                        toast(`Direct messaging channel workspace initialized for ${data.name || 'User'}`);
+                    };
+
+                    actionsArea.appendChild(followBtn);
+                    actionsArea.appendChild(msgBtn);
                 }
             });
-
-            refreshFriendCount(uid);
-            loadProfileTimeline(uid);
         };
 
-        function refreshFriendCount(uid) {
-            get(ref(database, `users/${uid}/friends`)).then(fSnap => {
-                const count = fSnap.exists() ? Object.keys(fSnap.val()).length : 0;
-                const el = document.getElementById('profile-friend-count');
-                if (el) el.innerText = `${count} friend${count === 1 ? '' : 's'}`;
-            });
-        }
-
-        function setFriendButtonState(isFriend) {
-            const btn = document.getElementById('friend-toggle-btn');
-            if (!btn) return;
-            btn.classList.toggle('is-friend', isFriend);
-            btn.innerHTML = isFriend
-                ? `<i class="fa-solid fa-user-check"></i> Friends`
-                : `<i class="fa-solid fa-user-plus"></i> Add Friend`;
-        }
-
-        window.toggleFriend = async (uid) => {
-            if (!currentUser || uid === currentUser.uid) return;
-            const myFriendRef = ref(database, `users/${currentUser.uid}/friends/${uid}`);
-            const theirFriendRef = ref(database, `users/${uid}/friends/${currentUser.uid}`);
-            const snap = await get(myFriendRef);
-            if (snap.exists()) {
-                await remove(myFriendRef);
-                await remove(theirFriendRef);
-                setFriendButtonState(false);
-                toast("Friend removed.");
-            } else {
-                await set(myFriendRef, true);
-                await set(theirFriendRef, true);
-                setFriendButtonState(true);
-                toast("Friend added!");
+        window.closeProfileSheet = () => {
+            document.getElementById('profile-sheet-overlay').classList.remove('active');
+            document.getElementById('profile-bottom-sheet').classList.remove('active');
+            if (activeSheetUidListener) {
+                activeSheetUidListener();
+                activeSheetUidListener = null;
             }
-            refreshFriendCount(uid);
-        };
 
-        window.closeProfileView = () => {
-            document.getElementById('profile-modal').classList.remove('active');
-            if(profileFeedUnsubscribe) {
-                profileFeedUnsubscribe();
-                profileFeedUnsubscribe = null;
-            }
-            // Stop any video that was playing on the profile page
-            document.querySelectorAll('#profile-timeline-target video').forEach(v => v.pause());
-
-            // Re-trigger the intersection observer for feed videos so ones currently
-            // in view resume autoplay now that the profile page is gone.
+            // Restore autoplay stream monitoring observers
             document.querySelectorAll('#posts-stream-target .custom-video-wrapper video').forEach(v => {
                 videoPlaybackObserver.unobserve(v);
                 videoPlaybackObserver.observe(v);
             });
         };
 
-        window.editProfileName = () => {
+        async function toggleFollowAction(targetUid, isCurrentlyFollowing) {
+            if(!currentUser) return;
+            const targetFollowersRef = ref(database, `users/${targetUid}/followers/${currentUser.uid}`);
+            const myFollowingRef = ref(database, `users/${currentUser.uid}/following/${targetUid}`);
+
+            if (isCurrentlyFollowing) {
+                await remove(targetFollowersRef);
+                await remove(myFollowingRef);
+                toast("Unfollowed user account.");
+            } else {
+                await set(targetFollowersRef, true);
+                await set(myFollowingRef, true);
+                toast("Following user profile!");
+            }
+        }
+
+        function editMyProfileBio() {
+            const currentBio = userProfile.bio || "";
+            const newBio = prompt("Enter your new short profile bio/details:", currentBio);
+            if (newBio !== null) {
+                update(ref(database, `users/${currentUser.uid}`), { bio: newBio.trim() }).then(() => {
+                    toast("Bio updated successfully.");
+                });
+            }
+        }
+
+        function editMyProfileName() {
             const newName = prompt("Enter your new profile name:", userProfile.name);
             if(newName && newName.trim().length > 0) {
                 update(ref(database, `users/${currentUser.uid}`), { name: newName.trim() }).then(() => {
-                    document.getElementById('profile-view-name').innerText = newName.trim();
-                    toast("Profile name updated successfully!");
+                    toast("Name updated successfully.");
                 });
             }
-        };
-
-        const profileGridTiles = new Map(); // postId -> tile element (profile grid)
-
-        // Build a single TikTok-style grid tile for a post
-        function createGridTileElement(post) {
-            const tile = document.createElement('div');
-            tile.className = 'profile-grid-tile';
-            tile.id = `grid-tile-${post.id}`;
-
-            const likeCount = post.likesCount || 0;
-
-            if (post.mediaUrl && (post.mediaType === 'video' || post.mediaUrl.match(/\.(mp4|webm|mov|ogg)$/i))) {
-                tile.innerHTML = `
-                    <video src="${post.mediaUrl}" muted playsinline preload="metadata"></video>
-                    <div class="tile-gradient"></div>
-                    <i class="fa-solid fa-play tile-play-icon"></i>
-                    <div class="tile-stats"><i class="fa-solid fa-thumbs-up"></i> <span class="tile-like-count">${likeCount}</span></div>
-                `;
-            } else if (post.mediaUrl) {
-                tile.innerHTML = `
-                    <img src="${post.mediaUrl}" loading="lazy">
-                    <div class="tile-gradient"></div>
-                    <div class="tile-stats"><i class="fa-solid fa-thumbs-up"></i> <span class="tile-like-count">${likeCount}</span></div>
-                `;
-            } else {
-                tile.classList.add('text-tile');
-                tile.innerHTML = `
-                    <p>${escapeHtml(post.text || '')}</p>
-                    <div class="tile-stats" style="position:absolute; bottom:6px; left:6px; color: var(--text-secondary); text-shadow:none;"><i class="fa-solid fa-thumbs-up"></i> <span class="tile-like-count">${likeCount}</span></div>
-                `;
-            }
-
-            tile.addEventListener('click', () => showProfileDetailFeed(post.id));
-
-            const thumbVideo = tile.querySelector('video');
-            if (thumbVideo) {
-                // Some browsers show a blank/black frame with only preload="metadata";
-                // nudging currentTime forces the first real frame to render as a thumbnail.
-                thumbVideo.addEventListener('loadedmetadata', () => {
-                    try { thumbVideo.currentTime = 0.1; } catch (e) {}
-                }, { once: true });
-            }
-
-            return tile;
-        }
-
-        function updateGridTileElement(tile, post) {
-            const countEl = tile.querySelector('.tile-like-count');
-            if (countEl) countEl.innerText = post.likesCount || 0;
-        }
-
-        function reconcileGrid(container, postsArray, renderedMap) {
-            const currentIds = new Set(postsArray.map(p => p.id));
-            renderedMap.forEach((el, id) => {
-                if (!currentIds.has(id)) { el.remove(); renderedMap.delete(id); }
-            });
-
-            let prevEl = null;
-            postsArray.forEach(post => {
-                let tile = renderedMap.get(post.id);
-                if (!tile) {
-                    tile = createGridTileElement(post);
-                    renderedMap.set(post.id, tile);
-                    if (prevEl) prevEl.after(tile);
-                    else container.prepend(tile);
-                } else {
-                    updateGridTileElement(tile, post);
-                    const expectedPrevSibling = prevEl ? prevEl.nextElementSibling : container.firstElementChild;
-                    if (expectedPrevSibling !== tile) {
-                        if (prevEl) prevEl.after(tile);
-                        else container.prepend(tile);
-                    }
-                }
-                prevEl = tile;
-            });
-        }
-
-        // Switch back to the grid view (pausing whatever is playing in the detail feed)
-        window.showProfileGrid = () => {
-            document.querySelectorAll('#profile-timeline-target video').forEach(v => v.pause());
-            document.getElementById('profile-timeline-target').style.display = 'none';
-            document.getElementById('profile-feed-back-bar').style.display = 'none';
-            document.getElementById('profile-grid-target').style.display = 'grid';
-        };
-
-        // Open the TikTok-style detail feed, scrolled to the tapped post
-        window.showProfileDetailFeed = (postId) => {
-            document.getElementById('profile-grid-target').style.display = 'none';
-            const timelineTarget = document.getElementById('profile-timeline-target');
-            const backBar = document.getElementById('profile-feed-back-bar');
-            timelineTarget.style.display = 'flex';
-            backBar.style.display = 'flex';
-
-            const card = profileRenderedCards.get(postId);
-            if (card) {
-                card.scrollIntoView({ block: 'start' });
-            }
-        };
-
-        function loadProfileTimeline(uid) {
-            const gridTarget = document.getElementById('profile-grid-target');
-            const target = document.getElementById('profile-timeline-target');
-            gridTarget.innerHTML = '<div style="grid-column: 1 / -1; text-align:center; padding: 20px;"><span class="loading-dots"><span></span><span></span><span></span></span></div>';
-            target.innerHTML = '';
-            profileRenderedCards.clear();
-            profileGridTiles.clear();
-
-            // Always start on the grid, like opening a TikTok profile
-            showProfileGrid();
-            
-            if(profileFeedUnsubscribe) profileFeedUnsubscribe();
-            
-            const q = query(ref(database, 'social_posts'), orderByChild('uid'), equalTo(uid));
-            let firstLoad = true;
-            profileFeedUnsubscribe = onValue(q, (snapshot) => {
-                if (firstLoad) { gridTarget.innerHTML = ''; firstLoad = false; }
-
-                if(!snapshot.exists()) {
-                    gridTarget.innerHTML = '<div id="profile-empty-state" style="grid-column: 1 / -1; text-align:center; color:var(--text-secondary); padding:20px;">No posts to show yet.</div>';
-                    profileRenderedCards.clear();
-                    profileGridTiles.clear();
-                    return;
-                }
-                const emptyState = document.getElementById('profile-empty-state');
-                if (emptyState) emptyState.remove();
-
-                const posts = [];
-                snapshot.forEach(c => posts.push({id: c.key, ...c.val()}));
-                posts.sort((a, b) => b.timestamp - a.timestamp);
-
-                reconcileGrid(gridTarget, posts, profileGridTiles);
-                reconcilePosts(target, posts, profileRenderedCards);
-            });
         }
 
         // Comment Overlays & Interactions

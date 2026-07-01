@@ -223,6 +223,12 @@
         .overlay-modal { position: fixed; inset: 0; background: rgba(255,255,255,0.8); display: none; align-items: center; justify-content: center; z-index: 200; padding: 16px; }
         .overlay-modal.active { display: flex; }
         .modal-sheet { background: var(--bg-surface); width: 100%; max-width: 600px; border-radius: var(--radius-lg); box-shadow: var(--shadow-modal); display: flex; flex-direction: column; max-height: 85vh; border: 1px solid var(--border-dim); animation: modalIn 0.2s ease-out; }
+
+        /* ── Profile View: Full-Width / Full-Screen ── */
+        #profile-modal { padding: 0; }
+        #profile-modal .modal-sheet { max-width: 100%; width: 100%; height: 100%; max-height: 100%; border-radius: 0; border: none; }
+        .friend-count-pill { font-size: 14px; color: var(--text-secondary); font-weight: 600; margin-bottom: 12px; cursor: default; }
+        .friend-action-btn.is-friend { background: #E4E6EB !important; color: var(--text-primary) !important; }
         @keyframes modalIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
         
         .modal-header { padding: 16px; border-bottom: 1px solid var(--border-dim); display: flex; justify-content: center; align-items: center; position: relative; }
@@ -450,7 +456,8 @@
                             <input type="file" id="profile-avatar-update" style="display:none;" accept="image/*">
                         </label>
                     </div>
-                    <h2 id="profile-view-name" style="margin-top: 16px; margin-bottom: 12px; font-size: 28px; letter-spacing: -0.5px;">Loading...</h2>
+                    <h2 id="profile-view-name" style="margin-top: 16px; margin-bottom: 4px; font-size: 28px; letter-spacing: -0.5px;">Loading...</h2>
+                    <div id="profile-friend-count" class="friend-count-pill"></div>
                     <div id="profile-actions" style="margin-bottom: 8px;"></div>
                 </div>
                 <div id="profile-timeline-target" style="padding: 16px; flex: 1; display: flex; flex-direction: column; gap: 16px; max-width: 680px; width: 100%; margin: 0 auto;"></div>
@@ -523,6 +530,7 @@
         let currentFeedLimit = 5;
         let feedUnsubscribe = null;
         let profileFeedUnsubscribe = null;
+        let userWantsVideoSound = false; // once true, newly rendered videos start unmuted
 
         // Anti-Long Press logic for Mobile Devices natively via JS contextmenu interception
         document.addEventListener('contextmenu', e => {
@@ -915,7 +923,7 @@
                     </div>
                     ${contextMenuHTML}
                 </div>
-                <div class="post-text">${escapeHtml(post.text)}</div>
+                <div class="post-text" data-raw-text="${encodeURIComponent(post.text || '')}">${escapeHtml(post.text)}</div>
                 ${mediaTag}
                 
                 <div class="post-stats">
@@ -925,7 +933,7 @@
                 
                 <div class="post-actions-row">
                     <div class="action-icon-group ${likeClass}" id="like-trigger-${post.id}">
-                        <i class="${likeIcon} fa-thumbs-up"></i> Like
+                        <i class="${likeIcon} fa-thumbs-up"></i> <span class="like-label">${hasLiked ? 'Liked' : 'Like'}</span>
                     </div>
                     <div class="action-icon-group" id="comment-trigger-${post.id}">
                         <i class="fa-regular fa-comment"></i> Comment
@@ -950,7 +958,7 @@
                 }
             }
 
-            onValue(ref(database, `post_replies/${post.id}`), (replySnap) => {
+            card._commentsUnsub = onValue(ref(database, `post_replies/${post.id}`), (replySnap) => {
                 const count = replySnap.exists() ? replySnap.size : 0;
                 const el = card.querySelector(`#comment-count-display-${post.id}`);
                 if(el) el.innerText = count;
@@ -972,6 +980,31 @@
             return card;
         }
 
+        // Patch an existing post card in place (likes, live text) without touching
+        // its video/media elements, so playback and mute state survive real-time updates.
+        function updatePostElement(card, post) {
+            const postLikesObj = post.likes || {};
+            const hasLiked = !!postLikesObj[currentUser.uid];
+
+            const likeCountEl = card.querySelector(`#like-count-display-${post.id}`);
+            if (likeCountEl) likeCountEl.innerText = post.likesCount || 0;
+
+            const likeTrigger = card.querySelector(`#like-trigger-${post.id}`);
+            if (likeTrigger) {
+                likeTrigger.classList.toggle('liked', hasLiked);
+                const icon = likeTrigger.querySelector('i');
+                if (icon) icon.className = (hasLiked ? 'fa-solid' : 'fa-regular') + ' fa-thumbs-up';
+                const label = likeTrigger.querySelector('.like-label');
+                if (label) label.innerText = hasLiked ? 'Liked' : 'Like';
+            }
+
+            const textEl = card.querySelector('.post-text');
+            if (textEl && textEl.dataset.rawText !== encodeURIComponent(post.text || '')) {
+                textEl.innerText = post.text || '';
+                textEl.dataset.rawText = encodeURIComponent(post.text || '');
+            }
+        }
+
         // Initialize custom logic for Videos embedded in a card
         function initCustomVideos(container) {
             const wrappers = container.querySelectorAll('.custom-video-wrapper');
@@ -987,6 +1020,10 @@
                 const playIcon = playBtn.querySelector('i');
                 const muteIcon = muteBtn.querySelector('i');
                 const spinner = wrapper.querySelector('.video-spinner');
+
+                // Apply the user's current sound preference to this newly-rendered video
+                video.muted = !userWantsVideoSound;
+                muteIcon.className = video.muted ? 'fa-solid fa-volume-xmark' : 'fa-solid fa-volume-high';
                 
                 video.addEventListener('click', () => {
                     if (video.paused) video.play(); else video.pause();
@@ -1001,6 +1038,9 @@
                     e.stopPropagation();
                     video.muted = !video.muted;
                     muteIcon.className = video.muted ? 'fa-solid fa-volume-xmark' : 'fa-solid fa-volume-high';
+                    // Remember the preference so future videos in the feed start in the
+                    // same state (e.g. once unmuted, subsequently loaded videos play with sound).
+                    userWantsVideoSound = !video.muted;
                 });
 
                 video.addEventListener('play', () => { playIcon.className = 'fa-solid fa-pause'; });
@@ -1035,6 +1075,50 @@
             return `${m}:${s}`;
         }
 
+        // Maps tracking rendered post cards so we can patch them in-place instead of
+        // wiping and rebuilding the whole feed (which used to interrupt video playback,
+        // reset mute state, and re-subscribe duplicate comment-count listeners on every
+        // like/comment anywhere in the feed).
+        const feedRenderedCards = new Map();      // postId -> card element (main feed)
+        const profileRenderedCards = new Map();   // postId -> card element (profile timeline)
+
+        // Diff `postsArray` (already sorted newest-first) against `renderedMap` and patch
+        // `container` in place: add new cards, remove gone ones, update changed ones,
+        // and reorder only when necessary. Never touches unrelated cards.
+        function reconcilePosts(container, postsArray, renderedMap) {
+            const currentIds = new Set(postsArray.map(p => p.id));
+
+            // Remove cards for posts that no longer exist
+            renderedMap.forEach((el, id) => {
+                if (!currentIds.has(id)) {
+                    if (el._commentsUnsub) el._commentsUnsub();
+                    el.remove();
+                    renderedMap.delete(id);
+                }
+            });
+
+            let prevEl = null;
+            postsArray.forEach(post => {
+                let card = renderedMap.get(post.id);
+                if (!card) {
+                    card = createPostElement(post);
+                    renderedMap.set(post.id, card);
+                    if (prevEl) prevEl.after(card);
+                    else container.prepend(card);
+                    initCustomVideos(card);
+                } else {
+                    updatePostElement(card, post);
+                    // Keep DOM order in sync with sort order without recreating nodes
+                    const expectedPrevSibling = prevEl ? prevEl.nextElementSibling : container.firstElementChild;
+                    if (expectedPrevSibling !== card) {
+                        if (prevEl) prevEl.after(card);
+                        else container.prepend(card);
+                    }
+                }
+                prevEl = card;
+            });
+        }
+
         // Timeline Attachment 
         function attachRealtimeTimelineFeed() {
             const streamTarget = document.getElementById('posts-stream-target');
@@ -1043,18 +1127,17 @@
             const feedQuery = query(ref(database, 'social_posts'), orderByChild('timestamp'), limitToLast(currentFeedLimit));
 
             feedUnsubscribe = onValue(feedQuery, (snapshot) => {
-                streamTarget.innerHTML = '';
-                if (!snapshot.exists()) return;
+                if (!snapshot.exists()) {
+                    streamTarget.innerHTML = '';
+                    feedRenderedCards.clear();
+                    return;
+                }
 
                 const postsArray = [];
                 snapshot.forEach((child) => { postsArray.push({ id: child.key, ...child.val() }); });
                 postsArray.sort((a, b) => b.timestamp - a.timestamp);
 
-                postsArray.forEach(post => {
-                    const card = createPostElement(post);
-                    streamTarget.appendChild(card);
-                    initCustomVideos(card);
-                });
+                reconcilePosts(streamTarget, postsArray, feedRenderedCards);
 
                 let anchor = document.getElementById('feed-scroll-anchor');
                 if (!anchor) {
@@ -1073,6 +1156,7 @@
             modal.classList.add('active');
             
             document.getElementById('profile-view-name').innerText = "Loading...";
+            document.getElementById('profile-friend-count').innerText = '';
             const actionsDiv = document.getElementById('profile-actions');
             actionsDiv.innerHTML = '';
 
@@ -1087,11 +1171,52 @@
                 if(uid === currentUser.uid) {
                     actionsDiv.innerHTML = `<button class="btn-primary" onclick="editProfileName()" style="width: auto; padding: 8px 16px; border-radius: 20px;"><i class="fa-solid fa-pen"></i> Edit Profile Name</button>`;
                 } else {
-                    actionsDiv.innerHTML = `<button class="btn-primary" style="width: auto; padding: 8px 16px; border-radius: 20px;"><i class="fa-solid fa-user-plus"></i> Add Friend</button>`;
+                    actionsDiv.innerHTML = `<button class="btn-primary friend-action-btn" id="friend-toggle-btn" style="width: auto; padding: 8px 16px; border-radius: 20px;"><i class="fa-solid fa-user-plus"></i> Add Friend</button>`;
+                    get(ref(database, `users/${currentUser.uid}/friends/${uid}`)).then(fs => {
+                        setFriendButtonState(fs.exists());
+                    });
+                    document.getElementById('friend-toggle-btn').addEventListener('click', () => toggleFriend(uid));
                 }
             });
 
+            refreshFriendCount(uid);
             loadProfileTimeline(uid);
+        };
+
+        function refreshFriendCount(uid) {
+            get(ref(database, `users/${uid}/friends`)).then(fSnap => {
+                const count = fSnap.exists() ? Object.keys(fSnap.val()).length : 0;
+                const el = document.getElementById('profile-friend-count');
+                if (el) el.innerText = `${count} friend${count === 1 ? '' : 's'}`;
+            });
+        }
+
+        function setFriendButtonState(isFriend) {
+            const btn = document.getElementById('friend-toggle-btn');
+            if (!btn) return;
+            btn.classList.toggle('is-friend', isFriend);
+            btn.innerHTML = isFriend
+                ? `<i class="fa-solid fa-user-check"></i> Friends`
+                : `<i class="fa-solid fa-user-plus"></i> Add Friend`;
+        }
+
+        window.toggleFriend = async (uid) => {
+            if (!currentUser || uid === currentUser.uid) return;
+            const myFriendRef = ref(database, `users/${currentUser.uid}/friends/${uid}`);
+            const theirFriendRef = ref(database, `users/${uid}/friends/${currentUser.uid}`);
+            const snap = await get(myFriendRef);
+            if (snap.exists()) {
+                await remove(myFriendRef);
+                await remove(theirFriendRef);
+                setFriendButtonState(false);
+                toast("Friend removed.");
+            } else {
+                await set(myFriendRef, true);
+                await set(theirFriendRef, true);
+                setFriendButtonState(true);
+                toast("Friend added!");
+            }
+            refreshFriendCount(uid);
         };
 
         window.closeProfileView = () => {
@@ -1115,25 +1240,28 @@
         function loadProfileTimeline(uid) {
             const target = document.getElementById('profile-timeline-target');
             target.innerHTML = '<div style="text-align:center; padding: 20px;"><span class="loading-dots"><span></span><span></span><span></span></span></div>';
+            profileRenderedCards.clear();
             
             if(profileFeedUnsubscribe) profileFeedUnsubscribe();
             
             const q = query(ref(database, 'social_posts'), orderByChild('uid'), equalTo(uid));
+            let firstLoad = true;
             profileFeedUnsubscribe = onValue(q, (snapshot) => {
-                target.innerHTML = '';
+                if (firstLoad) { target.innerHTML = ''; firstLoad = false; }
+
                 if(!snapshot.exists()) {
-                    target.innerHTML = '<div style="text-align:center; color:var(--text-secondary); padding:20px;">No posts to show yet.</div>';
+                    target.innerHTML = '<div id="profile-empty-state" style="text-align:center; color:var(--text-secondary); padding:20px;">No posts to show yet.</div>';
+                    profileRenderedCards.clear();
                     return;
                 }
+                const emptyState = document.getElementById('profile-empty-state');
+                if (emptyState) emptyState.remove();
+
                 const posts = [];
                 snapshot.forEach(c => posts.push({id: c.key, ...c.val()}));
                 posts.sort((a, b) => b.timestamp - a.timestamp);
-                
-                posts.forEach(p => {
-                    const card = createPostElement(p);
-                    target.appendChild(card);
-                    initCustomVideos(card);
-                });
+
+                reconcilePosts(target, posts, profileRenderedCards);
             });
         }
 

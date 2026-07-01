@@ -49,7 +49,7 @@
         }
 
         /* ── Anti-Long Press for Media & Avatars ── */
-        .no-long-press, img, video, .post-author-img, .nav-profile {
+        .no-long-press, img, video, .post-author-img, .nav-profile, .notif-avatar {
             -webkit-touch-callout: none !important;
             -webkit-user-select: none !important;
             -khtml-user-select: none !important;
@@ -109,9 +109,30 @@
         .nav-tab.active { color: var(--primary-orange); border-bottom-color: var(--primary-orange); border-radius: 0; margin: 0; height: 100%; background: transparent; }
 
         .nav-right { display: flex; align-items: center; gap: 12px; width: 320px; justify-content: flex-end; }
-        .icon-btn { width: 40px; height: 40px; border-radius: 50%; background: #E4E6EB; display: flex; align-items: center; justify-content: center; font-size: 18px; color: var(--text-primary); cursor: pointer; border: none; transition: background 0.2s; }
+        .icon-btn { width: 40px; height: 40px; border-radius: 50%; background: #E4E6EB; display: flex; align-items: center; justify-content: center; font-size: 18px; color: var(--text-primary); cursor: pointer; border: none; transition: background 0.2s; position: relative;}
         .icon-btn:hover { background: #D8DADF; }
         .nav-profile { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; cursor: pointer; border: 1px solid var(--border-dim); }
+
+        /* Notification Badge */
+        .notif-badge {
+            position: absolute; top: -4px; right: -4px;
+            background: #E41E3F; color: white;
+            font-size: 11px; font-weight: 700;
+            height: 20px; min-width: 20px;
+            padding: 0 6px; border-radius: 10px;
+            border: 2px solid var(--bg-surface);
+            display: none; align-items: center; justify-content: center;
+        }
+
+        /* Notification Item Styles */
+        .notif-item { display: flex; gap: 12px; padding: 12px 16px; cursor: pointer; transition: background 0.2s; align-items: center; border-bottom: 1px solid var(--border-dim);}
+        .notif-item:hover { background: var(--hover-overlay); }
+        .notif-item.unread { background: rgba(42, 187, 167, 0.1); } 
+        .notif-avatar-wrapper { position: relative; width: 56px; height: 56px; flex-shrink: 0;}
+        .notif-avatar { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+        .notif-text { flex: 1; font-size: 15px; color: var(--text-primary); line-height: 1.4; word-break: break-word;}
+        .notif-time { font-size: 13px; color: var(--text-secondary); margin-top: 4px; font-weight: 500;}
+        .notif-icon-badge { position: absolute; bottom: -2px; right: -2px; width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; border: 2px solid var(--bg-surface); font-size: 12px; }
 
         /* ── Navigation Drawer ── */
         .drawer-overlay {
@@ -220,11 +241,11 @@
         .scroll-anchor { height: 20px; width: 100%; margin-top: 10px; }
 
         /* ── Modals & Overlays ── */
-        .overlay-modal { position: fixed; inset: 0; background: rgba(255,255,255,0.8); display: none; align-items: center; justify-content: center; z-index: 200; padding: 16px; }
+        .overlay-modal { position: fixed; inset: 0; background: rgba(255,255,255,0.8); display: none; align-items: center; justify-content: center; z-index: 200; padding: 16px; backdrop-filter: blur(4px); }
         .overlay-modal.active { display: flex; }
         .modal-sheet { background: var(--bg-surface); width: 100%; max-width: 600px; border-radius: var(--radius-lg); box-shadow: var(--shadow-modal); display: flex; flex-direction: column; max-height: 85vh; border: 1px solid var(--border-dim); animation: modalIn 0.2s ease-out; }
 
-        /* ── Profile Bottom Sheet Presentation UI ── */
+        /* ── Profile & Notif Bottom Sheet Presentation UI ── */
         .profile-sheet-overlay {
             position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 998;
             display: none; opacity: 0; transition: opacity 0.3s ease;
@@ -241,7 +262,7 @@
         .profile-bottom-sheet.active { transform: translate(-50%, 0); }
 
         .sheet-handle { width: 50px; height: 5px; background: #BCC0C4; border-radius: 10px; margin: 12px auto 4px; flex-shrink: 0; }
-        .sheet-header { padding: 4px 16px; display: flex; justify-content: flex-end; align-items: center; }
+        .sheet-header { padding: 4px 16px; display: flex; justify-content: space-between; align-items: center; }
         .sheet-close-btn { background: #E4E6EB; border: none; width: 32px; height: 32px; border-radius: 50%; font-size: 16px; cursor: pointer; color: var(--text-secondary); display: flex; align-items: center; justify-content: center; }
         .sheet-body { flex: 1; overflow-y: auto; padding-bottom: 32px; }
 
@@ -430,7 +451,12 @@
 
         <div class="nav-right">
             <button class="icon-btn" title="Messenger"><i class="fa-brands fa-facebook-messenger"></i></button>
-            <button class="icon-btn" title="Notifications"><i class="fa-solid fa-bell"></i></button>
+            
+            <button class="icon-btn" id="nav-notif-btn" title="Notifications">
+                <i class="fa-solid fa-bell"></i>
+                <div id="notif-badge" class="notif-badge">0</div>
+            </button>
+            
             <img id="nav-profile-pic" src="https://ui-avatars.com/api/?name=User&background=FF8C00&color=fff" class="nav-profile no-long-press profile-link" data-uid="CURRENT_USER">
         </div>
     </nav>
@@ -531,10 +557,12 @@
         </div>
     </div>
 
-    <div id="profile-sheet-overlay" class="profile-sheet-overlay" onclick="closeProfileSheet()"></div>
+    <div id="profile-sheet-overlay" class="profile-sheet-overlay"></div>
+    
     <div id="profile-bottom-sheet" class="profile-bottom-sheet">
         <div class="sheet-handle"></div>
         <div class="sheet-header">
+            <div style="width: 32px;"></div>
             <button class="sheet-close-btn" onclick="closeProfileSheet()"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <div class="sheet-body">
@@ -580,7 +608,28 @@
         </div>
     </div>
 
-    <div id="comments-modal" class="overlay-modal" style="z-index: 600;">
+    <div id="notif-bottom-sheet" class="profile-bottom-sheet" style="height: 95vh;">
+        <div class="sheet-handle"></div>
+        <div class="sheet-header">
+            <h3 style="margin:0; font-size:22px; font-weight:700;">Notifications</h3>
+            <button class="sheet-close-btn" onclick="closeNotifications()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="sheet-body" id="notif-list-container" style="padding-top: 8px;">
+            </div>
+    </div>
+
+    <div id="single-post-overlay" class="overlay-modal" style="z-index: 1050; padding: 0;">
+        <div class="modal-sheet" style="max-height: 100vh; height: 100vh; border-radius: 0; border: none; max-width: 680px; margin: 0 auto; overflow-y: auto;">
+            <div class="modal-header" style="position: sticky; top: 0; background: var(--bg-surface); z-index: 10;">
+                <h3>Post</h3>
+                <button class="modal-close-btn" onclick="closeSinglePost()"><i class="fa-solid fa-arrow-left"></i></button>
+            </div>
+            <div class="modal-body" id="single-post-target" style="padding: 16px 0; background: var(--bg-body);">
+                </div>
+        </div>
+    </div>
+
+    <div id="comments-modal" class="overlay-modal" style="z-index: 1100;">
         <div class="modal-sheet">
             <div class="modal-header">
                 <h3>Comments</h3>
@@ -644,6 +693,7 @@
         
         let currentFeedLimit = 5;
         let feedUnsubscribe = null;
+        let notifUnsubscribe = null;
         let userWantsVideoSound = false; 
         let currentlyPlayingVideo = null;
         let activeSheetUidListener = null;
@@ -665,6 +715,13 @@
             }
         });
 
+        document.getElementById('profile-sheet-overlay').addEventListener('click', (e) => {
+            if(e.target.id === 'profile-sheet-overlay') {
+                closeProfileSheet();
+                closeNotifications();
+            }
+        });
+
         function toast(msg) {
             const box = document.getElementById('toast-box');
             const t = document.createElement('div');
@@ -672,6 +729,97 @@
             t.innerText = msg;
             box.appendChild(t);
             setTimeout(() => t.remove(), 4000);
+        }
+
+        // Global Notification Dispatcher
+        async function sendNotification(targetUid, type, postId = null, text = null) {
+            if (!currentUser || targetUid === currentUser.uid) return; 
+            const notifRef = ref(database, `notifications/${targetUid}`);
+            await push(notifRef, {
+                type,
+                postId,
+                text,
+                fromUid: currentUser.uid,
+                fromName: userProfile.name,
+                fromAvatar: userProfile.photoURL,
+                timestamp: Date.now(),
+                read: false
+            });
+        }
+
+        function listenToNotifications() {
+            if(notifUnsubscribe) notifUnsubscribe();
+            notifUnsubscribe = onValue(ref(database, `notifications/${currentUser.uid}`), (snap) => {
+                const notifs = [];
+                let unreadCount = 0;
+                
+                if(snap.exists()) {
+                    snap.forEach(c => {
+                        const n = c.val();
+                        n.id = c.key;
+                        notifs.push(n);
+                        if(!n.read) unreadCount++;
+                    });
+                }
+                
+                const badge = document.getElementById('notif-badge');
+                if (unreadCount > 0) {
+                    badge.style.display = 'flex';
+                    badge.innerText = unreadCount > 9 ? '9+' : unreadCount;
+                } else {
+                    badge.style.display = 'none';
+                }
+                
+                renderNotifications(notifs.sort((a,b) => b.timestamp - a.timestamp));
+            });
+        }
+
+        function renderNotifications(notifs) {
+            const container = document.getElementById('notif-list-container');
+            container.innerHTML = '';
+            
+            if(notifs.length === 0) {
+                container.innerHTML = '<div style="padding: 24px; text-align: center; color: var(--text-secondary);">No notifications yet.</div>';
+                return;
+            }
+            
+            notifs.forEach(n => {
+                const el = document.createElement('div');
+                el.className = `notif-item ${n.read ? '' : 'unread'}`;
+                
+                let iconClass, iconBg, textDesc;
+                if(n.type === 'like') { iconClass = 'fa-solid fa-thumbs-up'; iconBg = 'var(--primary-orange)'; textDesc = 'liked your post.'; }
+                else if(n.type === 'comment') { iconClass = 'fa-solid fa-comment'; iconBg = '#2ABBA7'; textDesc = 'commented on your post.'; }
+                else if(n.type === 'tag') { iconClass = 'fa-solid fa-user-tag'; iconBg = '#8C52FF'; textDesc = 'tagged you in a post.'; }
+                else if(n.type === 'follow') { iconClass = 'fa-solid fa-user-plus'; iconBg = '#42b72a'; textDesc = 'started following you.'; }
+
+                const diffMins = Math.round((Date.now() - n.timestamp)/60000);
+                const timeString = diffMins < 60 ? `${diffMins}m` : (diffMins < 1440 ? `${Math.floor(diffMins/60)}h` : new Date(n.timestamp).toLocaleDateString());
+
+                el.innerHTML = `
+                    <div class="notif-avatar-wrapper">
+                        <img src="${n.fromAvatar}" class="notif-avatar">
+                        <div class="notif-icon-badge" style="background: ${iconBg};"><i class="${iconClass}"></i></div>
+                    </div>
+                    <div class="notif-text">
+                        <strong>${escapeHtml(n.fromName)}</strong> ${textDesc}
+                        <div class="notif-time">${timeString}</div>
+                    </div>
+                    ${!n.read ? '<div style="width: 12px; height: 12px; border-radius: 50%; background: var(--primary-orange); margin-left: 4px;"></div>' : ''}
+                `;
+                
+                el.onclick = () => {
+                    if (!n.read) update(ref(database, `notifications/${currentUser.uid}/${n.id}`), { read: true });
+                    closeNotifications();
+                    
+                    if(n.type === 'follow') {
+                        openProfileSheet(n.fromUid);
+                    } else if (n.postId) {
+                        openSinglePost(n.postId);
+                    }
+                };
+                container.appendChild(el);
+            });
         }
 
         // Global Spinner Controls
@@ -690,6 +838,33 @@
             document.getElementById('emoji-picker-container').style.display = 'none';
             document.getElementById('tag-users-dropdown').style.display = 'none';
         }
+
+        // Single Post Isolation Viewer
+        window.openSinglePost = async (postId) => {
+            const target = document.getElementById('single-post-target');
+            target.innerHTML = '<div style="text-align:center; padding:40px;"><div class="auth-spinner-circle" style="margin: 0 auto; width:30px; height:30px;"></div></div>';
+            document.getElementById('single-post-overlay').classList.add('active');
+            
+            const snap = await get(ref(database, `social_posts/${postId}`));
+            if(snap.exists()) {
+                const p = snap.val();
+                p.id = snap.key;
+                target.innerHTML = '';
+                const card = createPostElement(p);
+                // remove bottom margins for full height flow in modal
+                card.style.marginBottom = '0';
+                target.appendChild(card);
+                initCustomVideos(card);
+            } else {
+                target.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-secondary);">Post not found or has been deleted.</div>';
+            }
+        };
+        
+        window.closeSinglePost = () => {
+            document.getElementById('single-post-overlay').classList.remove('active');
+            // Clean up to stop active video streams playing in background
+            document.getElementById('single-post-target').innerHTML = ''; 
+        };
         
         window.toggleDrawer = () => {
             const overlay = document.getElementById('drawer-overlay');
@@ -744,6 +919,19 @@
                 if (emojiPicker) emojiPicker.style.display = 'none';
             }
         });
+
+        // Notifications Modal Accessor
+        document.getElementById('nav-notif-btn').addEventListener('click', () => {
+            document.getElementById('profile-sheet-overlay').classList.add('active');
+            document.getElementById('profile-sheet-overlay').style.display = 'block';
+            document.getElementById('notif-bottom-sheet').classList.add('active');
+        });
+        
+        window.closeNotifications = () => {
+            document.getElementById('profile-sheet-overlay').classList.remove('active');
+            document.getElementById('notif-bottom-sheet').classList.remove('active');
+            setTimeout(() => document.getElementById('profile-sheet-overlay').style.display = 'none', 300);
+        };
 
         // Tags and Emojis Handlers (Updated to fetch from User's Following/Friends List)
         document.getElementById('tag-users-btn').addEventListener('click', async () => {
@@ -840,6 +1028,7 @@
                 splash.style.display = 'none';
                 gate.style.display = 'none';
                 listenToUserProfile(user);
+                listenToNotifications();
                 attachRealtimeTimelineFeed();
             } else {
                 currentUser = null;
@@ -876,7 +1065,7 @@
             });
         }
 
-        // Authentication Event Listeners (Wrapped in Overlay Spinner)
+        // Authentication Event Listeners
         document.getElementById('action-login').addEventListener('click', () => {
             const em = document.getElementById('login-email').value.trim();
             const pa = document.getElementById('login-pass').value;
@@ -971,7 +1160,6 @@
                 
                 document.getElementById('profile-edit-mode').style.display = 'none';
                 document.getElementById('profile-display-mode').style.display = 'block';
-                // Active DB listener handles refilling the actual text nodes
             } else {
                 toast("Name cannot be empty.");
             }
@@ -1035,13 +1223,27 @@
                 likes: {}
             };
 
-            push(ref(database, 'social_posts'), postObject).then(() => {
+            push(ref(database, 'social_posts'), postObject).then(async (newPostRef) => {
                 document.getElementById('composer-text').value = '';
                 clearMediaSelection();
                 btn.disabled = false;
                 btn.innerText = "Post";
                 closeComposerModal();
                 toast("Posted successfully!");
+                
+                // Parse for @tags to send notification
+                const myText = postObject.text;
+                if(myText.includes('@')) {
+                    const usersSnap = await get(ref(database, 'users'));
+                    if(usersSnap.exists()) {
+                        const allUsersMap = usersSnap.val();
+                        for(const [uId, uData] of Object.entries(allUsersMap)) {
+                            if (uId !== currentUser.uid && myText.includes(`@${uData.name}`)) {
+                                sendNotification(uId, 'tag', newPostRef.key, myText);
+                            }
+                        }
+                    }
+                }
             }).catch(() => {
                 btn.disabled = false;
                 btn.innerText = "Post";
@@ -1154,7 +1356,7 @@
                 const delBtn = card.querySelector(`.delete-post-btn`);
                 if(delBtn) {
                     delBtn.addEventListener('click', () => {
-                        showConfirm("Delete Post", "Are you sure you want to delete this post? This action cannot be undone.", async () => {
+                        showConfirm("Delete Post", "Are you sure you want to delete this post?", async () => {
                             await remove(ref(database, `social_posts/${post.id}`));
                             await remove(ref(database, `post_replies/${post.id}`));
                             toast("Post deleted.");
@@ -1176,8 +1378,16 @@
                     if (!snap.exists()) return;
                     const p = snap.val();
                     const currentLikesObj = p.likes || {};
-                    if (currentLikesObj[currentUser.uid]) delete currentLikesObj[currentUser.uid];
-                    else currentLikesObj[currentUser.uid] = true;
+                    
+                    if (currentLikesObj[currentUser.uid]) {
+                        delete currentLikesObj[currentUser.uid];
+                    } else {
+                        currentLikesObj[currentUser.uid] = true;
+                        // Dispatch like notification to creator
+                        if (post.uid !== currentUser.uid) {
+                            sendNotification(post.uid, 'like', post.id, p.text);
+                        }
+                    }
                     update(postRef, { likes: currentLikesObj, likesCount: Object.keys(currentLikesObj).length });
                 });
             });
@@ -1352,6 +1562,7 @@
         // ── Open and Present Profile Bottom Sheet ──
         window.openProfileSheet = (uid) => {
             document.getElementById('profile-sheet-overlay').classList.add('active');
+            document.getElementById('profile-sheet-overlay').style.display = 'block';
             document.getElementById('profile-bottom-sheet').classList.add('active');
             
             // Explicitly pause stream videos running beneath background
@@ -1430,6 +1641,7 @@
         window.closeProfileSheet = () => {
             document.getElementById('profile-sheet-overlay').classList.remove('active');
             document.getElementById('profile-bottom-sheet').classList.remove('active');
+            setTimeout(() => document.getElementById('profile-sheet-overlay').style.display = 'none', 300);
             
             // Reset layout modes and buttons
             document.getElementById('profile-edit-mode').style.display = 'none';
@@ -1459,6 +1671,7 @@
             } else {
                 await set(targetFollowersRef, true);
                 await set(myFollowingRef, true);
+                sendNotification(targetUid, 'follow');
                 toast("Following user profile!");
             }
         }
@@ -1610,6 +1823,11 @@
                 if(text) {
                     const nestedObj = { text: text, uid: currentUser.uid, author: userProfile.name, avatar: userProfile.photoURL, timestamp: Date.now() };
                     await push(ref(database, `post_replies/${activeTargetThreadId}/${replyId}/replies`), nestedObj);
+                    
+                    if(activePostOwnerId !== currentUser.uid) {
+                        sendNotification(activePostOwnerId, 'comment', activeTargetThreadId, text);
+                    }
+                    
                     input.value = '';
                     document.getElementById(`reply-input-box-${replyId}`).style.display = 'none';
                 }
@@ -1638,6 +1856,9 @@
 
             push(ref(database, `post_replies/${activeTargetThreadId}`), replyObject).then(() => {
                 input.value = '';
+                if(activePostOwnerId !== currentUser.uid) {
+                    sendNotification(activePostOwnerId, 'comment', activeTargetThreadId, txt);
+                }
             });
         }
 

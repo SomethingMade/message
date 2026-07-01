@@ -7,7 +7,7 @@
     <title>Lumina - Social Network</title>
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;500;600;700;900&display=swap" rel="stylesheet">
     
     <script type="module" src="https://cdn.jsdelivr.net/npm/emoji-picker-element@1.21.3/index.js"></script>
     
@@ -83,6 +83,91 @@
         @keyframes bounce {
             0%, 80%, 100% { transform: scale(0); }
             40% { transform: scale(1); }
+        }
+
+        /* ── X/Twitter Style Login Screen ── */
+        .auth-gate { position: fixed; inset: 0; background: var(--bg-surface); z-index: 1000; display: none; overflow-y: auto; }
+        .x-auth-container { display: flex; width: 100%; min-height: 100vh; }
+        
+        .x-auth-left { 
+            flex: 1; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            background: #000; 
+            color: #fff; 
+        }
+        
+        .x-auth-right { 
+            flex: 1; 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: center; 
+            padding: 36px; 
+            max-width: 800px; 
+            margin: 0 auto;
+        }
+        
+        .x-main-heading { 
+            font-size: 64px; 
+            font-weight: 900; 
+            letter-spacing: -2px; 
+            margin-bottom: 48px; 
+            color: #0f1419; 
+            line-height: 1.1;
+        }
+        
+        .x-sub-heading { 
+            font-size: 32px; 
+            font-weight: 800; 
+            margin-bottom: 32px; 
+            letter-spacing: -1px; 
+            color: #0f1419;
+        }
+        
+        .x-auth-form-container { max-width: 340px; width: 100%; }
+        
+        .x-btn { 
+            width: 100%; 
+            border-radius: 50px; 
+            padding: 12px; 
+            font-size: 15px; 
+            font-weight: 700; 
+            cursor: pointer; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            gap: 8px; 
+            border: none; 
+            transition: 0.2s; 
+            margin-bottom: 12px;
+        }
+        
+        .x-btn-google { background: #fff; color: #0f1419; border: 1px solid #cfd9de; }
+        .x-btn-google:hover { background: #e6e9ea; }
+        
+        .x-btn-primary { background: var(--primary-orange); color: #fff; }
+        .x-btn-primary:hover { background: var(--primary-hover); }
+        
+        .x-btn-outline { background: transparent; color: var(--primary-orange); border: 1px solid #cfd9de; }
+        .x-btn-outline:hover { background: rgba(255,140,0,0.1); }
+        
+        .x-divider { display: flex; align-items: center; text-align: center; margin: 4px 0 12px; color: #536471; font-size: 15px; }
+        .x-divider::before, .x-divider::after { content: ''; flex: 1; border-bottom: 1px solid #cfd9de; }
+        .x-divider span { padding: 0 10px; }
+        
+        .x-input { width: 100%; padding: 16px 12px; margin-bottom: 12px; border: 1px solid #cfd9de; border-radius: 4px; font-size: 15px; outline: none; transition: border 0.2s; }
+        .x-input:focus { border-color: var(--primary-orange); box-shadow: 0 0 0 1px var(--primary-orange); }
+        
+        .x-forgot-pass { color: var(--primary-orange); font-size: 13px; text-align: left; cursor: pointer; margin-top: 12px; font-weight: 500;}
+        .x-forgot-pass:hover { text-decoration: underline; }
+
+        @media (max-width: 1000px) {
+            .x-auth-left { display: none; }
+            .x-auth-right { padding: 24px; align-items: flex-start; justify-content: flex-start; padding-top: 10vh;}
+            .x-main-heading { font-size: 48px; margin-bottom: 32px; }
+            .x-sub-heading { font-size: 24px; }
+            .x-auth-form-container { max-width: 100%; }
         }
 
         /* ── Top Navigation Bar ── */
@@ -357,15 +442,7 @@
         .btn-danger { flex: 1; background: #DC3545; color: white; border: none; padding: 10px; border-radius: var(--radius-md); font-weight: 600; cursor: pointer; transition: 0.2s; font-size: 15px; }
         .btn-danger:hover { background: #C82333; }
 
-        /* ── Auth Gate & Loading Spinner ── */
-        .auth-gate { position: fixed; inset: 0; background: var(--bg-body); z-index: 1000; display: none; align-items: center; justify-content: center; padding: 20px; }
-        .auth-title-container { margin-bottom: 30px; text-align: center; }
-        .auth-title-container h1 { color: var(--primary-orange); font-size: 48px; font-weight: 700; margin:0; letter-spacing: -1.5px; }
-        .auth-title-container p { font-size: 20px; color: var(--text-primary); margin-top: 8px; }
-        .auth-card { background: var(--bg-surface); padding: 24px; border-radius: var(--radius-md); box-shadow: var(--shadow-modal); width: 100%; max-width: 400px; text-align: center; }
-        .auth-input { width: 100%; padding: 14px; border: 1px solid var(--border-dim); border-radius: var(--radius-md); font-size: 17px; margin-bottom: 12px; outline: none; }
-        .auth-input:focus { border-color: var(--primary-orange); box-shadow: 0 0 0 2px rgba(255,140,0,0.2); }
-
+        /* Global Spinner & Toast */
         .global-spinner-overlay { position: fixed; inset: 0; background: rgba(255,255,255,0.7); z-index: 10000; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
         .auth-spinner-circle { width: 44px; height: 44px; border: 4px solid var(--border-dim); border-top-color: var(--primary-orange); border-radius: 50%; animation: spin 1s linear infinite; }
         
@@ -387,12 +464,6 @@
             .nav-left { width: auto; }
             .nav-right { width: auto; flex: 1; }
             
-            /* Enhanced Mobile Login Screen styles */
-            .auth-gate { align-items: flex-start; padding: 12vh 20px 20px; background: var(--bg-surface); }
-            .auth-card { box-shadow: none; padding: 0; }
-            .auth-title-container h1 { font-size: 40px !important; }
-            .auth-title-container p { font-size: 16px !important; }
-            
             /* Mobile Full-Width Post Cards Optimization */
             .feed-container { padding: 0; gap: 8px; }
             .composer-card { border-radius: 0; box-shadow: none; border-bottom: 1px solid var(--border-dim); border-left: none; border-right: none;}
@@ -407,28 +478,43 @@
     </div>
 
     <div id="splash-screen" class="splash-screen">
-        <h1 style="color: var(--primary-orange); font-size: 48px; font-weight: 700; margin:0; letter-spacing: -1.5px;">Lumina</h1>
+        <h1 style="color: var(--primary-orange); font-size: 48px; font-weight: 700; margin:0; letter-spacing: -1.5px;">Lumina.</h1>
         <div class="loading-dots">
             <span></span><span></span><span></span>
         </div>
     </div>
 
     <div id="auth-screen" class="auth-gate">
-        <div style="display:flex; flex-direction:column; align-items:center; width: 100%; max-width: 400px; margin: 0 auto;">
-            <div class="auth-title-container">
-                <h1>Lumina</h1>
-                <p>Connect with friends and the world around you.</p>
+        <div class="x-auth-container">
+            <div class="x-auth-left">
+                <div style="font-size: 20vw; font-weight: 900; letter-spacing: -10px; user-select: none;">L.</div>
             </div>
-            <div class="auth-card">
-                <input type="email" id="login-email" class="auth-input" placeholder="Email address">
-                <input type="password" id="login-pass" class="auth-input" placeholder="Password">
-                <button class="btn-primary" id="action-login" style="font-size: 20px; padding: 12px;">Log In</button>
-                <div id="action-forgot-password" style="color: var(--primary-orange); margin: 16px 0; cursor: pointer; font-weight: 500;">Forgotten password?</div>
-                <hr style="border: 0; border-top: 1px solid var(--border-dim); margin-bottom: 20px;">
-                <button class="btn-primary" id="action-signup" style="background: #42b72a; max-width: 200px; margin: 0 auto; display: block;">Create new account</button>
-                <button class="btn-primary" id="action-google" style="background: #fff; color: #333; border: 1px solid var(--border-dim); margin-top: 16px; display:flex; align-items:center; justify-content:center; gap:8px;">
-                    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" style="width:18px" alt=""> Continue with Google
-                </button>
+            
+            <div class="x-auth-right">
+                <h1 class="x-main-heading">Happening now</h1>
+                <h2 class="x-sub-heading">Join today.</h2>
+                
+                <div class="x-auth-form-container">
+                    <button class="x-btn x-btn-google" id="action-google">
+                        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" style="width:20px" alt=""> Sign up with Google
+                    </button>
+                    
+                    <div class="x-divider"><span>or</span></div>
+                    
+                    <input type="email" id="login-email" class="x-input" placeholder="Email address">
+                    <input type="password" id="login-pass" class="x-input" placeholder="Password">
+                    
+                    <button class="x-btn x-btn-primary" id="action-signup">Create account</button>
+                    <div style="font-size: 11px; color: #536471; margin-bottom: 40px; line-height: 1.3;">
+                        By signing up, you agree to the Terms of Service and Privacy Policy, including Cookie Use.
+                    </div>
+                    
+                    <div>
+                        <h3 style="font-size: 17px; font-weight: 700; margin-bottom: 16px; color: #0f1419;">Already have an account?</h3>
+                        <button class="x-btn x-btn-outline" id="action-login">Sign in</button>
+                        <div id="action-forgot-password" class="x-forgot-pass">Forgot password?</div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -713,6 +799,10 @@
         let userWantsVideoSound = false; 
         let currentlyPlayingVideo = null;
         let activeSheetUidListener = null;
+        
+        // This map prevents posts from jumping around wildly when likes change. 
+        // A permanent algorithmic score is generated only the first time a post is fetched locally.
+        const postSortScores = new Map();
 
         // Anti-Long Press logic for Mobile Devices natively via JS contextmenu interception
         document.addEventListener('contextmenu', e => {
@@ -1191,7 +1281,7 @@
 
         document.getElementById('action-forgot-password').addEventListener('click', () => {
             const em = document.getElementById('login-email').value.trim();
-            if(!em) return toast("Please enter your email address to reset password.");
+            if(!em) return toast("Please enter your email address in the field to reset your password.");
             
             showSpinner();
             sendPasswordResetEmail(auth, em)
@@ -1636,14 +1726,18 @@
                 const postsArray = [];
                 snapshot.forEach((child) => { postsArray.push({ id: child.key, ...child.val() }); });
                 
-                // X/Twitter-style algorithm: Weighs popularity (likes), recency, and randomness
-                postsArray.sort((a, b) => {
-                    const recencyA = a.timestamp / 1000000000;
-                    const recencyB = b.timestamp / 1000000000;
-                    const scoreA = (a.likesCount || 0) * 50 + recencyA + (Math.random() * 10);
-                    const scoreB = (b.likesCount || 0) * 50 + recencyB + (Math.random() * 10);
-                    return scoreB - scoreA;
+                // X/Twitter-style algorithm anchored to fixed scores per active session
+                postsArray.forEach(p => {
+                    // Only assign a score the very first time the app fetches this specific post id
+                    if (!postSortScores.has(p.id)) {
+                        const recency = p.timestamp / 1000000000;
+                        const initialScore = (p.likesCount || 0) * 50 + recency + (Math.random() * 10);
+                        postSortScores.set(p.id, initialScore);
+                    }
                 });
+
+                // Sort posts relying strictly on their locked initial score instead of updating dynamically
+                postsArray.sort((a, b) => postSortScores.get(b.id) - postSortScores.get(a.id));
 
                 reconcilePosts(streamTarget, postsArray, feedRenderedCards);
 

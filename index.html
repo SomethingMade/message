@@ -257,7 +257,6 @@
         .profile-avatar-placement { display: flex; flex-direction: column; align-items: center; margin-top: -55px; position: relative; padding: 0 16px; text-align: center; }
         .profile-sheet-avatar { width: 110px; height: 110px; border-radius: 50%; object-fit: cover; border: 4px solid var(--bg-surface); box-shadow: var(--shadow-sm); background: #FFF; }
         
-        /* Overlapping Avatar Edit Icon */
         .avatar-upload-icon { 
             position: absolute; 
             bottom: 4px; 
@@ -279,25 +278,13 @@
         .profile-sheet-name { font-size: 26px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.5px; }
         .profile-sheet-bio { font-size: 15px; color: var(--text-secondary); margin-top: 8px; line-height: 1.45; word-break: break-word; max-width: 450px; margin-left: auto; margin-right: auto; }
         
-        /* Pill Inputs for Editing Profile */
         .pill-input {
-            width: 100%;
-            max-width: 350px;
-            padding: 10px 16px;
-            border-radius: 50px;
-            border: 1px solid var(--border-dim);
-            background: var(--bg-body);
-            font-size: 15px;
-            color: var(--text-primary);
-            outline: none;
-            text-align: center;
-            transition: border-color 0.2s, box-shadow 0.2s;
-            font-family: inherit;
+            width: 100%; max-width: 350px; padding: 10px 16px; border-radius: 50px;
+            border: 1px solid var(--border-dim); background: var(--bg-body);
+            font-size: 15px; color: var(--text-primary); outline: none; text-align: center;
+            transition: border-color 0.2s, box-shadow 0.2s; font-family: inherit;
         }
-        .pill-input:focus {
-            border-color: var(--primary-orange);
-            box-shadow: 0 0 0 2px rgba(255, 140, 0, 0.2);
-        }
+        .pill-input:focus { border-color: var(--primary-orange); box-shadow: 0 0 0 2px rgba(255, 140, 0, 0.2); }
 
         .profile-sheet-stats { display: flex; justify-content: center; gap: 24px; margin-top: 16px; font-size: 15px; color: var(--text-secondary); }
         .profile-sheet-stats strong { color: var(--text-primary); font-weight: 600; }
@@ -349,17 +336,23 @@
         .btn-danger { flex: 1; background: #DC3545; color: white; border: none; padding: 10px; border-radius: var(--radius-md); font-weight: 600; cursor: pointer; transition: 0.2s; font-size: 15px; }
         .btn-danger:hover { background: #C82333; }
 
-        /* ── Auth Gate ── */
+        /* ── Auth Gate & Loading Spinner ── */
         .auth-gate { position: fixed; inset: 0; background: var(--bg-body); z-index: 1000; display: none; align-items: center; justify-content: center; padding: 20px; }
+        .auth-title-container { margin-bottom: 30px; text-align: center; }
+        .auth-title-container h1 { color: var(--primary-orange); font-size: 48px; font-weight: 700; margin:0; letter-spacing: -1.5px; }
+        .auth-title-container p { font-size: 20px; color: var(--text-primary); margin-top: 8px; }
         .auth-card { background: var(--bg-surface); padding: 24px; border-radius: var(--radius-md); box-shadow: var(--shadow-modal); width: 100%; max-width: 400px; text-align: center; }
         .auth-input { width: 100%; padding: 14px; border: 1px solid var(--border-dim); border-radius: var(--radius-md); font-size: 17px; margin-bottom: 12px; outline: none; }
         .auth-input:focus { border-color: var(--primary-orange); box-shadow: 0 0 0 2px rgba(255,140,0,0.2); }
+
+        .global-spinner-overlay { position: fixed; inset: 0; background: rgba(255,255,255,0.7); z-index: 10000; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
+        .auth-spinner-circle { width: 44px; height: 44px; border: 4px solid var(--border-dim); border-top-color: var(--primary-orange); border-radius: 50%; animation: spin 1s linear infinite; }
         
         #toast-box { position: fixed; bottom: 20px; left: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; pointer-events: none;}
         .toast { background: #333; color: white; padding: 12px 20px; border-radius: var(--radius-md); font-size: 14px; box-shadow: var(--shadow-modal); animation: toastIn 0.3s; pointer-events: auto;}
         @keyframes toastIn { from { transform: translateX(-20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 
-        /* ── Responsive Architecture ── */
+        /* ── Responsive Architecture & Mobile Layout Optimization ── */
         @media (min-width: 768px) {
             .app-wrapper { grid-template-columns: 1fr; max-width: 680px; }
             .nav-center { display: flex; } 
@@ -372,10 +365,20 @@
             .nav-center, .nav-left .search-bar { display: none; }
             .nav-left { width: auto; }
             .nav-right { width: auto; flex: 1; }
+            
+            /* Enhanced Mobile Login Screen styles */
+            .auth-gate { align-items: flex-start; padding: 12vh 20px 20px; background: var(--bg-surface); }
+            .auth-card { box-shadow: none; padding: 0; }
+            .auth-title-container h1 { font-size: 40px !important; }
+            .auth-title-container p { font-size: 16px !important; }
         }
     </style>
 </head>
 <body>
+
+    <div id="auth-spinner" class="global-spinner-overlay" style="display:none;">
+        <div class="auth-spinner-circle"></div>
+    </div>
 
     <div id="splash-screen" class="splash-screen">
         <h1 style="color: var(--primary-orange); font-size: 48px; font-weight: 700; margin:0; letter-spacing: -1.5px;">Lumina</h1>
@@ -385,20 +388,22 @@
     </div>
 
     <div id="auth-screen" class="auth-gate">
-        <div style="margin-bottom: 30px;">
-            <h1 style="color: var(--primary-orange); font-size: 48px; font-weight: 700; margin:0; letter-spacing: -1.5px;">Lumina</h1>
-            <p style="font-size: 20px; color: var(--text-primary); margin-top: 8px;">Connect with friends and the world around you.</p>
-        </div>
-        <div class="auth-card">
-            <input type="email" id="login-email" class="auth-input" placeholder="Email address">
-            <input type="password" id="login-pass" class="auth-input" placeholder="Password">
-            <button class="btn-primary" id="action-login" style="font-size: 20px; padding: 12px;">Log In</button>
-            <div style="color: var(--primary-orange); margin: 16px 0; cursor: pointer;">Forgotten password?</div>
-            <hr style="border: 0; border-top: 1px solid var(--border-dim); margin-bottom: 20px;">
-            <button class="btn-primary" id="action-signup" style="background: #42b72a; max-width: 200px; margin: 0 auto; display: block;">Create new account</button>
-            <button class="btn-primary" id="action-google" style="background: #fff; color: #333; border: 1px solid var(--border-dim); margin-top: 16px; display:flex; align-items:center; justify-content:center; gap:8px;">
-                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" style="width:18px" alt=""> Continue with Google
-            </button>
+        <div style="display:flex; flex-direction:column; align-items:center; width: 100%; max-width: 400px; margin: 0 auto;">
+            <div class="auth-title-container">
+                <h1>Lumina</h1>
+                <p>Connect with friends and the world around you.</p>
+            </div>
+            <div class="auth-card">
+                <input type="email" id="login-email" class="auth-input" placeholder="Email address">
+                <input type="password" id="login-pass" class="auth-input" placeholder="Password">
+                <button class="btn-primary" id="action-login" style="font-size: 20px; padding: 12px;">Log In</button>
+                <div id="action-forgot-password" style="color: var(--primary-orange); margin: 16px 0; cursor: pointer; font-weight: 500;">Forgotten password?</div>
+                <hr style="border: 0; border-top: 1px solid var(--border-dim); margin-bottom: 20px;">
+                <button class="btn-primary" id="action-signup" style="background: #42b72a; max-width: 200px; margin: 0 auto; display: block;">Create new account</button>
+                <button class="btn-primary" id="action-google" style="background: #fff; color: #333; border: 1px solid var(--border-dim); margin-top: 16px; display:flex; align-items:center; justify-content:center; gap:8px;">
+                    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" style="width:18px" alt=""> Continue with Google
+                </button>
+            </div>
         </div>
     </div>
 
@@ -521,7 +526,6 @@
         </div>
     </div>
 
-    <!-- ── Profile Bottom Sheet Presentation Layer ── -->
     <div id="profile-sheet-overlay" class="profile-sheet-overlay" onclick="closeProfileSheet()"></div>
     <div id="profile-bottom-sheet" class="profile-bottom-sheet">
         <div class="sheet-handle"></div>
@@ -529,7 +533,6 @@
             <button class="sheet-close-btn" onclick="closeProfileSheet()"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <div class="sheet-body">
-            <!-- Dynamic Cover image module box -->
             <div class="profile-cover-box">
                 <img id="profile-view-cover" class="profile-cover-img no-long-press" src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&q=80">
                 <label id="profile-cover-upload-label" class="cover-upload-btn" style="display: none;">
@@ -538,7 +541,6 @@
                 </label>
             </div>
 
-            <!-- Avatar reposition wrapper -->
             <div class="profile-avatar-placement">
                 <div style="position: relative; display: inline-block;">
                     <img id="profile-view-avatar" class="profile-sheet-avatar no-long-press" src="https://ui-avatars.com/api/?name=User&background=FF8C00&color=fff">
@@ -549,17 +551,14 @@
                 </div>
             </div>
 
-            <!-- Descriptive Meta Content Target Blocks -->
             <div class="profile-meta-details">
                 <div id="profile-display-mode">
                     <h2 id="profile-view-name" class="profile-sheet-name">Loading User...</h2>
                     <p id="profile-view-bio" class="profile-sheet-bio">No details or bio provided yet.</p>
                     <div id="profile-join-date" style="font-size: 13px; color: var(--text-secondary); margin-top: 8px; font-weight: 500;">
-                        <!-- Date gets populated dynamically -->
-                    </div>
+                        </div>
                 </div>
 
-                <!-- Input mode for updating user attributes (Pill inputs) -->
                 <div id="profile-edit-mode" style="display: none; flex-direction: column; align-items: center; gap: 10px; margin-top: 12px;">
                     <input type="text" id="edit-name-pill" class="pill-input" placeholder="Your Name">
                     <input type="text" id="edit-bio-pill" class="pill-input" placeholder="Your Bio">
@@ -572,7 +571,6 @@
                 </div>
             </div>
 
-            <!-- Interactive Action Panel (Follow, Message, Profile Details Mutation) -->
             <div id="profile-sheet-actions" class="profile-sheet-actions"></div>
         </div>
     </div>
@@ -609,7 +607,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getAuth, GoogleAuthProvider, signInWithPopup, signOut as fbSignOut, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        import { getAuth, GoogleAuthProvider, signInWithPopup, signOut as fbSignOut, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
         import { getDatabase, ref, push, set, get, update, onValue, remove, query, orderByChild, limitToLast, equalTo } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
         const firebaseConfig = {
@@ -669,6 +667,15 @@
             t.innerText = msg;
             box.appendChild(t);
             setTimeout(() => t.remove(), 4000);
+        }
+
+        // Global Spinner Controls
+        function showSpinner() {
+            document.getElementById('auth-spinner').style.display = 'flex';
+        }
+        
+        function hideSpinner() {
+            document.getElementById('auth-spinner').style.display = 'none';
         }
 
         // Global UI Functions
@@ -821,6 +828,7 @@
                 splash.style.display = 'none';
                 gate.style.display = 'flex';
             }
+            hideSpinner();
         });
 
         function listenToUserProfile(user) {
@@ -850,25 +858,60 @@
             });
         }
 
+        // Authentication Event Listeners (Wrapped in Overlay Spinner)
         document.getElementById('action-login').addEventListener('click', () => {
             const em = document.getElementById('login-email').value.trim();
             const pa = document.getElementById('login-pass').value;
             if(!em || !pa) return toast("Enter valid credentials");
-            signInWithEmailAndPassword(auth, em, pa).catch(e => toast(e.message));
+            
+            showSpinner();
+            signInWithEmailAndPassword(auth, em, pa).catch(e => {
+                hideSpinner();
+                toast(e.message);
+            });
         });
 
         document.getElementById('action-signup').addEventListener('click', () => {
             const em = document.getElementById('login-email').value.trim();
             const pa = document.getElementById('login-pass').value;
             if(!em || !pa) return toast("Please complete form");
-            createUserWithEmailAndPassword(auth, em, pa).catch(e => toast(e.message));
+            
+            showSpinner();
+            createUserWithEmailAndPassword(auth, em, pa).catch(e => {
+                hideSpinner();
+                toast(e.message);
+            });
         });
 
         document.getElementById('action-google').addEventListener('click', () => {
-            signInWithPopup(auth, provider).catch(e => toast(e.message));
+            showSpinner();
+            signInWithPopup(auth, provider).catch(e => {
+                hideSpinner();
+                toast(e.message);
+            });
         });
 
-        const logoutAction = () => fbSignOut(auth).then(() => window.location.reload());
+        document.getElementById('action-forgot-password').addEventListener('click', () => {
+            const em = document.getElementById('login-email').value.trim();
+            if(!em) return toast("Please enter your email address to reset password.");
+            
+            showSpinner();
+            sendPasswordResetEmail(auth, em)
+                .then(() => {
+                    hideSpinner();
+                    toast("Password reset email sent! Please check your inbox.");
+                })
+                .catch(e => {
+                    hideSpinner();
+                    toast(e.message);
+                });
+        });
+
+        const logoutAction = () => {
+            showSpinner();
+            fbSignOut(auth).then(() => window.location.reload());
+        };
+        
         document.getElementById('drawer-logout-trigger').addEventListener('click', logoutAction);
 
         // Upload Profile Avatar logic via Modal Profile Sheet

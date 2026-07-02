@@ -563,6 +563,12 @@
             <span id="drawer-profile-name">Loading...</span>
         </div>
         <div class="sidebar-item" id="drawer-browse-users"><div class="icon-circle" style="color: var(--primary-orange);"><i class="fa-solid fa-users"></i></div> Browse Users</div>
+        
+        <div class="sidebar-item" id="drawer-install-app" style="display: none;" onclick="openInstallPrompt()">
+            <div class="icon-circle" style="color: #45BD62;"><i class="fa-solid fa-download"></i></div> 
+            Install App
+        </div>
+
         <div class="sidebar-item"><div class="icon-circle" style="color: #E22756;"><i class="fa-solid fa-store"></i></div> Marketplace</div>
         <div class="sidebar-item"><div class="icon-circle" style="color: #21A2DF;"><i class="fa-solid fa-tv"></i></div> Watch</div>
         <div class="sidebar-item"><div class="icon-circle" style="color: #8C52FF;"><i class="fa-solid fa-clock-rotate-left"></i></div> Memories</div>
@@ -732,6 +738,17 @@
                     <input type="text" id="comment-text-input" placeholder="Write a comment...">
                     <i class="fa-solid fa-paper-plane" id="submit-reply-btn" style="color: var(--primary-orange); cursor: pointer; padding: 4px;"></i>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="install-pwa-modal" class="overlay-modal" style="z-index: 2000;">
+        <div class="modal-sheet confirm-modal-sheet">
+            <h3 class="confirm-title">Install Lumina</h3>
+            <p class="confirm-msg">Install Lumina on your home screen for a faster, app-like experience and quick access.</p>
+            <div class="confirm-actions">
+                <button class="btn-cancel" onclick="closeInstallPrompt()">Not Now</button>
+                <button class="btn-primary" id="confirm-install-btn" style="flex: 1;">Install App</button>
             </div>
         </div>
     </div>
@@ -2195,6 +2212,51 @@
         function escapeHtml(str) {
             return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
         }
+
+        // --- PWA Installation Logic ---
+        let deferredPrompt;
+        const installBtn = document.getElementById('drawer-install-app');
+        const installModal = document.getElementById('install-pwa-modal');
+        const confirmInstallBtn = document.getElementById('confirm-install-btn');
+
+        // Listen for the browser's install signal
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault(); // Prevent native mini-infobar on mobile
+            deferredPrompt = e; // Stash event for later
+            if (installBtn) installBtn.style.display = 'flex'; // Reveal sidebar button
+        });
+
+        // Custom Modal UI Triggers
+        window.openInstallPrompt = () => {
+            toggleDrawer(); 
+            installModal.classList.add('active'); 
+        };
+
+        window.closeInstallPrompt = () => {
+            installModal.classList.remove('active');
+        };
+
+        // Handle the actual installation
+        confirmInstallBtn.addEventListener('click', async () => {
+            closeInstallPrompt();
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                console.log(`User response to the install prompt: ${outcome}`);
+                
+                // Clear prompt after execution
+                deferredPrompt = null;
+                installBtn.style.display = 'none'; 
+            }
+        });
+
+        // Clean up UI if installed successfully 
+        window.addEventListener('appinstalled', () => {
+            deferredPrompt = null;
+            if (installBtn) installBtn.style.display = 'none';
+            toast("Lumina has been installed successfully!");
+        });
+
     </script>
 </body>
 </html>

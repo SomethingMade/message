@@ -6,6 +6,11 @@
     <meta name="theme-color" content="#ffffff">
     <title>Lumina - Social Network</title>
     
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="https://i.postimg.cc/C5q1gtdc/IMG-20260701-194815.jpg">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;500;600;700;900&display=swap" rel="stylesheet">
     
@@ -759,6 +764,34 @@
         </div>
     </div>
 
+    <div id="messenger-modal" class="overlay-modal" style="z-index: 1300;">
+        <div class="modal-sheet" style="height: 85vh; display: flex; flex-direction: column;">
+            <div class="modal-header">
+                <h3 id="messenger-title">Messages</h3>
+                <button class="modal-close-btn" onclick="closeMessenger()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            
+            <div class="modal-body" id="messenger-friends-list" style="overflow-y: auto; padding: 0;"></div>
+            
+            <div id="active-chat-view" style="display: none; flex-direction: column; flex: 1; overflow: hidden;">
+                <div style="padding: 12px 16px; background: var(--bg-surface); border-bottom: 1px solid var(--border-dim); display: flex; align-items: center; gap: 12px; box-shadow: var(--shadow-sm); z-index: 2;">
+                    <button onclick="backToFriendsList()" style="border:none; background:var(--hover-overlay); width:36px; height:36px; border-radius:50%; cursor:pointer; font-size:16px; color: var(--text-primary);"><i class="fa-solid fa-arrow-left"></i></button>
+                    <img id="chat-partner-avatar" src="" style="width:36px; height:36px; border-radius:50%; object-fit: cover;">
+                    <span id="chat-partner-name" style="font-weight:600; font-size: 16px;"></span>
+                </div>
+                
+                <div id="chat-messages-container" style="flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 8px; background: var(--bg-body);"></div>
+                
+                <div class="comment-entry-box" style="background: var(--bg-surface);">
+                    <div class="comment-input-wrap">
+                        <input type="text" id="chat-text-input" placeholder="Type a message..." style="width: 100%;">
+                        <i class="fa-solid fa-paper-plane" id="send-chat-btn" style="color: var(--primary-orange); cursor: pointer; padding: 8px; font-size: 18px;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div id="toast-box"></div>
 
     <script type="module">
@@ -799,10 +832,20 @@
         let userWantsVideoSound = false; 
         let currentlyPlayingVideo = null;
         let activeSheetUidListener = null;
+
+        // Chat Variables
+        let activeChatPartnerId = null;
+        let activeChatUnsubscribe = null;
+        const getChatId = (uid1, uid2) => (uid1 < uid2) ? `${uid1}_${uid2}` : `${uid2}_${uid1}`;
         
-        // This map prevents posts from jumping around wildly when likes change. 
-        // A permanent algorithmic score is generated only the first time a post is fetched locally.
         const postSortScores = new Map();
+
+        // Register PWA Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js').catch(err => console.error('SW Registration Failed: ', err));
+            });
+        }
 
         // Anti-Long Press logic for Mobile Devices natively via JS contextmenu interception
         document.addEventListener('contextmenu', e => {
@@ -928,7 +971,6 @@
             });
         }
 
-        // Global Spinner Controls
         function showSpinner() {
             document.getElementById('auth-spinner').style.display = 'flex';
         }
@@ -937,7 +979,6 @@
             document.getElementById('auth-spinner').style.display = 'none';
         }
 
-        // Global UI Functions
         window.openComposerModal = () => document.getElementById('composer-modal').classList.add('active');
         window.closeComposerModal = () => {
             document.getElementById('composer-modal').classList.remove('active');
@@ -945,7 +986,6 @@
             document.getElementById('tag-users-dropdown').style.display = 'none';
         }
 
-        // Single Post Isolation Viewer
         window.openSinglePost = async (postId) => {
             const target = document.getElementById('single-post-target');
             target.innerHTML = '<div style="text-align:center; padding:40px;"><div class="auth-spinner-circle" style="margin: 0 auto; width:30px; height:30px;"></div></div>';
@@ -957,7 +997,6 @@
                 p.id = snap.key;
                 target.innerHTML = '';
                 const card = createPostElement(p);
-                // remove bottom margins for full height flow in modal
                 card.style.marginBottom = '0';
                 target.appendChild(card);
                 initCustomVideos(card);
@@ -968,7 +1007,6 @@
         
         window.closeSinglePost = () => {
             document.getElementById('single-post-overlay').classList.remove('active');
-            // Clean up to stop active video streams playing in background
             document.getElementById('single-post-target').innerHTML = ''; 
         };
         
@@ -1004,7 +1042,6 @@
             closeConfirm();
         };
         
-        // ── Browse & Search Users Logic ──
         window.openBrowseUsers = async () => {
             document.getElementById('browse-users-modal').classList.add('active');
             const listTarget = document.getElementById('browse-users-list');
@@ -1018,7 +1055,6 @@
                         window.allUsersCache.push({ id: child.key, ...child.val() });
                     });
                     
-                    // Default sort by follower count
                     window.allUsersCache.sort((a, b) => Object.keys(b.followers || {}).length - Object.keys(a.followers || {}).length);
                     renderBrowseUsers(window.allUsersCache);
                 } else {
@@ -1101,7 +1137,6 @@
             }
         });
 
-        // Notifications Modal Accessor
         document.getElementById('nav-notif-btn').addEventListener('click', () => {
             document.getElementById('profile-sheet-overlay').classList.add('active');
             document.getElementById('profile-sheet-overlay').style.display = 'block';
@@ -1114,7 +1149,6 @@
             setTimeout(() => document.getElementById('profile-sheet-overlay').style.display = 'none', 300);
         };
 
-        // Tags and Emojis Handlers (Updated to fetch from User's Following/Friends List)
         document.getElementById('tag-users-btn').addEventListener('click', async () => {
             const dropdown = document.getElementById('tag-users-dropdown');
             const emojiContainer = document.getElementById('emoji-picker-container');
@@ -1246,7 +1280,6 @@
             });
         }
 
-        // Authentication Event Listeners
         document.getElementById('action-login').addEventListener('click', () => {
             const em = document.getElementById('login-email').value.trim();
             const pa = document.getElementById('login-pass').value;
@@ -1302,7 +1335,6 @@
         
         document.getElementById('drawer-logout-trigger').addEventListener('click', logoutAction);
 
-        // Upload Profile Avatar logic via Modal Profile Sheet
         document.getElementById('profile-avatar-update').addEventListener('change', async (e) => {
             const file = e.target.files[0];
             if (!file) return;
@@ -1315,7 +1347,6 @@
             }
         });
 
-        // Dynamic Upload Profile Cover Image logic
         document.getElementById('profile-cover-update').addEventListener('change', async (e) => {
             const file = e.target.files[0];
             if (!file) return;
@@ -1328,7 +1359,6 @@
             }
         });
 
-        // Pill form details update function
         document.getElementById('save-profile-btn').addEventListener('click', async () => {
             const newName = document.getElementById('edit-name-pill').value.trim();
             const newBio = document.getElementById('edit-bio-pill').value.trim();
@@ -1412,7 +1442,6 @@
                 closeComposerModal();
                 toast("Posted successfully!");
                 
-                // Parse for @tags to send notification
                 const myText = postObject.text;
                 if(myText.includes('@')) {
                     const usersSnap = await get(ref(database, 'users'));
@@ -1431,7 +1460,6 @@
             });
         });
 
-        // Intersection Observers
         const infiniteScrollObserver = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
@@ -1456,7 +1484,6 @@
             });
         }, { threshold: 0.5 }); 
 
-        // Generate consistent Post Elements 
         function createPostElement(post) {
             const card = document.createElement('div');
             card.className = 'post-card';
@@ -1532,7 +1559,6 @@
                 </div>
             `;
 
-            // Setup Listeners
             if (post.uid === currentUser.uid) {
                 const delBtn = card.querySelector(`.delete-post-btn`);
                 if(delBtn) {
@@ -1564,7 +1590,6 @@
                         delete currentLikesObj[currentUser.uid];
                     } else {
                         currentLikesObj[currentUser.uid] = true;
-                        // Dispatch like notification to creator
                         if (post.uid !== currentUser.uid) {
                             sendNotification(post.uid, 'like', post.id, p.text);
                         }
@@ -1599,7 +1624,6 @@
             }
         }
 
-        // Initialize custom logic for Videos embedded in a card
         function initCustomVideos(container) {
             const wrappers = container.querySelectorAll('.custom-video-wrapper');
             wrappers.forEach(wrapper => {
@@ -1726,9 +1750,7 @@
                 const postsArray = [];
                 snapshot.forEach((child) => { postsArray.push({ id: child.key, ...child.val() }); });
                 
-                // X/Twitter-style algorithm anchored to fixed scores per active session
                 postsArray.forEach(p => {
-                    // Only assign a score the very first time the app fetches this specific post id
                     if (!postSortScores.has(p.id)) {
                         const recency = p.timestamp / 1000000000;
                         const initialScore = (p.likesCount || 0) * 50 + recency + (Math.random() * 10);
@@ -1736,9 +1758,7 @@
                     }
                 });
 
-                // Sort posts relying strictly on their locked initial score instead of updating dynamically
                 postsArray.sort((a, b) => postSortScores.get(b.id) - postSortScores.get(a.id));
-
                 reconcilePosts(streamTarget, postsArray, feedRenderedCards);
 
                 let anchor = document.getElementById('feed-scroll-anchor');
@@ -1752,24 +1772,20 @@
             });
         }
 
-        // ── Open and Present Profile Bottom Sheet ──
         window.openProfileSheet = (uid) => {
             document.getElementById('profile-sheet-overlay').classList.add('active');
             document.getElementById('profile-sheet-overlay').style.display = 'block';
             document.getElementById('profile-bottom-sheet').classList.add('active');
             
-            // Explicitly pause stream videos running beneath background
             document.querySelectorAll('#posts-stream-target video').forEach(v => v.pause());
 
             const isMe = (uid === currentUser.uid);
 
-            // Toggle visibility nodes based on privileges
             document.getElementById('profile-avatar-upload-label').style.display = isMe ? 'flex' : 'none';
             document.getElementById('profile-cover-upload-label').style.display = isMe ? 'block' : 'none';
 
             if (activeSheetUidListener) activeSheetUidListener();
 
-            // Establish real-time sync for target profile sheet user details
             activeSheetUidListener = onValue(ref(database, `users/${uid}`), (snap) => {
                 const data = snap.exists() ? snap.val() : {};
                 
@@ -1777,11 +1793,9 @@
                 document.getElementById('profile-view-avatar').src = data.photoURL || `https://ui-avatars.com/api/?name=User`;
                 document.getElementById('profile-view-bio').innerText = data.bio || "No details or bio provided yet.";
                 
-                // Formulate and inject Joined date
                 const joinedDateString = new Date(data.createdAt || Date.now()).toLocaleDateString(undefined, {month: 'long', year: 'numeric'});
                 document.getElementById('profile-join-date').innerHTML = `<i class="fa-solid fa-calendar-days"></i> Joined ${joinedDateString}`;
 
-                // Fallback default image for profile cover
                 document.getElementById('profile-view-cover').src = data.coverURL || "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&q=80";
 
                 const followersObj = data.followers || {};
@@ -1794,7 +1808,6 @@
                 actionsArea.innerHTML = '';
 
                 if(isMe) {
-                    // Current User controls (Pill mode toggle)
                     const editProfileBtn = document.createElement('button');
                     editProfileBtn.className = "btn-sheet-action btn-sheet-secondary";
                     editProfileBtn.innerHTML = `<i class="fa-solid fa-pen"></i> Edit Profile`;
@@ -1811,7 +1824,6 @@
 
                     actionsArea.appendChild(editProfileBtn);
                 } else {
-                    // Visitor Context Controls
                     const followBtn = document.createElement('button');
                     const hasFollowed = !!followersObj[currentUser.uid];
                     followBtn.className = hasFollowed ? "btn-sheet-action btn-sheet-secondary is-active" : "btn-sheet-action btn-sheet-primary";
@@ -1822,7 +1834,8 @@
                     msgBtn.className = "btn-sheet-action btn-sheet-secondary";
                     msgBtn.innerHTML = `<i class="fa-regular fa-comment-dots"></i> Message`;
                     msgBtn.onclick = () => {
-                        toast(`Direct messaging channel workspace initialized for ${data.name || 'User'}`);
+                        closeProfileSheet();
+                        openActiveChat(uid, data.name || 'User', data.photoURL || 'https://ui-avatars.com/api/?name=User');
                     };
 
                     actionsArea.appendChild(followBtn);
@@ -1836,7 +1849,6 @@
             document.getElementById('profile-bottom-sheet').classList.remove('active');
             setTimeout(() => document.getElementById('profile-sheet-overlay').style.display = 'none', 300);
             
-            // Reset layout modes and buttons
             document.getElementById('profile-edit-mode').style.display = 'none';
             document.getElementById('profile-display-mode').style.display = 'block';
 
@@ -1845,7 +1857,6 @@
                 activeSheetUidListener = null;
             }
 
-            // Restore autoplay stream monitoring observers
             document.querySelectorAll('#posts-stream-target .custom-video-wrapper video').forEach(v => {
                 videoPlaybackObserver.unobserve(v);
                 videoPlaybackObserver.observe(v);
@@ -1869,7 +1880,6 @@
             }
         }
 
-        // Comment Overlays & Interactions
         window.openCommentThread = function(postId, postOwnerUid) {
             activeTargetThreadId = postId;
             activePostOwnerId = postOwnerUid;
@@ -2054,6 +2064,133 @@
                 }
             });
         }
+
+        // Messenger Features Integration 
+        document.querySelector('button[title="Messenger"]').addEventListener('click', async () => {
+            if (!currentUser) return toast("Please sign in first.");
+            document.getElementById('messenger-modal').classList.add('active');
+            document.getElementById('messenger-friends-list').style.display = 'block';
+            document.getElementById('active-chat-view').style.display = 'none';
+            document.getElementById('messenger-title').innerText = "Messages";
+            
+            const listTarget = document.getElementById('messenger-friends-list');
+            listTarget.innerHTML = '<div style="text-align:center; padding:40px;"><div class="auth-spinner-circle" style="margin: 0 auto; width:30px; height:30px;"></div></div>';
+
+            try {
+                const mySnap = await get(ref(database, `users/${currentUser.uid}`));
+                const followingUids = mySnap.exists() ? Object.keys(mySnap.val().following || {}) : [];
+                
+                if (followingUids.length === 0) {
+                    listTarget.innerHTML = '<div style="text-align:center; padding:24px; color:var(--text-secondary);">Follow some users to start chatting!</div>';
+                    return;
+                }
+
+                listTarget.innerHTML = '';
+                for (const uid of followingUids) {
+                    const uSnap = await get(ref(database, `users/${uid}`));
+                    if (uSnap.exists()) {
+                        const u = uSnap.val();
+                        const el = document.createElement('div');
+                        el.className = 'sidebar-item';
+                        el.style.borderBottom = '1px solid var(--border-dim)';
+                        el.style.borderRadius = '0';
+                        el.style.padding = '16px';
+                        el.innerHTML = `
+                            <img src="${u.photoURL}" style="width: 48px; height: 48px; border-radius: 50%; object-fit: cover;">
+                            <div style="font-weight: 600; font-size: 15px; color: var(--text-primary); flex: 1;">${escapeHtml(u.name)}</div>
+                            <i class="fa-solid fa-chevron-right" style="color: var(--text-secondary); font-size: 14px;"></i>
+                        `;
+                        el.onclick = () => openActiveChat(uid, u.name, u.photoURL);
+                        listTarget.appendChild(el);
+                    }
+                }
+            } catch (err) {
+                listTarget.innerHTML = '<div style="text-align:center; padding:24px; color:var(--text-secondary);">Error loading friends.</div>';
+            }
+        });
+
+        window.closeMessenger = () => {
+            document.getElementById('messenger-modal').classList.remove('active');
+            if(activeChatUnsubscribe) { activeChatUnsubscribe(); activeChatUnsubscribe = null; }
+            activeChatPartnerId = null;
+        };
+
+        window.backToFriendsList = () => {
+            document.getElementById('messenger-friends-list').style.display = 'block';
+            document.getElementById('active-chat-view').style.display = 'none';
+            document.getElementById('messenger-title').innerText = "Messages";
+            if(activeChatUnsubscribe) { activeChatUnsubscribe(); activeChatUnsubscribe = null; }
+            activeChatPartnerId = null;
+        };
+
+        window.openActiveChat = (partnerId, partnerName, partnerAvatar) => {
+            activeChatPartnerId = partnerId;
+            document.getElementById('messenger-friends-list').style.display = 'none';
+            document.getElementById('active-chat-view').style.display = 'flex';
+            document.getElementById('messenger-title').innerText = "Chat";
+            document.getElementById('chat-partner-name').innerText = partnerName;
+            document.getElementById('chat-partner-avatar').src = partnerAvatar;
+
+            const chatContainer = document.getElementById('chat-messages-container');
+            const chatId = getChatId(currentUser.uid, partnerId);
+            
+            if(activeChatUnsubscribe) activeChatUnsubscribe();
+            
+            activeChatUnsubscribe = onValue(ref(database, `chats/${chatId}/messages`), (snap) => {
+                chatContainer.innerHTML = '';
+                if(snap.exists()) {
+                    snap.forEach(child => {
+                        const msg = child.val();
+                        const isMe = msg.uid === currentUser.uid;
+                        
+                        const msgBubble = document.createElement('div');
+                        msgBubble.style.maxWidth = '75%';
+                        msgBubble.style.padding = '10px 14px';
+                        msgBubble.style.borderRadius = '18px';
+                        msgBubble.style.fontSize = '15px';
+                        msgBubble.style.lineHeight = '1.4';
+                        msgBubble.style.marginBottom = '4px';
+                        msgBubble.style.wordBreak = 'break-word';
+                        msgBubble.style.alignSelf = isMe ? 'flex-end' : 'flex-start';
+                        
+                        if(isMe) {
+                            msgBubble.style.background = 'var(--primary-orange)';
+                            msgBubble.style.color = 'white';
+                            msgBubble.style.borderBottomRightRadius = '4px';
+                        } else {
+                            msgBubble.style.background = '#E4E6EB';
+                            msgBubble.style.color = 'var(--text-primary)';
+                            msgBubble.style.borderBottomLeftRadius = '4px';
+                        }
+                        
+                        msgBubble.innerText = msg.text;
+                        chatContainer.appendChild(msgBubble);
+                    });
+                    chatContainer.scrollTop = chatContainer.scrollHeight;
+                }
+            });
+        };
+
+        const sendChatMessage = () => {
+            const input = document.getElementById('chat-text-input');
+            const text = input.value.trim();
+            if(!text || !activeChatPartnerId) return;
+
+            const chatId = getChatId(currentUser.uid, activeChatPartnerId);
+            
+            push(ref(database, `chats/${chatId}/messages`), {
+                text: text,
+                uid: currentUser.uid,
+                timestamp: Date.now()
+            }).then(() => {
+                input.value = '';
+            });
+        };
+
+        document.getElementById('send-chat-btn').addEventListener('click', sendChatMessage);
+        document.getElementById('chat-text-input').addEventListener('keypress', (e) => {
+            if(e.key === 'Enter') sendChatMessage();
+        });
 
         function escapeHtml(str) {
             return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");

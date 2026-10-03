@@ -237,6 +237,7 @@ button.rw:hover{background:var(--hover)}
    <button class="ibtn" id="me" title="Account"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg></button></div></div>
   <div class="search"><input id="q" class="in" placeholder="Search chats" autocomplete="off"></div>
   <div class="banner" id="enc-banner" hidden></div>
+  <div class="banner" id="push-banner" hidden>Turn on notifications so you never miss a message.</div>
   <div id="chats"></div>
  </aside>
  <main id="convo">
@@ -278,9 +279,10 @@ button.rw:hover{background:var(--hover)}
 
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-import {getAuth,onAuthStateChanged,signOut,RecaptchaVerifier,signInWithPhoneNumber} from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+import {getAuth,onAuthStateChanged,onIdTokenChanged,signOut,RecaptchaVerifier,signInWithPhoneNumber} from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 import {getStorage,ref as sref,uploadBytes,getDownloadURL} from "https://www.gstatic.com/firebasejs/10.8.1/firebase-storage.js";
-import {getDatabase,ref,get,set,update,push,onValue,query,orderByChild,limitToLast,increment,onDisconnect,serverTimestamp} from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+import {getMessaging,getToken,onMessage,isSupported as isMessagingSupported} from "https://www.gstatic.com/firebasejs/10.8.1/firebase-messaging.js";
+import {getDatabase,ref,get,set,remove,update,push,onValue,query,orderByChild,limitToLast,increment,onDisconnect,serverTimestamp} from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 const app=initializeApp({
             apiKey: "AIzaSyBQSPwpVbGrdCuOoyitAeWQHIeipj2MgIY",
             authDomain: "newstart-64c43.firebaseapp.com",
@@ -367,6 +369,42 @@ $('phone').addEventListener('keydown',e=>{if(e.key==='Enter')sendCode()});
 $('save').onclick=async()=>{const n=$('name').value.trim();if(!n){$('e-name').textContent='Enter your name.';return}
  await update(ref(db,'users/'+me.uid),{name:n,phoneNumber:me.phoneNumber||phoneFull,createdAt:Date.now()});showApp()};
 
+/* ---- push notifications (FCM): same service worker, token store and payload as the main Haba app ---- */
+const FCM_VAPID_KEY="BKOsn-S9ti0UEtUqRA9zzegFMaI8TrL2CKA1cpPqUjvAIsZ4SJkMe7127cg9T4S-tJHrHsLpf1gLFjZazmxQvGQ";
+let fcmToken=null,messaging=null,fcmReg=null,fgBound=false;
+/* the worker's notification Reply action authenticates from this cache, exactly like the main app writes it */
+const AUTH_DB='gozaAuthCache',AUTH_STORE='tokens';
+const authDb=()=>new Promise((r,j)=>{const q=indexedDB.open(AUTH_DB,1);q.onupgradeneeded=()=>q.result.createObjectStore(AUTH_STORE);q.onsuccess=()=>r(q.result);q.onerror=()=>j(q.error)});
+async function cacheAuth(u){try{const token=await u.getIdToken(),d=await authDb();await new Promise((r,j)=>{const t=d.transaction(AUTH_STORE,'readwrite');t.objectStore(AUTH_STORE).put({token,uid:u.uid,updatedAt:Date.now()},'current');t.oncomplete=r;t.onerror=()=>j(t.error)})}catch(_){}}
+async function clearAuth(){try{const d=await authDb();d.transaction(AUTH_STORE,'readwrite').objectStore(AUTH_STORE).delete('current')}catch(_){}}
+onIdTokenChanged(auth,u=>{u?cacheAuth(u):clearAuth()});
+async function setupPush(){
+ if(!me||!('serviceWorker' in navigator)||!('Notification' in window)||Notification.permission!=='granted')return;
+ try{
+  if(!await isMessagingSupported())return;
+  fcmReg=fcmReg||await navigator.serviceWorker.register('./firebase-messaging-sw.js');
+  messaging=messaging||getMessaging(app);
+  const token=await getToken(messaging,{vapidKey:FCM_VAPID_KEY,serviceWorkerRegistration:fcmReg});
+  if(!token)return;fcmToken=token;
+  await set(ref(db,`users/${me.uid}/fcmTokens/${token}`),{createdAt:serverTimestamp(),ua:navigator.userAgent});
+  if(!fgBound){fgBound=true;onMessage(messaging,pl=>{const d=pl.data||{};
+   if(d.chatUid&&d.chatUid===active&&document.visibilityState==='visible')return;
+   navigator.serviceWorker.ready.then(r=>r.showNotification(d.title||'New Message',{body:d.body||'Sent you a message',icon:d.icon||undefined,
+    tag:d.groupId?'group-'+d.groupId:d.chatUid?'chat-'+d.chatUid:'new-message',data:{url:d.url||'/',uid:d.chatUid,groupId:d.groupId},
+    actions:[{action:'reply',title:'Reply',type:'text',placeholder:'Type a message…'},{action:'close',title:'Dismiss'}]}))})}
+ }catch(_){}
+}
+function refreshPushBanner(){$('push-banner').hidden=!(me&&'Notification' in window&&Notification.permission==='default')}
+async function enablePush(){
+ if(!('Notification' in window)){toast('Notifications are not supported on this browser');return}
+ let p=Notification.permission;if(p==='default')p=await Notification.requestPermission();
+ if(p==='granted'){await setupPush();toast('Notifications are on')}else toast('Notifications are blocked in your browser settings');
+ refreshPushBanner();
+}
+$('push-banner').onclick=enablePush;
+/* tapping a notification while the app is open asks it to jump to that chat */
+if('serviceWorker' in navigator)navigator.serviceWorker.addEventListener('message',e=>{const d=e.data||{};if(d.type==='open-chat'&&d.uid&&me)loadProfile(d.uid).then(()=>openChat(d.uid))});
+
 /* ---- session ---- */
 onAuthStateChanged(auth,async u=>{
  if(offList){offList();offList=null}
@@ -376,7 +414,7 @@ onAuthStateChanged(auth,async u=>{
  if(!p.exists()||!p.val().name){$('auth').hidden=false;$('app').hidden=true;step('name');hideSplash();return}
  showApp();hideSplash();
 });
-function showApp(){$('auth').hidden=true;$('app').hidden=false;startPresence();backupInfo=undefined;myKeys().catch(()=>{}).then(refreshBanner);
+function showApp(){$('auth').hidden=true;$('app').hidden=false;startPresence();setupPush();refreshPushBanner();backupInfo=undefined;myKeys().catch(()=>{}).then(refreshBanner);
  if(offList)offList();
  offList=onValue(ref(db,'user_chats/'+me.uid),s=>{chats=s.val()||{};renderList();Object.keys(chats).forEach(loadProfile)})}
 async function loadProfile(uid){if(profiles[uid])return;const s=await get(ref(db,'users/'+uid));profiles[uid]=s.val()||{name:'Haba user'};renderList();if(active===uid)paintHead()}
@@ -751,7 +789,7 @@ $('r-name').onclick=async()=>{
  if(v===null)return;if(!v){toast('Enter a name');return}
  try{await update(ref(db,'users/'+me.uid),{name:v});(profiles[me.uid]=profiles[me.uid]||{}).name=v;toast('Name updated');paintMain()}catch(_){toast('Could not update name')}
 };
-$('r-out').onclick=async()=>{if(await ask('Sign out?','You will need to verify your phone number to sign back in. Keep your backup PIN safe so you can restore your chat history later.',{ok:'Sign out'})){closeSheet();stopPresence();await update(ref(db,'users/'+me.uid),{status:'offline',lastSeen:serverTimestamp()}).catch(()=>{});signOut(auth)}};
+$('r-out').onclick=async()=>{if(await ask('Sign out?','You will need to verify your phone number to sign back in. Keep your backup PIN safe so you can restore your chat history later.',{ok:'Sign out'})){closeSheet();stopPresence();await update(ref(db,'users/'+me.uid),{status:'offline',lastSeen:serverTimestamp()}).catch(()=>{});if(fcmToken){await remove(ref(db,`users/${me.uid}/fcmTokens/${fcmToken}`)).catch(()=>{});fcmToken=null}signOut(auth)}};
 
 /* ---- new chat / account ---- */
 $('new').onclick=async()=>{

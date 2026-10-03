@@ -212,6 +212,33 @@ button.rw:hover{background:var(--hover)}
 .rw{flex:1;min-width:0;display:flex;align-items:center;justify-content:flex-end;gap:2px;height:28px;overflow:hidden}
 .rw span{width:3px;border-radius:2px;background:var(--text);flex-shrink:0;opacity:.8}
 .rt{font:400 10px/1 var(--brand);letter-spacing:.6px;min-width:30px;text-align:right}
+/* profile sheet */
+@media (max-width:768px){#sheet .pan{max-width:none}}
+.sh{position:sticky;top:0;z-index:2;background:var(--bg);gap:8px;padding-bottom:6px}
+.sh h2{font-size:17px;font-weight:700;letter-spacing:-.2px}
+.pid{position:relative;overflow:hidden;padding:20px 24px 26px}
+.pid::before{content:'';position:absolute;inset:0;background:var(--text);opacity:.05;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Cpolygon points='20,80 170,30 80,110' fill-opacity='.75'/%3E%3Cpolygon points='120,180 170,30 80,110'/%3E%3Cpolygon points='20,80 80,110 80,140' fill-opacity='.55'/%3E%3C/svg%3E") no-repeat 118% -34%/280px;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Cpolygon points='20,80 170,30 80,110' fill-opacity='.75'/%3E%3Cpolygon points='120,180 170,30 80,110'/%3E%3Cpolygon points='20,80 80,110 80,140' fill-opacity='.55'/%3E%3C/svg%3E") no-repeat 118% -34%/280px;pointer-events:none}
+.pid>*{position:relative}
+.pid .av{width:104px;height:104px;margin:0 auto 14px;font-size:36px;box-shadow:0 0 0 4px var(--bg),0 0 0 5px var(--line)}
+#p-av:not(:empty){background-color:var(--text);color:var(--bg)}
+.pid .nm{font-size:24px;font-weight:800;letter-spacing:-.5px}
+#p-user{color:var(--text);opacity:.55;font-weight:600;font-size:15px;margin-top:3px}
+#p-user:empty{display:none}
+#p-phone{font:400 11px/1 var(--brand);letter-spacing:1.2px;margin-top:14px}
+#p-phone:empty{display:none}
+.sec{text-transform:none;letter-spacing:0;font-size:13px;font-weight:600;padding:20px 24px 8px}
+.lst{margin:0 16px;padding:0;background:var(--bg-input);border-radius:18px;overflow:hidden}
+.lst.gap{margin-top:22px}
+.rw{padding:14px 16px;border-radius:0;gap:14px}
+.lst .rw+.rw{border-top:1px solid var(--line)}
+button.rw:hover,button.rw:active{background:rgba(127,127,127,.12)}
+.rw .ic{width:40px;height:40px;background:var(--bg)}
+.rw .tx{flex:1;min-width:0}
+.rw .tx b{font-size:15.5px}
+button.rw:not(.dg)::after{content:'';width:8px;height:8px;border-right:2px solid var(--sub);border-top:2px solid var(--sub);transform:rotate(45deg);margin-right:4px;flex-shrink:0;opacity:.7}
+.note{padding:12px 24px 8px}
+.pf{display:flex;align-items:center;justify-content:center;gap:8px;margin:30px 0 8px;color:var(--sub);font:400 9px/1 var(--brand);letter-spacing:1.6px}
+.pf svg{width:16px;height:16px}
 </style>
 </head>
 <body>
@@ -253,12 +280,13 @@ button.rw:hover{background:var(--hover)}
  <div id="v-main">
   <div class="sh"><button class="ibtn" id="sh-close" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button><h2>Profile</h2></div>
   <div class="pid"><div class="av" id="p-av"></div><div class="nm" id="p-name"></div><div class="sb" id="p-user"></div><div class="sb" id="p-phone"></div></div>
-  <div class="sec">Settings</div>
+  <div class="sec">Account</div>
   <div class="lst">
    <button class="rw" id="r-name"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></div><div class="tx"><b>Edit name</b><span>How people see you in chats</span></div></button>
    <button class="rw" id="r-enc"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div><div class="tx"><b>Encryption &amp; recovery</b><span id="r-enc-sub">Backup PIN for your encrypted chats</span></div></button>
-   <button class="rw dg" id="r-out"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></div><div class="tx"><b>Sign out</b></div></button>
   </div>
+  <div class="lst gap"><button class="rw dg" id="r-out"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></div><div class="tx"><b>Sign out</b></div></button></div>
+  <div class="pf"><svg viewBox="0 0 200 200"><polygon points="20,80 170,30 80,110" fill="currentColor" fill-opacity=".75"/><polygon points="120,180 170,30 80,110" fill="currentColor"/><polygon points="20,80 80,110 80,140" fill="currentColor" fill-opacity=".55"/></svg><span>Haba Messenger</span></div>
  </div>
  <div id="v-enc" hidden>
   <div class="sh"><button class="ibtn" id="enc-back" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button><h2>Encryption &amp; recovery</h2></div>

@@ -147,15 +147,15 @@ button.rw:hover{background:var(--hover)}
 .st.on{color:var(--w-green);font-weight:500}
 #msgs{background:transparent;padding:10px 8% 8px;gap:2px}
 @media (max-width:768px){#msgs{padding:10px 10px 8px}}
-#msgs .b{position:relative;max-width:min(82%,480px);padding:6px 8px 6px 9px;border-radius:8px;font-size:15px;line-height:1.3;background:var(--w-in);color:var(--w-txt);box-shadow:0 1px .5px rgba(11,20,26,.13)}
+#msgs .b{position:relative;max-width:min(82%,480px);padding:6px 7px 7px 9px;border-radius:8px;font-size:14.5px;line-height:1.3;background:var(--w-in);color:var(--w-txt);box-shadow:0 1px .5px rgba(11,20,26,.13)}
 #msgs .b::after{content:'';display:block;clear:both}
 #msgs .b.me{background:var(--w-out);color:var(--w-txt)}
 #msgs .b.f{margin-top:7px}
-#msgs .b.f::before{content:'';position:absolute;top:0;width:0;height:0;border-bottom:10px solid transparent}
+#msgs .b.f::before{content:'';position:absolute;top:0;width:8px;height:13px}
 #msgs .b.f:not(.me){border-top-left-radius:0}
-#msgs .b.f:not(.me)::before{left:-7px;border-right:8px solid var(--w-in)}
+#msgs .b.f:not(.me)::before{left:-8px;background:var(--w-in);clip-path:path('M8 0H0C1 5 4 10 8 13Z')}
 #msgs .b.f.me{border-top-right-radius:0}
-#msgs .b.f.me::before{right:-7px;border-left:8px solid var(--w-out)}
+#msgs .b.f.me::before{right:-8px;background:var(--w-out);clip-path:path('M0 0H8C7 5 4 10 0 13Z')}
 #msgs .b.stk.f::before{display:none}
 #msgs .b.stk{background:none;box-shadow:none;padding:0}
 #msgs .b.mb{padding:3px}
@@ -170,6 +170,26 @@ button.rw:hover{background:var(--hover)}
 .compose .in{height:44px;border-radius:22px;background:var(--w-field);padding:0 18px;box-shadow:0 1px .5px rgba(11,20,26,.13)}
 .compose .in:focus{border-color:transparent}
 .send{width:44px;height:44px;background:var(--w-green);color:#fff}
+
+/* media bubbles + full-screen viewer */
+#msgs .b.mb .mw{width:min(300px,68vw);min-width:0;min-height:0;border-radius:6px}
+#msgs .b.mb .mw[data-t="image"]{aspect-ratio:4/3}
+#msgs .b.mb .mw img,#msgs .b.mb .mw video{width:100%;height:100%;max-width:none;max-height:none;object-fit:cover}
+#msgs .b.mb .mw video{object-fit:contain;background:#000}
+#msgs .b.mb .mw:has(audio){width:auto;min-height:0}
+#msgs .b.mb>.mt{float:none;justify-content:flex-end;margin:3px 5px 1px}
+.cap::after{content:'';display:block;clear:both}
+#msgs .b.ov>.mt{position:absolute;right:8px;bottom:7px;margin:0;color:#fff;padding:2px 6px;border-radius:10px;background:rgba(0,0,0,.4)}
+#lb{padding:0;flex-direction:column;align-items:stretch;justify-content:flex-start;background:#000;cursor:default}
+.lbh{position:absolute;top:0;left:0;right:0;z-index:2;display:flex;align-items:center;gap:12px;padding:calc(10px + env(safe-area-inset-top,0px)) 12px 28px;background:linear-gradient(rgba(0,0,0,.7),transparent);color:#fff}
+.lbh .ibtn{background:rgba(255,255,255,.14);color:#fff}
+.lbw{flex:1;min-width:0}.lbw b{display:block;font-size:16px;font-weight:600}.lbw span{font-size:12.5px;opacity:.75}
+.lbs{flex:1;display:flex;align-items:center;justify-content:center;overflow:hidden;min-height:0}
+#lb .lbs img{max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;transition:transform .2s;cursor:zoom-in}
+#lb .lbs img.z{transform:scale(2.2);cursor:zoom-out}
+.lbn{position:absolute;top:50%;transform:translateY(-50%);z-index:2;width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.14);color:#fff;font-size:28px;line-height:1;display:flex;align-items:center;justify-content:center}
+.lbn.l{left:12px}.lbn.r{right:12px}
+@media (max-width:768px){.lbn{display:none}}
 </style>
 </head>
 <body>
@@ -231,7 +251,7 @@ button.rw:hover{background:var(--hover)}
  </div>
 </div></div>
 <div id="toast" hidden></div>
-<div id="lb" hidden><img alt=""></div>
+<div id="lb" hidden><div class="lbh"><button class="ibtn" id="lb-x" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button><div class="lbw"><b id="lb-n"></b><span id="lb-d"></span></div><button class="ibtn" id="lb-dl" aria-label="Download"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><polyline points="7 11 12 16 17 11"/><path d="M5 21h14"/></svg></button></div><div class="lbs" id="lb-s"><img id="lb-i" alt=""></div><button class="lbn l" id="lb-p" aria-label="Previous">&#8249;</button><button class="lbn r" id="lb-nx" aria-label="Next">&#8250;</button></div>
 <div id="modal" hidden><div class="box"><h3 id="m-title"></h3><p id="m-text"></p><input id="m-in" class="in" hidden><div class="acts"><button id="m-cancel">Cancel</button><button class="go" id="m-ok">OK</button></div></div></div>
 
 <script type="module">
@@ -382,7 +402,8 @@ async function openChat(uid){
    const mb=(m.mediaURL||m.mediaType)?mediaBlock(m):null;
    const me_=m.senderUid===me.uid?' me':'';
    if(!mb)return `<div class="b${me_}${f}">${esc(txt)}${meta(m)}</div>`;
-   return `<div class="b${mb.cls}${me_}${f}">${mb.html}${txt&&!mb.noCap?`<div class="cap">${esc(txt)}</div>`:''}${meta(m)}</div>`})).then(a=>a.map((h,i)=>dayChip(items[i-1],items[i])+h));
+   const cap=txt&&!mb.noCap,ov=!cap&&!m.viewOnce&&(m.mediaType==='image'||m.mediaType==='gif')?' ov':'';
+   return `<div class="b${mb.cls}${ov}${me_}${f}">${mb.html}${cap?`<div class="cap">${esc(txt)}${meta(m)}</div>`:meta(m)}</div>`})).then(a=>a.map((h,i)=>dayChip(items[i-1],items[i])+h));
   if(active!==uid)return;
   const box=$('msgs'),stick=box.scrollHeight-box.scrollTop-box.clientHeight<120;
   box.innerHTML=out.join('');hydrate(uid);paintTicks();if(stick)box.scrollTop=box.scrollHeight;
@@ -431,7 +452,7 @@ function getMedia(uid,m,retry){
 }
 function paintMedia(el,t,url){
  const keep=()=>{if(pinned){const b=$('msgs');b.scrollTop=b.scrollHeight}};
- if(t==='image'){el.innerHTML='<img alt="Photo">';const i=el.firstChild;i.onload=keep;i.src=url;i.dataset.lb=url}
+ if(t==='image'){el.innerHTML='<img alt="Photo">';const i=el.firstChild;i.onload=()=>{el.style.aspectRatio=Math.min(1.6,Math.max(.75,i.naturalWidth/i.naturalHeight));keep()};i.src=url;i.dataset.lb=url}
  else if(t==='video'){el.innerHTML='<video controls playsinline preload="metadata"></video>';const v=el.firstChild;v.onloadedmetadata=keep;v.src=url}
  else if(t==='audio'){el.innerHTML='<audio controls preload="metadata"></audio>';el.firstChild.src=url}
 }
@@ -451,8 +472,21 @@ function hydrate(uid){
  });
 }
 $('msgs').addEventListener('scroll',()=>{const b=$('msgs');pinned=b.scrollHeight-b.scrollTop-b.clientHeight<160});
-$('msgs').addEventListener('click',e=>{const i=e.target.closest('img[data-lb]');if(i){$('lb').firstElementChild.src=i.dataset.lb;$('lb').hidden=false}});
-$('lb').onclick=()=>{$('lb').hidden=true;$('lb').firstElementChild.removeAttribute('src')};
+let lbList=[],lbN=0,tx=0;
+function lbShow(n){lbN=(n+lbList.length)%lbList.length;const el=lbList[lbN],im=$('lb-i');im.classList.remove('z');im.style.transformOrigin='';im.src=el.dataset.lb;
+ const m=msgStore[((el.closest('[data-k]')||{}).dataset||{}).k]||{};
+ $('lb-n').textContent=m.senderUid?(m.senderUid===me.uid?'You':(profiles[m.senderUid]||{}).name||''):'';
+ $('lb-d').textContent=m.createdAt?dayLabel(m.createdAt)+', '+tmf(m.createdAt):'';
+ $('lb-p').hidden=$('lb-nx').hidden=lbList.length<2}
+function lbClose(){$('lb').hidden=true;$('lb-i').removeAttribute('src')}
+$('msgs').addEventListener('click',e=>{const i=e.target.closest('img[data-lb]');if(!i)return;lbList=[...$('msgs').querySelectorAll('img[data-lb]')];lbShow(lbList.indexOf(i));$('lb').hidden=false});
+$('lb-x').onclick=lbClose;$('lb-p').onclick=()=>lbShow(lbN-1);$('lb-nx').onclick=()=>lbShow(lbN+1);
+$('lb-s').onclick=e=>{if(e.target.id==='lb-s')lbClose()};
+$('lb-i').onclick=e=>{const im=e.currentTarget,r=im.getBoundingClientRect();im.style.transformOrigin=((e.clientX-r.left)/r.width*100)+'% '+((e.clientY-r.top)/r.height*100)+'%';im.classList.toggle('z')};
+$('lb-dl').onclick=()=>{const a=document.createElement('a');a.href=$('lb-i').src;a.download='Haba-photo';a.target='_blank';a.rel='noopener';document.body.appendChild(a);a.click();a.remove()};
+$('lb-s').addEventListener('touchstart',e=>{tx=e.touches[0].clientX},{passive:true});
+$('lb-s').addEventListener('touchend',e=>{const d=e.changedTouches[0].clientX-tx;if(Math.abs(d)>60&&lbList.length>1&&!$('lb-i').classList.contains('z'))lbShow(lbN+(d<0?1:-1))});
+document.addEventListener('keydown',e=>{if($('lb').hidden)return;if(e.key==='Escape')lbClose();else if(lbList.length>1&&e.key==='ArrowLeft')lbShow(lbN-1);else if(lbList.length>1&&e.key==='ArrowRight')lbShow(lbN+1)});
 
 /* ---- presence: publish my status, show theirs (same fields as the main Haba app) ---- */
 let offConn=null,offPres=[];const pres={};

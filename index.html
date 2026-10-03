@@ -137,40 +137,25 @@ button.rw:hover{background:var(--hover)}
  #back{display:flex}
 }
 
-/* ---- WhatsApp-style conversation ---- */
-:root{--w-bg:#EFE7DE;--w-dot:rgba(0,0,0,.05);--w-in:#fff;--w-out:#D9FDD3;--w-txt:#111B21;--w-time:#667781;--w-head:#F0F2F5;--w-field:#fff;--w-chip:rgba(255,255,255,.92);--w-tick:#53BDEB;--w-green:#00A884}
-@media (prefers-color-scheme:dark){:root{--w-bg:#0B141A;--w-dot:rgba(255,255,255,.04);--w-in:#202C33;--w-out:#005C4B;--w-txt:#E9EDEF;--w-time:rgba(233,237,239,.62);--w-head:#202C33;--w-field:#2A3942;--w-chip:#182229}}
-#thread{background-color:var(--w-bg);background-image:radial-gradient(var(--w-dot) 1.2px,transparent 1.3px),radial-gradient(var(--w-dot) 1.2px,transparent 1.3px);background-size:26px 26px;background-position:0 0,13px 13px}
-.ch{background:var(--w-head);border-bottom:none;gap:12px;padding-bottom:8px}
-.ch .ibtn{background:transparent}
-.ch .av.sm{width:40px;height:40px}
-.st.on{color:var(--w-green);font-weight:500}
-#msgs{background:transparent;padding:10px 8% 8px;gap:2px}
-@media (max-width:768px){#msgs{padding:10px 10px 8px}}
-#msgs .b{position:relative;max-width:min(82%,480px);padding:6px 7px 7px 9px;border-radius:8px;font-size:14.5px;line-height:1.3;background:var(--w-in);color:var(--w-txt);box-shadow:0 1px .5px rgba(11,20,26,.13)}
-#msgs .b::after{content:'';display:block;clear:both}
-#msgs .b.me{background:var(--w-out);color:var(--w-txt)}
-#msgs .b.f{margin-top:7px}
-#msgs .b.f::before{content:'';position:absolute;top:0;width:8px;height:13px}
-#msgs .b.f:not(.me){border-top-left-radius:0}
-#msgs .b.f:not(.me)::before{left:-8px;background:var(--w-in);clip-path:path('M8 0H0C1 5 4 10 8 13Z')}
-#msgs .b.f.me{border-top-right-radius:0}
-#msgs .b.f.me::before{right:-8px;background:var(--w-out);clip-path:path('M0 0H8C7 5 4 10 0 13Z')}
-#msgs .b.stk.f::before{display:none}
-#msgs .b.stk{background:none;box-shadow:none;padding:0}
+/* ---- Haba conversation: ink bubbles, one faceted corner, brand-type timestamps ---- */
+.ch{gap:12px;padding-bottom:10px}
+.ch .n{font-weight:700;letter-spacing:-.2px}
+#msgs{padding:14px 16px 10px;gap:3px}
+#msgs .b{position:relative;max-width:min(78%,460px);padding:9px 14px 9px;border-radius:20px 20px 20px 5px;font-size:15px;line-height:1.38;letter-spacing:-.1px;background:var(--bubble-in);color:var(--text)}
+#msgs .b.me{border-radius:20px 20px 5px 20px;background:var(--bubble-out);color:var(--bubble-out-text)}
+#msgs .b.f{margin-top:9px}
+#msgs .b.stk{background:none;padding:0}
 #msgs .b.mb{padding:3px}
-#msgs .b .mw{border-radius:6px}
-#msgs .b .cap{padding:5px 5px 0}
-.mt{float:right;display:flex;align-items:center;gap:3px;margin:7px 0 -4px 12px;font-size:11px;line-height:1;color:var(--w-time);white-space:nowrap;user-select:none}
-#msgs .b.mb .mt{float:none;justify-content:flex-end;margin:3px 5px 1px}
-.tk{display:inline-flex}.tk svg{width:16px;height:11px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
-.tk.rd{color:var(--w-tick)}
-.day,#msgs .sys{align-self:center;background:var(--w-chip);color:var(--w-time);font-size:12.5px;padding:5px 12px;border-radius:8px;margin:10px 0 6px;box-shadow:0 1px .5px rgba(11,20,26,.13);text-align:center}
-.compose{background:transparent;border-top:none;padding:6px 8px calc(8px + env(safe-area-inset-bottom,0px));gap:8px}
-.compose .in{height:44px;border-radius:22px;background:var(--w-field);padding:0 18px;box-shadow:0 1px .5px rgba(11,20,26,.13)}
-.compose .in:focus{border-color:transparent}
-.send{width:44px;height:44px;background:var(--w-green);color:#fff}
-
+#msgs .b .cap{padding:6px 11px 4px}
+.mt{display:flex;align-items:center;gap:5px;margin-top:5px;font:400 8.5px/1 var(--brand);letter-spacing:.7px;opacity:.6;white-space:nowrap;user-select:none}
+#msgs .b.me .mt{justify-content:flex-end}
+#msgs .b:not(.l):not(.ov):not(.sh) .mt{display:none}
+.tk{display:inline-flex}.tk svg{width:11px;height:11px;display:block}
+.day{display:flex;align-items:center;gap:12px;align-self:stretch;margin:16px 0 8px;font:400 9px/1 var(--brand);letter-spacing:1.5px;color:var(--sub)}
+.day::before,.day::after{content:'';flex:1;height:1px;background:var(--line)}
+.compose{gap:8px;padding:10px 12px calc(10px + env(safe-area-inset-bottom,0px))}
+.compose .in{height:44px;padding:0 18px}
+.send{width:44px;height:44px}.send svg{width:20px;height:20px}
 /* media bubbles + full-screen viewer */
 #msgs .b.mb .mw{width:min(300px,68vw);min-width:0;min-height:0;border-radius:6px}
 #msgs .b.mb .mw[data-t="image"]{aspect-ratio:4/3}
@@ -190,6 +175,12 @@ button.rw:hover{background:var(--hover)}
 .lbn{position:absolute;top:50%;transform:translateY(-50%);z-index:2;width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.14);color:#fff;font-size:28px;line-height:1;display:flex;align-items:center;justify-content:center}
 .lbn.l{left:12px}.lbn.r{right:12px}
 @media (max-width:768px){.lbn{display:none}}
+#msgs .b.mb .mw{border-radius:17px}
+#msgs .b.mb:not(.me)>.mt{justify-content:flex-start}
+#msgs .b.ov.me .mw{border-bottom-right-radius:3px}
+#msgs .b.ov:not(.me) .mw{border-bottom-left-radius:3px}
+#msgs .b.ov>.mt{opacity:1;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.lbw span{font:400 9px/1.4 var(--brand);letter-spacing:1px}
 </style>
 </head>
 <body>
@@ -222,7 +213,7 @@ button.rw:hover{background:var(--hover)}
   <div id="thread" hidden style="display:flex;flex-direction:column;flex:1;min-height:0">
    <div class="ch"><button class="ibtn" id="back" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button><div class="av sm" id="t-av"></div><div class="who"><div class="n" id="t-name"></div><div class="st" id="t-sub"></div></div></div>
    <div id="msgs"></div>
-   <div class="compose"><input id="msg" class="in" placeholder="Message" autocomplete="off"><button class="send" id="sendmsg" aria-label="Send"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg></button></div>
+   <div class="compose"><input id="msg" class="in" placeholder="Message" autocomplete="off"><button class="send" id="sendmsg" aria-label="Send"><svg viewBox="0 0 200 200"><polygon points="20,80 170,30 80,110" fill="currentColor" fill-opacity=".75"/><polygon points="120,180 170,30 80,110" fill="currentColor"/><polygon points="20,80 80,110 80,140" fill="currentColor" fill-opacity=".55"/></svg></button></div>
   </div>
  </main>
 </div>
@@ -380,7 +371,7 @@ function dayLabel(t){const d=new Date(t),n=new Date(),y=new Date(n);y.setDate(n.
  return Date.now()-t<6*864e5?d.toLocaleDateString([],{weekday:'long'}):d.toLocaleDateString([],{day:'numeric',month:'long',year:'numeric'})}
 const dayChip=(p,m)=>m&&m.createdAt&&(!p||dk(p.createdAt)!==dk(m.createdAt))?`<div class="day">${esc(dayLabel(m.createdAt))}</div>`:'';
 const tmf=t=>t?new Date(t).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'}):'';
-const SGL='<svg viewBox="0 0 16 11"><path d="M2 6l3.5 3.5L13 1.5"/></svg>',DBL='<svg viewBox="0 0 16 11"><path d="M1 6l3.5 3.5L11 1.5M6 8.5l1 1L15 1.5"/></svg>';
+const SGL='<svg viewBox="0 0 200 200"><polygon points="120,180 170,30 80,110" fill="none" stroke="currentColor" stroke-width="16" stroke-linejoin="round"/></svg>',DBL='<svg viewBox="0 0 200 200"><polygon points="20,80 170,30 80,110" fill="currentColor" fill-opacity=".75"/><polygon points="120,180 170,30 80,110" fill="currentColor"/><polygon points="20,80 80,110 80,140" fill="currentColor" fill-opacity=".55"/></svg>';
 let peerRead=0;
 const meta=m=>`<span class="mt">${tmf(m.createdAt)}${m.senderUid===me.uid?`<i class="tk" data-ts="${+m.createdAt||0}"></i>`:''}</span>`;
 function paintTicks(){$('msgs').querySelectorAll('.tk').forEach(e=>{const r=+e.dataset.ts<=peerRead;e.classList.toggle('rd',r);e.innerHTML=r?DBL:SGL})}
@@ -393,7 +384,7 @@ async function openChat(uid){
  const markRead=()=>{update(ref(db),{[`user_chats/${me.uid}/${uid}/unreadCount`]:0,[`dm_threads/${t}/readReceipts/${me.uid}`]:Date.now()}).catch(()=>{})};markRead();
  offMsgs=onValue(query(ref(db,`dm_threads/${t}/messages`),orderByChild('createdAt'),limitToLast(150)),async s=>{
   const items=[];s.forEach(c=>{const v=c.val();items.push({k:c.key,...v});msgStore[c.key]=items[items.length-1]});
-  const out=await Promise.all(items.map(async (m,i)=>{const f=grp(items[i-1],m);
+  const out=await Promise.all(items.map(async (m,i)=>{const f=grp(items[i-1],m),l=(!items[i+1]||grp(m,items[i+1]))?' l':'';
    if(m.systemText)return `<div class="sys">${esc(m.systemText)}</div>`;
    if(m.deletedForEveryone)return `<div class="sys">Message removed</div>`;
    if(m.deleted)return `<div class="sys">Message removed</div>`;
@@ -401,9 +392,9 @@ async function openChat(uid){
    const txt=m.text?await dec(uid,m.text):'';
    const mb=(m.mediaURL||m.mediaType)?mediaBlock(m):null;
    const me_=m.senderUid===me.uid?' me':'';
-   if(!mb)return `<div class="b${me_}${f}">${esc(txt)}${meta(m)}</div>`;
+   if(!mb)return `<div class="b${me_}${f}${l}">${esc(txt)}${meta(m)}</div>`;
    const cap=txt&&!mb.noCap,ov=!cap&&!m.viewOnce&&(m.mediaType==='image'||m.mediaType==='gif')?' ov':'';
-   return `<div class="b${mb.cls}${ov}${me_}${f}">${mb.html}${cap?`<div class="cap">${esc(txt)}${meta(m)}</div>`:meta(m)}</div>`})).then(a=>a.map((h,i)=>dayChip(items[i-1],items[i])+h));
+   return `<div class="b${mb.cls}${ov}${me_}${f}${l}">${mb.html}${cap?`<div class="cap">${esc(txt)}${meta(m)}</div>`:meta(m)}</div>`})).then(a=>a.map((h,i)=>dayChip(items[i-1],items[i])+h));
   if(active!==uid)return;
   const box=$('msgs'),stick=box.scrollHeight-box.scrollTop-box.clientHeight<120;
   box.innerHTML=out.join('');hydrate(uid);paintTicks();if(stick)box.scrollTop=box.scrollHeight;
@@ -472,6 +463,7 @@ function hydrate(uid){
  });
 }
 $('msgs').addEventListener('scroll',()=>{const b=$('msgs');pinned=b.scrollHeight-b.scrollTop-b.clientHeight<160});
+$('msgs').addEventListener('click',e=>{const b=e.target.closest('.b');if(b&&!e.target.closest('[data-lb],[data-k],audio,video'))b.classList.toggle('sh')});
 let lbList=[],lbN=0,tx=0;
 function lbShow(n){lbN=(n+lbList.length)%lbList.length;const el=lbList[lbN],im=$('lb-i');im.classList.remove('z');im.style.transformOrigin='';im.src=el.dataset.lb;
  const m=msgStore[((el.closest('[data-k]')||{}).dataset||{}).k]||{};
@@ -503,7 +495,7 @@ function stopPresence(){if(offConn){offConn();offConn=null}stopPres()}
 function stopPres(){offPres.forEach(f=>f());offPres=[]}
 function seenText(p){
  if(!p)return{t:''};
- if(p.status==='online')return{t:'online',on:true};
+ if(p.status==='online')return{t:'Active now',on:true};
  if(!p.lastSeen)return{t:'Offline'};
  const d=new Date(p.lastSeen),n=new Date(),y=new Date(n);y.setDate(n.getDate()-1);
  const tm=d.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'});

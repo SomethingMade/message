@@ -206,6 +206,12 @@ button.rw:hover{background:var(--hover)}
 .send svg{animation:sp-pop .18s ease-out}
 @keyframes sp-pop{from{transform:scale(.6);opacity:0}to{transform:none;opacity:1}}
 @media (prefers-reduced-motion:reduce){.send svg{animation:none}}
+.rec{flex:1;min-width:0;display:flex;align-items:center;gap:10px;height:44px;padding:0 16px 0 4px;border-radius:22px;background:var(--bg-input)}
+.rec .ibtn{width:36px;height:36px;background:transparent}
+.rd{width:8px;height:8px;border-radius:50%;background:#E41E3F;flex-shrink:0;animation:vbusy 1s ease-in-out infinite}
+.rw{flex:1;min-width:0;display:flex;align-items:center;justify-content:flex-end;gap:2px;height:28px;overflow:hidden}
+.rw span{width:3px;border-radius:2px;background:var(--text);flex-shrink:0;opacity:.8}
+.rt{font:400 10px/1 var(--brand);letter-spacing:.6px;min-width:30px;text-align:right}
 </style>
 </head>
 <body>
@@ -238,7 +244,7 @@ button.rw:hover{background:var(--hover)}
   <div id="thread" hidden style="display:flex;flex-direction:column;flex:1;min-height:0">
    <div class="ch"><button class="ibtn" id="back" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button><div class="av sm" id="t-av"></div><div class="who"><div class="n" id="t-name"></div><div class="st" id="t-sub"></div></div></div>
    <div id="msgs"></div>
-   <div class="compose"><input id="msg" class="in" placeholder="Message" autocomplete="off"><button class="send" id="sendmsg" aria-label="Voice message"><svg class="i-mic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg><svg class="i-snd" viewBox="0 0 200 200"><polygon points="20,80 170,30 80,110" fill="currentColor" fill-opacity=".75"/><polygon points="120,180 170,30 80,110" fill="currentColor"/><polygon points="20,80 80,110 80,140" fill="currentColor" fill-opacity=".55"/></svg></button></div>
+   <div class="compose"><input id="msg" class="in" placeholder="Message" autocomplete="off"><div class="rec" id="rec" hidden><button class="ibtn" id="rec-x" aria-label="Cancel recording"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg></button><span class="rd"></span><div class="rw" id="rec-w"></div><span class="rt" id="rec-t">0:00</span></div><button class="send" id="sendmsg" aria-label="Voice message"><svg class="i-mic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg><svg class="i-snd" viewBox="0 0 200 200"><polygon points="20,80 170,30 80,110" fill="currentColor" fill-opacity=".75"/><polygon points="120,180 170,30 80,110" fill="currentColor"/><polygon points="20,80 80,110 80,140" fill="currentColor" fill-opacity=".55"/></svg></button></div>
   </div>
  </main>
 </div>
@@ -273,6 +279,7 @@ button.rw:hover{background:var(--hover)}
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
 import {getAuth,onAuthStateChanged,signOut,RecaptchaVerifier,signInWithPhoneNumber} from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+import {getStorage,ref as sref,uploadBytes,getDownloadURL} from "https://www.gstatic.com/firebasejs/10.8.1/firebase-storage.js";
 import {getDatabase,ref,get,set,update,push,onValue,query,orderByChild,limitToLast,increment,onDisconnect,serverTimestamp} from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 const app=initializeApp({
             apiKey: "AIzaSyBQSPwpVbGrdCuOoyitAeWQHIeipj2MgIY",
@@ -282,7 +289,7 @@ const app=initializeApp({
             storageBucket: "newstart-64c43.firebasestorage.app",
             messagingSenderId: "941619830061",
             appId: "1:941619830061:web:de9e0f791eb8f6eacf87a4"
-        }),auth=getAuth(app),db=getDatabase(app);
+        }),auth=getAuth(app),db=getDatabase(app),storage=getStorage(app);
 const $=id=>document.getElementById(id), AVATAR="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 96 96%22%3E%3Ccircle cx=%2248%22 cy=%2248%22 r=%2248%22 fill=%22%23000000%22/%3E%3Ccircle cx=%2248%22 cy=%2238%22 r=%2218%22 fill=%22%23FFFFFF%22 fill-opacity=%220.85%22/%3E%3Cpath d=%22M48 60c-19 0-30 10.5-30 22v2a48 48 0 0 0 60 0v-2c0-11.5-11-22-30-22z%22 fill=%22%23FFFFFF%22 fill-opacity=%220.85%22/%3E%3C/svg%3E", E2E='\u27e6e2e1\u27e7';
 let me=null,confirmation=null,verifier=null,phoneFull='',chats={},profiles={},previews={},active=null,offList=null,offMsgs=null;
 
@@ -407,7 +414,7 @@ const SGL='<svg viewBox="0 0 200 200"><polygon points="120,180 170,30 80,110" fi
 let peerRead=0;
 const meta=m=>`<span class="mt">${tmf(m.createdAt)}${m.senderUid===me.uid?`<i class="tk" data-ts="${+m.createdAt||0}"></i>`:''}</span>`;
 function paintTicks(){$('msgs').querySelectorAll('.tk').forEach(e=>{const r=+e.dataset.ts<=peerRead;e.classList.toggle('rd',r);e.innerHTML=r?DBL:SGL})}
-async function openChat(uid){if(active!==uid)pauseVoices();
+async function openChat(uid){if(active!==uid){pauseVoices();if(rec)stopRec(false)}
  active=uid;if(offMsgs){offMsgs();offMsgs=null}
  $('ph').hidden=true;$('thread').hidden=false;$('app').classList.add('in-chat');navPush('chat');$('msgs').innerHTML='';
  pinned=true;watchPresence(uid);loadProfile(uid);paintHead();renderList();
@@ -444,11 +451,59 @@ async function sendMsg(){
   [`user_chats/${uid}/${me.uid}/senderUid`]:me.uid,[`user_chats/${uid}/${me.uid}/unreadCount`]:increment(1)
  }).catch(()=>ask('Not sent',"Your message couldn't be sent. Check your connection and try again.",{cancel:false}));
 }
-function syncSend(){const h=!!$('msg').value.trim(),b=$('sendmsg');b.classList.toggle('has',h);b.setAttribute('aria-label',h?'Send':'Voice message')}
+function syncSend(){const h=!!$('msg').value.trim()||!!rec,b=$('sendmsg');b.classList.toggle('has',h);b.setAttribute('aria-label',h?'Send':'Voice message')}
 $('msg').addEventListener('input',syncSend);
-$('sendmsg').onclick=()=>{if($('msg').value.trim())sendMsg();else toast('Voice messages are not available here yet')};
+let rec=null;
+$('sendmsg').onclick=()=>{if(rec)stopRec(true);else if($('msg').value.trim())sendMsg();else startRec()};
+$('rec-x').onclick=()=>stopRec(false);
+
+/* ---- record & send voice notes: encrypted with the chat key, same media format as photos/voice in Haba ---- */
+const MEDIA_DIR=t=>'dm_media/'+t; /* same Storage folder the main Haba app uses for 1:1 chat media */
+async function startRec(){
+ if(!active||rec)return;
+ if(!navigator.mediaDevices||!window.MediaRecorder){toast('Recording is not supported on this browser');return}
+ pauseVoices();
+ let stream;try{stream=await navigator.mediaDevices.getUserMedia({audio:true})}catch(_){toast('Allow microphone access to record');return}
+ const mime=['audio/webm;codecs=opus','audio/webm','audio/mp4','audio/ogg;codecs=opus'].find(x=>MediaRecorder.isTypeSupported(x))||'';
+ let mr;try{mr=new MediaRecorder(stream,mime?{mimeType:mime}:{})}catch(_){stream.getTracks().forEach(x=>x.stop());toast('Recording is not supported on this browser');return}
+ const r={mr,stream,chunks:[],start:Date.now(),uid:active,lv:[],mime:(mr.mimeType||mime||'audio/webm').split(';')[0]};
+ mr.ondataavailable=e=>{if(e.data&&e.data.size)r.chunks.push(e.data)};
+ try{const C=window.AudioContext||window.webkitAudioContext;r.ctx=new C();r.ctx.resume&&r.ctx.resume();const an=r.ctx.createAnalyser();an.fftSize=256;r.ctx.createMediaStreamSource(stream).connect(an);r.an=an;r.buf=new Uint8Array(an.fftSize)}catch(_){}
+ rec=r;mr.start(250);
+ $('msg').hidden=true;$('rec').hidden=false;$('rec-t').textContent='0:00';$('rec-w').innerHTML='';syncSend();
+ r.iv=setInterval(()=>{const sec=(Date.now()-r.start)/1000;$('rec-t').textContent=fdur(sec);
+  if(r.an){r.an.getByteTimeDomainData(r.buf);let m=0;for(const v of r.buf)m=Math.max(m,Math.abs(v-128));r.lv.push(Math.min(1,m/70))}else r.lv.push(.3);
+  r.lv=r.lv.slice(-60);$('rec-w').innerHTML=r.lv.map(v=>`<span style="height:${Math.max(12,Math.round(v*100))}%"></span>`).join('');
+  if(sec>=300)stopRec(true)},100);
+}
+function stopRec(send){
+ if(!rec)return;const r=rec;rec=null;clearInterval(r.iv);const dur=(Date.now()-r.start)/1000;
+ r.mr.onstop=()=>{r.stream.getTracks().forEach(x=>x.stop());try{r.ctx&&r.ctx.close()}catch(_){}
+  if(!send)return;if(dur<1){toast('Hold on a little longer to record');return}
+  sendVoice(new Blob(r.chunks,{type:r.mime}),dur,r.uid,r.mime)};
+ try{r.mr.stop()}catch(_){r.mr.onstop()}
+ $('rec').hidden=true;$('msg').hidden=false;syncSend();
+}
+async function sendVoice(blob,dur,uid,mime){
+ const t=tid(me.uid,uid);
+ try{
+  toast('Sending voice message…');
+  const key=await sharedKey(uid);if(!key){toast("Can't send: encryption key unavailable");return}
+  const iv=crypto.getRandomValues(new Uint8Array(12)),ct=new Uint8Array(await crypto.subtle.encrypt({name:'AES-GCM',iv},key,await blob.arrayBuffer()));
+  const out=new Uint8Array(12+ct.length);out.set(iv);out.set(ct,12);
+  const id=push(ref(db,`dm_threads/${t}/messages`)).key;
+  const r=sref(storage,`${MEDIA_DIR(t)}/${Date.now()}_voice.bin`);
+  await uploadBytes(r,out,{contentType:'application/octet-stream'});
+  const url=await getDownloadURL(r),now=Date.now(),pv='🎤 Voice message';
+  await update(ref(db),{
+   [`dm_threads/${t}/messages/${id}`]:{senderUid:me.uid,createdAt:now,mediaType:'audio',mediaURL:url,mediaEncrypted:true,mediaMimeType:mime,duration:Math.round(dur)},
+   [`user_chats/${me.uid}/${uid}`]:{text:pv,timestamp:now,unreadCount:0,senderUid:me.uid},
+   [`user_chats/${uid}/${me.uid}/text`]:pv,[`user_chats/${uid}/${me.uid}/timestamp`]:now,
+   [`user_chats/${uid}/${me.uid}/senderUid`]:me.uid,[`user_chats/${uid}/${me.uid}/unreadCount`]:increment(1)});
+ }catch(_){ask('Not sent',"Your voice message couldn't be sent. Check your connection and try again.",{cancel:false})}
+}
 $('msg').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMsg()}});
-function chatHide(){pauseVoices();$('app').classList.remove('in-chat');if(offMsgs){offMsgs();offMsgs=null}active=null;stopPres();$('thread').hidden=true;$('ph').hidden=false;renderList()}
+function chatHide(){if(rec)stopRec(false);pauseVoices();$('app').classList.remove('in-chat');if(offMsgs){offMsgs();offMsgs=null}active=null;stopPres();$('thread').hidden=true;$('ph').hidden=false;renderList()}
 $('back').onclick=()=>navClose('chat',chatHide);
 
 /* ---- media in chat (photos, videos, voice notes, documents, GIFs, stickers) ---- */
@@ -488,17 +543,17 @@ const voices={},VN=32,RATES=[1,1.5,2];
 const pauseVoices=()=>Object.values(voices).forEach(o=>o.audio&&o.audio.pause());
 const fdur=x=>isFinite(x)&&x>0?Math.floor(x/60)+':'+String(Math.floor(x%60)).padStart(2,'0'):'0:00';
 function seeded(k,n){let h=2166136261;for(const c of String(k)){h^=c.charCodeAt(0);h=Math.imul(h,16777619)}h=h||1;const a=[];for(let i=0;i<n;i++){h^=h<<13;h^=h>>>17;h^=h<<5;a.push(.25+((h>>>0)%1000)/1000*.75)}return a}
-function vdur(v){const a=v.audio;return a?(isFinite(a.duration)&&a.duration>0?a.duration:v.decDur||0):0}
+function vdur(v){const a=v.audio;return a?(isFinite(a.duration)&&a.duration>0?a.duration:v.decDur||v.kd||0):0}
 function initVoice(el,uid,m){
  let v=voices[m.k];if(!v){v={h:seeded(m.k,VN),rate:1};v.paint=()=>{
   const e=v.el;if(!e)return;const a=v.audio,d=vdur(v),t=a?a.currentTime:0,pl=!!a&&!a.paused,bars=e.querySelectorAll('.vwv span');
   if(v.dirty){bars.forEach((b,i)=>b.style.height=Math.round(v.h[i]*100)+'%');v.dirty=false}
   const cut=d?Math.round(t/d*VN):0;bars.forEach((b,i)=>b.classList.toggle('p',i<cut));
   e.classList.toggle('on',pl);e.classList.toggle('busy',!!v.busy);
-  e.querySelector('.vt').textContent=a&&d?fdur(pl||t>0?t:d):'Voice';
+  e.querySelector('.vt').textContent=a&&d?fdur(pl||t>0?t:d):(v.kd?fdur(v.kd):'Voice');
   e.querySelector('.vs').textContent=v.rate+'x';e.querySelector('.vp').setAttribute('aria-label',pl?'Pause':'Play')};
   voices[m.k]=v}
- v.el=el;v.dirty=true;
+ v.el=el;v.dirty=true;v.kd=(+m.duration>3600?m.duration/1000:+m.duration)||0;
  el.innerHTML='<button class="vp" aria-label="Play"><svg class="i-p" viewBox="0 0 24 24"><path d="M8 5.5v13l11-6.5z" fill="currentColor"/></svg><svg class="i-s" viewBox="0 0 24 24"><rect x="6.5" y="5" width="4" height="14" rx="1.2" fill="currentColor"/><rect x="13.5" y="5" width="4" height="14" rx="1.2" fill="currentColor"/></svg></button><div class="vw"><div class="vwv">'+v.h.map((_,i)=>`<span style="--i:${i}"></span>`).join('')+'</div></div><div class="vr"><span class="vt"></span><button class="vs"></button></div>';
  el.querySelector('.vp').onclick=async()=>{if(!await voiceLoad(uid,m,v))return;const a=v.audio;
   if(a.paused){pauseVoices();a.play().catch(()=>toast("Couldn't play that voice message"))}else a.pause()};

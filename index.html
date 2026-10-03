@@ -136,6 +136,40 @@ button.rw:hover{background:var(--hover)}
  #app.in-chat #convo{transform:none}
  #back{display:flex}
 }
+
+/* ---- WhatsApp-style conversation ---- */
+:root{--w-bg:#EFE7DE;--w-dot:rgba(0,0,0,.05);--w-in:#fff;--w-out:#D9FDD3;--w-txt:#111B21;--w-time:#667781;--w-head:#F0F2F5;--w-field:#fff;--w-chip:rgba(255,255,255,.92);--w-tick:#53BDEB;--w-green:#00A884}
+@media (prefers-color-scheme:dark){:root{--w-bg:#0B141A;--w-dot:rgba(255,255,255,.04);--w-in:#202C33;--w-out:#005C4B;--w-txt:#E9EDEF;--w-time:rgba(233,237,239,.62);--w-head:#202C33;--w-field:#2A3942;--w-chip:#182229}}
+#thread{background-color:var(--w-bg);background-image:radial-gradient(var(--w-dot) 1.2px,transparent 1.3px),radial-gradient(var(--w-dot) 1.2px,transparent 1.3px);background-size:26px 26px;background-position:0 0,13px 13px}
+.ch{background:var(--w-head);border-bottom:none;gap:12px;padding-bottom:8px}
+.ch .ibtn{background:transparent}
+.ch .av.sm{width:40px;height:40px}
+.st.on{color:var(--w-green);font-weight:500}
+#msgs{background:transparent;padding:10px 8% 8px;gap:2px}
+@media (max-width:768px){#msgs{padding:10px 10px 8px}}
+#msgs .b{position:relative;max-width:min(82%,480px);padding:6px 8px 6px 9px;border-radius:8px;font-size:15px;line-height:1.3;background:var(--w-in);color:var(--w-txt);box-shadow:0 1px .5px rgba(11,20,26,.13)}
+#msgs .b::after{content:'';display:block;clear:both}
+#msgs .b.me{background:var(--w-out);color:var(--w-txt)}
+#msgs .b.f{margin-top:7px}
+#msgs .b.f::before{content:'';position:absolute;top:0;width:0;height:0;border-bottom:10px solid transparent}
+#msgs .b.f:not(.me){border-top-left-radius:0}
+#msgs .b.f:not(.me)::before{left:-7px;border-right:8px solid var(--w-in)}
+#msgs .b.f.me{border-top-right-radius:0}
+#msgs .b.f.me::before{right:-7px;border-left:8px solid var(--w-out)}
+#msgs .b.stk.f::before{display:none}
+#msgs .b.stk{background:none;box-shadow:none;padding:0}
+#msgs .b.mb{padding:3px}
+#msgs .b .mw{border-radius:6px}
+#msgs .b .cap{padding:5px 5px 0}
+.mt{float:right;display:flex;align-items:center;gap:3px;margin:7px 0 -4px 12px;font-size:11px;line-height:1;color:var(--w-time);white-space:nowrap;user-select:none}
+#msgs .b.mb .mt{float:none;justify-content:flex-end;margin:3px 5px 1px}
+.tk{display:inline-flex}.tk svg{width:16px;height:11px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.tk.rd{color:var(--w-tick)}
+.day,#msgs .sys{align-self:center;background:var(--w-chip);color:var(--w-time);font-size:12.5px;padding:5px 12px;border-radius:8px;margin:10px 0 6px;box-shadow:0 1px .5px rgba(11,20,26,.13);text-align:center}
+.compose{background:transparent;border-top:none;padding:6px 8px calc(8px + env(safe-area-inset-bottom,0px));gap:8px}
+.compose .in{height:44px;border-radius:22px;background:var(--w-field);padding:0 18px;box-shadow:0 1px .5px rgba(11,20,26,.13)}
+.compose .in:focus{border-color:transparent}
+.send{width:44px;height:44px;background:var(--w-green);color:#fff}
 </style>
 </head>
 <body>
@@ -318,15 +352,28 @@ $('q').oninput=renderList;
 /* ---- conversation ---- */
 const tid=(a,b)=>[a,b].sort().join('_');
 function paintHead(){const p=profiles[active]||{};$('t-name').textContent=p.name||'…';const a=$('t-av');a.style.backgroundImage=p.photoURL?`url('${p.photoURL}')`:'';a.textContent=p.photoURL?'':initials(p.name)}
+const dk=t=>t?new Date(t).toDateString():'';
+const isSys=x=>!x||x.systemText||x.deleted||x.deletedForEveryone||x.mediaType==='call'||x.mediaType==='group_call';
+const grp=(p,m)=>(isSys(p)||p.senderUid!==m.senderUid||dk(p.createdAt)!==dk(m.createdAt))?' f':'';
+function dayLabel(t){const d=new Date(t),n=new Date(),y=new Date(n);y.setDate(n.getDate()-1);
+ if(d.toDateString()===n.toDateString())return'Today';if(d.toDateString()===y.toDateString())return'Yesterday';
+ return Date.now()-t<6*864e5?d.toLocaleDateString([],{weekday:'long'}):d.toLocaleDateString([],{day:'numeric',month:'long',year:'numeric'})}
+const dayChip=(p,m)=>m&&m.createdAt&&(!p||dk(p.createdAt)!==dk(m.createdAt))?`<div class="day">${esc(dayLabel(m.createdAt))}</div>`:'';
+const tmf=t=>t?new Date(t).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'}):'';
+const SGL='<svg viewBox="0 0 16 11"><path d="M2 6l3.5 3.5L13 1.5"/></svg>',DBL='<svg viewBox="0 0 16 11"><path d="M1 6l3.5 3.5L11 1.5M6 8.5l1 1L15 1.5"/></svg>';
+let peerRead=0;
+const meta=m=>`<span class="mt">${tmf(m.createdAt)}${m.senderUid===me.uid?`<i class="tk" data-ts="${+m.createdAt||0}"></i>`:''}</span>`;
+function paintTicks(){$('msgs').querySelectorAll('.tk').forEach(e=>{const r=+e.dataset.ts<=peerRead;e.classList.toggle('rd',r);e.innerHTML=r?DBL:SGL})}
 async function openChat(uid){
  active=uid;if(offMsgs){offMsgs();offMsgs=null}
  $('ph').hidden=true;$('thread').hidden=false;$('app').classList.add('in-chat');$('msgs').innerHTML='';
  pinned=true;watchPresence(uid);loadProfile(uid);paintHead();renderList();
  const t=tid(me.uid,uid);
+ peerRead=0;offPres.push(onValue(ref(db,`dm_threads/${t}/readReceipts/${uid}`),s=>{peerRead=+s.val()||0;paintTicks()}));
  const markRead=()=>{update(ref(db),{[`user_chats/${me.uid}/${uid}/unreadCount`]:0,[`dm_threads/${t}/readReceipts/${me.uid}`]:Date.now()}).catch(()=>{})};markRead();
  offMsgs=onValue(query(ref(db,`dm_threads/${t}/messages`),orderByChild('createdAt'),limitToLast(150)),async s=>{
   const items=[];s.forEach(c=>{const v=c.val();items.push({k:c.key,...v});msgStore[c.key]=items[items.length-1]});
-  const out=await Promise.all(items.map(async m=>{
+  const out=await Promise.all(items.map(async (m,i)=>{const f=grp(items[i-1],m);
    if(m.systemText)return `<div class="sys">${esc(m.systemText)}</div>`;
    if(m.deletedForEveryone)return `<div class="sys">Message removed</div>`;
    if(m.deleted)return `<div class="sys">Message removed</div>`;
@@ -334,11 +381,11 @@ async function openChat(uid){
    const txt=m.text?await dec(uid,m.text):'';
    const mb=(m.mediaURL||m.mediaType)?mediaBlock(m):null;
    const me_=m.senderUid===me.uid?' me':'';
-   if(!mb)return `<div class="b${me_}">${esc(txt)}<small>${fmt(m.createdAt)}</small></div>`;
-   return `<div class="b${mb.cls}${me_}">${mb.html}${txt&&!mb.noCap?`<div class="cap">${esc(txt)}</div>`:''}<small>${fmt(m.createdAt)}</small></div>`}));
+   if(!mb)return `<div class="b${me_}${f}">${esc(txt)}${meta(m)}</div>`;
+   return `<div class="b${mb.cls}${me_}${f}">${mb.html}${txt&&!mb.noCap?`<div class="cap">${esc(txt)}</div>`:''}${meta(m)}</div>`})).then(a=>a.map((h,i)=>dayChip(items[i-1],items[i])+h));
   if(active!==uid)return;
   const box=$('msgs'),stick=box.scrollHeight-box.scrollTop-box.clientHeight<120;
-  box.innerHTML=out.join('');hydrate(uid);if(stick)box.scrollTop=box.scrollHeight;
+  box.innerHTML=out.join('');hydrate(uid);paintTicks();if(stick)box.scrollTop=box.scrollHeight;
   if(items.length&&items[items.length-1].senderUid!==me.uid)markRead();
  });
 }
@@ -422,7 +469,7 @@ function stopPresence(){if(offConn){offConn();offConn=null}stopPres()}
 function stopPres(){offPres.forEach(f=>f());offPres=[]}
 function seenText(p){
  if(!p)return{t:''};
- if(p.status==='online')return{t:'Active now',on:true};
+ if(p.status==='online')return{t:'online',on:true};
  if(!p.lastSeen)return{t:'Offline'};
  const d=new Date(p.lastSeen),n=new Date(),y=new Date(n);y.setDate(n.getDate()-1);
  const tm=d.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'});

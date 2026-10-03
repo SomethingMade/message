@@ -112,6 +112,23 @@ button.rw:hover{background:var(--hover)}
 .rw.dg .tx b{color:#E41E3F}
 .note{color:var(--sub);font-size:13px;line-height:1.5;padding:6px 20px 8px}
 #toast{position:fixed;left:50%;bottom:calc(28px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:95;max-width:90%;background:var(--accent);color:var(--bg);padding:10px 18px;border-radius:999px;font-size:14px;font-weight:600;text-align:center}
+.b.mb{padding:4px}
+.b.mb small{padding:0 8px 3px}
+.b .mw{border-radius:14px;overflow:hidden;min-width:170px;max-width:100%;background:rgba(127,127,127,.16);display:flex;align-items:center;justify-content:center;min-height:110px;cursor:pointer}
+.b .mw img,.b .mw video{display:block;max-width:100%;max-height:360px;width:auto;height:auto}
+.b .mw audio{width:240px;max-width:100%;margin:8px}
+.b .mw:has(audio),.b .mw:has(video){cursor:default}
+.b .ld{font-size:13px;opacity:.75;padding:28px 16px;text-align:center;line-height:1.4}
+.b .dc{display:flex;align-items:center;gap:10px;padding:6px 8px;cursor:pointer;min-width:190px}
+.b .dc .di{width:38px;height:38px;border-radius:10px;background:rgba(127,127,127,.22);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px}
+.b .dc b{display:block;font-weight:600;font-size:14px;word-break:break-all}
+.b .dc small{text-align:left;margin:1px 0 0;padding:0;font-size:12px}
+.b .cap{padding:6px 10px 2px;white-space:pre-wrap;word-break:break-word}
+.b.stk{background:none;padding:0}.b.stk img{width:132px;height:132px;object-fit:contain;display:block}
+.who{min-width:0}.who .n{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.st{font-size:12.5px;color:var(--sub);margin-top:1px;min-height:16px}.st.on{color:#1FA971;font-weight:600}
+#lb{position:fixed;inset:0;z-index:85;background:rgba(0,0,0,.92);display:flex;align-items:center;justify-content:center;padding:16px;cursor:zoom-out}
+#lb img{max-width:100%;max-height:100%;object-fit:contain}
 @media (min-width:769px){#sheet{align-items:center;padding:20px}#sheet .pan{border-radius:16px;max-height:90vh;box-shadow:0 12px 28px rgba(0,0,0,.25)}}
 @media (max-width:768px){
  #list{width:100%;border-right:none}
@@ -149,7 +166,7 @@ button.rw:hover{background:var(--hover)}
  <main id="convo">
   <div class="ph" id="ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Select a chat to start messaging</div>
   <div id="thread" hidden style="display:flex;flex-direction:column;flex:1;min-height:0">
-   <div class="ch"><button class="ibtn" id="back" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button><div class="av sm" id="t-av"></div><div class="n" id="t-name"></div></div>
+   <div class="ch"><button class="ibtn" id="back" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button><div class="av sm" id="t-av"></div><div class="who"><div class="n" id="t-name"></div><div class="st" id="t-sub"></div></div></div>
    <div id="msgs"></div>
    <div class="compose"><input id="msg" class="in" placeholder="Message" autocomplete="off"><button class="send" id="sendmsg" aria-label="Send"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg></button></div>
   </div>
@@ -180,12 +197,13 @@ button.rw:hover{background:var(--hover)}
  </div>
 </div></div>
 <div id="toast" hidden></div>
+<div id="lb" hidden><img alt=""></div>
 <div id="modal" hidden><div class="box"><h3 id="m-title"></h3><p id="m-text"></p><input id="m-in" class="in" hidden><div class="acts"><button id="m-cancel">Cancel</button><button class="go" id="m-ok">OK</button></div></div></div>
 
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
 import {getAuth,onAuthStateChanged,signOut,RecaptchaVerifier,signInWithPhoneNumber} from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-import {getDatabase,ref,get,set,update,push,onValue,query,orderByChild,limitToLast,increment} from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+import {getDatabase,ref,get,set,update,push,onValue,query,orderByChild,limitToLast,increment,onDisconnect,serverTimestamp} from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 const app=initializeApp({
             apiKey: "AIzaSyBQSPwpVbGrdCuOoyitAeWQHIeipj2MgIY",
             authDomain: "newstart-64c43.firebaseapp.com",
@@ -268,13 +286,13 @@ $('save').onclick=async()=>{const n=$('name').value.trim();if(!n){$('e-name').te
 /* ---- session ---- */
 onAuthStateChanged(auth,async u=>{
  if(offList){offList();offList=null}
- if(!u){me=null;kp=null;backupInfo=undefined;$('sheet').hidden=true;$('app').hidden=true;$('auth').hidden=false;step('phone');hideSplash();return}
+ if(!u){stopPresence();me=null;kp=null;backupInfo=undefined;$('sheet').hidden=true;$('app').hidden=true;$('auth').hidden=false;step('phone');hideSplash();return}
  me=u;
  const p=await get(ref(db,'users/'+u.uid));
  if(!p.exists()||!p.val().name){$('auth').hidden=false;$('app').hidden=true;step('name');hideSplash();return}
  showApp();hideSplash();
 });
-function showApp(){$('auth').hidden=true;$('app').hidden=false;backupInfo=undefined;myKeys().catch(()=>{}).then(refreshBanner);
+function showApp(){$('auth').hidden=true;$('app').hidden=false;startPresence();backupInfo=undefined;myKeys().catch(()=>{}).then(refreshBanner);
  if(offList)offList();
  offList=onValue(ref(db,'user_chats/'+me.uid),s=>{chats=s.val()||{};renderList();Object.keys(chats).forEach(loadProfile)})}
 async function loadProfile(uid){if(profiles[uid])return;const s=await get(ref(db,'users/'+uid));profiles[uid]=s.val()||{name:'Haba user'};renderList();if(active===uid)paintHead()}
@@ -303,19 +321,24 @@ function paintHead(){const p=profiles[active]||{};$('t-name').textContent=p.name
 async function openChat(uid){
  active=uid;if(offMsgs){offMsgs();offMsgs=null}
  $('ph').hidden=true;$('thread').hidden=false;$('app').classList.add('in-chat');$('msgs').innerHTML='';
- loadProfile(uid);paintHead();renderList();
+ pinned=true;watchPresence(uid);loadProfile(uid);paintHead();renderList();
  const t=tid(me.uid,uid);
  const markRead=()=>{update(ref(db),{[`user_chats/${me.uid}/${uid}/unreadCount`]:0,[`dm_threads/${t}/readReceipts/${me.uid}`]:Date.now()}).catch(()=>{})};markRead();
  offMsgs=onValue(query(ref(db,`dm_threads/${t}/messages`),orderByChild('createdAt'),limitToLast(150)),async s=>{
-  const items=[];s.forEach(c=>{items.push({k:c.key,...c.val()})});
+  const items=[];s.forEach(c=>{const v=c.val();items.push({k:c.key,...v});msgStore[c.key]=items[items.length-1]});
   const out=await Promise.all(items.map(async m=>{
    if(m.systemText)return `<div class="sys">${esc(m.systemText)}</div>`;
    if(m.deletedForEveryone)return `<div class="sys">Message removed</div>`;
-   let txt=m.text?await dec(uid,m.text):'';if(!txt&&(m.mediaType||m.mediaURL))txt='📎 '+(m.mediaType||'Attachment')+' (open in Haba to view)';
-   return `<div class="b${m.senderUid===me.uid?' me':''}">${esc(txt)}<small>${fmt(m.createdAt)}</small></div>`}));
+   if(m.deleted)return `<div class="sys">Message removed</div>`;
+   if(m.mediaType==='call'||m.mediaType==='group_call')return `<div class="sys">📞 ${m.mediaType==='group_call'?'Group call':'Call'}${typeof m.callStatus==='string'?' · '+esc(m.callStatus):''}</div>`;
+   const txt=m.text?await dec(uid,m.text):'';
+   const mb=(m.mediaURL||m.mediaType)?mediaBlock(m):null;
+   const me_=m.senderUid===me.uid?' me':'';
+   if(!mb)return `<div class="b${me_}">${esc(txt)}<small>${fmt(m.createdAt)}</small></div>`;
+   return `<div class="b${mb.cls}${me_}">${mb.html}${txt&&!mb.noCap?`<div class="cap">${esc(txt)}</div>`:''}<small>${fmt(m.createdAt)}</small></div>`}));
   if(active!==uid)return;
   const box=$('msgs'),stick=box.scrollHeight-box.scrollTop-box.clientHeight<120;
-  box.innerHTML=out.join('');if(stick)box.scrollTop=box.scrollHeight;
+  box.innerHTML=out.join('');hydrate(uid);if(stick)box.scrollTop=box.scrollHeight;
   if(items.length&&items[items.length-1].senderUid!==me.uid)markRead();
  });
 }
@@ -332,7 +355,88 @@ async function sendMsg(){
 }
 $('sendmsg').onclick=sendMsg;
 $('msg').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMsg()}});
-$('back').onclick=()=>{$('app').classList.remove('in-chat');if(offMsgs){offMsgs();offMsgs=null}active=null;$('thread').hidden=true;$('ph').hidden=false;renderList()};
+$('back').onclick=()=>{$('app').classList.remove('in-chat');if(offMsgs){offMsgs();offMsgs=null}active=null;stopPres();$('thread').hidden=true;$('ph').hidden=false;renderList()};
+
+/* ---- media in chat (photos, videos, voice notes, documents, GIFs, stickers) ---- */
+const msgStore={},mcache={},minfl={};let pinned=true;
+const safeUrl=u=>typeof u==='string'&&/^https:\/\//i.test(u);
+const fsize=n=>!n?'':n<1024?n+' B':n<1048576?(n/1024).toFixed(1)+' KB':(n/1048576).toFixed(1)+' MB';
+function mediaBlock(m){
+ const t=m.mediaType,k=esc(m.k||'');
+ if(m.viewOnce)return{cls:' mb',noCap:true,html:`<div class="dc" style="cursor:default"><div class="di">👁</div><div><b>${t==='video'?'Video':t==='audio'?'Voice message':'Photo'} (view once)</b><small>Open in Haba to view</small></div></div>`};
+ if(t==='sticker'&&safeUrl(m.mediaURL))return{cls:' stk',noCap:true,html:`<img src="${esc(m.mediaURL)}" alt="Sticker">`};
+ if(t==='gif'&&safeUrl(m.mediaURL))return{cls:' mb',html:`<div class="mw"><img src="${esc(safeUrl(m.mediaPreview)?m.mediaPreview:m.mediaURL)}" alt="GIF" data-lb="${esc(m.mediaURL)}"></div>`};
+ if((t==='image'||t==='video'||t==='audio')&&safeUrl(m.mediaURL))return{cls:' mb',html:`<div class="mw" data-k="${k}" data-t="${t}"><div class="ld">Loading…</div></div>`};
+ if(t==='document'&&safeUrl(m.mediaURL))return{cls:' mb',noCap:!m.text,html:`<div class="dc" data-k="${k}" data-t="document"><div class="di">📄</div><div><b>${esc(m.fileName||'Document')}</b><small>${esc(fsize(m.fileSize))}</small></div></div>`};
+ return{cls:'',noCap:true,html:esc('📎 '+(t||'Attachment')+' (open in Haba to view)')};
+}
+/* encrypted media = [12-byte IV][AES-GCM ciphertext] at mediaURL, same as the main Haba app */
+function getMedia(uid,m,retry){
+ const u=m.mediaURL;if(!m.mediaEncrypted)return Promise.resolve(u);
+ if(!retry&&mcache[u])return Promise.resolve(mcache[u]);
+ if(!retry&&minfl[u])return minfl[u];
+ const attempt=async()=>{const key=await sharedKey(uid);if(!key)return null;
+  const res=await fetch(u);if(!res.ok)return null;const buf=await res.arrayBuffer();
+  const plain=await crypto.subtle.decrypt({name:'AES-GCM',iv:new Uint8Array(buf.slice(0,12))},key,buf.slice(12));
+  return mcache[u]=URL.createObjectURL(new Blob([plain],{type:m.mediaMimeType||'application/octet-stream'}))};
+ const job=(async()=>{try{return await attempt()}catch(_){delete shared[uid];try{return await attempt()}catch(_2){return null}}})().finally(()=>{delete minfl[u]});
+ return minfl[u]=job;
+}
+function paintMedia(el,t,url){
+ const keep=()=>{if(pinned){const b=$('msgs');b.scrollTop=b.scrollHeight}};
+ if(t==='image'){el.innerHTML='<img alt="Photo">';const i=el.firstChild;i.onload=keep;i.src=url;i.dataset.lb=url}
+ else if(t==='video'){el.innerHTML='<video controls playsinline preload="metadata"></video>';const v=el.firstChild;v.onloadedmetadata=keep;v.src=url}
+ else if(t==='audio'){el.innerHTML='<audio controls preload="metadata"></audio>';el.firstChild.src=url}
+}
+function hydrate(uid){
+ $('msgs').querySelectorAll('[data-k]').forEach(el=>{
+  const m=msgStore[el.dataset.k];if(!m)return;const t=el.dataset.t;
+  if(t==='document'){el.onclick=async()=>{const url=await getMedia(uid,m,false);if(!url){toast("Couldn't open that file");return}
+   const a=document.createElement('a');a.href=url;a.download=m.fileName||'file';a.target='_blank';a.rel='noopener';document.body.appendChild(a);a.click();a.remove()};return}
+  const load=async retry=>{el.onclick=null;el.innerHTML='<div class="ld">Loading…</div>';
+   const url=await getMedia(uid,m,retry);
+   if(!url){el.innerHTML='<div class="ld">Couldn’t load this file.<br>Tap to retry.</div>';el.onclick=()=>load(true);return}
+   paintMedia(el,t,url)};
+  const ready=m.mediaEncrypted?mcache[m.mediaURL]:m.mediaURL;
+  if(ready){paintMedia(el,t,ready);return}
+  if(t==='image'){load(false);return}
+  el.innerHTML=`<div class="ld">${t==='video'?'▶ Tap to load video':'🎤 Voice message · tap to load'}</div>`;el.onclick=()=>load(false);
+ });
+}
+$('msgs').addEventListener('scroll',()=>{const b=$('msgs');pinned=b.scrollHeight-b.scrollTop-b.clientHeight<160});
+$('msgs').addEventListener('click',e=>{const i=e.target.closest('img[data-lb]');if(i){$('lb').firstElementChild.src=i.dataset.lb;$('lb').hidden=false}});
+$('lb').onclick=()=>{$('lb').hidden=true;$('lb').firstElementChild.removeAttribute('src')};
+
+/* ---- presence: publish my status, show theirs (same fields as the main Haba app) ---- */
+let offConn=null,offPres=[];const pres={};
+function startPresence(){
+ if(offConn){offConn();offConn=null}
+ offConn=onValue(ref(db,'.info/connected'),s=>{
+  if(s.val()!==true||!me)return;
+  const st=ref(db,`users/${me.uid}/status`),ls=ref(db,`users/${me.uid}/lastSeen`);
+  onDisconnect(st).set('offline').catch(()=>{});onDisconnect(ls).set(serverTimestamp()).catch(()=>{});
+  set(st,'online').catch(()=>{});set(ls,serverTimestamp()).catch(()=>{});
+ });
+}
+function stopPresence(){if(offConn){offConn();offConn=null}stopPres()}
+function stopPres(){offPres.forEach(f=>f());offPres=[]}
+function seenText(p){
+ if(!p)return{t:''};
+ if(p.status==='online')return{t:'Active now',on:true};
+ if(!p.lastSeen)return{t:'Offline'};
+ const d=new Date(p.lastSeen),n=new Date(),y=new Date(n);y.setDate(n.getDate()-1);
+ const tm=d.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'});
+ if(d.toDateString()===n.toDateString())return{t:'Last seen today at '+tm};
+ if(d.toDateString()===y.toDateString())return{t:'Last seen yesterday at '+tm};
+ return{t:'Last seen '+d.toLocaleDateString([],{month:'short',day:'numeric'})+' at '+tm};
+}
+function paintStatus(){const r=seenText(pres[active]),el=$('t-sub');el.textContent=r.t;el.classList.toggle('on',!!r.on)}
+function watchPresence(uid){
+ stopPres();$('t-sub').textContent='';$('t-sub').classList.remove('on');
+ const upd=()=>{if(active===uid)paintStatus()};
+ offPres=[onValue(ref(db,`users/${uid}/status`),s=>{(pres[uid]=pres[uid]||{}).status=s.val();upd()}),
+          onValue(ref(db,`users/${uid}/lastSeen`),s=>{(pres[uid]=pres[uid]||{}).lastSeen=s.val();upd()})];
+}
 
 /* ---- profile, settings & encryption recovery ---- */
 let backupInfo; /* undefined = unknown, null = none, object = {salt,iv,data,iterations} */
@@ -442,7 +546,7 @@ $('r-name').onclick=async()=>{
  if(v===null)return;if(!v){toast('Enter a name');return}
  try{await update(ref(db,'users/'+me.uid),{name:v});(profiles[me.uid]=profiles[me.uid]||{}).name=v;toast('Name updated');paintMain()}catch(_){toast('Could not update name')}
 };
-$('r-out').onclick=async()=>{if(await ask('Sign out?','You will need to verify your phone number to sign back in. Keep your backup PIN safe so you can restore your chat history later.',{ok:'Sign out'})){closeSheet();signOut(auth)}};
+$('r-out').onclick=async()=>{if(await ask('Sign out?','You will need to verify your phone number to sign back in. Keep your backup PIN safe so you can restore your chat history later.',{ok:'Sign out'})){closeSheet();stopPresence();await update(ref(db,'users/'+me.uid),{status:'offline',lastSeen:serverTimestamp()}).catch(()=>{});signOut(auth)}};
 
 /* ---- new chat / account ---- */
 $('new').onclick=async()=>{

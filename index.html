@@ -181,6 +181,25 @@ button.rw:hover{background:var(--hover)}
 #msgs .b.ov:not(.me) .mw{border-bottom-left-radius:3px}
 #msgs .b.ov>.mt{opacity:1;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
 .lbw span{font:400 9px/1.4 var(--brand);letter-spacing:1px}
+/* voice notes */
+#msgs .b.vb{padding:10px 12px 9px;width:min(290px,76vw)}
+.vn{display:flex;align-items:center;gap:10px}
+.vp{width:38px;height:38px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:var(--text);color:var(--bubble-in);transition:transform .12s}
+.vp:active{transform:scale(.92)}
+#msgs .b.me .vp{background:var(--bubble-out-text);color:var(--bubble-out)}
+.vp svg{width:20px;height:20px}.vp .i-s{display:none}.vn.on .vp .i-p{display:none}.vn.on .vp .i-s{display:block}
+.vn.busy .vp{animation:vbusy 1s ease-in-out infinite}
+.vw{flex:1;min-width:0;height:34px;display:flex;align-items:center;cursor:pointer}
+.vwv{display:flex;align-items:center;justify-content:space-between;width:100%;height:30px}
+.vwv span{width:3px;height:30%;border-radius:2px;background:currentColor;opacity:.28;transition:opacity .15s}
+.vwv span.p{opacity:1}
+.vn.on .vwv span{animation:vwv .9s ease-in-out infinite;animation-delay:calc(var(--i)*-.07s)}
+.vr{display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0;min-width:34px}
+.vt{font:400 9px/1 var(--brand);letter-spacing:.6px;opacity:.7}
+.vs{font:600 10px/1 'Inter',sans-serif;padding:4px 7px;border-radius:999px;border:1px solid currentColor;opacity:.55}
+@keyframes vwv{50%{transform:scaleY(.6)}}
+@keyframes vbusy{50%{opacity:.45}}
+@media (prefers-reduced-motion:reduce){.vn.on .vwv span{animation:none}}
 </style>
 </head>
 <body>
@@ -264,6 +283,12 @@ let me=null,confirmation=null,verifier=null,phoneFull='',chats={},profiles={},pr
 /* splash typing, same as Haba */
 (()=>{const el=$('typed'),t='HABA';let i=0;const k=setInterval(()=>{el.textContent=t.slice(0,++i);if(i>=t.length)clearInterval(k)},120)})();
 const hideSplash=()=>setTimeout(()=>$('splash').classList.add('out'),900);
+
+/* device back button: closes the top-most layer (viewer > profile sheet > open chat) before leaving the app */
+const navStack=[];
+function navPush(t){if(navStack.includes(t))return;navStack.push(t);try{history.pushState({t},'')}catch(_){}}
+function navClose(t,hide){if(navStack[navStack.length-1]===t){history.back();return}const i=navStack.lastIndexOf(t);if(i>-1)navStack.splice(i,1);hide()}
+window.addEventListener('popstate',()=>{const t=navStack.pop();if(t==='lb')lbHide();else if(t==='sheet')sheetHide();else if(t==='chat')chatHide()});
 
 /* dialogs */
 function ask(title,text,{input=false,ok='OK',cancel=true,pin=false,value=''}={}){return new Promise(res=>{$('m-title').textContent=title;$('m-text').textContent=text;const mi=$('m-in');mi.hidden=!input;mi.value=value;mi.type=pin?'password':'text';mi.inputMode=pin?'numeric':'text';mi.maxLength=pin?6:200;mi.autocomplete='off';$('m-cancel').hidden=!cancel;$('m-ok').textContent=ok;$('modal').hidden=false;if(input)mi.focus();const done=v=>{$('modal').hidden=true;mi.onkeydown=null;res(v)};mi.onkeydown=e=>{if(e.key==='Enter')$('m-ok').click()};$('m-ok').onclick=()=>done(input?mi.value.trim():true);$('m-cancel').onclick=()=>done(input?null:false)})}
@@ -375,9 +400,9 @@ const SGL='<svg viewBox="0 0 200 200"><polygon points="120,180 170,30 80,110" fi
 let peerRead=0;
 const meta=m=>`<span class="mt">${tmf(m.createdAt)}${m.senderUid===me.uid?`<i class="tk" data-ts="${+m.createdAt||0}"></i>`:''}</span>`;
 function paintTicks(){$('msgs').querySelectorAll('.tk').forEach(e=>{const r=+e.dataset.ts<=peerRead;e.classList.toggle('rd',r);e.innerHTML=r?DBL:SGL})}
-async function openChat(uid){
+async function openChat(uid){if(active!==uid)pauseVoices();
  active=uid;if(offMsgs){offMsgs();offMsgs=null}
- $('ph').hidden=true;$('thread').hidden=false;$('app').classList.add('in-chat');$('msgs').innerHTML='';
+ $('ph').hidden=true;$('thread').hidden=false;$('app').classList.add('in-chat');navPush('chat');$('msgs').innerHTML='';
  pinned=true;watchPresence(uid);loadProfile(uid);paintHead();renderList();
  const t=tid(me.uid,uid);
  peerRead=0;offPres.push(onValue(ref(db,`dm_threads/${t}/readReceipts/${uid}`),s=>{peerRead=+s.val()||0;paintTicks()}));
@@ -414,7 +439,8 @@ async function sendMsg(){
 }
 $('sendmsg').onclick=sendMsg;
 $('msg').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMsg()}});
-$('back').onclick=()=>{$('app').classList.remove('in-chat');if(offMsgs){offMsgs();offMsgs=null}active=null;stopPres();$('thread').hidden=true;$('ph').hidden=false;renderList()};
+function chatHide(){pauseVoices();$('app').classList.remove('in-chat');if(offMsgs){offMsgs();offMsgs=null}active=null;stopPres();$('thread').hidden=true;$('ph').hidden=false;renderList()}
+$('back').onclick=()=>navClose('chat',chatHide);
 
 /* ---- media in chat (photos, videos, voice notes, documents, GIFs, stickers) ---- */
 const msgStore={},mcache={},minfl={};let pinned=true;
@@ -425,6 +451,7 @@ function mediaBlock(m){
  if(m.viewOnce)return{cls:' mb',noCap:true,html:`<div class="dc" style="cursor:default"><div class="di">👁</div><div><b>${t==='video'?'Video':t==='audio'?'Voice message':'Photo'} (view once)</b><small>Open in Haba to view</small></div></div>`};
  if(t==='sticker'&&safeUrl(m.mediaURL))return{cls:' stk',noCap:true,html:`<img src="${esc(m.mediaURL)}" alt="Sticker">`};
  if(t==='gif'&&safeUrl(m.mediaURL))return{cls:' mb',html:`<div class="mw"><img src="${esc(safeUrl(m.mediaPreview)?m.mediaPreview:m.mediaURL)}" alt="GIF" data-lb="${esc(m.mediaURL)}"></div>`};
+ if(t==='audio'&&safeUrl(m.mediaURL))return{cls:' vb',html:`<div class="vn" data-k="${k}" data-t="audio"></div>`};
  if((t==='image'||t==='video'||t==='audio')&&safeUrl(m.mediaURL))return{cls:' mb',html:`<div class="mw" data-k="${k}" data-t="${t}"><div class="ld">Loading…</div></div>`};
  if(t==='document'&&safeUrl(m.mediaURL))return{cls:' mb',noCap:!m.text,html:`<div class="dc" data-k="${k}" data-t="document"><div class="di">📄</div><div><b>${esc(m.fileName||'Document')}</b><small>${esc(fsize(m.fileSize))}</small></div></div>`};
  return{cls:'',noCap:true,html:esc('📎 '+(t||'Attachment')+' (open in Haba to view)')};
@@ -447,9 +474,48 @@ function paintMedia(el,t,url){
  else if(t==='video'){el.innerHTML='<video controls playsinline preload="metadata"></video>';const v=el.firstChild;v.onloadedmetadata=keep;v.src=url}
  else if(t==='audio'){el.innerHTML='<audio controls preload="metadata"></audio>';el.firstChild.src=url}
 }
+/* ---- voice notes: custom player (play/pause, animated waveform, seek, speed) ---- */
+const voices={},VN=32,RATES=[1,1.5,2];
+const pauseVoices=()=>Object.values(voices).forEach(o=>o.audio&&o.audio.pause());
+const fdur=x=>isFinite(x)&&x>0?Math.floor(x/60)+':'+String(Math.floor(x%60)).padStart(2,'0'):'0:00';
+function seeded(k,n){let h=2166136261;for(const c of String(k)){h^=c.charCodeAt(0);h=Math.imul(h,16777619)}h=h||1;const a=[];for(let i=0;i<n;i++){h^=h<<13;h^=h>>>17;h^=h<<5;a.push(.25+((h>>>0)%1000)/1000*.75)}return a}
+function vdur(v){const a=v.audio;return a?(isFinite(a.duration)&&a.duration>0?a.duration:v.decDur||0):0}
+function initVoice(el,uid,m){
+ let v=voices[m.k];if(!v){v={h:seeded(m.k,VN),rate:1};v.paint=()=>{
+  const e=v.el;if(!e)return;const a=v.audio,d=vdur(v),t=a?a.currentTime:0,pl=!!a&&!a.paused,bars=e.querySelectorAll('.vwv span');
+  if(v.dirty){bars.forEach((b,i)=>b.style.height=Math.round(v.h[i]*100)+'%');v.dirty=false}
+  const cut=d?Math.round(t/d*VN):0;bars.forEach((b,i)=>b.classList.toggle('p',i<cut));
+  e.classList.toggle('on',pl);e.classList.toggle('busy',!!v.busy);
+  e.querySelector('.vt').textContent=a&&d?fdur(pl||t>0?t:d):'Voice';
+  e.querySelector('.vs').textContent=v.rate+'x';e.querySelector('.vp').setAttribute('aria-label',pl?'Pause':'Play')};
+  voices[m.k]=v}
+ v.el=el;v.dirty=true;
+ el.innerHTML='<button class="vp" aria-label="Play"><svg class="i-p" viewBox="0 0 24 24"><path d="M8 5.5v13l11-6.5z" fill="currentColor"/></svg><svg class="i-s" viewBox="0 0 24 24"><rect x="6.5" y="5" width="4" height="14" rx="1.2" fill="currentColor"/><rect x="13.5" y="5" width="4" height="14" rx="1.2" fill="currentColor"/></svg></button><div class="vw"><div class="vwv">'+v.h.map((_,i)=>`<span style="--i:${i}"></span>`).join('')+'</div></div><div class="vr"><span class="vt"></span><button class="vs"></button></div>';
+ el.querySelector('.vp').onclick=async()=>{if(!await voiceLoad(uid,m,v))return;const a=v.audio;
+  if(a.paused){pauseVoices();a.play().catch(()=>toast("Couldn't play that voice message"))}else a.pause()};
+ el.querySelector('.vw').onclick=async e=>{if(!await voiceLoad(uid,m,v))return;const r=e.currentTarget.getBoundingClientRect(),d=vdur(v);if(d){v.audio.currentTime=Math.max(0,Math.min(1,(e.clientX-r.left)/r.width))*d;v.paint()}};
+ el.querySelector('.vs').onclick=()=>{v.rate=RATES[(RATES.indexOf(v.rate)+1)%RATES.length];if(v.audio)v.audio.playbackRate=v.rate;v.paint()};
+ v.paint();
+}
+async function voiceLoad(uid,m,v){
+ if(v.audio)return true;if(v.busy)return false;
+ v.busy=true;v.paint();
+ const url=await getMedia(uid,m,false);v.busy=false;
+ if(!url){v.paint();toast("Couldn't load that voice message");return false}
+ const a=new Audio();a.preload='auto';a.src=url;a.playbackRate=v.rate;v.audio=a;
+ a.onended=()=>{a.currentTime=0;v.paint()};
+ ['timeupdate','play','pause','loadedmetadata','durationchange'].forEach(ev=>a.addEventListener(ev,v.paint));
+ v.paint();
+ (async()=>{try{const buf=await(await fetch(url)).arrayBuffer(),C=window.AudioContext||window.webkitAudioContext,ctx=new C(),d=await ctx.decodeAudioData(buf);ctx.close&&ctx.close();
+  const ch=d.getChannelData(0),sz=Math.floor(ch.length/VN);if(sz<1)throw 0;const pk=[];
+  for(let i=0;i<VN;i++){let t=0,n=0;for(let j=i*sz;j<(i+1)*sz;j+=4){t+=Math.abs(ch[j]);n++}pk.push(t/n)}
+  const mx=Math.max(...pk)||1;v.h=pk.map(x=>.2+.8*x/mx);v.decDur=d.duration;v.dirty=true;v.paint()}catch(_){}})();
+ return true;
+}
 function hydrate(uid){
  $('msgs').querySelectorAll('[data-k]').forEach(el=>{
   const m=msgStore[el.dataset.k];if(!m)return;const t=el.dataset.t;
+  if(t==='audio'){initVoice(el,uid,m);return}
   if(t==='document'){el.onclick=async()=>{const url=await getMedia(uid,m,false);if(!url){toast("Couldn't open that file");return}
    const a=document.createElement('a');a.href=url;a.download=m.fileName||'file';a.target='_blank';a.rel='noopener';document.body.appendChild(a);a.click();a.remove()};return}
   const load=async retry=>{el.onclick=null;el.innerHTML='<div class="ld">Loading…</div>';
@@ -470,8 +536,9 @@ function lbShow(n){lbN=(n+lbList.length)%lbList.length;const el=lbList[lbN],im=$
  $('lb-n').textContent=m.senderUid?(m.senderUid===me.uid?'You':(profiles[m.senderUid]||{}).name||''):'';
  $('lb-d').textContent=m.createdAt?dayLabel(m.createdAt)+', '+tmf(m.createdAt):'';
  $('lb-p').hidden=$('lb-nx').hidden=lbList.length<2}
-function lbClose(){$('lb').hidden=true;$('lb-i').removeAttribute('src')}
-$('msgs').addEventListener('click',e=>{const i=e.target.closest('img[data-lb]');if(!i)return;lbList=[...$('msgs').querySelectorAll('img[data-lb]')];lbShow(lbList.indexOf(i));$('lb').hidden=false});
+function lbHide(){$('lb').hidden=true;$('lb-i').removeAttribute('src')}
+function lbClose(){navClose('lb',lbHide)}
+$('msgs').addEventListener('click',e=>{const i=e.target.closest('img[data-lb]');if(!i)return;lbList=[...$('msgs').querySelectorAll('img[data-lb]')];lbShow(lbList.indexOf(i));$('lb').hidden=false;navPush('lb')});
 $('lb-x').onclick=lbClose;$('lb-p').onclick=()=>lbShow(lbN-1);$('lb-nx').onclick=()=>lbShow(lbN+1);
 $('lb-s').onclick=e=>{if(e.target.id==='lb-s')lbClose()};
 $('lb-i').onclick=e=>{const im=e.currentTarget,r=im.getBoundingClientRect();im.style.transformOrigin=((e.clientX-r.left)/r.width*100)+'% '+((e.clientY-r.top)/r.height*100)+'%';im.classList.toggle('z')};
@@ -597,8 +664,9 @@ async function paintMain(){
  await myKeys().catch(()=>null);if(backupInfo===undefined)await loadBackup();
  $('r-enc-sub').textContent=!kp?"This device can't read older chats":backupInfo?'Backup PIN is set':backupInfo===null?'No backup PIN yet':'Backup PIN for your encrypted chats';
 }
-function openSheet(v){$('sheet').hidden=false;showView(v||'main')}
-function closeSheet(){$('sheet').hidden=true;refreshBanner()}
+function openSheet(v){navPush('sheet');$('sheet').hidden=false;showView(v||'main')}
+function sheetHide(){$('sheet').hidden=true;refreshBanner()}
+function closeSheet(){navClose('sheet',sheetHide)}
 function showView(v){$('v-main').hidden=v!=='main';$('v-enc').hidden=v!=='enc';v==='main'?paintMain():paintEnc();$('sheet').querySelector('.pan').scrollTop=0}
 async function refreshBanner(){
  const b=$('enc-banner');if(!me){b.hidden=true;return}

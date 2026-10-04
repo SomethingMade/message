@@ -269,6 +269,9 @@ button.rw:hover{background:var(--hover)}
 #msgs .b .cap{padding:6px 11px 4px}
 .mt{display:flex;align-items:center;gap:5px;margin-top:5px;font:400 8.5px/1 var(--brand);letter-spacing:.7px;opacity:.6;white-space:nowrap;user-select:none}
 #msgs .b.me .mt{justify-content:flex-end}
+/* friend's avatar beside their bubbles: gutter on every incoming bubble, avatar on the last bubble of each group */
+#msgs .b:not(.me){margin-left:36px}
+#msgs .b.l:not(.me)::before{content:var(--peer-ini,'');position:absolute;left:-36px;bottom:0;width:28px;height:28px;border-radius:50%;background:var(--peer-av,none) center/cover no-repeat,var(--bg-input);color:var(--sub);font:700 11px/28px var(--sans,Inter,system-ui,sans-serif);text-align:center;letter-spacing:0;white-space:normal;pointer-events:none}
 #msgs .b:not(.l):not(.ov):not(.sh) .mt{display:none}
 .tk{display:inline-flex}.tk svg{width:11px;height:11px;display:block}
 .pd{font-style:normal;font-size:9px;line-height:1;opacity:.8}
@@ -906,7 +909,10 @@ $('cats').addEventListener('click',e=>{const b=e.target.closest('.cat');if(!b)re
 
 /* ---- conversation ---- */
 const tid=(a,b)=>[a,b].sort().join('_');
-function paintHead(){const p=profiles[active]||{};$('t-name').innerHTML=nameHtml(p,'…',active);const a=$('t-av');a.style.backgroundImage=p.photoURL?`url('${p.photoURL}')`:'';a.textContent=p.photoURL?'':initials(p.name)}
+function paintHead(){const p=profiles[active]||{};$('t-name').innerHTML=nameHtml(p,'…',active);const a=$('t-av');a.style.backgroundImage=p.photoURL?`url('${p.photoURL}')`:'';a.textContent=p.photoURL?'':initials(p.name);
+ const ms=$('msgs'),pu=safeUrl(p.photoURL)?p.photoURL:'';
+ ms.style.setProperty('--peer-av',pu?`url("${pu.replace(/["\\\n]/g,c=>encodeURIComponent(c))}")`:'none');
+ ms.style.setProperty('--peer-ini',pu?"''":JSON.stringify(initials(p.name).replace(/["\\]/g,'')))}
 const dk=t=>t?new Date(t).toDateString():'';
 const isSys=x=>!x||x.systemText||x.deleted||x.deletedForEveryone||x.mediaType==='call'||x.mediaType==='group_call';
 const grp=(p,m)=>(isSys(p)||p.senderUid!==m.senderUid||dk(p.createdAt)!==dk(m.createdAt))?' f':'';

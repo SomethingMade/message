@@ -521,6 +521,7 @@ async function sharedKey(peer){
  if(shared[peer])return shared[peer];
  const my=await myKeys();if(!my)return null;
  const s=await get(ref(db,`users/${peer}/e2ee/publicKey`));if(!s.exists())return null;
+ idbSet('peerpub-'+me.uid+'-'+peer,s.val()).catch(()=>{}); /* lets the push worker decrypt notifications offline */
  try{const pk=await crypto.subtle.importKey('jwk',s.val(),{name:'ECDH',namedCurve:'P-256'},true,[]);
   return shared[peer]=await crypto.subtle.deriveKey({name:'ECDH',public:pk},my.privateKey,{name:'AES-GCM',length:256},false,['encrypt','decrypt'])}catch(_){return null}
 }
@@ -616,7 +617,8 @@ async function setupPush(){
    if(d.chatUid&&d.chatUid===active&&document.visibilityState==='visible')return;
    let pr=profiles[d.chatUid];if(!pr&&d.chatUid){try{pr=(await get(ref(db,'users/'+d.chatUid))).val()||null;if(pr)profiles[d.chatUid]=pr}catch(_){}}
    const who=(pr||{}).name,ico=safeUrl(d.icon)?d.icon:safeUrl((pr||{}).photoURL)?pr.photoURL:undefined,kind={image:'📷 Photo',video:'🎥 Video',audio:'🎤 Voice message',document:'📄 Document',gif:'GIF',sticker:'Sticker'}[d.mediaType];
-   navigator.serviceWorker.ready.then(r=>r.showNotification(d.title||who||'Haba Messenger',{silent:true,body:(d.body&&d.body.trim()&&!d.body.includes('\u27e6e2e')&&!/^[A-Za-z0-9+\/=_-]{24,}$/.test(d.body.trim())&&d.body.trim())||kind||'New message',icon:ico,
+   const plain=(d.body&&d.body.startsWith(E2E)&&d.chatUid&&!d.groupId)?await dec(d.chatUid,d.body):null;
+   navigator.serviceWorker.ready.then(r=>r.showNotification(d.title||who||'Haba Messenger',{silent:true,body:(plain&&!plain.startsWith('\u{1F512}')&&plain)||(d.body&&d.body.trim()&&!d.body.includes('\u27e6e2e')&&!/^[A-Za-z0-9+\/=_-]{24,}$/.test(d.body.trim())&&d.body.trim())||kind||'New message',icon:ico,
     tag:d.groupId?'group-'+d.groupId:d.chatUid?'chat-'+d.chatUid:'new-message',data:{url:d.url||'/',uid:d.chatUid,groupId:d.groupId},
     actions:[{action:'reply',title:'Reply',type:'text',placeholder:'Type a message…'},{action:'close',title:'Dismiss'}]}))})}
  }catch(_){}

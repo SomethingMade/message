@@ -273,7 +273,13 @@ button.rw:hover{background:var(--hover)}
 #msgs .b:not(.me){margin-left:36px}
 #msgs .b.l:not(.me)::before{content:var(--peer-ini,'');position:absolute;left:-36px;bottom:0;width:28px;height:28px;border-radius:50%;background:var(--peer-av,none) center/cover no-repeat,var(--bg-input);color:var(--sub);font:700 11px/28px var(--sans,Inter,system-ui,sans-serif);text-align:center;letter-spacing:0;white-space:normal;pointer-events:none}
 #msgs .b:not(.l):not(.ov):not(.sh) .mt{display:none}
-.tk{display:inline-flex}.tk svg{width:11px;height:11px;display:block}
+.tk{display:inline-flex;opacity:1}.tk svg{width:15px;height:15px;display:block}
+.b.me .tk{color:rgba(255,255,255,.72)}.b.me .tk.rd{color:#fff}
+.b:not(.me) .tk{color:var(--sub)}
+.b.me .mt:has(.tk){opacity:1}.b.me .mt:has(.tk) .tk{margin-left:1px}
+.ctk{display:inline-flex;vertical-align:-3px;margin-right:5px;color:var(--sub)}.ctk svg{width:16px;height:16px;display:block}
+.ctk.rd{color:var(--accent)}
+.chat.unread .cm .p.mine{font-weight:400;color:var(--sub)}
 .pd{font-style:normal;font-size:9px;line-height:1;opacity:.8}
 #p-av{position:relative;cursor:pointer;-webkit-tap-highlight-color:transparent}
 #p-av::after{content:'';position:absolute;right:-2px;bottom:-2px;width:32px;height:32px;border-radius:50%;background:#0A84FF url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z'/%3E%3Ccircle cx='12' cy='13' r='4'/%3E%3C/svg%3E") center/17px no-repeat;box-shadow:0 0 0 3px var(--bg)}
@@ -766,14 +772,16 @@ function checkIncoming(nc){
  Object.entries(nc).forEach(([u,c])=>{seenTs[u]=Math.max(seenTs[u]||0,(c&&+c.timestamp)||0)});chatsInit=true}
 let catF='all';
 function paintOnlineCount(){if(!me)return;const n=Object.entries(chats).filter(([u,c])=>c&&c.timestamp&&!isArch(c)&&!blocked[u]&&fStatus[u]==='online').length,b=$('cn-online');b.hidden=!n;b.textContent=n>99?'99+':n}
-const typOff={},typNow={};
+const typOff={},typNow={},rcOff={},rcTs={};
+function watchReceipt(u){if(rcOff[u]||!me||u===me.uid)return;
+ rcOff[u]=onValue(ref(db,`dm_threads/${tid(me.uid,u)}/readReceipts/${u}`),s=>{const v=+s.val()||0;if(rcTs[u]===v)return;rcTs[u]=v;renderList();if(active===u)peerRead=Math.max(peerRead,v)},()=>{})}
 function watchTyping(u){if(typOff[u]||!me||u===me.uid)return;
  typOff[u]=onValue(ref(db,`dm_threads/${tid(me.uid,u)}/typing/${u}`),s=>{const v=s.val()===true;if(!!typNow[u]===v)return;typNow[u]=v;paintCardTyping(u)})}
 function paintCardTyping(){renderList()}
-function watchFriends(uids){uids.slice(0,60).forEach(u=>{watchTyping(u);if(friendOff[u]||u===(me&&me.uid))return;let first=true;
+function watchFriends(uids){uids.slice(0,60).forEach(u=>{watchTyping(u);watchReceipt(u);if(friendOff[u]||u===(me&&me.uid))return;let first=true;
  friendOff[u]=onValue(ref(db,`users/${u}/status`),s=>{const v=s.val(),was=fStatus[u];fStatus[u]=v;if(v!==was){paintOnlineCount();if(catF==='online')renderList()}if(first){first=false;return}
   if(v==='online'&&was!=='online'&&Date.now()-(lastOnline[u]||0)>30000){lastOnline[u]=Date.now();playSound('online')}})})}
-function stopFriends(){Object.values(typOff).forEach(f=>f());[typOff,typNow].forEach(o=>Object.keys(o).forEach(k=>delete o[k]));Object.values(friendOff).forEach(f=>f());[friendOff,fStatus,seenTs,lastOnline].forEach(o=>Object.keys(o).forEach(k=>delete o[k]));chatsInit=false}
+function stopFriends(){Object.values(rcOff).forEach(f=>f());[rcOff,rcTs].forEach(o=>Object.keys(o).forEach(k=>delete o[k]));Object.values(typOff).forEach(f=>f());[typOff,typNow].forEach(o=>Object.keys(o).forEach(k=>delete o[k]));Object.values(friendOff).forEach(f=>f());[friendOff,fStatus,seenTs,lastOnline].forEach(o=>Object.keys(o).forEach(k=>delete o[k]));chatsInit=false}
 
 /* ---- session ---- */
 onAuthStateChanged(auth,async u=>{
@@ -848,7 +856,7 @@ function renderList(){
  if(!rows.length&&!top){$('chats').innerHTML=emptyHtml(q?'search':catF);return}
  $('chats').innerHTML=top+rows.map(([uid,c])=>{const p=profiles[uid]||{},pv=previews[uid+c.timestamp];if(pv===undefined)preview(uid,c);
   const bl=!!blocked[uid],un=!bl&&c.unreadCount>0&&c.senderUid!==me.uid;
-  return `<div class="chat${un?' unread':''}${bl?' blocked':''}${active===uid?' active':''}" data-uid="${esc(uid)}"><div class="av" ${avStyle(p)}>${p.photoURL?'':esc(initials(p.name))}</div><div class="cm"><div class="n">${nameHtml(p,'…',uid)}</div>${typNow[uid]&&!bl?'<div class="p typ">typing</div>':`<div class="p">${bl?'Blocked':(c.senderUid===me.uid?'You: ':'')+esc(pv===undefined?'…':pv)}</div>`}</div><div class="meta"><span class="t">${fmt(c.timestamp)}</span>${un?`<span class="badge">${c.unreadCount>99?'99+':c.unreadCount}</span>`:''}</div></div>`}).join('');
+  return `<div class="chat${un?' unread':''}${bl?' blocked':''}${active===uid?' active':''}" data-uid="${esc(uid)}"><div class="av" ${avStyle(p)}>${p.photoURL?'':esc(initials(p.name))}</div><div class="cm"><div class="n">${nameHtml(p,'…',uid)}</div>${typNow[uid]&&!bl?'<div class="p typ">typing</div>':`<div class="p${!bl&&c.senderUid===me.uid?' mine':''}">${bl?'Blocked':(c.senderUid===me.uid?cardTick(uid,c):'')+esc(pv===undefined?'…':pv)}</div>`}</div><div class="meta"><span class="t">${fmt(c.timestamp)}</span>${un?`<span class="badge">${c.unreadCount>99?'99+':c.unreadCount}</span>`:''}</div></div>`}).join('');
 }
 $('chats').onclick=e=>{if(lpFired){lpFired=false;return}const r=e.target.closest('.chat');if(!r)return;
  if(r.dataset.arch){showArch=true;renderList();$('chats').scrollTop=0;return}if(r.dataset.back){showArch=false;renderList();return}
@@ -922,6 +930,7 @@ function dayLabel(t){const d=new Date(t),n=new Date(),y=new Date(n);y.setDate(n.
 const dayChip=(p,m)=>m&&m.createdAt&&(!p||dk(p.createdAt)!==dk(m.createdAt))?`<div class="day">${esc(dayLabel(m.createdAt))}</div>`:'';
 const tmf=t=>t?new Date(t).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'}):'';
 const SGL='<svg viewBox="0 0 200 200"><polygon points="120,180 170,30 80,110" fill="none" stroke="currentColor" stroke-width="16" stroke-linejoin="round"/></svg>',DBL='<svg viewBox="0 0 200 200"><polygon points="20,80 170,30 80,110" fill="currentColor" fill-opacity=".75"/><polygon points="120,180 170,30 80,110" fill="currentColor"/><polygon points="20,80 80,110 80,140" fill="currentColor" fill-opacity=".55"/></svg>';
+const cardTick=(uid,c)=>{const rd=(rcTs[uid]||0)>=(+c.timestamp||0)&&(+c.timestamp||0)>0;return `<i class="ctk${rd?' rd':''}" aria-label="${rd?'Read':'Sent'}" title="${rd?'Read':'Sent'}">${rd?DBL:SGL}</i>`};
 let peerRead=0;
 const meta=m=>`<span class="mt">${tmf(m.createdAt)}${m.senderUid===me.uid?(m.pending?`<i class="pd" title="Sending">🕓</i>`:`<i class="tk" data-ts="${+m.createdAt||0}"></i>`):''}</span>`;
 function paintTicks(){$('msgs').querySelectorAll('.tk').forEach(e=>{const r=+e.dataset.ts<=peerRead;e.classList.toggle('rd',r);e.innerHTML=r?DBL:SGL})}

@@ -53,8 +53,11 @@ input{font:inherit;color:inherit}
 #nc .chat{padding:8px 16px}#nc .chat .av{width:44px;height:44px;font-size:15px}
 #nc .chat .av.ac{background:var(--accent);color:var(--bg)}
 .nsec{padding:14px 16px 4px;font-size:12px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.6px}
+.ninv.nfol{background:var(--accent);color:var(--bg)}.ninv.nfol:disabled{opacity:.6}
+#nc .chat .ninv{margin-left:8px}
+.ndis{flex-shrink:0;width:30px;height:30px;margin-left:4px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--sub)}.ndis svg{width:16px;height:16px}.ndis:active{background:var(--bg-input)}
+#nc .empty .ninv.big{height:40px;padding:0 20px;margin-top:16px}
 .ninv{display:inline-flex;align-items:center;justify-content:center;height:32px;padding:0 14px;border-radius:999px;background:var(--bg-input);color:var(--text);font-size:13.5px;font-weight:600;text-decoration:none;flex-shrink:0}
-#nc .empty .ninv{height:40px;padding:0 20px;margin-top:16px;background:var(--accent);color:var(--bg)}
 /* stickers: animated picker (Noto emoji + GIPHY), same content as the main Haba app */
 #mwrap .in{padding-right:88px}#mwrap .skb{right:43px}
 #ssh{position:fixed;inset:0;z-index:79;background:rgba(0,0,0,.45);display:flex;align-items:flex-end;justify-content:center}
@@ -486,7 +489,7 @@ img,svg,video,a{-webkit-user-drag:none;user-drag:none;-webkit-touch-callout:none
  <button class="rw dg" id="ms-del"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg></div><div class="tx"><b>Delete</b></div></button>
 </div></div></div>
 <div id="fsh" hidden><div class="msheet"><div class="grab"></div><h3 class="dt">Forward to</h3><div class="fq"><input class="in" id="fs-q" placeholder="Search" autocomplete="off"></div><div class="fl" id="fs-l"></div></div></div>
-<div id="nc" hidden><div class="nh"><button class="ibtn" id="nc-back" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button><h2>New chat</h2><button class="ibtn" id="nc-sync" title="Sync contacts" aria-label="Sync contacts"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 1-15.5 6.2L3 16"/><path d="M3 12A9 9 0 0 1 18.5 5.8L21 8"/><polyline points="21 3 21 8 16 8"/><polyline points="3 21 3 16 8 16"/></svg></button></div><div class="nq"><input class="in" id="nc-q" placeholder="Search name, @username or number" autocomplete="off"></div><div id="nc-l"></div><input type="file" id="nc-vcf" accept=".vcf,text/vcard,text/x-vcard,text/directory" hidden></div>
+<div id="nc" hidden><div class="nh"><button class="ibtn" id="nc-back" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button><h2>New chat</h2><button class="ibtn" id="nc-sync" title="Show new suggestions" aria-label="Show new suggestions"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 1-15.5 6.2L3 16"/><path d="M3 12A9 9 0 0 1 18.5 5.8L21 8"/><polyline points="21 3 21 8 16 8"/><polyline points="3 21 3 16 8 16"/></svg></button></div><div class="nq"><input class="in" id="nc-q" placeholder="Search friends, @username or number" autocomplete="off"></div><div id="nc-l"></div></div>
 <div id="ssh" hidden><div class="msheet"><div class="grab"></div><h3 class="dt">Stickers</h3><div class="skq"><input class="in" id="sk-q" placeholder="Search stickers" autocomplete="off"></div><div class="skc" id="sk-c"></div><div class="skt" id="sk-t"></div><div class="sks"><div class="skg" id="sk-g"></div></div></div></div>
 <div id="toast" hidden></div>
 <div id="inbn" role="status" aria-live="polite" hidden></div>
@@ -499,7 +502,7 @@ import {initializeApp} from "https://www.gstatic.com/firebasejs/10.8.1/firebase-
 import {getAuth,onAuthStateChanged,onIdTokenChanged,signOut,RecaptchaVerifier,signInWithPhoneNumber,createUserWithEmailAndPassword,signInWithEmailAndPassword,sendPasswordResetEmail,updateProfile} from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 import {getStorage,ref as sref,uploadBytes,getDownloadURL} from "https://www.gstatic.com/firebasejs/10.8.1/firebase-storage.js";
 import {getMessaging,getToken,deleteToken,onMessage,isSupported as isMessagingSupported} from "https://www.gstatic.com/firebasejs/10.8.1/firebase-messaging.js";
-import {getDatabase,ref,get,set,remove,update,push,onValue,query,orderByChild,equalTo,limitToLast,increment,onDisconnect,serverTimestamp} from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+import {getDatabase,ref,get,set,remove,update,push,onValue,query,orderByChild,orderByKey,startAt,limitToFirst,equalTo,limitToLast,increment,onDisconnect,serverTimestamp} from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 const app=initializeApp({
             apiKey: "AIzaSyBQSPwpVbGrdCuOoyitAeWQHIeipj2MgIY",
             authDomain: "newstart-64c43.firebaseapp.com",
@@ -772,7 +775,7 @@ function stopFriends(){Object.values(typOff).forEach(f=>f());[typOff,typNow].for
 /* ---- session ---- */
 onAuthStateChanged(auth,async u=>{
  if(offList){offList();offList=null}
- if(!u){cClearAll();stopPresence();stopFriends();me=null;kp=null;backupInfo=undefined;$('sheet').hidden=true;$('nc').hidden=true;$('ssh').hidden=true;$('app').hidden=true;$('auth').hidden=false;step('phone');hideSplash();return}
+ if(!u){cClearAll();stopPresence();stopFriends();ncReset();me=null;kp=null;backupInfo=undefined;$('sheet').hidden=true;$('nc').hidden=true;$('ssh').hidden=true;$('app').hidden=true;$('auth').hidden=false;step('phone');hideSplash();return}
  me=u;
  const p=await get(ref(db,'users/'+u.uid));
  if(!p.exists()||!p.val().name){$('auth').hidden=false;$('app').hidden=true;step('name');hideSplash();return}
@@ -1675,11 +1678,6 @@ function normPhone(raw){
  if(d.startsWith(cc)&&d.length>=11)return '+'+d;
  return '+'+cc+d.replace(/^0+/,'');
 }
-let ncData={hits:[],miss:[]},ncBusy=false;
-const ncKey=()=>'habaContacts_'+me.uid;
-function ncLoad(){try{ncData=JSON.parse(localStorage.getItem(ncKey()))||{hits:[],miss:[]}}catch(_){ncData={hits:[],miss:[]}}}
-function ncSave(){try{localStorage.setItem(ncKey(),JSON.stringify(ncData))}catch(_){}}
-const ncCanPick=()=>'contacts' in navigator&&'ContactsManager' in window;
 let usersQueryDenied=false,ncLastErr='';
 const phoneKey=n=>String(n||'').replace(/\D/g,'');
 /* my number goes into phones/<digits> = my uid, so friends can find me by number without reading all of /users */
@@ -1693,70 +1691,82 @@ async function findByPhone(num){
   let uid=null;if(s.exists())s.forEach(c=>{if(!uid)uid=c.key});return uid}
  catch(e){const c=String((e&&(e.code||e.message))||'error');ncLastErr=c;if(/permission/i.test(c))usersQueryDenied=true;console.error('users lookup failed',e);throw e}
 }
-let ncProps=Promise.resolve(['name','tel']);
-function ncLoadProps(){ncProps=(async()=>{try{if(navigator.contacts&&navigator.contacts.getProperties){const sup=await navigator.contacts.getProperties();const p=['name','tel'].filter(x=>sup.includes(x));if(p.length)return p}}catch(_){}return ['name','tel']})()}
-async function ncSync(){
- if(ncBusy)return;
- if(!ncCanPick()){toast("This browser can't share contacts. Import a contacts file instead.");return}
- let picked;
- try{const props=await ncProps;picked=await navigator.contacts.select(props,{multiple:true})}
- catch(e){console.error('contact picker failed',e);
-  toast(e&&e.name==='SecurityError'?'Open Haba directly in Chrome to share contacts':"Couldn't open your contacts"+(e&&e.name?' ('+e.name+')':'')+'. Try importing a contacts file.');return}
- if(picked&&picked.length)ncProcess(picked);
+/* ---- suggested friends: random Haba users to follow (same nodes as Haba: contacts/{me}/{them} + followers/{them}/{me}) ---- */
+let myFollowing={},ncFolOff=null,ncFolFor=null,ncSug=[],ncSugBusy=false,ncSugErr=false,ncSugT=0,ncFolBusy={};
+const DISMISS_KEY='habaDismissedSuggestions';
+let dismissed=new Set();try{dismissed=new Set(JSON.parse(localStorage.getItem(DISMISS_KEY)||'[]'))}catch(_){}
+function ncWatchFollowing(){
+ if(!me||ncFolFor===me.uid)return;
+ if(ncFolOff)ncFolOff();ncFolFor=me.uid;
+ ncFolOff=onValue(ref(db,'contacts/'+me.uid),x=>{myFollowing=x.val()||{};if(!$('nc').hidden)paintNc()},()=>{});
 }
-/* fallback that works in every browser: a .vcf export from the phone's Contacts app */
-function parseVcf(text){
- const out=[];text=String(text||'').replace(/\r\n?/g,'\n').replace(/\n[ \t]/g,'');
- text.split(/BEGIN:VCARD/i).slice(1).forEach(card=>{
-  let name='';const tel=[];
-  card.split('\n').forEach(l=>{
-   let m=l.match(/^FN[^:]*:(.*)$/i);if(m&&!name)name=m[1].trim();
-   if(!name){m=l.match(/^N(?:;[^:]*)?:(.*)$/i);if(m){const q=m[1].split(';');name=((q[1]||'')+' '+(q[0]||'')).trim()}}
-   m=l.match(/^(?:item\d+\.)?TEL[^:]*:(.+)$/i);if(m&&m[1].trim())tel.push(m[1].trim());
-  });
-  if(tel.length)out.push({name:[name],tel});
- });
- return out;
+function ncReset(){if(ncFolOff)ncFolOff();ncFolOff=null;ncFolFor=null;myFollowing={};ncSug=[];ncSugT=0}
+const ncOk=(uid,p)=>uid!==me.uid&&uid!==AI_UID&&!myFollowing[uid]&&!blocked[uid]&&!dismissed.has(uid)&&p&&typeof p==='object'&&p.name;
+const rndKey=()=>{const c='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';let k='';for(let i=0;i<3;i++)k+=c[Math.floor(Math.random()*c.length)];return k};
+async function ncLoadSuggestions(force){
+ if(ncSugBusy||!me)return;
+ if(!force&&ncSug.length&&Date.now()-ncSugT<5*60e3)return;
+ ncSugBusy=true;ncSugErr=false;paintNc();
+ try{
+  /* UIDs are random, so a random start key + a bounded page gives a random slice without downloading every user */
+  const pool={};
+  const take=s=>s.forEach(c=>{pool[c.key]=c.val()});
+  take(await get(query(ref(db,'users'),orderByKey(),startAt(rndKey()),limitToFirst(80))));
+  if(Object.keys(pool).length<40)take(await get(query(ref(db,'users'),orderByKey(),limitToFirst(80))));
+  const uids=Object.keys(pool).filter(u=>ncOk(u,pool[u]));
+  for(let i=uids.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[uids[i],uids[j]]=[uids[j],uids[i]]}
+  ncSug=uids.slice(0,24);ncSug.forEach(u=>{profiles[u]=pool[u];delete staleProf[u]});ncSugT=Date.now();
+ }catch(e){console.error('suggestions failed',e);ncSugErr=true}
+ ncSugBusy=false;if(!$('nc').hidden)paintNc();
 }
-async function ncImportFile(f){
- if(!f)return;
- let txt;try{txt=await f.text()}catch(_){toast("Couldn't read that file");return}
- const list=parseVcf(txt);
- if(!list.length){toast('No phone numbers found in that file');return}
- ncProcess(list);
+async function followUser(target){
+ if(!me||!target||target===me.uid||ncFolBusy[target])return;
+ ncFolBusy[target]=1;paintNc();
+ try{
+  const up={};
+  up[`contacts/${me.uid}/${target}`]=true;
+  up[`followers/${target}/${me.uid}`]=true;
+  up[`users/${me.uid}/followingCount`]=increment(1);
+  up[`users/${target}/followersCount`]=increment(1);
+  up[`followEvents/${target}/${push(ref(db,`followEvents/${target}`)).key}`]={type:'follow',ts:Date.now(),by:me.uid};
+  await update(ref(db),up);
+  myFollowing[target]=true;
+  const mp=profiles[me.uid]||{};
+  set(push(ref(db,`notifications/${target}`)),{type:'follow',postId:null,commentId:null,jobId:null,fromUid:me.uid,fromName:mp.name||me.displayName||'Someone',fromPhotoURL:mp.photoURL||me.photoURL||'',text:'',timestamp:serverTimestamp(),read:false}).catch(()=>{});
+  toast('Following '+((profiles[target]||{}).name||'this person'));
+ }catch(e){console.error('follow failed',e);toast("Couldn't follow. Try again.")}
+ delete ncFolBusy[target];paintNc();
 }
-async function ncProcess(picked){
- if(ncBusy)return;
- ncBusy=true;paintNc('Checking contacts…');
- const map=new Map();
- picked.forEach(c=>{const nm=(c.name&&c.name[0])||'';(c.tel||[]).forEach(t=>{const n=normPhone(t);if(n&&n!==me.phoneNumber&&!map.has(n))map.set(n,nm)})});
- const nums=[...map.keys()].slice(0,500),hits=new Map(),miss=[];let i=0,fail=0;
- await Promise.all(Array.from({length:8},async()=>{while(i<nums.length){const n=nums[i++];let uid=null;
-  try{uid=await findByPhone(n)}catch(_){fail++;continue}
-  if(uid&&uid!==me.uid){if(!hits.has(uid))hits.set(uid,{uid,name:map.get(n),phone:n})}
-  else if(!uid)miss.push({name:map.get(n),phone:n})}}));
- ncBusy=false;
- if(nums.length&&fail===nums.length){toast("Couldn't check contacts"+(ncLastErr?' ('+String(ncLastErr).replace(/^[^/]*\//,'').slice(0,40)+')':'')+'. Try again.');paintNc();return}
- ncData={hits:[...hits.values()],miss,t:Date.now()};ncSave();paintNc();
- toast(hits.size?`${hits.size} contact${hits.size>1?'s':''} on Haba`:'None of those contacts are on Haba yet');
+function dismissSuggestion(uid){
+ dismissed.add(uid);try{localStorage.setItem(DISMISS_KEY,JSON.stringify([...dismissed]))}catch(_){}
+ ncSug=ncSug.filter(u=>u!==uid);paintNc();
 }
-function paintNc(status){
+function ncRow(uid,sug){
+ const p=profiles[uid]||{},fol=!!myFollowing[uid],busy=!!ncFolBusy[uid];
+ const sub=[p.username?'@'+p.username:'',p.about||((p.followersCount||0)>0?p.followersCount+' followers':(sug?'New to Haba':''))].filter(Boolean).join(' · ');
+ const btn=fol?`<button class="ninv" data-act="open" data-u="${esc(uid)}">Message</button>`:`<button class="ninv nfol" data-act="follow" data-u="${esc(uid)}"${busy?' disabled':''}>${busy?'…':'Follow'}</button>`;
+ const x=sug&&!fol?`<button class="ndis" data-act="dismiss" data-u="${esc(uid)}" aria-label="Dismiss suggestion" title="Not interested"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>`:'';
+ return `<div class="chat" data-act="open" data-u="${esc(uid)}"><div class="av" ${avStyle(p)}>${p.photoURL?'':esc(initials(p.name))}</div><div class="cm"><div class="n"><span class="nt">${esc(p.name||'Haba user')}</span>${vb(p,uid)}</div>${sub?`<div class="p">${esc(sub)}</div>`:''}</div>${btn}${x}</div>`;
+}
+function paintNc(){
  if(!me)return;
- const q=$('nc-q').value.trim().toLowerCase(),qd=q.replace(/\D/g,''),canPick=ncCanPick();
- const match=(c,p)=>!q||(c.name||'').toLowerCase().includes(q)||((p&&p.name)||'').toLowerCase().includes(q)||((p&&p.username)||'').toLowerCase().includes(q.replace(/^@/,''))||(qd.length>=3&&(c.phone||'').replace(/\D/g,'').includes(qd));
+ const q=$('nc-q').value.trim().toLowerCase(),qd=q.replace(/\D/g,'');
+ const match=(uid)=>{if(!q)return true;const p=profiles[uid]||{};return (p.name||'').toLowerCase().includes(q)||(p.username||'').toLowerCase().includes(q.replace(/^@/,''))};
  let h='';
- if(status)h+=`<div class="nsec">${esc(status)}</div>`;
- const hits=(ncData.hits||[]).filter(c=>c.uid!==me.uid&&!blocked[c.uid]).filter(c=>match(c,profiles[c.uid])).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
- const miss=(ncData.miss||[]).filter(c=>match(c,null)).sort((a,b)=>(a.name||a.phone).localeCompare(b.name||b.phone));
  if(qd.length>=7){const n=normPhone(q);if(n)h+=`<div class="chat" data-act="num" data-v="${esc(n)}"><div class="av ac">+</div><div class="cm"><div class="n"><span class="nt">Find ${esc(n)} on Haba</span></div></div></div>`}
  else if(q.replace(/^@/,'').length>=2&&!/^[\d\s+()-]+$/.test(q))h+=`<div class="chat" data-act="user" data-v="${esc(q.replace(/^@/,''))}"><div class="av ac">@</div><div class="cm"><div class="n"><span class="nt">Find @${esc(q.replace(/^@/,''))}</span></div></div></div>`;
- if(!q)h+=`<div class="chat" data-act="vcf"><div class="av ac">\u{1F4C7}</div><div class="cm"><div class="n"><span class="nt">Import contacts file (.vcf)</span></div></div></div>`;
  if(!q)h+=`<div class="chat" data-act="ask"><div class="av ac">@</div><div class="cm"><div class="n"><span class="nt">Find by @username</span></div></div></div>`;
- if(hits.length){h+=`<div class="nsec">Contacts on Haba</div>`+hits.map(c=>{const p=profiles[c.uid]||{};if(!profiles[c.uid])loadProfile(c.uid).then(()=>{if(!$('nc').hidden)paintNc()});
-  const sub=[p.name&&p.name!==c.name?p.name:'',p.username?'@'+p.username:''].filter(Boolean).join(' · ');
-  return `<div class="chat" data-act="open" data-u="${esc(c.uid)}"><div class="av" ${avStyle(p)}>${p.photoURL?'':esc(initials(c.name||p.name))}</div><div class="cm"><div class="n"><span class="nt">${esc(c.name||p.name||c.phone)}</span>${vb(p,c.uid)}</div>${sub?`<div class="p">${esc(sub)}</div>`:''}</div></div>`}).join('')}
- else if(!q&&!ncBusy)h+=`<div class="empty"><div class="et">${(ncData.t?'No contacts on Haba yet':'Find your contacts')}</div><div class="es">${canPick?(ncData.t?'None of the contacts you shared have signed up yet. You can invite them below or sync again.':'Share your contacts to see which of your friends are already on Haba.'):"This browser can't share your address book with Haba. Import a contacts file, or search by phone number or @username above."}</div>${canPick?'<button class="ninv" data-act="sync">'+(ncData.t?'Sync again':'Sync contacts')+'</button>':''}</div>`;
- if(miss.length)h+=`<div class="nsec">Invite to Haba</div>`+miss.slice(0,200).map(c=>`<div class="chat"><div class="av">${esc(initials(c.name||'?'))}</div><div class="cm"><div class="n"><span class="nt">${esc(c.name||c.phone)}</span></div><div class="p">${esc(c.phone)}</div></div><a class="ninv" href="sms:${esc(c.phone)}?body=${encodeURIComponent('Join me on Haba Messenger: '+location.origin)}">Invite</a></div>`).join('');
+ /* people I already follow = my friends to chat with */
+ const fl=Object.keys(myFollowing).filter(u=>myFollowing[u]&&u!==me.uid&&!blocked[u]).slice(0,100);
+ fl.forEach(u=>{if(!profiles[u])loadProfile(u).then(()=>{if(!$('nc').hidden)paintNc()})});
+ const friends=fl.filter(match).sort((a,b)=>((profiles[a]||{}).name||'').localeCompare((profiles[b]||{}).name||''));
+ if(friends.length)h+=`<div class="nsec">Your friends</div>`+friends.map(u=>ncRow(u,false)).join('');
+ const sug=ncSug.filter(u=>ncOk(u,profiles[u])||myFollowing[u]).filter(u=>!myFollowing[u]).filter(match);
+ h+=`<div class="nsec">Suggested friends</div>`;
+ if(sug.length)h+=sug.map(u=>ncRow(u,true)).join('');
+ else if(ncSugBusy)h+=`<div class="empty"><div class="es">Finding people on Haba…</div></div>`;
+ else if(ncSugErr)h+=`<div class="empty"><div class="et">Couldn't load suggestions</div><div class="es">Check your connection, or search by @username above.</div><button class="ninv nfol big" data-act="refresh">Try again</button></div>`;
+ else if(!q)h+=`<div class="empty"><div class="et">No suggestions right now</div><div class="es">Try again for a fresh set of people from Haba.</div><button class="ninv nfol big" data-act="refresh">Show more people</button></div>`;
  $('nc-l').innerHTML=h;
 }
 async function ncOpen(uid){
@@ -1782,13 +1792,13 @@ async function ncNumber(n){
 }
 function ncHide(){$('nc').hidden=true}
 function ncClose(){navClose('nc',ncHide)}
-$('new').onclick=()=>{ncLoadProps();ncLoad();$('nc-q').value='';navPush('nc');$('nc').hidden=false;paintNc();$('nc-l').scrollTop=0};
-$('nc-vcf').onchange=e=>{const f=e.target.files&&e.target.files[0];e.target.value='';ncImportFile(f)};
-$('nc-back').onclick=ncClose;$('nc-sync').onclick=ncSync;$('nc-q').addEventListener('input',()=>paintNc());
+$('new').onclick=()=>{ncWatchFollowing();$('nc-q').value='';navPush('nc');$('nc').hidden=false;paintNc();$('nc-l').scrollTop=0;ncLoadSuggestions(false)};
+$('nc-back').onclick=ncClose;$('nc-sync').onclick=()=>ncLoadSuggestions(true);$('nc-q').addEventListener('input',()=>paintNc());
 $('nc-l').onclick=async e=>{
  const a=e.target.closest('[data-act]');if(!a)return;const act=a.dataset.act;
- if(act==='sync')ncSync();
- else if(act==='vcf')$('nc-vcf').click();
+ if(act==='refresh')ncLoadSuggestions(true);
+ else if(act==='follow'){e.stopPropagation();followUser(a.dataset.u)}
+ else if(act==='dismiss'){e.stopPropagation();dismissSuggestion(a.dataset.u)}
  else if(act==='open')ncOpen(a.dataset.u);
  else if(act==='user')ncUsername(a.dataset.v);
  else if(act==='num')ncNumber(a.dataset.v);

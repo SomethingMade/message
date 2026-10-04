@@ -91,6 +91,9 @@ input{font:inherit;color:inherit}
 .sys{align-self:center;font-size:12.5px;color:var(--sub);padding:6px 0}
 .compose{display:flex;gap:8px;align-items:center;padding:10px 12px calc(10px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line)}
 .compose .in{height:42px;border-radius:999px}
+.compose .att{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--sub)}
+.compose .att svg{width:22px;height:22px}
+.compose .att:disabled{opacity:.4}
 .send{width:42px;height:42px;border-radius:50%;background:var(--accent);color:var(--bg);display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .send svg{width:18px;height:18px}
 #modal{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:90;display:flex;align-items:center;justify-content:center;padding:20px}
@@ -315,7 +318,7 @@ img,svg,video,a{-webkit-user-drag:none;user-drag:none;-webkit-touch-callout:none
    <div class="ch"><button class="ibtn" id="back" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button><div class="av sm" id="t-av"></div><div class="who"><div class="n" id="t-name"></div><div class="st" id="t-sub"></div></div><button class="ibtn" id="dis-btn" aria-label="Disappearing messages" title="Disappearing messages"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><polyline points="12 9 12 13 15 15"/><path d="M9 2h6"/></svg></button></div>
    <div class="dbanner" id="dis-banner" hidden><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><polyline points="12 9 12 13 15 15"/><path d="M9 2h6"/></svg><span id="dis-text"></span></div>
    <div id="msgs"></div>
-   <div class="compose"><input id="msg" class="in" placeholder="Message" autocomplete="off"><div class="rec" id="rec" hidden><button class="ibtn" id="rec-x" aria-label="Cancel recording"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg></button><span class="rcd"></span><div class="rcw" id="rec-w"></div><span class="rt" id="rec-t">0:00</span></div><button class="send" id="sendmsg" aria-label="Voice message"><svg class="i-mic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg><svg class="i-snd" viewBox="0 0 200 200"><polygon points="20,80 170,30 80,110" fill="currentColor" fill-opacity=".75"/><polygon points="120,180 170,30 80,110" fill="currentColor"/><polygon points="20,80 80,110 80,140" fill="currentColor" fill-opacity=".55"/></svg></button></div>
+   <div class="compose"><button class="att" id="att" type="button" aria-label="Attach photo, video or file"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.4 11.6l-8.5 8.5a5.5 5.5 0 0 1-7.8-7.8l8.5-8.5a3.7 3.7 0 0 1 5.2 5.2l-8.5 8.5a1.8 1.8 0 0 1-2.6-2.6l7.8-7.8"/></svg></button><input type="file" id="att-in" multiple hidden accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip"><input id="msg" class="in" placeholder="Message" autocomplete="off"><div class="rec" id="rec" hidden><button class="ibtn" id="rec-x" aria-label="Cancel recording"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg></button><span class="rcd"></span><div class="rcw" id="rec-w"></div><span class="rt" id="rec-t">0:00</span></div><button class="send" id="sendmsg" aria-label="Voice message"><svg class="i-mic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg><svg class="i-snd" viewBox="0 0 200 200"><polygon points="20,80 170,30 80,110" fill="currentColor" fill-opacity=".75"/><polygon points="120,180 170,30 80,110" fill="currentColor"/><polygon points="20,80 80,110 80,140" fill="currentColor" fill-opacity=".55"/></svg></button></div>
   </div>
  </main>
 </div>
@@ -764,7 +767,7 @@ async function startRec(){
  mr.ondataavailable=e=>{if(e.data&&e.data.size)r.chunks.push(e.data)};
  try{const C=window.AudioContext||window.webkitAudioContext;r.ctx=new C();r.ctx.resume&&r.ctx.resume();const an=r.ctx.createAnalyser();an.fftSize=256;r.ctx.createMediaStreamSource(stream).connect(an);r.an=an;r.buf=new Uint8Array(an.fftSize)}catch(_){}
  rec=r;mr.start(250);
- $('msg').hidden=true;$('rec').hidden=false;$('rec-t').textContent='0:00';$('rec-w').innerHTML='';syncSend();
+ $('msg').hidden=true;$('att').hidden=true;$('rec').hidden=false;$('rec-t').textContent='0:00';$('rec-w').innerHTML='';syncSend();
  r.iv=setInterval(()=>{const sec=(Date.now()-r.start)/1000;$('rec-t').textContent=fdur(sec);
   if(r.an){r.an.getByteTimeDomainData(r.buf);let m=0;for(const v of r.buf)m=Math.max(m,Math.abs(v-128));r.lv.push(Math.min(1,m/70))}else r.lv.push(.3);
   r.lv=r.lv.slice(-60);$('rec-w').innerHTML=r.lv.map(v=>`<span style="height:${Math.max(12,Math.round(v*100))}%"></span>`).join('');
@@ -776,7 +779,7 @@ function stopRec(send){
   if(!send)return;if(dur<1){toast('Hold on a little longer to record');return}
   sendVoice(new Blob(r.chunks,{type:r.mime}),dur,r.uid,r.mime)};
  try{r.mr.stop()}catch(_){r.mr.onstop()}
- $('rec').hidden=true;$('msg').hidden=false;syncSend();
+ $('rec').hidden=true;$('msg').hidden=false;$('att').hidden=false;syncSend();
 }
 async function sendVoice(blob,dur,uid,mime){
  const t=tid(me.uid,uid);
@@ -797,6 +800,54 @@ async function sendVoice(blob,dur,uid,mime){
    [`user_chats/${uid}/${me.uid}/senderUid`]:me.uid,[`user_chats/${uid}/${me.uid}/unreadCount`]:increment(1)})});
  }catch(_){ask('Not sent',"Your voice message couldn't be sent. Check your connection and try again.",{cancel:false})}
 }
+
+/* ---- send photos, videos and documents: same encryption, Storage folders and message fields as Haba ---- */
+const MAX_UP=100*1048576;
+async function prepImage(file){
+ const same=(w,h)=>({file,w:w||0,h:h||0});let bmp;
+ try{try{bmp=await createImageBitmap(file,{imageOrientation:'from-image'})}catch(_){bmp=await createImageBitmap(file)}}catch(_){return same(0,0)}
+ const W=bmp.width,H=bmp.height,ty=(file.type||'').toLowerCase(),sc=Math.min(1,1600/Math.max(W,H));
+ if(!/^image\/(jpeg|jpg|png|webp|heic|heif)$/.test(ty)||(sc===1&&file.size<=512000)){bmp.close&&bmp.close();return same(W,H)}
+ try{const w=Math.max(1,Math.round(W*sc)),h=Math.max(1,Math.round(H*sc)),cv=document.createElement('canvas');cv.width=w;cv.height=h;
+  const cx=cv.getContext('2d');cx.fillStyle='#fff';cx.fillRect(0,0,w,h);cx.imageSmoothingQuality='high';cx.drawImage(bmp,0,0,w,h);bmp.close&&bmp.close();
+  const b=await new Promise(r=>cv.toBlob(r,'image/jpeg',.82));if(!b||b.size>=file.size)return same(W,H);
+  return{file:new File([b],(file.name||'photo').replace(/\.[^.]+$/,'')+'.jpg',{type:'image/jpeg'}),w,h}}catch(_){return same(W,H)}
+}
+async function sendFiles(files){
+ const uid=active;if(!uid||!files.length)return;
+ if(blocked[uid]){if(await ask('Unblock to send?',"You've blocked this contact. Unblock them to send a file.",{ok:'Unblock'}))await remove(ref(db,`users/${me.uid}/blocked/${uid}`)).catch(()=>{});return}
+ const key=await sharedKey(uid);if(!key){toast("Can't send: encryption key unavailable");return}
+ const t=tid(me.uid,uid);let ok=0;
+ for(let i=0;i<files.length;i++){
+  const f=files[i];
+  if(f.size>MAX_UP){toast((f.name||'File')+' is too large (max 100 MB)');continue}
+  try{
+   toast(files.length>1?`Sending ${i+1} of ${files.length}…`:'Sending…');
+   const isVid=(f.type||'').startsWith('video/'),isImg=(f.type||'').startsWith('image/'),doc=!isVid&&!isImg;
+   let send=f;if(isImg)send=(await prepImage(f)).file;
+   const iv=crypto.getRandomValues(new Uint8Array(12)),ct=new Uint8Array(await crypto.subtle.encrypt({name:'AES-GCM',iv},key,await send.arrayBuffer()));
+   const out=new Uint8Array(12+ct.length);out.set(iv);out.set(ct,12);
+   const safe=(send.name||(isVid?'video':'photo')).replace(/[^a-zA-Z0-9.\-_]/g,'_');
+   const r=sref(storage,`${doc?'documents':'dm_media'}/${t}/${Date.now()}_${safe}`);
+   await uploadBytes(r,out,{contentType:'application/octet-stream'});
+   const url=await getDownloadURL(r),now=Date.now(),mime=send.type||(isVid?'video/mp4':isImg?'image/jpeg':'application/octet-stream');
+   const ds=uid===active?disSec:await getDis(t),bm=await blockedBy(uid);
+   const pv=await enc(uid,doc?'📄 '+(f.name||'Document'):isVid?'🎥 Video':'📷 Photo');
+   const id=push(ref(db,`dm_threads/${t}/messages`)).key;
+   const msg={senderUid:me.uid,createdAt:now,mediaType:doc?'document':isVid?'video':'image',mediaURL:url,mediaEncrypted:true,mediaMimeType:mime,...(doc?{fileName:f.name,fileSize:f.size}:{}),...(ds>0?{expiresAt:now+ds*1000}:{})};
+   if(!doc)mcache[url]=URL.createObjectURL(send);
+   await update(ref(db),{
+    [`dm_threads/${t}/messages/${id}`]:msg,
+    [`user_chats/${me.uid}/${uid}`]:{text:pv,timestamp:now,unreadCount:0,senderUid:me.uid},
+    ...(bm?{}:{[`user_chats/${uid}/${me.uid}/text`]:pv,[`user_chats/${uid}/${me.uid}/timestamp`]:now,
+    [`user_chats/${uid}/${me.uid}/senderUid`]:me.uid,[`user_chats/${uid}/${me.uid}/unreadCount`]:increment(1)})});
+   ok++;
+  }catch(_){ask('Not sent',`"${f.name||'File'}" couldn't be sent. Check your connection and try again.`,{cancel:false})}
+ }
+ if(ok)toast(ok>1?`${ok} files sent`:'Sent');
+}
+$('att').onclick=()=>{if(active)$('att-in').click()};
+$('att-in').onchange=e=>{const fs=Array.from(e.target.files||[]);e.target.value='';if(fs.length)sendFiles(fs)};
 $('msg').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMsg()}});
 function chatHide(){if(rec)stopRec(false);pauseVoices();$('app').classList.remove('in-chat');if(offMsgs){offMsgs();offMsgs=null}active=null;stopPres();$('thread').hidden=true;$('ph').hidden=false;renderList()}
 $('back').onclick=()=>navClose('chat',chatHide);

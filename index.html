@@ -116,6 +116,12 @@ input{font:inherit;color:inherit}
 .ibtn{width:38px;height:38px;border-radius:50%;background:var(--bg-input);display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .ibtn svg{width:20px;height:20px}
 .search{margin:4px 16px 8px}
+.cats{display:flex;gap:8px;padding:0 16px 8px;overflow-x:auto;scrollbar-width:none}.cats::-webkit-scrollbar{display:none}
+.cat{flex-shrink:0;height:32px;padding:0 14px;border-radius:999px;background:var(--bg-input);color:var(--text);font-size:13.5px;font-weight:600;display:flex;align-items:center;gap:6px}
+.cat.on{background:var(--accent);color:var(--bg)}
+.cat .cn{min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--accent);color:var(--bg);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.cat.on .cn{background:var(--bg);color:var(--accent)}
+
 .search .in{height:40px;border-radius:999px;font-size:15px}
 #chats{flex:1;overflow-y:auto}
 .chat{display:flex;gap:12px;align-items:center;padding:8px 16px;cursor:pointer}
@@ -369,6 +375,7 @@ img,svg,video,a{-webkit-user-drag:none;user-drag:none;-webkit-touch-callout:none
    <button class="ibtn" id="more" title="More" aria-label="More options"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/></svg></button>
    <button class="ibtn" id="me" title="Account"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg></button></div></div>
   <div class="search"><input id="q" class="in" placeholder="Search chats" autocomplete="off"></div>
+  <div class="cats" id="cats" role="tablist"><button class="cat on" data-c="all" role="tab">All</button><button class="cat" data-c="unread" role="tab">Unread<span class="cn" id="cn-unread" hidden></span></button><button class="cat" data-c="online" role="tab">Online</button></div>
   <div class="banner" id="enc-banner" hidden></div>
   <div class="banner" id="push-banner" hidden>Turn on notifications so you never miss a message.</div>
   <div id="chats"></div>
@@ -648,12 +655,13 @@ function checkIncoming(nc){
   for(const [u,c] of Object.entries(nc)){if(blocked[u])continue;if(c&&c.senderUid&&c.senderUid!==me.uid&&(+c.timestamp||0)>(seenTs[u]||0)){const here=(u===active&&document.visibilityState==='visible');k=here?(k||'pop'):'message';if(!here)inbShow(u,c)}}
   if(k)playSound(k)}
  Object.entries(nc).forEach(([u,c])=>{seenTs[u]=Math.max(seenTs[u]||0,(c&&+c.timestamp)||0)});chatsInit=true}
+let catF='all';
 const typOff={},typNow={};
 function watchTyping(u){if(typOff[u]||!me||u===me.uid)return;
  typOff[u]=onValue(ref(db,`dm_threads/${tid(me.uid,u)}/typing/${u}`),s=>{const v=s.val()===true;if(!!typNow[u]===v)return;typNow[u]=v;paintCardTyping(u)})}
 function paintCardTyping(){renderList()}
 function watchFriends(uids){uids.slice(0,60).forEach(u=>{watchTyping(u);if(friendOff[u]||u===(me&&me.uid))return;let first=true;
- friendOff[u]=onValue(ref(db,`users/${u}/status`),s=>{const v=s.val(),was=fStatus[u];fStatus[u]=v;if(first){first=false;return}
+ friendOff[u]=onValue(ref(db,`users/${u}/status`),s=>{const v=s.val(),was=fStatus[u];fStatus[u]=v;if(catF==='online'&&v!==was)renderList();if(first){first=false;return}
   if(v==='online'&&was!=='online'&&Date.now()-(lastOnline[u]||0)>30000){lastOnline[u]=Date.now();playSound('online')}})})}
 function stopFriends(){Object.values(typOff).forEach(f=>f());[typOff,typNow].forEach(o=>Object.keys(o).forEach(k=>delete o[k]));Object.values(friendOff).forEach(f=>f());[friendOff,fStatus,seenTs,lastOnline].forEach(o=>Object.keys(o).forEach(k=>delete o[k]));chatsInit=false}
 
@@ -695,10 +703,12 @@ function renderList(){
   .filter(([uid])=>!q||((profiles[uid]||{}).name||'').toLowerCase().includes(q));
  const archN=all.filter(([u,c])=>isArch(c)).length;
  if(showArch&&!archN)showArch=false;
- const rows=all.filter(([u,c])=>showArch?isArch(c):!isArch(c));
+ const isUn=(u,c)=>!blocked[u]&&c.unreadCount>0&&c.senderUid!==me.uid;
+ const nUn=all.filter(([u,c])=>!isArch(c)&&isUn(u,c)).length,cb=$('cn-unread');cb.hidden=!nUn;cb.textContent=nUn>99?'99+':nUn;
+ const rows=all.filter(([u,c])=>showArch?isArch(c):!isArch(c)).filter(([u,c])=>showArch||catF==='all'||(catF==='unread'?isUn(u,c):(fStatus[u]==='online'&&!blocked[u])));
  const top=showArch?`<div class="chat arch" data-back="1"><div class="av">${BACK_SVG}</div><div class="cm"><div class="n">Archived chats</div><div class="p">Tap to go back</div></div></div>`
   :(archN?`<div class="chat arch" data-arch="1"><div class="av">${ARCH_SVG}</div><div class="cm"><div class="n">Archived</div></div><div class="meta"><span class="t">${archN}</span></div></div>`:'');
- if(!rows.length&&!top){$('chats').innerHTML=`<div class="empty">${q?'No chats match your search.':'No conversations yet.<br>Tap the pencil to start one.'}</div>`;return}
+ if(!rows.length&&!top){$('chats').innerHTML=`<div class="empty">${q?'No chats match your search.':catF==='unread'?'No unread chats.':catF==='online'?'No friends online right now.':'No conversations yet.<br>Tap the pencil to start one.'}</div>`;return}
  $('chats').innerHTML=top+rows.map(([uid,c])=>{const p=profiles[uid]||{},pv=previews[uid+c.timestamp];if(pv===undefined)preview(uid,c);
   const bl=!!blocked[uid],un=!bl&&c.unreadCount>0&&c.senderUid!==me.uid;
   return `<div class="chat${un?' unread':''}${bl?' blocked':''}${active===uid?' active':''}" data-uid="${esc(uid)}"><div class="av" ${avStyle(p)}>${p.photoURL?'':esc(initials(p.name))}</div><div class="cm"><div class="n">${nameHtml(p,'…',uid)}</div>${typNow[uid]&&!bl?'<div class="p typ">typing</div>':`<div class="p">${bl?'Blocked':(c.senderUid===me.uid?'You: ':'')+esc(pv===undefined?'…':pv)}</div>`}</div><div class="meta"><span class="t">${fmt(c.timestamp)}</span>${un?`<span class="badge">${c.unreadCount>99?'99+':c.unreadCount}</span>`:''}</div></div>`}).join('');
@@ -757,6 +767,7 @@ $('cs-del').onclick=()=>{const uid=csUid,nm=(profiles[uid]||{}).name||'this cont
  try{await update(ref(db),{[`users/${me.uid}/cleared/${uid}`]:Date.now(),[`user_chats/${me.uid}/${uid}`]:null});
   if(active===uid)navClose('chat',chatHide);toast('Chat deleted')}catch(_){toast("Couldn't delete the chat")}},60)};
 $('q').oninput=renderList;
+$('cats').addEventListener('click',e=>{const b=e.target.closest('.cat');if(!b)return;catF=b.dataset.c;document.querySelectorAll('#cats .cat').forEach(x=>{const on=x===b;x.classList.toggle('on',on);x.setAttribute('aria-selected',on)});renderList()});
 
 /* ---- conversation ---- */
 const tid=(a,b)=>[a,b].sort().join('_');

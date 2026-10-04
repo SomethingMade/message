@@ -146,6 +146,11 @@ input{font:inherit;color:inherit}
 .compose .att{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--sub)}
 .compose .att svg{width:22px;height:22px}
 .compose .att:disabled{opacity:.4}
+.compose .mwrap{position:relative;flex:1;min-width:0}
+.compose .mwrap .in{padding-right:46px}
+.compose .mwrap .att{position:absolute;right:3px;top:50%;margin-top:-20px;transition:opacity .15s}
+.compose .mwrap:focus-within .att{opacity:0;pointer-events:none}
+.compose .mwrap:focus-within .in{padding-right:18px}
 .send{width:42px;height:42px;border-radius:50%;background:var(--accent);color:var(--bg);display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .send svg{width:18px;height:18px}
 #modal{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:90;display:flex;align-items:center;justify-content:center;padding:20px}
@@ -377,7 +382,7 @@ img,svg,video,a{-webkit-user-drag:none;user-drag:none;-webkit-touch-callout:none
    <div class="dbanner" id="dis-banner" hidden><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><polyline points="12 9 12 13 15 15"/><path d="M9 2h6"/></svg><span id="dis-text"></span></div>
    <div id="msgs"></div>
    <div id="rbar" hidden><div class="rq"><b id="rb-n"></b><span id="rb-t"></span></div><button class="ibtn" id="rb-x" type="button" aria-label="Cancel reply"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button></div>
-   <div class="compose"><button class="att" id="att" type="button" aria-label="Attach photo, video or file"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.4 11.6l-8.5 8.5a5.5 5.5 0 0 1-7.8-7.8l8.5-8.5a3.7 3.7 0 0 1 5.2 5.2l-8.5 8.5a1.8 1.8 0 0 1-2.6-2.6l7.8-7.8"/></svg></button><input type="file" id="att-in" multiple hidden accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip"><input id="msg" class="in" placeholder="Message" autocomplete="off"><div class="rec" id="rec" hidden><button class="ibtn" id="rec-x" aria-label="Cancel recording"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg></button><span class="rcd"></span><div class="rcw" id="rec-w"></div><span class="rt" id="rec-t">0:00</span></div><button class="send" id="sendmsg" aria-label="Voice message"><svg class="i-mic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg><svg class="i-snd" viewBox="0 0 200 200"><polygon points="20,80 170,30 80,110" fill="currentColor" fill-opacity=".75"/><polygon points="120,180 170,30 80,110" fill="currentColor"/><polygon points="20,80 80,110 80,140" fill="currentColor" fill-opacity=".55"/></svg></button></div>
+   <div class="compose"><div class="mwrap" id="mwrap"><input id="msg" class="in" placeholder="Message" autocomplete="off"><button class="att" id="att" type="button" aria-label="Attach photo, video or file"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.4 11.6l-8.5 8.5a5.5 5.5 0 0 1-7.8-7.8l8.5-8.5a3.7 3.7 0 0 1 5.2 5.2l-8.5 8.5a1.8 1.8 0 0 1-2.6-2.6l7.8-7.8"/></svg></button></div><input type="file" id="att-in" multiple hidden accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip"><div class="rec" id="rec" hidden><button class="ibtn" id="rec-x" aria-label="Cancel recording"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg></button><span class="rcd"></span><div class="rcw" id="rec-w"></div><span class="rt" id="rec-t">0:00</span></div><button class="send" id="sendmsg" aria-label="Voice message"><svg class="i-mic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg><svg class="i-snd" viewBox="0 0 200 200"><polygon points="20,80 170,30 80,110" fill="currentColor" fill-opacity=".75"/><polygon points="120,180 170,30 80,110" fill="currentColor"/><polygon points="20,80 80,110 80,140" fill="currentColor" fill-opacity=".55"/></svg></button></div>
   </div>
  </main>
 </div>
@@ -879,7 +884,7 @@ async function startRec(){
  mr.ondataavailable=e=>{if(e.data&&e.data.size)r.chunks.push(e.data)};
  try{const C=window.AudioContext||window.webkitAudioContext;r.ctx=new C();r.ctx.resume&&r.ctx.resume();const an=r.ctx.createAnalyser();an.fftSize=256;r.ctx.createMediaStreamSource(stream).connect(an);r.an=an;r.buf=new Uint8Array(an.fftSize)}catch(_){}
  rec=r;mr.start(250);
- $('msg').hidden=true;$('att').hidden=true;$('rec').hidden=false;$('rec-t').textContent='0:00';$('rec-w').innerHTML='';syncSend();
+ $('mwrap').hidden=true;$('msg').hidden=true;$('att').hidden=true;$('rec').hidden=false;$('rec-t').textContent='0:00';$('rec-w').innerHTML='';syncSend();
  r.iv=setInterval(()=>{const sec=(Date.now()-r.start)/1000;$('rec-t').textContent=fdur(sec);
   if(r.an){r.an.getByteTimeDomainData(r.buf);let m=0;for(const v of r.buf)m=Math.max(m,Math.abs(v-128));r.lv.push(Math.min(1,m/70))}else r.lv.push(.3);
   r.lv=r.lv.slice(-60);$('rec-w').innerHTML=r.lv.map(v=>`<span style="height:${Math.max(12,Math.round(v*100))}%"></span>`).join('');
@@ -891,7 +896,7 @@ function stopRec(send){
   if(!send)return;if(dur<1){toast('Hold on a little longer to record');return}
   sendVoice(new Blob(r.chunks,{type:r.mime}),dur,r.uid,r.mime)};
  try{r.mr.stop()}catch(_){r.mr.onstop()}
- $('rec').hidden=true;$('msg').hidden=false;$('att').hidden=false;syncSend();
+ $('rec').hidden=true;$('mwrap').hidden=false;$('msg').hidden=false;$('att').hidden=false;syncSend();
 }
 async function sendVoice(blob,dur,uid,mime,fwd){
  const t=tid(me.uid,uid);

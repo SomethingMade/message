@@ -15,6 +15,10 @@ firebase.initializeApp({
 });
 
 const messaging = firebase.messaging();
+const SW_VERSION = '2026-10-04-c';
+self.addEventListener('message', (e) => {
+    if (e.data && e.data.type === 'version' && e.ports && e.ports[0]) e.ports[0].postMessage({ v: SW_VERSION });
+});
 const NOTIF_ICON = "https://i.postimg.cc/Bv3sQWxd/1783111354171.png";
 const DB_URL = "https://newstart-64c43-default-rtdb.firebaseio.com";
 
@@ -68,10 +72,14 @@ const E2E_PREFIX = '\u27e6e2e1\u27e7';
 const KEYS_DB = 'haba-messenger', KEYS_STORE = 'keys';
 const MEDIA_LABEL = { image: '\ud83d\udcf7 Photo', video: '\ud83c\udfa5 Video', audio: '\ud83c\udfa4 Voice message', document: '\ud83d\udcc4 Document', gif: 'GIF', sticker: 'Sticker' };
 
-function keysGet(key) {
+// Key pairs live in IndexedDB. The messenger page uses "haba-messenger", the main Haba app
+// uses "haba-e2ee" (same store + key names), so look in both. Opening never creates a DB.
+const KEY_DBS = ['haba-messenger', 'haba-e2ee'];
+function keysGet(key, dbName) {
     return new Promise((resolve) => {
-        const req = indexedDB.open(KEYS_DB, 1);
-        req.onupgradeneeded = () => { if (!req.result.objectStoreNames.contains(KEYS_STORE)) req.result.createObjectStore(KEYS_STORE); };
+        let req;
+        try { req = indexedDB.open(dbName || KEY_DBS[0], 1); } catch (e) { resolve(null); return; }
+        req.onupgradeneeded = () => { try { req.transaction.abort(); } catch (_) {} };
         req.onerror = () => resolve(null);
         req.onsuccess = () => {
             const db = req.result;
@@ -82,6 +90,13 @@ function keysGet(key) {
             } catch (e) { db.close(); resolve(null); }
         };
     });
+}
+async function loadKeyPair(uid) {
+    for (const name of KEY_DBS) {
+        const kp = await keysGet('keypair-' + uid, name);
+        if (kp && kp.privateKey) return { kp, name };
+    }
+    return null;
 }
 
 const fromB64 = (s) => Uint8Array.from(atob(s), (c) => c.charCodeAt(0)).buffer;
@@ -100,9 +115,10 @@ async function decryptPushBody(body, chatUid, groupId) {
         const auth = await getCachedAuth();
         const uid = auth && auth.uid;
         if (!uid) return null;
-        const kp = await keysGet('keypair-' + uid);
-        if (!kp || !kp.privateKey) return null;
-        const cached = await keysGet('peerpub-' + uid + '-' + chatUid);
+        const found = await loadKeyPair(uid);
+        if (!found) return null;
+        const kp = found.kp;
+        const cached = await keysGet('peerpub-' + uid + '-' + chatUid, found.name);
         if (cached) { try { return await decryptWithPeerKey(kp.privateKey, cached, body); } catch (_) {} }
         if (!auth.token) return null;
         const fresh = await fetchJson('users/' + chatUid + '/e2ee/publicKey', auth.token); // new sender, or their key changed
@@ -116,9 +132,10 @@ const toB64 = (buf) => { let t = ''; new Uint8Array(buf).forEach((c) => (t += St
 // Encrypts text exactly like enc() in the app (AES-GCM over the ECDH shared key).
 // Throws when it can't, so a reply is never sent as plain text.
 async function encryptForPeer(text, myUid, peerUid, token) {
-    const kp = await keysGet('keypair-' + myUid);
-    if (!kp || !kp.privateKey) throw new Error('no key pair on this device');
-    let jwk = await keysGet('peerpub-' + myUid + '-' + peerUid);
+    const found = await loadKeyPair(myUid);
+    if (!found) throw new Error('no key pair on this device');
+    const kp = found.kp;
+    let jwk = await keysGet('peerpub-' + myUid + '-' + peerUid, found.name);
     if (!jwk) jwk = await fetchJson('users/' + peerUid + '/e2ee/publicKey', token);
     if (!jwk) throw new Error('peer has no public key');
     const pub = await crypto.subtle.importKey('jwk', jwk, { name: 'ECDH', namedCurve: 'P-256' }, false, []);

@@ -55,6 +55,25 @@ input{font:inherit;color:inherit}
 .nsec{padding:14px 16px 4px;font-size:12px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.6px}
 .ninv{display:inline-flex;align-items:center;justify-content:center;height:32px;padding:0 14px;border-radius:999px;background:var(--bg-input);color:var(--text);font-size:13.5px;font-weight:600;text-decoration:none;flex-shrink:0}
 #nc .empty .ninv{height:40px;padding:0 20px;margin-top:16px;background:var(--accent);color:var(--bg)}
+/* stickers: animated picker (Noto emoji + GIPHY), same content as the main Haba app */
+#mwrap .in{padding-right:88px}#mwrap .skb{right:43px}
+#ssh{position:fixed;inset:0;z-index:79;background:rgba(0,0,0,.45);display:flex;align-items:flex-end;justify-content:center}
+#ssh .msheet{display:flex;flex-direction:column;height:68vh;max-height:68vh}
+@media (min-width:769px){#ssh{align-items:center;padding:20px}#ssh .msheet{height:520px}}
+.skq{padding:0 16px 8px;flex-shrink:0}.skq .in{height:40px;border-radius:999px;font-size:15px}
+.skc,.skt{display:flex;gap:6px;overflow-x:auto;padding:0 16px 8px;scrollbar-width:none;flex-shrink:0}
+.skc::-webkit-scrollbar,.skt::-webkit-scrollbar{display:none}
+.skc button{flex-shrink:0;height:32px;padding:0 14px;border-radius:999px;background:var(--bg-input);font-size:13.5px;font-weight:600;white-space:nowrap}
+.skc button.on{background:var(--accent);color:var(--bg)}
+.skt{border-bottom:1px solid var(--line);margin-bottom:8px}
+.skt button{flex-shrink:0;width:38px;height:38px;border-radius:10px;font-size:19px;display:flex;align-items:center;justify-content:center}
+.skt button.on{background:var(--bg-input)}
+.sks{flex:1;min-height:0;overflow-y:auto;padding:0 12px}
+.skg{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:4px 0 8px}
+.skg button{aspect-ratio:1;border-radius:16px;background:var(--bg-input);display:flex;align-items:center;justify-content:center;padding:6px}
+.skg button:active{transform:scale(.94)}
+.skg img{width:100%;height:100%;object-fit:contain;pointer-events:none}
+.skg .skm{grid-column:1/-1;text-align:center;color:var(--sub);font-size:13px;padding:30px 0}
 /* reply, swipe, message menu, forward */
 #msgs .b[data-mk]{touch-action:pan-y;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 .qt{display:block;padding:5px 9px;margin-bottom:6px;border-radius:8px;border-left:3px solid var(--sub);background:rgba(127,127,127,.18);font-size:13px;line-height:1.3;cursor:pointer;overflow:hidden;white-space:normal;letter-spacing:0}
@@ -407,7 +426,7 @@ img,svg,video,a{-webkit-user-drag:none;user-drag:none;-webkit-touch-callout:none
    <div class="dbanner" id="dis-banner" hidden><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><polyline points="12 9 12 13 15 15"/><path d="M9 2h6"/></svg><span id="dis-text"></span></div>
    <div id="msgs"></div>
    <div id="rbar" hidden><div class="rq"><b id="rb-n"></b><span id="rb-t"></span></div><button class="ibtn" id="rb-x" type="button" aria-label="Cancel reply"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button></div>
-   <div class="compose"><div class="mwrap" id="mwrap"><input id="msg" class="in" placeholder="Message" autocomplete="off"><button class="att" id="att" type="button" aria-label="Attach photo, video or file"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.4 11.6l-8.5 8.5a5.5 5.5 0 0 1-7.8-7.8l8.5-8.5a3.7 3.7 0 0 1 5.2 5.2l-8.5 8.5a1.8 1.8 0 0 1-2.6-2.6l7.8-7.8"/></svg></button></div><input type="file" id="att-in" multiple hidden accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip"><div class="rec" id="rec" hidden><button class="ibtn" id="rec-x" aria-label="Cancel recording"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg></button><span class="rcd"></span><div class="rcw" id="rec-w"></div><span class="rt" id="rec-t">0:00</span></div><button class="send" id="sendmsg" aria-label="Voice message"><svg class="i-mic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg><svg class="i-snd" viewBox="0 0 200 200"><polygon points="20,80 170,30 80,110" fill="currentColor" fill-opacity=".75"/><polygon points="120,180 170,30 80,110" fill="currentColor"/><polygon points="20,80 80,110 80,140" fill="currentColor" fill-opacity=".55"/></svg></button></div>
+   <div class="compose"><div class="mwrap" id="mwrap"><input id="msg" class="in" placeholder="Message" autocomplete="off"><button class="att skb" id="skb" type="button" aria-label="Stickers"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><path d="M9 9.5h.01M15 9.5h.01"/></svg></button><button class="att" id="att" type="button" aria-label="Attach photo, video or file"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.4 11.6l-8.5 8.5a5.5 5.5 0 0 1-7.8-7.8l8.5-8.5a3.7 3.7 0 0 1 5.2 5.2l-8.5 8.5a1.8 1.8 0 0 1-2.6-2.6l7.8-7.8"/></svg></button></div><input type="file" id="att-in" multiple hidden accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip"><div class="rec" id="rec" hidden><button class="ibtn" id="rec-x" aria-label="Cancel recording"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg></button><span class="rcd"></span><div class="rcw" id="rec-w"></div><span class="rt" id="rec-t">0:00</span></div><button class="send" id="sendmsg" aria-label="Voice message"><svg class="i-mic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg><svg class="i-snd" viewBox="0 0 200 200"><polygon points="20,80 170,30 80,110" fill="currentColor" fill-opacity=".75"/><polygon points="120,180 170,30 80,110" fill="currentColor"/><polygon points="20,80 80,110 80,140" fill="currentColor" fill-opacity=".55"/></svg></button></div>
   </div>
  </main>
 </div>
@@ -457,6 +476,7 @@ img,svg,video,a{-webkit-user-drag:none;user-drag:none;-webkit-touch-callout:none
 </div></div></div>
 <div id="fsh" hidden><div class="msheet"><div class="grab"></div><h3 class="dt">Forward to</h3><div class="fq"><input class="in" id="fs-q" placeholder="Search" autocomplete="off"></div><div class="fl" id="fs-l"></div></div></div>
 <div id="nc" hidden><div class="nh"><button class="ibtn" id="nc-back" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button><h2>New chat</h2><button class="ibtn" id="nc-sync" title="Sync contacts" aria-label="Sync contacts"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 1-15.5 6.2L3 16"/><path d="M3 12A9 9 0 0 1 18.5 5.8L21 8"/><polyline points="21 3 21 8 16 8"/><polyline points="3 21 3 16 8 16"/></svg></button></div><div class="nq"><input class="in" id="nc-q" placeholder="Search name, @username or number" autocomplete="off"></div><div id="nc-l"></div></div>
+<div id="ssh" hidden><div class="msheet"><div class="grab"></div><h3 class="dt">Stickers</h3><div class="skq"><input class="in" id="sk-q" placeholder="Search stickers" autocomplete="off"></div><div class="skc" id="sk-c"></div><div class="skt" id="sk-t"></div><div class="sks"><div class="skg" id="sk-g"></div></div></div></div>
 <div id="toast" hidden></div>
 <div id="inbn" role="status" aria-live="polite" hidden></div>
 <div id="lb" hidden><div class="lbh"><button class="ibtn" id="lb-x" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button><div class="lbw"><b id="lb-n"></b><span id="lb-d"></span></div><button class="ibtn" id="lb-dl" aria-label="Download"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><polyline points="7 11 12 16 17 11"/><path d="M5 21h14"/></svg></button></div><div class="lbs" id="lb-s"><img id="lb-i" alt=""></div><button class="lbn l" id="lb-p" aria-label="Previous">&#8249;</button><button class="lbn r" id="lb-nx" aria-label="Next">&#8250;</button></div>
@@ -491,7 +511,7 @@ const hideSplash=()=>setTimeout(()=>$('splash').classList.add('out'),Math.max(30
 const navStack=[];
 function navPush(t){if(navStack.includes(t))return;navStack.push(t);try{history.pushState({t},'')}catch(_){}}
 function navClose(t,hide){if(navStack[navStack.length-1]===t){history.back();return}const i=navStack.lastIndexOf(t);if(i>-1)navStack.splice(i,1);hide()}
-window.addEventListener('popstate',()=>{const t=navStack.pop();if(t==='lb')lbHide();else if(t==='sheet')sheetHide();else if(t==='chat')chatHide();else if(t==='menu')menuHide();else if(t==='dis')disHide();else if(t==='cs')csHide();else if(t==='rp')rpHide();else if(t==='xp')xpHide();else if(t==='ms')msHide();else if(t==='fs')fsHide();else if(t==='nc')ncHide()});
+window.addEventListener('popstate',()=>{const t=navStack.pop();if(t==='lb')lbHide();else if(t==='sheet')sheetHide();else if(t==='chat')chatHide();else if(t==='menu')menuHide();else if(t==='dis')disHide();else if(t==='cs')csHide();else if(t==='rp')rpHide();else if(t==='xp')xpHide();else if(t==='ms')msHide();else if(t==='fs')fsHide();else if(t==='nc')ncHide();else if(t==='sk')skHide()});
 function navSwap(from,to){const i=navStack.lastIndexOf(from);if(i>-1){navStack[i]=to;try{history.replaceState({t:to},'')}catch(_){}}else navPush(to)}
 
 /* dialogs */
@@ -692,7 +712,7 @@ function stopFriends(){Object.values(typOff).forEach(f=>f());[typOff,typNow].for
 /* ---- session ---- */
 onAuthStateChanged(auth,async u=>{
  if(offList){offList();offList=null}
- if(!u){stopPresence();stopFriends();me=null;kp=null;backupInfo=undefined;$('sheet').hidden=true;$('nc').hidden=true;$('app').hidden=true;$('auth').hidden=false;step('phone');hideSplash();return}
+ if(!u){stopPresence();stopFriends();me=null;kp=null;backupInfo=undefined;$('sheet').hidden=true;$('nc').hidden=true;$('ssh').hidden=true;$('app').hidden=true;$('auth').hidden=false;step('phone');hideSplash();return}
  me=u;
  const p=await get(ref(db,'users/'+u.uid));
  if(!p.exists()||!p.val().name){$('auth').hidden=false;$('app').hidden=true;step('name');hideSplash();return}
@@ -1179,6 +1199,60 @@ function fsPaint(){
 function fwdOpen(k){fwdM=msgStore[k];fwdPeer=active;if(!fwdM)return;$('fs-q').value='';fsPaint();$('fsh').hidden=false}
 $('ms-fwd').onclick=()=>{const k=msK;msHide();navSwap('ms','fs');fwdOpen(k)};
 $('fs-q').addEventListener('input',fsPaint);
+/* ---- stickers: animated Noto emoji + GIPHY stickers, same content and message format as the main Haba app ---- */
+const SK_KEY='5JwiRyqITDtOhuRPigrrDUjdaSabu7e6';
+const SK_PACKS=[
+ {t:'😀',l:'Happy',s:[['1f600','😀'],['1f602','😂'],['1f60d','😍'],['1f970','🥰'],['1f60e','😎'],['1f973','🥳'],['1f929','🤩'],['1f917','🤗']]},
+ {t:'😢',l:'Moody',s:[['1f622','😢'],['1f62d','😭'],['1f621','😡'],['1f631','😱'],['1f914','🤔'],['1f92f','🤯'],['1f97a','🥺'],['1f634','😴']]},
+ {t:'👍',l:'Gestures',s:[['1f609','😉'],['1f44d','👍'],['1f44e','👎'],['1f44f','👏'],['1f64f','🙏'],['1f64c','🙌'],['1f91d','🤝']]},
+ {t:'🔥',l:'Hype',s:[['1f496','💖'],['1f525','🔥'],['1f389','🎉'],['1f4af','💯'],['1f680','🚀']]}
+];
+const SK_QUICK=['Love','LOL','Yes','No','Hi','Bye','Wow','Dance','Congrats'];
+const skUrl=cp=>`https://fonts.gstatic.com/s/e/notoemoji/latest/${cp}/512.gif`;
+let skBuilt=false,skCat=0,skMode=false,skSeq=0,skTimer=null;
+function skHide(){$('ssh').hidden=true}
+function skClose(){navClose('sk',skHide)}
+function skItem(src,alt,fn){const b=document.createElement('button');b.type='button';b.title=alt;const i=document.createElement('img');i.src=src;i.alt=alt;i.loading='lazy';b.appendChild(i);b.onclick=fn;return b}
+function skShowPack(i){const g=$('sk-g');g.innerHTML='';SK_PACKS[i].s.forEach(([cp,ch])=>g.appendChild(skItem(skUrl(cp),ch,()=>skSend(skUrl(cp),ch))))}
+function skChips(on){$('sk-c').querySelectorAll('button').forEach(c=>c.classList.toggle('on',c.textContent===on))}
+function skExitSearch(){skMode=false;skSeq++;skChips(null);$('sk-t').hidden=false;skShowPack(skCat)}
+async function skSearch(q){
+ skMode=true;const my=++skSeq;$('sk-t').hidden=true;
+ const g=$('sk-g');g.innerHTML='<p class="skm">Loading stickers…</p>';
+ try{
+  const r=await fetch(`https://api.giphy.com/v1/stickers/${q?'search':'trending'}?api_key=${SK_KEY}${q?'&q='+encodeURIComponent(q):''}&limit=24&rating=pg-13`);
+  const d=await r.json();if(my!==skSeq)return;
+  g.innerHTML='';let n=0;
+  (d.data||[]).forEach(x=>{const im=x.images||{},pv=(im.fixed_width_small||im.fixed_width||im.original||{}).url,full=(im.fixed_width||im.original||{}).url;
+   if(!stkOk(pv)||!stkOk(full))return;n++;g.appendChild(skItem(pv,'Sticker',()=>skSend(full,'')))});
+  if(!n)g.innerHTML='<p class="skm">No stickers found.</p>';
+ }catch(_){if(my===skSeq)g.innerHTML="<p class=\"skm\">Couldn't load stickers. Check your connection.</p>"}
+}
+function skBuild(){
+ if(skBuilt)return;skBuilt=true;
+ SK_QUICK.forEach(l=>{const b=document.createElement('button');b.type='button';b.textContent=l;b.onclick=()=>{skChips(l);$('sk-q').value=l;skSearch(l)};$('sk-c').appendChild(b)});
+ SK_PACKS.forEach((p,i)=>{const b=document.createElement('button');b.type='button';b.textContent=p.t;b.title=p.l;if(!i)b.className='on';
+  b.onclick=()=>{if(skCat===i&&!skMode)return;skCat=i;$('sk-t').querySelectorAll('button').forEach((x,j)=>x.classList.toggle('on',j===i));skShowPack(i);$('sk-g').parentNode.scrollTop=0};
+  $('sk-t').appendChild(b)});
+}
+async function skSend(url,ch){
+ if(!active||!stkOk(url))return;skClose();
+ try{await postMsg(active,{mediaType:'sticker',mediaURL:url},ch?ch+' Sticker':'Sticker')}
+ catch(_){ask('Not sent',"Your sticker couldn't be sent. Check your connection and try again.",{cancel:false})}
+}
+$('skb').onclick=()=>{
+ if(!active)return;skBuild();$('sk-q').value='';
+ if(skMode)skExitSearch();else skShowPack(skCat);
+ $('sk-g').parentNode.scrollTop=0;navPush('sk');$('ssh').hidden=false;
+};
+$('sk-q').addEventListener('input',e=>{
+ const q=e.target.value.trim();skChips(null);clearTimeout(skTimer);
+ if(!q){skExitSearch();return}
+ skTimer=setTimeout(()=>skSearch(q),350);
+});
+$('ssh').addEventListener('click',e=>{if(e.target===$('ssh'))skClose()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('modal').hidden&&!$('ssh').hidden)skClose()});
+
 $('fsh').onclick=e=>{
  if(e.target.id==='fsh'){navClose('fs',fsHide);return}
  const r=e.target.closest('.chat[data-u]');if(!r)return;
@@ -1219,11 +1293,12 @@ $('back').onclick=()=>navClose('chat',chatHide);
 /* ---- media in chat (photos, videos, voice notes, documents, GIFs, stickers) ---- */
 const msgStore={},mcache={},minfl={};let pinned=true;
 const safeUrl=u=>typeof u==='string'&&/^https:\/\//i.test(u);
+const stkOk=u=>{try{const x=new URL(u);return x.protocol==='https:'&&(x.hostname==='fonts.gstatic.com'||x.hostname==='giphy.com'||x.hostname.endsWith('.giphy.com'))}catch(_){return false}};
 const fsize=n=>!n?'':n<1024?n+' B':n<1048576?(n/1024).toFixed(1)+' KB':(n/1048576).toFixed(1)+' MB';
 function mediaBlock(m){
  const t=m.mediaType,k=esc(m.k||'');
  if(m.viewOnce)return{cls:' mb',noCap:true,html:`<div class="dc" style="cursor:default"><div class="di">👁</div><div><b>${t==='video'?'Video':t==='audio'?'Voice message':'Photo'} (view once)</b><small>Open in Haba to view</small></div></div>`};
- if(t==='sticker'&&safeUrl(m.mediaURL))return{cls:' stk',noCap:true,html:`<img src="${esc(m.mediaURL)}" alt="Sticker">`};
+ if(t==='sticker'&&stkOk(m.mediaURL))return{cls:' stk',noCap:true,html:`<img src="${esc(m.mediaURL)}" alt="Sticker">`};
  if(t==='gif'&&safeUrl(m.mediaURL))return{cls:' mb',html:`<div class="mw"><img src="${esc(safeUrl(m.mediaPreview)?m.mediaPreview:m.mediaURL)}" alt="GIF" data-lb="${esc(m.mediaURL)}"></div>`};
  if(t==='audio'&&safeUrl(m.mediaURL))return{cls:' vb',html:`<div class="vn" data-k="${k}" data-t="audio"></div>`};
  if((t==='image'||t==='video'||t==='audio')&&safeUrl(m.mediaURL))return{cls:' mb',html:`<div class="mw" data-k="${k}" data-t="${t}"><div class="ld">Loading…</div></div>`};

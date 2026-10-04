@@ -43,6 +43,32 @@ input{font:inherit;color:inherit}
 .xpt button{height:38px;padding:0 16px;border-radius:999px;background:rgba(255,255,255,.14);color:#fff;font-size:14px;font-weight:600}
 .xpgo{width:100%;height:48px;border-radius:12px;background:#fff;color:#000;font-weight:700;font-size:16px}
 .xpgo:disabled{opacity:.5}
+/* reply, swipe, message menu, forward */
+#msgs .b[data-mk]{touch-action:pan-y;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.qt{display:block;padding:5px 9px;margin-bottom:6px;border-radius:8px;border-left:3px solid var(--sub);background:rgba(127,127,127,.18);font-size:13px;line-height:1.3;cursor:pointer;overflow:hidden;white-space:normal;letter-spacing:0}
+.qt b{display:block;font-size:12px;font-weight:700;opacity:.9}
+.qt span{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;opacity:.8;word-break:break-word}
+.fw{font-size:12px;opacity:.65;font-style:italic;margin-bottom:3px;white-space:normal}
+#msgs .b.mb>.qt,#msgs .b.mb>.fw{margin:5px 6px 6px}
+#msgs .b.mb>.fw{margin-bottom:0}
+@keyframes bhl{0%,55%{box-shadow:0 0 0 3px rgba(10,132,255,.6)}100%{box-shadow:0 0 0 0 rgba(10,132,255,0)}}
+#msgs .b.hl{animation:bhl 1.3s ease-out}
+.swi{position:absolute;left:-44px;top:50%;margin-top:-16px;width:32px;height:32px;border-radius:50%;background:var(--bg-input);color:var(--text);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transform:scale(.6)}
+.swi.on{background:var(--accent);color:var(--bg)}
+.swi svg{width:17px;height:17px}
+#rbar{display:flex;align-items:center;gap:10px;padding:8px 12px;border-top:1px solid var(--line);background:var(--bg)}
+#rbar .rq{flex:1;min-width:0;border-left:3px solid var(--accent);padding-left:10px}
+#rbar b{display:block;font-size:13px;font-weight:700}
+#rbar span{display:block;font-size:13.5px;color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#rbar .ibtn{width:32px;height:32px}
+#rbar .ibtn svg{width:16px;height:16px}
+#msh,#fsh{position:fixed;inset:0;z-index:79;background:rgba(0,0,0,.45);display:flex;align-items:flex-end;justify-content:center}
+#msh .rw::after{display:none!important}
+#msh .dt{font-size:14px;font-weight:500;color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:12px}
+.fq{padding:0 16px 8px}.fq .in{height:40px;border-radius:999px;font-size:15px}
+.fl{max-height:50vh;overflow-y:auto}
+#fs-l .av{width:44px;height:44px;font-size:15px}
+@media (min-width:769px){#msh,#fsh{align-items:center;padding:20px}}
 /* verified badge */
 .vbd{width:16px;height:16px;flex-shrink:0;vertical-align:-2px;margin-left:4px;display:inline-block}
 .cm .n,.who .n{display:flex;align-items:center}
@@ -342,6 +368,7 @@ img,svg,video,a{-webkit-user-drag:none;user-drag:none;-webkit-touch-callout:none
    <div class="ch"><button class="ibtn" id="back" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button><div class="av sm" id="t-av"></div><div class="who"><div class="n" id="t-name"></div><div class="st" id="t-sub"></div></div><button class="ibtn" id="dis-btn" aria-label="Disappearing messages" title="Disappearing messages"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><polyline points="12 9 12 13 15 15"/><path d="M9 2h6"/></svg></button></div>
    <div class="dbanner" id="dis-banner" hidden><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><polyline points="12 9 12 13 15 15"/><path d="M9 2h6"/></svg><span id="dis-text"></span></div>
    <div id="msgs"></div>
+   <div id="rbar" hidden><div class="rq"><b id="rb-n"></b><span id="rb-t"></span></div><button class="ibtn" id="rb-x" type="button" aria-label="Cancel reply"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button></div>
    <div class="compose"><button class="att" id="att" type="button" aria-label="Attach photo, video or file"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.4 11.6l-8.5 8.5a5.5 5.5 0 0 1-7.8-7.8l8.5-8.5a3.7 3.7 0 0 1 5.2 5.2l-8.5 8.5a1.8 1.8 0 0 1-2.6-2.6l7.8-7.8"/></svg></button><input type="file" id="att-in" multiple hidden accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip"><input id="msg" class="in" placeholder="Message" autocomplete="off"><div class="rec" id="rec" hidden><button class="ibtn" id="rec-x" aria-label="Cancel recording"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg></button><span class="rcd"></span><div class="rcw" id="rec-w"></div><span class="rt" id="rec-t">0:00</span></div><button class="send" id="sendmsg" aria-label="Voice message"><svg class="i-mic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg><svg class="i-snd" viewBox="0 0 200 200"><polygon points="20,80 170,30 80,110" fill="currentColor" fill-opacity=".75"/><polygon points="120,180 170,30 80,110" fill="currentColor"/><polygon points="20,80 80,110 80,140" fill="currentColor" fill-opacity=".55"/></svg></button></div>
   </div>
  </main>
@@ -384,6 +411,13 @@ img,svg,video,a{-webkit-user-drag:none;user-drag:none;-webkit-touch-callout:none
  <button class="rw dg" id="cs-del"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></div><div class="tx"><b>Delete chat</b></div></button>
 </div></div></div>
 <div id="rsheet" hidden><div class="msheet"><div class="grab"></div><h3 class="dt" id="rp-title">Report</h3><p class="dd">Chats are end-to-end encrypted, so we can't read your messages. We receive only the reason you choose and this account's ID.</p><div class="lst" id="rp-opts"><button class="rw dopt" data-r="spam"><div class="tx"><b>Spam or scam</b></div><svg class="ck" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4"><polyline points="20 6 9 17 4 12"/></svg></button><button class="rw dopt" data-r="harassment"><div class="tx"><b>Harassment or threats</b></div><svg class="ck" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4"><polyline points="20 6 9 17 4 12"/></svg></button><button class="rw dopt" data-r="inappropriate"><div class="tx"><b>Inappropriate or explicit content</b></div><svg class="ck" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4"><polyline points="20 6 9 17 4 12"/></svg></button><button class="rw dopt" data-r="impersonation"><div class="tx"><b>Impersonation</b></div><svg class="ck" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4"><polyline points="20 6 9 17 4 12"/></svg></button><button class="rw dopt" data-r="other"><div class="tx"><b>Something else</b></div><svg class="ck" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4"><polyline points="20 6 9 17 4 12"/></svg></button></div><div class="lst gap"><button class="rw dopt sel" id="rp-blk"><div class="tx"><b>Also block this contact</b></div><svg class="ck" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4"><polyline points="20 6 9 17 4 12"/></svg></button></div><div style="margin:14px 16px 0"><textarea id="rp-det" class="in" maxlength="300" rows="3" placeholder="Add details (optional)" style="height:auto;padding:12px 16px;resize:none"></textarea><p id="rp-err" class="err" style="margin:8px 0 0" hidden></p><button class="btn" id="rp-send" style="margin-top:10px" disabled>Send report</button></div></div></div>
+<div id="msh" hidden><div class="msheet"><div class="grab"></div><h3 class="dt" id="ms-pv"></h3><div class="lst">
+ <button class="rw" id="ms-reply"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 17 4 12 9 7"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/></svg></div><div class="tx"><b>Reply</b></div></button>
+ <button class="rw" id="ms-copy"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></div><div class="tx"><b>Copy text</b></div></button>
+ <button class="rw" id="ms-fwd"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 17 20 12 15 7"/><path d="M4 18v-2a4 4 0 0 1 4-4h12"/></svg></div><div class="tx"><b>Forward</b></div></button>
+ <button class="rw dg" id="ms-del"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg></div><div class="tx"><b>Delete</b></div></button>
+</div></div></div>
+<div id="fsh" hidden><div class="msheet"><div class="grab"></div><h3 class="dt">Forward to</h3><div class="fq"><input class="in" id="fs-q" placeholder="Search" autocomplete="off"></div><div class="fl" id="fs-l"></div></div></div>
 <div id="toast" hidden></div>
 <div id="lb" hidden><div class="lbh"><button class="ibtn" id="lb-x" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button><div class="lbw"><b id="lb-n"></b><span id="lb-d"></span></div><button class="ibtn" id="lb-dl" aria-label="Download"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><polyline points="7 11 12 16 17 11"/><path d="M5 21h14"/></svg></button></div><div class="lbs" id="lb-s"><img id="lb-i" alt=""></div><button class="lbn l" id="lb-p" aria-label="Previous">&#8249;</button><button class="lbn r" id="lb-nx" aria-label="Next">&#8250;</button></div>
 <div id="modal" hidden><div class="box"><h3 id="m-title"></h3><p id="m-text"></p><input id="m-in" class="in" hidden><div class="acts"><button id="m-cancel">Cancel</button><button class="go" id="m-ok">OK</button></div></div></div>
@@ -417,7 +451,7 @@ const hideSplash=()=>setTimeout(()=>$('splash').classList.add('out'),Math.max(30
 const navStack=[];
 function navPush(t){if(navStack.includes(t))return;navStack.push(t);try{history.pushState({t},'')}catch(_){}}
 function navClose(t,hide){if(navStack[navStack.length-1]===t){history.back();return}const i=navStack.lastIndexOf(t);if(i>-1)navStack.splice(i,1);hide()}
-window.addEventListener('popstate',()=>{const t=navStack.pop();if(t==='lb')lbHide();else if(t==='sheet')sheetHide();else if(t==='chat')chatHide();else if(t==='menu')menuHide();else if(t==='dis')disHide();else if(t==='cs')csHide();else if(t==='rp')rpHide();else if(t==='xp')xpHide()});
+window.addEventListener('popstate',()=>{const t=navStack.pop();if(t==='lb')lbHide();else if(t==='sheet')sheetHide();else if(t==='chat')chatHide();else if(t==='menu')menuHide();else if(t==='dis')disHide();else if(t==='cs')csHide();else if(t==='rp')rpHide();else if(t==='xp')xpHide();else if(t==='ms')msHide();else if(t==='fs')fsHide()});
 function navSwap(from,to){const i=navStack.lastIndexOf(from);if(i>-1){navStack[i]=to;try{history.replaceState({t:to},'')}catch(_){}}else navPush(to)}
 
 /* dialogs */
@@ -701,7 +735,7 @@ const SGL='<svg viewBox="0 0 200 200"><polygon points="120,180 170,30 80,110" fi
 let peerRead=0;
 const meta=m=>`<span class="mt">${tmf(m.createdAt)}${m.senderUid===me.uid?`<i class="tk" data-ts="${+m.createdAt||0}"></i>`:''}</span>`;
 function paintTicks(){$('msgs').querySelectorAll('.tk').forEach(e=>{const r=+e.dataset.ts<=peerRead;e.classList.toggle('rd',r);e.innerHTML=r?DBL:SGL})}
-async function openChat(uid){if(active!==uid){pauseVoices();if(rec)stopRec(false)}
+async function openChat(uid){if(active!==uid){pauseVoices();if(rec)stopRec(false);clearReply()}
  active=uid;if(offMsgs){offMsgs();offMsgs=null}
  $('ph').hidden=true;$('thread').hidden=false;$('app').classList.add('in-chat');navPush('chat');$('msgs').innerHTML='';
  pinned=true;watchPresence(uid);loadProfile(uid);paintHead();renderList();
@@ -717,12 +751,12 @@ async function openChat(uid){if(active!==uid){pauseVoices();if(rec)stopRec(false
    if(m.deletedForEveryone)return `<div class="sys">Message removed</div>`;
    if(m.deleted)return `<div class="sys">Message removed</div>`;
    if(m.mediaType==='call'||m.mediaType==='group_call')return `<div class="sys">📞 ${m.mediaType==='group_call'?'Group call':'Call'}${typeof m.callStatus==='string'?' · '+esc(m.callStatus):''}</div>`;
-   const txt=m.text?await dec(uid,m.text):'';
+   const txt=m.text?await dec(uid,m.text):'';ptext[m.k]=txt;const qh=await quoteHtml(uid,m);
    const mb=(m.mediaURL||m.mediaType)?mediaBlock(m):null;
    const me_=m.senderUid===me.uid?' me':'';
-   if(!mb)return `<div class="b${me_}${f}${l}">${esc(txt)}${meta(m)}</div>`;
-   const cap=txt&&!mb.noCap,ov=!cap&&!m.viewOnce&&(m.mediaType==='image'||m.mediaType==='gif')?' ov':'';
-   return `<div class="b${mb.cls}${ov}${me_}${f}${l}">${mb.html}${cap?`<div class="cap">${esc(txt)}${meta(m)}</div>`:meta(m)}</div>`})).then(a=>a.map((h,i)=>dayChip(items[i-1],items[i])+h));
+   if(!mb)return `<div class="b${me_}${f}${l}" data-mk="${esc(m.k)}">${qh}${esc(txt)}${meta(m)}</div>`;
+   const cap=txt&&!mb.noCap,ov=!cap&&!qh&&!m.viewOnce&&(m.mediaType==='image'||m.mediaType==='gif')?' ov':'';
+   return `<div class="b${mb.cls}${ov}${me_}${f}${l}" data-mk="${esc(m.k)}">${qh}${mb.html}${cap?`<div class="cap">${esc(txt)}${meta(m)}</div>`:meta(m)}</div>`})).then(a=>a.map((h,i)=>dayChip(items[i-1],items[i])+h));
   if(active!==uid)return;
   const box=$('msgs'),stick=box.scrollHeight-box.scrollTop-box.clientHeight<120;
   box.innerHTML=out.join('');hydrate(uid);paintTicks();if(stick)box.scrollTop=box.scrollHeight;
@@ -733,11 +767,11 @@ const blockedBy=async u=>{try{return (await get(ref(db,`users/${u}/blocked/${me.
 async function sendMsg(){
  const inp=$('msg'),text=inp.value.trim();if(!text||!active)return;
  if(blocked[active]){const u=active;if(await ask('Unblock to send?',"You've blocked this contact. Unblock them to send a message.",{ok:'Unblock'}))await remove(ref(db,`users/${me.uid}/blocked/${u}`)).catch(()=>{});return}
- inp.value='';syncSend();
- const uid=active,t=tid(me.uid,uid),now=Date.now(),e=await enc(uid,text),bm=await blockedBy(uid);
+ inp.value='';syncSend();const rpm=replyTo;clearReply();
+ const uid=active,t=tid(me.uid,uid),now=Date.now(),e=await enc(uid,text),bm=await blockedBy(uid),rp=rpm?await replyPayload(uid,rpm):null;
  const key=push(ref(db,`dm_threads/${t}/messages`)).key;
  await update(ref(db),{
-  [`dm_threads/${t}/messages/${key}`]:{text:e,senderUid:me.uid,createdAt:now,...(disSec>0?{expiresAt:now+disSec*1000}:{})},
+  [`dm_threads/${t}/messages/${key}`]:{text:e,senderUid:me.uid,createdAt:now,...(rp?{replyToMessage:rp}:{}),...(disSec>0?{expiresAt:now+disSec*1000}:{})},
   [`user_chats/${me.uid}/${uid}`]:{text:e,timestamp:now,unreadCount:0,senderUid:me.uid},
   ...(bm?{}:{[`user_chats/${uid}/${me.uid}/text`]:e,[`user_chats/${uid}/${me.uid}/timestamp`]:now,
   [`user_chats/${uid}/${me.uid}/senderUid`]:me.uid,[`user_chats/${uid}/${me.uid}/unreadCount`]:increment(1)})
@@ -806,7 +840,7 @@ function stopRec(send){
  try{r.mr.stop()}catch(_){r.mr.onstop()}
  $('rec').hidden=true;$('msg').hidden=false;$('att').hidden=false;syncSend();
 }
-async function sendVoice(blob,dur,uid,mime){
+async function sendVoice(blob,dur,uid,mime,fwd){
  const t=tid(me.uid,uid);
  if(blocked[uid]){toast('Unblock this contact to send');return}
  try{
@@ -819,7 +853,7 @@ async function sendVoice(blob,dur,uid,mime){
   await uploadBytes(r,out,{contentType:'application/octet-stream'});
   const url=await getDownloadURL(r),now=Date.now(),pv='🎤 Voice message',ds=uid===active?disSec:await getDis(t),bm=await blockedBy(uid);
   await update(ref(db),{
-   [`dm_threads/${t}/messages/${id}`]:{senderUid:me.uid,createdAt:now,mediaType:'audio',mediaURL:url,mediaEncrypted:true,mediaMimeType:mime,duration:Math.round(dur),...(ds>0?{expiresAt:now+ds*1000}:{})},
+   [`dm_threads/${t}/messages/${id}`]:{senderUid:me.uid,createdAt:now,...(fwd?{isForwarded:true}:{}),mediaType:'audio',mediaURL:url,mediaEncrypted:true,mediaMimeType:mime,duration:Math.round(dur),...(ds>0?{expiresAt:now+ds*1000}:{})},
    [`user_chats/${me.uid}/${uid}`]:{text:pv,timestamp:now,unreadCount:0,senderUid:me.uid},
    ...(bm?{}:{[`user_chats/${uid}/${me.uid}/text`]:pv,[`user_chats/${uid}/${me.uid}/timestamp`]:now,
    [`user_chats/${uid}/${me.uid}/senderUid`]:me.uid,[`user_chats/${uid}/${me.uid}/unreadCount`]:increment(1)})});
@@ -838,11 +872,11 @@ async function prepImage(file){
   const b=await new Promise(r=>cv.toBlob(r,'image/jpeg',.82));if(!b||b.size>=file.size)return same(W,H);
   return{file:new File([b],(file.name||'photo').replace(/\.[^.]+$/,'')+'.jpg',{type:'image/jpeg'}),w,h}}catch(_){return same(W,H)}
 }
-async function sendFiles(files,to){
+async function sendFiles(files,to,opts={}){
  const uid=to||active;if(!uid||!files.length)return;
  if(blocked[uid]){if(await ask('Unblock to send?',"You've blocked this contact. Unblock them to send a file.",{ok:'Unblock'}))await remove(ref(db,`users/${me.uid}/blocked/${uid}`)).catch(()=>{});return}
  const key=await sharedKey(uid);if(!key){toast("Can't send: encryption key unavailable");return}
- const t=tid(me.uid,uid);let ok=0;
+ const t=tid(me.uid,uid);let ok=0;const rpm=opts.fwd?null:replyTo;if(rpm)clearReply();
  for(let i=0;i<files.length;i++){
   const f=files[i];
   if(f.size>MAX_UP){toast((f.name||'File')+' is too large (max 100 MB)');continue}
@@ -858,8 +892,8 @@ async function sendFiles(files,to){
    const url=await getDownloadURL(r),now=Date.now(),mime=send.type||(isVid?'video/mp4':isImg?'image/jpeg':'application/octet-stream');
    const ds=uid===active?disSec:await getDis(t),bm=await blockedBy(uid);
    const pv=await enc(uid,doc?'📄 '+(f.name||'Document'):isVid?'🎥 Video':'📷 Photo');
-   const id=push(ref(db,`dm_threads/${t}/messages`)).key;
-   const msg={senderUid:me.uid,createdAt:now,mediaType:doc?'document':isVid?'video':'image',mediaURL:url,mediaEncrypted:true,mediaMimeType:mime,...(doc?{fileName:f.name,fileSize:f.size}:{}),...(ds>0?{expiresAt:now+ds*1000}:{})};
+   const id=push(ref(db,`dm_threads/${t}/messages`)).key,rp=rpm&&i===0?await replyPayload(uid,rpm):null;
+   const msg={senderUid:me.uid,createdAt:now,...(opts.fwd?{isForwarded:true}:{}),...(rp?{replyToMessage:rp}:{}),mediaType:doc?'document':isVid?'video':'image',mediaURL:url,mediaEncrypted:true,mediaMimeType:mime,...(doc?{fileName:f.name,fileSize:f.size}:{}),...(ds>0?{expiresAt:now+ds*1000}:{})};
    if(!doc)mcache[url]=URL.createObjectURL(send);
    await update(ref(db),{
     [`dm_threads/${t}/messages/${id}`]:msg,
@@ -936,11 +970,136 @@ $('xp-rm').onclick=()=>{xpQ.splice(xpI,1);if(!xpQ.length||xpI>=xpQ.length)xpFini
 $('xp-x').onclick=()=>navClose('xp',xpHide);
 window.addEventListener('resize',()=>{if(!$('xp').hidden)xpLayout()});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('xp').hidden)navClose('xp',xpHide)});
+/* ---- reply (swipe right), long-press menu (reply / copy / forward / delete) ---- */
+const ptext={},MLBL={image:'📷 Photo',video:'🎥 Video',audio:'🎤 Voice message',gif:'GIF',sticker:'Sticker',document:'📄 Document'};
+let replyTo=null,msK=null,msAt=0,fwdM=null,fwdPeer=null;
+async function quoteHtml(uid,m){
+ let h='';if(m.isForwarded)h+='<div class="fw">↪ Forwarded</div>';
+ const r=m.replyToMessage;
+ if(r&&typeof r==='object'){
+  const nm=r.senderUid===me.uid?'You':((profiles[r.senderUid]||profiles[uid]||{}).name||'User');
+  let t=r.text?await dec(uid,r.text):'';if(!t)t=MLBL[r.mediaType]||(r.mediaType?'Attachment':'Message');
+  h+=`<div class="qt" data-qk="${esc(r.key||'')}"><b>${esc(nm)}</b><span>${esc(t)}</span></div>`}
+ return h}
+async function replyPayload(uid,r){
+ const o={key:r.key,senderUid:r.senderUid,text:r.text?await enc(uid,r.text):'',mediaType:r.mediaType||''};
+ return Object.assign(o,r.media||{})}
+function setReply(k){
+ const m=msgStore[k];if(!m||!active||m.deleted)return;const media={};
+ if(!m.viewOnce&&safeUrl(m.mediaURL)&&['image','gif','video'].includes(m.mediaType)){media.mediaURL=m.mediaURL;if(m.mediaPreview)media.mediaPreview=m.mediaPreview;if(m.mediaEncrypted){media.mediaEncrypted=true;if(m.mediaMimeType)media.mediaMimeType=m.mediaMimeType}}
+ replyTo={key:k,senderUid:m.senderUid,text:ptext[k]||'',mediaType:m.mediaType||'',media};
+ $('rb-n').textContent=m.senderUid===me.uid?'You':((profiles[m.senderUid]||profiles[active]||{}).name||'User');
+ $('rb-t').textContent=replyTo.text||MLBL[m.mediaType]||'Message';
+ $('rbar').hidden=false;$('msg').focus()}
+function clearReply(){replyTo=null;$('rbar').hidden=true}
+$('rb-x').onclick=clearReply;
+
+/* swipe right = reply, long press = menu */
+const SWI='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 17 4 12 9 7"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/></svg>';
+let gs=null,gSup=0;
+function gEnd(){if(gs){clearTimeout(gs.lp);if(gs.mode==='swipe'&&gs.el){gs.el.style.transition='transform .18s ease';gs.el.style.transform='';gs.ic&&gs.ic.remove()}}gs=null}
+$('msgs').addEventListener('pointerdown',e=>{
+ if(e.pointerType==='mouse'&&e.button!==0)return;
+ const el=e.target.closest('.b[data-mk]');if(!el||e.target.closest('video,audio'))return;
+ gEnd();gs={el,k:el.dataset.mk,x:e.clientX,y:e.clientY,id:e.pointerId,dx:0,mode:'',touch:e.pointerType!=='mouse'};
+ gs.lp=setTimeout(()=>{if(!gs||gs.mode)return;gs.mode='lp';gSup=Date.now();msOpen(gs.k)},480)});
+$('msgs').addEventListener('pointermove',e=>{
+ if(!gs||e.pointerId!==gs.id||gs.mode==='lp'||gs.mode==='none')return;
+ const dx=e.clientX-gs.x,dy=e.clientY-gs.y;
+ if(!gs.mode){
+  if(Math.hypot(dx,dy)<=10)return;clearTimeout(gs.lp);
+  if(gs.touch&&dx>0&&Math.abs(dx)>Math.abs(dy)*1.5){gs.mode='swipe';try{$('msgs').setPointerCapture(e.pointerId)}catch(_){}
+   gs.ic=document.createElement('i');gs.ic.className='swi';gs.ic.innerHTML=SWI;gs.el.appendChild(gs.ic)}
+  else{gs.mode='none';return}}
+ const d=Math.max(0,dx),x=d<70?d:70+(d-70)*.25;
+ gs.el.style.transition='none';gs.el.style.transform=`translateX(${x}px)`;gs.dx=d;
+ const pr=Math.min(1,d/56);gs.ic.style.opacity=Math.min(1,d/36);gs.ic.style.transform=`scale(${.6+.4*pr})`;
+ const arm=d>=56;if(arm!==!!gs.armed){gs.armed=arm;gs.ic.classList.toggle('on',arm);if(arm)try{navigator.vibrate&&navigator.vibrate(10)}catch(_){}}});
+['pointerup','pointercancel'].forEach(ev=>$('msgs').addEventListener(ev,e=>{
+ if(!gs||e.pointerId!==gs.id)return;const g=gs;
+ if(g.mode==='swipe'){gSup=Date.now();if(ev==='pointerup'&&g.dx>=56)setReply(g.k)}
+ gEnd()}));
+$('msgs').addEventListener('click',e=>{
+ if(Date.now()-gSup<500){e.stopPropagation();e.preventDefault();return}
+ const q=e.target.closest('.qt');if(!q||!q.dataset.qk)return;
+ const t=$('msgs').querySelector(`[data-mk="${CSS.escape(q.dataset.qk)}"]`);
+ if(!t){toast('Original message not available');return}
+ t.scrollIntoView({block:'center',behavior:'smooth'});t.classList.remove('hl');void t.offsetWidth;t.classList.add('hl')},true);
+$('msgs').addEventListener('contextmenu',e=>{const el=e.target.closest('.b[data-mk]');if(!el)return;e.preventDefault();if(Date.now()-gSup<700)return;gSup=Date.now();msOpen(el.dataset.mk)});
+
+function msOpen(k){
+ const m=msgStore[k];if(!m||m.deleted||m.systemText)return;msK=k;msAt=Date.now();
+ const own=m.senderUid===me.uid,txt=ptext[k]||'';
+ $('ms-copy').hidden=!txt;$('ms-del').hidden=!own;$('ms-fwd').hidden=!!m.viewOnce||m.mediaType==='call'||m.mediaType==='group_call';
+ $('ms-pv').textContent=txt||MLBL[m.mediaType]||'Message';
+ navPush('ms');$('msh').hidden=false;try{navigator.vibrate&&navigator.vibrate(12)}catch(_){}}
+function msHide(){$('msh').hidden=true}
+function msClose(){navClose('ms',msHide)}
+$('msh').onclick=e=>{if(e.target.id==='msh'&&Date.now()-msAt>350)msClose()};
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('msh').hidden)msClose()});
+$('ms-reply').onclick=()=>{const k=msK;msClose();setReply(k)};
+async function copyText(t){try{await navigator.clipboard.writeText(t);return true}catch(_){const a=document.createElement('textarea');a.value=t;a.style.cssText='position:fixed;opacity:0';document.body.appendChild(a);a.select();let ok=false;try{ok=document.execCommand('copy')}catch(_){}a.remove();return ok}}
+$('ms-copy').onclick=async()=>{const t=ptext[msK];msClose();if(t)toast(await copyText(t)?'Message copied':"Couldn't copy")};
+$('ms-del').onclick=()=>{const k=msK;msClose();setTimeout(()=>delMsg(k),60)};
+async function delMsg(k){
+ const m=msgStore[k],uid=active;if(!m||!uid||m.senderUid!==me.uid)return;
+ if(!await ask('Delete message?','This message will be removed for everyone in this chat.',{ok:'Delete'}))return;
+ const t=tid(me.uid,uid),f={deleted:true,deletedAt:Date.now(),text:null,mediaURL:null,mediaType:null,reactions:null,replyToMessage:null,replyToStory:null,fileName:null,fileSize:null,duration:null,isForwarded:null,editedAt:null};
+ try{await update(ref(db,`dm_threads/${t}/messages/${k}`),f);
+  /* if it was the latest message, update the chat-list preview on both sides (same as Haba) */
+  try{const[a,b]=await Promise.all([get(ref(db,`user_chats/${me.uid}/${uid}`)),get(ref(db,`user_chats/${uid}/${me.uid}`))]),u={};
+   if(a.exists()&&a.val().timestamp===m.createdAt)u[`user_chats/${me.uid}/${uid}/text`]='This message was deleted';
+   if(b.exists()&&b.val().timestamp===m.createdAt)u[`user_chats/${uid}/${me.uid}/text`]='This message was deleted';
+   if(Object.keys(u).length)await update(ref(db),u)}catch(_){}
+  toast('Message deleted')}
+ catch(_){toast('Could not delete')}}
+
+/* forward: text is re-encrypted for the new chat; encrypted media is decrypted here and re-encrypted for the new chat */
+function fsHide(){$('fsh').hidden=true}
+function fsPaint(){
+ const q=$('fs-q').value.trim().toLowerCase();
+ const rows=Object.entries(chats).filter(([u])=>!blocked[u]).sort((a,b)=>(+b[1].timestamp||0)-(+a[1].timestamp||0))
+  .filter(([u])=>!q||((profiles[u]||{}).name||'').toLowerCase().includes(q));
+ $('fs-l').innerHTML=rows.length?rows.map(([u])=>{const p=profiles[u]||{};if(!profiles[u])loadProfile(u).then(()=>{if(!$('fsh').hidden)fsPaint()});
+  return `<div class="chat" data-u="${esc(u)}"><div class="av" ${avStyle(p)}>${p.photoURL?'':esc(initials(p.name))}</div><div class="cm"><div class="n">${nameHtml(p,'…',u)}</div></div></div>`}).join(''):'<div class="empty">No chats to forward to.</div>'}
+function fwdOpen(k){fwdM=msgStore[k];fwdPeer=active;if(!fwdM)return;$('fs-q').value='';fsPaint();$('fsh').hidden=false}
+$('ms-fwd').onclick=()=>{const k=msK;msHide();navSwap('ms','fs');fwdOpen(k)};
+$('fs-q').addEventListener('input',fsPaint);
+$('fsh').onclick=e=>{
+ if(e.target.id==='fsh'){navClose('fs',fsHide);return}
+ const r=e.target.closest('.chat[data-u]');if(!r)return;
+ const to=r.dataset.u,m=fwdM,peer=fwdPeer;navClose('fs',fsHide);fwdSend(to,m,peer)};
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('fsh').hidden)navClose('fs',fsHide)});
+async function postMsg(to,p,pv){
+ if(blocked[to]){toast('Unblock this contact to send');return false}
+ const t=tid(me.uid,to),now=Date.now(),ds=to===active?disSec:await getDis(t),bm=await blockedBy(to),pe=await enc(to,pv),id=push(ref(db,`dm_threads/${t}/messages`)).key;
+ await update(ref(db),{
+  [`dm_threads/${t}/messages/${id}`]:{senderUid:me.uid,createdAt:now,...p,...(ds>0?{expiresAt:now+ds*1000}:{})},
+  [`user_chats/${me.uid}/${to}`]:{text:pe,timestamp:now,unreadCount:0,senderUid:me.uid},
+  ...(bm?{}:{[`user_chats/${to}/${me.uid}/text`]:pe,[`user_chats/${to}/${me.uid}/timestamp`]:now,
+  [`user_chats/${to}/${me.uid}/senderUid`]:me.uid,[`user_chats/${to}/${me.uid}/unreadCount`]:increment(1)})});
+ return true}
+async function fwdSend(to,m,peer){
+ if(!m||!to)return;const t=m.mediaType;
+ try{
+  if(!t){const txt=ptext[m.k];if(!txt){toast("Couldn't forward that message");return}
+   if(await postMsg(to,{text:await enc(to,txt),isForwarded:true},txt))toast('Forwarded');return}
+  if(t==='sticker'||t==='gif'){const p={mediaType:t,mediaURL:m.mediaURL,isForwarded:true};if(m.mediaPreview)p.mediaPreview=m.mediaPreview;
+   if(await postMsg(to,p,t==='gif'?'GIF':'Sticker'))toast('Forwarded');return}
+  if(!m.mediaEncrypted){const p={mediaType:t,mediaURL:m.mediaURL,isForwarded:true};['fileName','fileSize','mediaMimeType','mediaPreview','duration'].forEach(f=>{if(m[f]!=null)p[f]=m[f]});
+   if(await postMsg(to,p,MLBL[t]||'Attachment'))toast('Forwarded');return}
+  toast('Forwarding…');
+  const u=await getMedia(peer,m,false);if(!u){toast("Couldn't forward that file");return}
+  const blob=await(await fetch(u)).blob();
+  if(t==='audio'){await sendVoice(blob,m.duration||0,to,m.mediaMimeType||blob.type||'audio/webm',true)}
+  else{await sendFiles([new File([blob],m.fileName||(t==='video'?'video.mp4':'photo.jpg'),{type:m.mediaMimeType||blob.type||'application/octet-stream'})],to,{fwd:true})}
+  toast('Forwarded')}
+ catch(_){toast("Couldn't forward")}}
 $('att').onclick=()=>{if(active)$('att-in').click()};
 $('att-in').onchange=async e=>{const fs=Array.from(e.target.files||[]),to=active;e.target.value='';if(!fs.length||!to)return;
  const list=await previewFiles(fs);if(list&&list.length)sendFiles(list,to)};
 $('msg').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMsg()}});
-function chatHide(){if(rec)stopRec(false);pauseVoices();$('app').classList.remove('in-chat');if(offMsgs){offMsgs();offMsgs=null}active=null;stopPres();$('thread').hidden=true;$('ph').hidden=false;renderList()}
+function chatHide(){if(rec)stopRec(false);clearReply();pauseVoices();$('app').classList.remove('in-chat');if(offMsgs){offMsgs();offMsgs=null}active=null;stopPres();$('thread').hidden=true;$('ph').hidden=false;renderList()}
 $('back').onclick=()=>navClose('chat',chatHide);
 
 /* ---- media in chat (photos, videos, voice notes, documents, GIFs, stickers) ---- */

@@ -268,6 +268,12 @@ button.rw:hover{background:var(--hover)}
 #msgs .b.me .mt{justify-content:flex-end}
 #msgs .b:not(.l):not(.ov):not(.sh) .mt{display:none}
 .tk{display:inline-flex}.tk svg{width:11px;height:11px;display:block}
+.pd{font-style:normal;font-size:9px;line-height:1;opacity:.8}
+#p-av{position:relative;cursor:pointer;-webkit-tap-highlight-color:transparent}
+#p-av::after{content:'';position:absolute;right:-2px;bottom:-2px;width:32px;height:32px;border-radius:50%;background:#0A84FF url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z'/%3E%3Ccircle cx='12' cy='13' r='4'/%3E%3C/svg%3E") center/17px no-repeat;box-shadow:0 0 0 3px var(--bg)}
+#p-av.busy{opacity:.55;pointer-events:none}
+#p-av.busy::after{background:#0A84FF;animation:pavp 1s ease-in-out infinite}
+@keyframes pavp{50%{opacity:.4}}
 .day{display:flex;align-items:center;gap:12px;align-self:stretch;margin:16px 0 8px;font:400 9px/1 var(--brand);letter-spacing:1.5px;color:var(--sub)}
 .day::before,.day::after{content:'';flex:1;height:1px;background:var(--line)}
 .compose{gap:8px;padding:10px 12px calc(10px + env(safe-area-inset-bottom,0px))}
@@ -433,9 +439,11 @@ img,svg,video,a{-webkit-user-drag:none;user-drag:none;-webkit-touch-callout:none
 <div id="sheet" hidden><div class="pan">
  <div id="v-main">
   <div class="sh"><button class="ibtn" id="sh-close" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button><h2>Profile</h2></div>
-  <div class="pid"><div class="av" id="p-av"></div><div class="nm" id="p-name"></div><div class="sb" id="p-user"></div><div class="sb" id="p-phone"></div></div>
+  <div class="pid"><input type="file" id="p-file" accept="image/*" hidden><div class="av" id="p-av" role="button" tabindex="0" aria-label="Change profile photo"></div><div class="nm" id="p-name"></div><div class="sb" id="p-user"></div><div class="sb" id="p-phone"></div></div>
   <div class="sec">Account</div>
   <div class="lst">
+   <button class="rw" id="r-photo"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></div><div class="tx"><b>Change profile photo</b><span>Choose from your gallery or take a new one</span></div></button>
+   <button class="rw" id="r-photo-rm" hidden><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></div><div class="tx"><b>Remove profile photo</b><span>Show your initials instead</span></div></button>
    <button class="rw" id="r-name"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></div><div class="tx"><b>Edit name</b><span>How people see you in chats</span></div></button>
    <button class="rw" id="r-enc"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div><div class="tx"><b>Encryption &amp; recovery</b><span id="r-enc-sub">Backup PIN for your encrypted chats</span></div></button>
    <button class="rw" id="r-snd"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6 9H2v6h4l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M19 5a10 10 0 0 1 0 14"/></svg></div><div class="tx"><b>Notification sounds</b><span id="r-snd-sub">On</span></div></button>
@@ -523,9 +531,55 @@ function toast(m){const t=$('toast');t.textContent=m;t.hidden=false;clearTimeout
 const idb=()=>new Promise((r,j)=>{const q=indexedDB.open('haba-messenger',1);q.onupgradeneeded=()=>q.result.createObjectStore('keys');q.onsuccess=()=>r(q.result);q.onerror=()=>j(q.error)});
 const idbGet=async k=>{const d=await idb();return new Promise((r,j)=>{const q=d.transaction('keys').objectStore('keys').get(k);q.onsuccess=()=>r(q.result);q.onerror=()=>j(q.error)})};
 const idbSet=async(k,v)=>{const d=await idb();return new Promise((r,j)=>{const t=d.transaction('keys','readwrite');t.objectStore('keys').put(v,k);t.oncomplete=r;t.onerror=()=>j(t.error)})};
+/* ---- offline cache (IndexedDB 'haba-cache'): chat list, profiles and the last messages of each thread are painted instantly from disk, then replaced by live data ---- */
+const CACHE_DB='haba-cache',MSG_KEEP=150;
+const cdb=()=>cdb.p||(cdb.p=new Promise((r,j)=>{if(!window.indexedDB)return j(new Error('no idb'));const q=indexedDB.open(CACHE_DB,2);q.onupgradeneeded=()=>{const d=q.result;['list','msgs','outbox'].forEach(n=>{if(!d.objectStoreNames.contains(n))d.createObjectStore(n)})};q.onsuccess=()=>r(q.result);q.onerror=()=>{cdb.p=null;j(q.error)}}));
+const cGet=async(st,k)=>{try{const d=await cdb();return await new Promise(r=>{const q=d.transaction(st).objectStore(st).get(k);q.onsuccess=()=>r(q.result||null);q.onerror=()=>r(null)})}catch(_){return null}};
+const cSet=async(st,k,v)=>{try{const d=await cdb();await new Promise(r=>{const t=d.transaction(st,'readwrite');t.objectStore(st).put(v,k);t.oncomplete=r;t.onerror=r;t.onabort=r})}catch(_){}};
+const cClearAll=async()=>{try{const d=await cdb();await new Promise(r=>{const t=d.transaction(['list','msgs','outbox'],'readwrite');t.objectStore('list').clear();t.objectStore('msgs').clear();t.objectStore('outbox').clear();outbox.length=0;t.oncomplete=r;t.onerror=r;t.onabort=r})}catch(_){}};
+const cTimers={};
+function cLater(id,fn,ms=800){clearTimeout(cTimers[id]);cTimers[id]=setTimeout(fn,ms)}
+/* ---- offline outbox: text messages are saved to disk first, shown as pending (🕓), and sent as soon as the realtime connection is up -- survives app restarts ---- */
+const outbox=[];let curRepaint=null,rtOnline=false,flushing=false,flushAgain=false,offFlush=null;const inflight=new Set();
+const outAdd=async p=>{outbox.push(p);await cSet('outbox',p.key,p)};
+const outDel=async k=>{const i=outbox.findIndex(x=>x.key===k);if(i>-1)outbox.splice(i,1);try{const d=await cdb();await new Promise(r=>{const t=d.transaction('outbox','readwrite');t.objectStore('outbox').delete(k);t.oncomplete=r;t.onerror=r;t.onabort=r})}catch(_){}};
+async function outLoad(){outbox.length=0;try{const d=await cdb();const all=await new Promise(r=>{const q=d.transaction('outbox').objectStore('outbox').getAll();q.onsuccess=()=>r(q.result||[]);q.onerror=()=>r([])});all.filter(x=>x&&me&&x.owner===me.uid).forEach(x=>{if(!outbox.some(o=>o.key===x.key))outbox.push(x)})}catch(_){}}
+const pendingFor=t=>outbox.filter(p=>me&&p.owner===me.uid&&p.t===t).map(p=>({k:p.key,text:p.text,senderUid:p.owner,createdAt:p.createdAt,pending:true,...(p.rp?{replyToMessage:p.rp}:{}),...(p.exp?{expiresAt:p.exp}:{})}));
+const blockedBy2=u=>Promise.race([blockedBy(u),new Promise(r=>setTimeout(()=>r(false),3000))]);
+async function flushOutbox(){
+ if(flushing){flushAgain=true;return}
+ if(!me||!rtOnline)return;
+ flushing=true;
+ try{do{flushAgain=false;const tried=new Set();
+  for(;;){
+   const p=outbox.filter(x=>me&&x.owner===me.uid&&!inflight.has(x.key)&&!tried.has(x.key)).sort((a,b)=>a.createdAt-b.createdAt)[0];
+   if(!p||!rtOnline)break;
+   tried.add(p.key);inflight.add(p.key);
+   try{
+    const ex=await get(ref(db,`dm_threads/${p.t}/messages/${p.key}`));
+    if(!ex.exists()){ /* not already delivered by an interrupted earlier attempt */
+     if(!p.enc&&!(typeof p.text==='string'&&p.text.startsWith(E2E)))p.text=await enc(p.uid,p.text);
+     const bm=await blockedBy2(p.uid),now=p.createdAt;
+     await update(ref(db),{
+      [`dm_threads/${p.t}/messages/${p.key}`]:{text:p.text,senderUid:me.uid,createdAt:now,...(p.rp?{replyToMessage:p.rp}:{}),...(p.exp?{expiresAt:p.exp}:{})},
+      [`user_chats/${me.uid}/${p.uid}`]:{text:p.text,timestamp:now,unreadCount:0,senderUid:me.uid},
+      ...(bm?{}:{[`user_chats/${p.uid}/${me.uid}/text`]:p.text,[`user_chats/${p.uid}/${me.uid}/timestamp`]:now,[`user_chats/${p.uid}/${me.uid}/senderUid`]:me.uid,[`user_chats/${p.uid}/${me.uid}/unreadCount`]:increment(1)})
+     });
+    }
+    await outDel(p.key);
+   }catch(_){
+    if(rtOnline){toast("A message couldn't be sent");await outDel(p.key)} /* online and still refused = real rejection; offline = keep and retry later */
+   }finally{inflight.delete(p.key)}
+   if(curRepaint)curRepaint();
+  }
+ }while(flushAgain)}finally{flushing=false}
+}
+window.addEventListener('online',()=>flushOutbox());
+function saveListCache(){if(!me)return;const uid=me.uid;cLater('list',()=>{const pr={};Object.keys(chats||{}).concat([uid]).forEach(u=>{if(profiles[u]&&!staleProf[u])pr[u]=profiles[u]});cSet('list',uid,{chats:chats||{},profiles:pr,at:Date.now()})})}
+function saveMsgCache(t,items){if(!me)return;const uid=me.uid;cLater('m'+t,()=>cSet('msgs',uid+':'+t,items.slice(-MSG_KEEP)),400)}
 const b64=b=>{let s='';new Uint8Array(b).forEach(c=>s+=String.fromCharCode(c));return btoa(s)};
 const unb64=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0)).buffer;
-let kp=null;const peerKeys={},shared={};
+let kp=null;const peerKeys={},shared={},staleProf={};
 let kpP=null;
 const myKeys=()=>kp?Promise.resolve(kp):(kpP||(kpP=loadKeys().finally(()=>{kpP=null})));
 async function loadKeys(){
@@ -541,9 +595,11 @@ async function loadKeys(){
 async function sharedKey(peer){
  if(shared[peer])return shared[peer];
  const my=await myKeys();if(!my)return null;
- const s=await get(ref(db,`users/${peer}/e2ee/publicKey`));if(!s.exists())return null;
- idbSet('peerpub-'+me.uid+'-'+peer,s.val()).catch(()=>{}); /* lets the push worker decrypt notifications offline */
- try{const pk=await crypto.subtle.importKey('jwk',s.val(),{name:'ECDH',namedCurve:'P-256'},true,[]);
+ let pubJwk=null;
+ try{const s=await get(ref(db,`users/${peer}/e2ee/publicKey`));if(!s.exists())return null;pubJwk=s.val();idbSet('peerpub-'+me.uid+'-'+peer,pubJwk).catch(()=>{}) /* lets the push worker (and offline mode) decrypt */}
+ catch(_){try{pubJwk=await idbGet('peerpub-'+me.uid+'-'+peer)}catch(__){}}
+ if(!pubJwk)return null;
+ try{const pk=await crypto.subtle.importKey('jwk',pubJwk,{name:'ECDH',namedCurve:'P-256'},true,[]);
   return shared[peer]=await crypto.subtle.deriveKey({name:'ECDH',public:pk},my.privateKey,{name:'AES-GCM',length:256},false,['encrypt','decrypt'])}catch(_){return null}
 }
 async function enc(peer,text){const k=await sharedKey(peer);if(!k)return text;const iv=crypto.getRandomValues(new Uint8Array(12));return E2E+b64(iv)+':'+b64(await crypto.subtle.encrypt({name:'AES-GCM',iv},k,new TextEncoder().encode(text)))}
@@ -714,7 +770,7 @@ function stopFriends(){Object.values(typOff).forEach(f=>f());[typOff,typNow].for
 /* ---- session ---- */
 onAuthStateChanged(auth,async u=>{
  if(offList){offList();offList=null}
- if(!u){stopPresence();stopFriends();me=null;kp=null;backupInfo=undefined;$('sheet').hidden=true;$('nc').hidden=true;$('ssh').hidden=true;$('app').hidden=true;$('auth').hidden=false;step('phone');hideSplash();return}
+ if(!u){cClearAll();stopPresence();stopFriends();me=null;kp=null;backupInfo=undefined;$('sheet').hidden=true;$('nc').hidden=true;$('ssh').hidden=true;$('app').hidden=true;$('auth').hidden=false;step('phone');hideSplash();return}
  me=u;
  const p=await get(ref(db,'users/'+u.uid));
  if(!p.exists()||!p.val().name){$('auth').hidden=false;$('app').hidden=true;step('name');hideSplash();return}
@@ -725,7 +781,11 @@ function showApp(){$('auth').hidden=true;$('app').hidden=false;startPresence();p
  stopFriends();
  blocked={};cleared={};setCat('all');offBl.forEach(f=>f());
  offBl=[onValue(ref(db,'users/'+me.uid+'/blocked'),x=>{blocked=x.val()||{};renderList()}),onValue(ref(db,'users/'+me.uid+'/cleared'),x=>{cleared=x.val()||{}})];
- offList=onValue(ref(db,'user_chats/'+me.uid),s=>{const nc=s.val()||{};checkIncoming(nc);chats=nc;renderList();Object.keys(chats).forEach(loadProfile);watchFriends(Object.keys(chats))})}
+ if(offFlush){offFlush();offFlush=null}
+ outLoad().then(()=>{offFlush=onValue(ref(db,'.info/connected'),s=>{rtOnline=s.val()===true;if(rtOnline)flushOutbox()})});
+ let liveList=false;const myUid=me.uid;
+ cGet('list',myUid).then(d=>{if(!d||liveList||!me||me.uid!==myUid)return;chats=d.chats||{};Object.entries(d.profiles||{}).forEach(([u,p])=>{if(!profiles[u]){profiles[u]=p;staleProf[u]=1}});renderList()});
+ offList=onValue(ref(db,'user_chats/'+me.uid),s=>{liveList=true;const nc=s.val()||{};checkIncoming(nc);chats=nc;saveListCache();renderList();Object.keys(chats).forEach(loadProfile);watchFriends(Object.keys(chats))})}
 /* same rules as Haba: gold = business account; blue = paid / streak / 5000+ followers (users/{uid} fields) */
 const VB_BLUE='<svg class="verified-badge vbd" viewBox="0 0 22 22" width="16" height="16" aria-label="Verified"><path fill="#0A84FF" d="M20.396 11c-.018-.646-.215-1.275-.57-1.816-.354-.54-.852-.972-1.438-1.246.223-.607.27-1.264.14-1.897-.131-.634-.437-1.218-.882-1.687-.47-.445-1.053-.75-1.687-.882-.633-.13-1.29-.083-1.897.14-.273-.587-.704-1.086-1.245-1.44S11.647 1.62 11 1.604c-.646.017-1.273.213-1.813.568-.54.354-.972.853-1.246 1.44-.607-.223-1.264-.272-1.897-.14-.633.13-1.217.437-1.687.882-.444.47-.75 1.053-.882 1.687-.13.633-.083 1.29.14 1.897-.586.274-1.084.706-1.438 1.246-.354.54-.552 1.17-.57 1.816.018.646.216 1.276.57 1.816.354.54.852.972 1.438 1.246-.223.607-.27 1.264-.14 1.897.131.634.437 1.217.882 1.687.47.445 1.054.75 1.687.882.633.13 1.29.083 1.897-.14.274.586.706 1.084 1.246 1.438.54.354 1.17.552 1.813.57.646-.018 1.276-.216 1.816-.57.54-.354.972-.852 1.246-1.438.607.223 1.264.27 1.897.14.634-.131 1.217-.437 1.687-.882.445-.47.75-1.053.882-1.687.13-.633.083-1.29-.14-1.897.586-.274 1.084-.706 1.438-1.246.355-.54.552-1.17.57-1.816zM9.662 14.85l-3.429-3.428 1.293-1.293 2.136 2.136 4.6-4.6 1.293 1.293-5.893 5.892z"></path></svg>';
 const VB_GOLD='<svg class="verified-badge business-badge vbd" viewBox="0 0 22 22" width="16" height="16" aria-label="Business Account"><path fill="#D4A017" d="M20.396 11c-.018-.646-.215-1.275-.57-1.816-.354-.54-.852-.972-1.438-1.246.223-.607.27-1.264.14-1.897-.131-.634-.437-1.218-.882-1.687-.47-.445-1.053-.75-1.687-.882-.633-.13-1.29-.083-1.897.14-.273-.587-.704-1.086-1.245-1.44S11.647 1.62 11 1.604c-.646.017-1.273.213-1.813.568-.54.354-.972.853-1.246 1.44-.607-.223-1.264-.272-1.897-.14-.633.13-1.217.437-1.687.882-.444.47-.75 1.053-.882 1.687-.13.633-.083 1.29.14 1.897-.586.274-1.084.706-1.438 1.246-.354.54-.552 1.17-.57 1.816.018.646.216 1.276.57 1.816.354.54.852.972 1.438 1.246-.223.607-.27 1.264-.14 1.897.131.634.437 1.217.882 1.687.47.445 1.054.75 1.687.882.633.13 1.29.083 1.897-.14.274.586.706 1.084 1.246 1.438.54.354 1.17.552 1.813.57.646-.018 1.276-.216 1.816-.57.54-.354.972-.852 1.246-1.438.607.223 1.264.27 1.897.14.634-.131 1.217-.437 1.687-.882.445-.47.75-1.053.882-1.687.13-.633.083-1.29-.14-1.897.586-.274 1.084-.706 1.438-1.246.355-.54.552-1.17.57-1.816zM9.662 14.85l-3.429-3.428 1.293-1.293 2.136 2.136 4.6-4.6 1.293 1.293-5.893 5.892z"></path></svg>';
@@ -733,7 +793,8 @@ const AI_UID='goza-ai-assistant',FRIENDS_BADGE_THRESHOLD=5000;
 const isVerifiedProfile=(p,uid)=>uid===AI_UID||!!(p&&(p.isBusinessAccount||p.paidVerifiedAt||p.streakVerifiedAt||(p.followersCount||0)>FRIENDS_BADGE_THRESHOLD));
 const vb=(p,uid)=>uid===AI_UID?VB_BLUE:p&&p.isBusinessAccount?VB_GOLD:isVerifiedProfile(p,uid)?VB_BLUE:'';
 const nameHtml=(p,fb,uid)=>'<span class="nt">'+esc((p&&p.name)||fb)+'</span>'+vb(p,uid);
-async function loadProfile(uid){if(profiles[uid])return;const s=await get(ref(db,'users/'+uid));profiles[uid]=s.val()||{name:'Haba user'};renderList();if(active===uid)paintHead()}
+async function loadProfile(uid){if(profiles[uid]&&!staleProf[uid])return;let v;try{v=(await get(ref(db,'users/'+uid))).val()}catch(_){return} /* offline: keep cached profile */
+ delete staleProf[uid];profiles[uid]=v||{name:'Haba user'};saveListCache();renderList();if(active===uid)paintHead()}
 
 /* ---- chat list ---- */
 const initials=n=>(n||'?').trim().split(/\s+/).slice(0,2).map(w=>w[0]).join('').toUpperCase();
@@ -851,7 +912,7 @@ const dayChip=(p,m)=>m&&m.createdAt&&(!p||dk(p.createdAt)!==dk(m.createdAt))?`<d
 const tmf=t=>t?new Date(t).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'}):'';
 const SGL='<svg viewBox="0 0 200 200"><polygon points="120,180 170,30 80,110" fill="none" stroke="currentColor" stroke-width="16" stroke-linejoin="round"/></svg>',DBL='<svg viewBox="0 0 200 200"><polygon points="20,80 170,30 80,110" fill="currentColor" fill-opacity=".75"/><polygon points="120,180 170,30 80,110" fill="currentColor"/><polygon points="20,80 80,110 80,140" fill="currentColor" fill-opacity=".55"/></svg>';
 let peerRead=0;
-const meta=m=>`<span class="mt">${tmf(m.createdAt)}${m.senderUid===me.uid?`<i class="tk" data-ts="${+m.createdAt||0}"></i>`:''}</span>`;
+const meta=m=>`<span class="mt">${tmf(m.createdAt)}${m.senderUid===me.uid?(m.pending?`<i class="pd" title="Sending">🕓</i>`:`<i class="tk" data-ts="${+m.createdAt||0}"></i>`):''}</span>`;
 function paintTicks(){$('msgs').querySelectorAll('.tk').forEach(e=>{const r=+e.dataset.ts<=peerRead;e.classList.toggle('rd',r);e.innerHTML=r?DBL:SGL})}
 async function openChat(uid){if(active!==uid){pauseVoices();if(rec)stopRec(false);clearReply()}
  active=uid;if(offMsgs){offMsgs();offMsgs=null}
@@ -862,9 +923,9 @@ async function openChat(uid){if(active!==uid){pauseVoices();if(rec)stopRec(false
  peerRead=0;offPres.push(onValue(ref(db,`dm_threads/${t}/readReceipts/${uid}`),s=>{peerRead=+s.val()||0;paintTicks()}));
  disSec=0;paintDis();clearTimeout(sweepT);offPres.push(onValue(ref(db,`dm_threads/${t}/settings/disappearingSeconds`),s=>{disSec=+s.val()||0;paintDis()}));
  const markRead=()=>{update(ref(db),{[`user_chats/${me.uid}/${uid}/unreadCount`]:0,[`dm_threads/${t}/readReceipts/${me.uid}`]:Date.now()}).catch(()=>{})};markRead();
- offMsgs=onValue(query(ref(db,`dm_threads/${t}/messages`),orderByChild('createdAt'),limitToLast(150)),async s=>{
-  const items=[];s.forEach(c=>{const v=c.val();items.push({k:c.key,...v});msgStore[c.key]=items[items.length-1]});
-  sweep(t,uid,items.slice());{const nw=Date.now(),cl=+cleared[uid]||0;for(let i=items.length-1;i>=0;i--)if((items[i].expiresAt&&items[i].expiresAt<=nw)||(cl&&(+items[i].createdAt||0)<=cl))items.splice(i,1)}
+ let gotLive=false,seq=0,lastItems=[];curRepaint=()=>{if(active===uid)paintMsgs(lastItems.slice(),!gotLive)};
+ const paintMsgs=async(items,fromCache)=>{const my=++seq;
+  lastItems=items.filter(x=>!x.pending);if(!fromCache)sweep(t,uid,items.slice());pendingFor(t).forEach(p=>{if(!items.some(x=>x.k===p.k))items.push(p)});{const nw=Date.now(),cl=+cleared[uid]||0;for(let i=items.length-1;i>=0;i--)if((items[i].expiresAt&&items[i].expiresAt<=nw)||(cl&&(+items[i].createdAt||0)<=cl))items.splice(i,1)}
   const out=await Promise.all(items.map(async (m,i)=>{const f=grp(items[i-1],m),l=(!items[i+1]||grp(m,items[i+1]))?' l':'';
    if(m.systemText)return `<div class="sys">${esc(m.systemText)}</div>`;
    if(m.deletedForEveryone)return `<div class="sys">Message removed</div>`;
@@ -876,10 +937,15 @@ async function openChat(uid){if(active!==uid){pauseVoices();if(rec)stopRec(false
    if(!mb)return `<div class="b${me_}${f}${l}" data-mk="${esc(m.k)}">${qh}${esc(txt)}${meta(m)}</div>`;
    const cap=txt&&!mb.noCap,ov=!cap&&!qh&&!m.viewOnce&&(m.mediaType==='image'||m.mediaType==='gif')?' ov':'';
    return `<div class="b${mb.cls}${ov}${me_}${f}${l}" data-mk="${esc(m.k)}">${qh}${mb.html}${cap?`<div class="cap">${esc(txt)}${meta(m)}</div>`:meta(m)}</div>`})).then(a=>a.map((h,i)=>dayChip(items[i-1],items[i])+h));
-  if(active!==uid)return;
+  if(active!==uid||my!==seq||(fromCache&&gotLive))return;
   const box=$('msgs'),stick=box.scrollHeight-box.scrollTop-box.clientHeight<120;
   box.innerHTML=out.join('');hydrate(uid);paintTicks();if(stick)box.scrollTop=box.scrollHeight;
-  if(items.length&&items[items.length-1].senderUid!==me.uid)markRead();
+  if(!fromCache&&items.length&&items[items.length-1].senderUid!==me.uid)markRead();
+ };
+ cGet('msgs',me.uid+':'+t).then(c=>{if(!c||!c.length||gotLive||active!==uid)return;c.forEach(m=>{msgStore[m.k]=m});paintMsgs(c.slice(),true)});
+ offMsgs=onValue(query(ref(db,`dm_threads/${t}/messages`),orderByChild('createdAt'),limitToLast(150)),s=>{
+  gotLive=true;const items=[];s.forEach(c=>{const v=c.val();items.push({k:c.key,...v});msgStore[c.key]=items[items.length-1]});
+  saveMsgCache(t,items);paintMsgs(items,false);
  });
 }
 const blockedBy=async u=>{try{return (await get(ref(db,`users/${u}/blocked/${me.uid}`))).val()===true}catch(_){return false}};
@@ -887,14 +953,11 @@ async function sendMsg(){
  const inp=$('msg'),text=inp.value.trim();if(!text||!active)return;
  if(blocked[active]){const u=active;if(await ask('Unblock to send?',"You've blocked this contact. Unblock them to send a message.",{ok:'Unblock'}))await remove(ref(db,`users/${me.uid}/blocked/${u}`)).catch(()=>{});return}
  inp.value='';syncSend();stopTyping();const rpm=replyTo;clearReply();
- const uid=active,t=tid(me.uid,uid),now=Date.now(),e=await enc(uid,text),bm=await blockedBy(uid),rp=rpm?await replyPayload(uid,rpm):null;
+ const uid=active,t=tid(me.uid,uid),now=Date.now(),e=await enc(uid,text),rp=rpm?await replyPayload(uid,rpm).catch(()=>null):null;
  const key=push(ref(db,`dm_threads/${t}/messages`)).key;
- await update(ref(db),{
-  [`dm_threads/${t}/messages/${key}`]:{text:e,senderUid:me.uid,createdAt:now,...(rp?{replyToMessage:rp}:{}),...(disSec>0?{expiresAt:now+disSec*1000}:{})},
-  [`user_chats/${me.uid}/${uid}`]:{text:e,timestamp:now,unreadCount:0,senderUid:me.uid},
-  ...(bm?{}:{[`user_chats/${uid}/${me.uid}/text`]:e,[`user_chats/${uid}/${me.uid}/timestamp`]:now,
-  [`user_chats/${uid}/${me.uid}/senderUid`]:me.uid,[`user_chats/${uid}/${me.uid}/unreadCount`]:increment(1)})
- }).catch(()=>ask('Not sent',"Your message couldn't be sent. Check your connection and try again.",{cancel:false}));
+ await outAdd({key,owner:me.uid,uid,t,text:e,enc:typeof e==='string'&&e.startsWith(E2E),createdAt:now,rp:rp||null,exp:disSec>0?now+disSec*1000:0});
+ if(curRepaint)curRepaint(); /* show it right away as pending */
+ flushOutbox();
 }
 function syncSend(){const h=!!$('msg').value.trim()||!!rec,b=$('sendmsg');b.classList.toggle('has',h);b.setAttribute('aria-label',h?'Send':'Voice message')}
 $('msg').addEventListener('input',syncSend);
@@ -1519,7 +1582,7 @@ async function paintEnc(){
 async function paintMain(){
  const u=(await get(ref(db,'users/'+me.uid)).catch(()=>null)),p=(u&&u.val())||profiles[me.uid]||{};profiles[me.uid]=p;
  const av=$('p-av');av.style.backgroundImage=p.photoURL?`url('${p.photoURL.replace(/'/g,'%27')}')`:'';av.textContent=p.photoURL?'':initials(p.name);
- $('p-name').innerHTML=esc(p.name||'Haba user')+vb(p,me.uid);$('p-user').textContent=p.username?'@'+p.username:'';$('p-phone').textContent=me.phoneNumber||me.email||'';
+ $('r-photo-rm').hidden=!p.photoURL;$('p-name').innerHTML=esc(p.name||'Haba user')+vb(p,me.uid);$('p-user').textContent=p.username?'@'+p.username:'';$('p-phone').textContent=me.phoneNumber||me.email||'';
  await myKeys().catch(()=>null);if(backupInfo===undefined)await loadBackup();
  $('r-enc-sub').textContent=!kp?"This device can't read older chats":backupInfo?'Backup PIN is set':backupInfo===null?'No backup PIN yet':'Backup PIN for your encrypted chats';
 }
@@ -1545,6 +1608,44 @@ $('r-name').onclick=async()=>{
  const v=await ask('Edit name','This is how people see you in chats.',{input:true,ok:'Save',value:(profiles[me.uid]||{}).name||''});
  if(v===null)return;if(!v){toast('Enter a name');return}
  try{await update(ref(db,'users/'+me.uid),{name:v});(profiles[me.uid]=profiles[me.uid]||{}).name=v;toast('Name updated');paintMain()}catch(_){toast('Could not update name')}
+};
+/* ---- profile photo: pick -> centre-crop square -> 512px JPEG -> upload -> users/{uid}/photoURL ---- */
+async function readImg(file){
+ try{return await createImageBitmap(file,{imageOrientation:'from-image'})}catch(_){}
+ return new Promise((res,rej)=>{const u=URL.createObjectURL(file),i=new Image();i.onload=()=>{URL.revokeObjectURL(u);res(i)};i.onerror=()=>{URL.revokeObjectURL(u);rej(new Error('bad image'))};i.src=u});
+}
+function squareJpeg(img,size=512){
+ const w=img.width||img.naturalWidth,h=img.height||img.naturalHeight,m=Math.min(w,h),c=document.createElement('canvas');
+ c.width=c.height=Math.min(size,m);const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);
+ x.drawImage(img,(w-m)/2,(h-m)/2,m,m,0,0,c.width,c.height);
+ return new Promise((r,j)=>c.toBlob(b=>b?r(b):j(new Error('encode failed')),'image/jpeg',.86));
+}
+async function uploadAvatar(blob){ /* Firebase Storage: needs a rule letting users write avatars/{their uid}/ */
+ const r=sref(storage,`avatars/${me.uid}/${Date.now()}.jpg`);
+ await uploadBytes(r,blob,{contentType:'image/jpeg',cacheControl:'public,max-age=31536000'});
+ return getDownloadURL(r);
+}
+let photoBusy=false;
+async function setPhoto(file){
+ if(photoBusy||!file||!me)return;
+ if(!/^image\//.test(file.type)){toast('Choose an image file');return}
+ if(file.size>25*1024*1024){toast('That image is too large (max 25 MB)');return}
+ photoBusy=true;$('p-av').classList.add('busy');
+ try{
+  const blob=await squareJpeg(await readImg(file)),url=await uploadAvatar(blob);
+  await update(ref(db,'users/'+me.uid),{photoURL:url});
+  (profiles[me.uid]=profiles[me.uid]||{}).photoURL=url;delete staleProf[me.uid];saveListCache();renderList();toast('Profile photo updated');
+ }catch(_){toast("Couldn't update your photo. Check your connection and try again.")}
+ finally{photoBusy=false;$('p-av').classList.remove('busy');if(!$('sheet').hidden)paintMain()}
+}
+const pickPhoto=()=>{const f=$('p-file');f.value='';f.click()};
+$('p-file').onchange=e=>{const f=e.target.files&&e.target.files[0];if(f)setPhoto(f)};
+$('r-photo').onclick=pickPhoto;$('p-av').onclick=pickPhoto;
+$('p-av').onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();pickPhoto()}};
+$('r-photo-rm').onclick=async()=>{
+ if(!await ask('Remove profile photo?','Your contacts will see your initials instead.',{ok:'Remove'}))return;
+ try{await update(ref(db,'users/'+me.uid),{photoURL:null});const p=profiles[me.uid]=profiles[me.uid]||{};delete p.photoURL;saveListCache();renderList();toast('Profile photo removed');paintMain()}
+ catch(_){toast("Couldn't remove your photo")}
 };
 $('r-out').onclick=async()=>{if(await ask('Sign out?','You will need to verify your phone number to sign back in. Keep your backup PIN safe so you can restore your chat history later.',{ok:'Sign out'})){closeSheet();stopTyping();stopPresence();await update(ref(db,'users/'+me.uid),{status:'offline',lastSeen:serverTimestamp()}).catch(()=>{});if(fcmToken){await remove(ref(db,`users/${me.uid}/fcmTokens/${fcmToken}`)).catch(()=>{});fcmToken=null}signOut(auth)}};
 

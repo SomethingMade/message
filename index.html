@@ -19,6 +19,11 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--t
 button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 input{font:inherit;color:inherit}
 [hidden]{display:none!important}
+/* verified badge */
+.vb{width:16px;height:16px;flex-shrink:0;vertical-align:-2px;margin-left:4px;display:inline-block}
+.cm .n,.who .n{display:flex;align-items:center}
+.cm .n .nt,.who .n .nt{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cm .n .vb,.who .n .vb{vertical-align:baseline}
 /* splash: three facets assemble into the mark, then the wordmark types in */
 #splash{position:fixed;inset:0;background:var(--bg);z-index:100;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .5s ease,visibility .5s}
 #splash.out{opacity:0;visibility:hidden}
@@ -567,6 +572,9 @@ function showApp(){$('auth').hidden=true;$('app').hidden=false;startPresence();s
  blocked={};cleared={};showArch=false;offBl.forEach(f=>f());
  offBl=[onValue(ref(db,'users/'+me.uid+'/blocked'),x=>{blocked=x.val()||{};renderList()}),onValue(ref(db,'users/'+me.uid+'/cleared'),x=>{cleared=x.val()||{}})];
  offList=onValue(ref(db,'user_chats/'+me.uid),s=>{const nc=s.val()||{};checkIncoming(nc);chats=nc;renderList();Object.keys(chats).forEach(loadProfile);watchFriends(Object.keys(chats))})}
+const VB_SVG='<svg class="vb" viewBox="0 0 24 24" role="img" aria-label="Verified"><path fill="#1D9BF0" d="M22.5 12.5c0-1.58-.88-2.95-2.18-3.66.54-1.4.24-3.05-.88-4.17s-2.77-1.42-4.17-.88C14.58 2.5 13.2 1.5 11.62 1.5S8.67 2.4 7.96 3.7c-1.4-.54-3.05-.24-4.17.88s-1.42 2.77-.88 4.17C1.6 9.55.72 10.92.72 12.5s.88 2.95 2.19 3.66c-.54 1.4-.24 3.05.88 4.17s2.77 1.42 4.17.88c.71 1.3 2.08 2.19 3.66 2.19s2.95-.88 3.66-2.19c1.4.54 3.05.24 4.17-.88s1.42-2.77.88-4.17c1.3-.71 2.18-2.08 2.18-3.66z"/><path fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" d="M7.6 12.6l3 3 5.8-6.2"/></svg>';
+const vb=p=>p&&p.verified===true?VB_SVG:'';
+const nameHtml=(p,fb)=>'<span class="nt">'+esc((p&&p.name)||fb)+'</span>'+vb(p);
 async function loadProfile(uid){if(profiles[uid])return;const s=await get(ref(db,'users/'+uid));profiles[uid]=s.val()||{name:'Haba user'};renderList();if(active===uid)paintHead()}
 
 /* ---- chat list ---- */
@@ -589,7 +597,7 @@ function renderList(){
  if(!rows.length&&!top){$('chats').innerHTML=`<div class="empty">${q?'No chats match your search.':'No conversations yet.<br>Tap the pencil to start one.'}</div>`;return}
  $('chats').innerHTML=top+rows.map(([uid,c])=>{const p=profiles[uid]||{},pv=previews[uid+c.timestamp];if(pv===undefined)preview(uid,c);
   const bl=!!blocked[uid],un=!bl&&c.unreadCount>0&&c.senderUid!==me.uid;
-  return `<div class="chat${un?' unread':''}${bl?' blocked':''}${active===uid?' active':''}" data-uid="${esc(uid)}"><div class="av" ${avStyle(p)}>${p.photoURL?'':esc(initials(p.name))}</div><div class="cm"><div class="n">${esc(p.name||'…')}</div><div class="p">${bl?'Blocked':(c.senderUid===me.uid?'You: ':'')+esc(pv===undefined?'…':pv)}</div></div><div class="meta"><span class="t">${fmt(c.timestamp)}</span>${un?`<span class="badge">${c.unreadCount>99?'99+':c.unreadCount}</span>`:''}</div></div>`}).join('');
+  return `<div class="chat${un?' unread':''}${bl?' blocked':''}${active===uid?' active':''}" data-uid="${esc(uid)}"><div class="av" ${avStyle(p)}>${p.photoURL?'':esc(initials(p.name))}</div><div class="cm"><div class="n">${nameHtml(p,'…')}</div><div class="p">${bl?'Blocked':(c.senderUid===me.uid?'You: ':'')+esc(pv===undefined?'…':pv)}</div></div><div class="meta"><span class="t">${fmt(c.timestamp)}</span>${un?`<span class="badge">${c.unreadCount>99?'99+':c.unreadCount}</span>`:''}</div></div>`}).join('');
 }
 $('chats').onclick=e=>{if(lpFired){lpFired=false;return}const r=e.target.closest('.chat');if(!r)return;
  if(r.dataset.arch){showArch=true;renderList();$('chats').scrollTop=0;return}if(r.dataset.back){showArch=false;renderList();return}
@@ -602,7 +610,7 @@ $('chats').addEventListener('pointerdown',e=>{const r=e.target.closest('.chat[da
 $('chats').addEventListener('pointermove',e=>{if(lpT&&Math.hypot(e.clientX-lpX,e.clientY-lpY)>10)lpStop()});
 ['pointerup','pointercancel','pointerleave','scroll'].forEach(ev=>$('chats').addEventListener(ev,lpStop,{passive:true}));
 function csOpen(uid){if(!uid||!chats[uid])return;lpStop();csUid=uid;csAt=Date.now();const c=chats[uid]||{};
- $('cs-name').textContent=(profiles[uid]||{}).name||'Chat';
+ $('cs-name').innerHTML=nameHtml(profiles[uid],'Chat');
  $('cs-arch-t').textContent=isArch(c)?'Unarchive chat':'Archive chat';
  $('cs-blk-t').textContent=blocked[uid]?'Unblock':'Block';
  navPush('cs');$('csheet').hidden=false}
@@ -648,7 +656,7 @@ $('q').oninput=renderList;
 
 /* ---- conversation ---- */
 const tid=(a,b)=>[a,b].sort().join('_');
-function paintHead(){const p=profiles[active]||{};$('t-name').textContent=p.name||'…';const a=$('t-av');a.style.backgroundImage=p.photoURL?`url('${p.photoURL}')`:'';a.textContent=p.photoURL?'':initials(p.name)}
+function paintHead(){const p=profiles[active]||{};$('t-name').innerHTML=nameHtml(p,'…');const a=$('t-av');a.style.backgroundImage=p.photoURL?`url('${p.photoURL}')`:'';a.textContent=p.photoURL?'':initials(p.name)}
 const dk=t=>t?new Date(t).toDateString():'';
 const isSys=x=>!x||x.systemText||x.deleted||x.deletedForEveryone||x.mediaType==='call'||x.mediaType==='group_call';
 const grp=(p,m)=>(isSys(p)||p.senderUid!==m.senderUid||dk(p.createdAt)!==dk(m.createdAt))?' f':'';
@@ -1012,7 +1020,7 @@ async function paintEnc(){
 async function paintMain(){
  const u=(await get(ref(db,'users/'+me.uid)).catch(()=>null)),p=(u&&u.val())||profiles[me.uid]||{};profiles[me.uid]=p;
  const av=$('p-av');av.style.backgroundImage=p.photoURL?`url('${p.photoURL.replace(/'/g,'%27')}')`:'';av.textContent=p.photoURL?'':initials(p.name);
- $('p-name').textContent=p.name||'Haba user';$('p-user').textContent=p.username?'@'+p.username:'';$('p-phone').textContent=me.phoneNumber||me.email||'';
+ $('p-name').innerHTML=esc(p.name||'Haba user')+vb(p);$('p-user').textContent=p.username?'@'+p.username:'';$('p-phone').textContent=me.phoneNumber||me.email||'';
  await myKeys().catch(()=>null);if(backupInfo===undefined)await loadBackup();
  $('r-enc-sub').textContent=!kp?"This device can't read older chats":backupInfo?'Backup PIN is set':backupInfo===null?'No backup PIN yet':'Backup PIN for your encrypted chats';
 }

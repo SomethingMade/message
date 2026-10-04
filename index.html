@@ -240,11 +240,11 @@ button.rw:not(.dg)::after{content:'';width:8px;height:8px;border-right:2px solid
 .pf{display:flex;align-items:center;justify-content:center;gap:8px;margin:30px 0 8px;color:var(--sub);font:400 9px/1 var(--brand);letter-spacing:1.6px}
 .pf svg{width:16px;height:16px}
 /* header menu */
-#menu,#dsheet{position:fixed;inset:0;z-index:79;background:rgba(0,0,0,.45);display:flex;align-items:flex-end;justify-content:center}
+#menu,#dsheet,#csheet{position:fixed;inset:0;z-index:79;background:rgba(0,0,0,.45);display:flex;align-items:flex-end;justify-content:center}
 .msheet{width:100%;max-width:460px;background:var(--bg);border-radius:22px 22px 0 0;padding:10px 0 calc(16px + env(safe-area-inset-bottom,0px));animation:sheetUp .22s ease-out}
 .grab{width:36px;height:4px;border-radius:2px;background:var(--line);margin:0 auto 14px}
 @keyframes sheetUp{from{transform:translateY(100%)}}
-@media (min-width:769px){#dsheet{align-items:center;background:rgba(0,0,0,.45);padding:20px}#menu{align-items:flex-start;justify-content:flex-start;background:transparent;padding:60px 12px}.msheet{width:340px;border-radius:16px;padding:8px 0;box-shadow:0 12px 28px rgba(0,0,0,.25);border:1px solid var(--line);animation:none}.grab{display:none}}
+@media (min-width:769px){#dsheet,#csheet{align-items:center;background:rgba(0,0,0,.45);padding:20px}#menu{align-items:flex-start;justify-content:flex-start;background:transparent;padding:60px 12px}.msheet{width:340px;border-radius:16px;padding:8px 0;box-shadow:0 12px 28px rgba(0,0,0,.25);border:1px solid var(--line);animation:none}.grab{display:none}}
 @media (prefers-reduced-motion:reduce){.msheet{animation:none}}
 .btn.alt{background:transparent;color:var(--text);border:1.5px solid var(--line)}
 .or{display:flex;align-items:center;gap:12px;color:var(--sub);font-size:13px;margin:16px 0}
@@ -264,6 +264,9 @@ img,svg,video,a{-webkit-user-drag:none;user-drag:none;-webkit-touch-callout:none
 .dd{font-size:13px;color:var(--sub);text-align:center;margin:0 24px 16px;line-height:1.4}
 .dopt::after{display:none!important}
 .dopt .ck{width:18px;height:18px;display:none;flex-shrink:0}
+#csheet .rw::after{display:none!important}#csheet .dt{margin-bottom:12px}
+.chat.blocked .p{font-style:italic}.chat.blocked .av{opacity:.55}
+.chat.arch .av{background:var(--bg-input);color:var(--text)}.chat.arch .av svg{width:22px;height:22px}.chat.arch .n{font-weight:600}
 .dopt.sel .ck{display:block}.dopt.sel .tx b{font-weight:800}
 </style>
 </head>
@@ -341,6 +344,11 @@ img,svg,video,a{-webkit-user-drag:none;user-drag:none;-webkit-touch-callout:none
  <button class="rw" id="mn-ref"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg></div><div class="tx"><b>Refresh</b><span>Clear cached files and load the latest version</span></div></button>
 </div></div></div>
 <div id="dsheet" hidden><div class="msheet"><div class="grab"></div><h3 class="dt">Disappearing messages</h3><p class="dd">New messages you send in this chat will disappear after the timer you pick. This doesn't affect messages already sent.</p><div class="lst" id="dis-opts"><button class="rw dopt" data-s="0"><div class="tx"><b>Off</b></div><svg class="ck" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4"><polyline points="20 6 9 17 4 12"/></svg></button><button class="rw dopt" data-s="86400"><div class="tx"><b>24 hours</b></div><svg class="ck" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4"><polyline points="20 6 9 17 4 12"/></svg></button><button class="rw dopt" data-s="604800"><div class="tx"><b>7 days</b></div><svg class="ck" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4"><polyline points="20 6 9 17 4 12"/></svg></button><button class="rw dopt" data-s="7776000"><div class="tx"><b>90 days</b></div><svg class="ck" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4"><polyline points="20 6 9 17 4 12"/></svg></button></div></div></div>
+<div id="csheet" hidden><div class="msheet"><div class="grab"></div><h3 class="dt" id="cs-name"></h3><div class="lst">
+ <button class="rw" id="cs-arch"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg></div><div class="tx"><b id="cs-arch-t">Archive chat</b></div></button>
+ <button class="rw" id="cs-blk"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.9" y1="4.9" x2="19.1" y2="19.1"/></svg></div><div class="tx"><b id="cs-blk-t">Block</b></div></button>
+ <button class="rw dg" id="cs-del"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></div><div class="tx"><b>Delete chat</b></div></button>
+</div></div></div>
 <div id="toast" hidden></div>
 <div id="lb" hidden><div class="lbh"><button class="ibtn" id="lb-x" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button><div class="lbw"><b id="lb-n"></b><span id="lb-d"></span></div><button class="ibtn" id="lb-dl" aria-label="Download"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><polyline points="7 11 12 16 17 11"/><path d="M5 21h14"/></svg></button></div><div class="lbs" id="lb-s"><img id="lb-i" alt=""></div><button class="lbn l" id="lb-p" aria-label="Previous">&#8249;</button><button class="lbn r" id="lb-nx" aria-label="Next">&#8250;</button></div>
 <div id="modal" hidden><div class="box"><h3 id="m-title"></h3><p id="m-text"></p><input id="m-in" class="in" hidden><div class="acts"><button id="m-cancel">Cancel</button><button class="go" id="m-ok">OK</button></div></div></div>
@@ -362,6 +370,7 @@ const app=initializeApp({
         }),auth=getAuth(app),db=getDatabase(app),storage=getStorage(app);
 const $=id=>document.getElementById(id), AVATAR="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 96 96%22%3E%3Ccircle cx=%2248%22 cy=%2248%22 r=%2248%22 fill=%22%23000000%22/%3E%3Ccircle cx=%2248%22 cy=%2238%22 r=%2218%22 fill=%22%23FFFFFF%22 fill-opacity=%220.85%22/%3E%3Cpath d=%22M48 60c-19 0-30 10.5-30 22v2a48 48 0 0 0 60 0v-2c0-11.5-11-22-30-22z%22 fill=%22%23FFFFFF%22 fill-opacity=%220.85%22/%3E%3C/svg%3E", E2E='\u27e6e2e1\u27e7';
 let me=null,confirmation=null,verifier=null,phoneFull='',chats={},profiles={},previews={},active=null,offList=null,offMsgs=null;
+let blocked={},cleared={},showArch=false,offBl=[];
 
 /* splash typing, same as Haba */
 setTimeout(()=>{const el=$('typed'),t='HABA';let i=0;const k=setInterval(()=>{el.textContent=t.slice(0,++i);if(i>=t.length)clearInterval(k)},120)},850);
@@ -372,7 +381,7 @@ const hideSplash=()=>setTimeout(()=>$('splash').classList.add('out'),Math.max(30
 const navStack=[];
 function navPush(t){if(navStack.includes(t))return;navStack.push(t);try{history.pushState({t},'')}catch(_){}}
 function navClose(t,hide){if(navStack[navStack.length-1]===t){history.back();return}const i=navStack.lastIndexOf(t);if(i>-1)navStack.splice(i,1);hide()}
-window.addEventListener('popstate',()=>{const t=navStack.pop();if(t==='lb')lbHide();else if(t==='sheet')sheetHide();else if(t==='chat')chatHide();else if(t==='menu')menuHide();else if(t==='dis')disHide()});
+window.addEventListener('popstate',()=>{const t=navStack.pop();if(t==='lb')lbHide();else if(t==='sheet')sheetHide();else if(t==='chat')chatHide();else if(t==='menu')menuHide();else if(t==='dis')disHide();else if(t==='cs')csHide()});
 function navSwap(from,to){const i=navStack.lastIndexOf(from);if(i>-1){navStack[i]=to;try{history.replaceState({t:to},'')}catch(_){}}else navPush(to)}
 
 /* dialogs */
@@ -413,7 +422,7 @@ async function dec(peer,p){
 }
 
 /* block the long-press / right-click menu everywhere except text inputs */
-document.addEventListener('contextmenu',e=>{if(!e.target.closest('input,textarea,[contenteditable="true"]'))e.preventDefault()});
+document.addEventListener('contextmenu',e=>{const r=e.target.closest('.chat[data-uid]');if(r){e.preventDefault();csOpen(r.dataset.uid);return}if(!e.target.closest('input,textarea,[contenteditable="true"]'))e.preventDefault()});
 document.addEventListener('selectstart',e=>{if(!e.target.closest||!e.target.closest('input,textarea,[contenteditable="true"]'))e.preventDefault()});
 document.addEventListener('dragstart',e=>e.preventDefault());
 
@@ -532,7 +541,7 @@ paintSnd();
 let chatsInit=false;const seenTs={},friendOff={},fStatus={},lastOnline={};
 function checkIncoming(nc){
  if(chatsInit){let k=null;
-  for(const [u,c] of Object.entries(nc)){if(c&&c.senderUid&&c.senderUid!==me.uid&&(+c.timestamp||0)>(seenTs[u]||0))k=(u===active&&document.visibilityState==='visible')?(k||'pop'):'message'}
+  for(const [u,c] of Object.entries(nc)){if(blocked[u])continue;if(c&&c.senderUid&&c.senderUid!==me.uid&&(+c.timestamp||0)>(seenTs[u]||0))k=(u===active&&document.visibilityState==='visible')?(k||'pop'):'message'}
   if(k)playSound(k)}
  Object.entries(nc).forEach(([u,c])=>{seenTs[u]=Math.max(seenTs[u]||0,(c&&+c.timestamp)||0)});chatsInit=true}
 function watchFriends(uids){uids.slice(0,60).forEach(u=>{if(friendOff[u]||u===(me&&me.uid))return;let first=true;
@@ -552,6 +561,8 @@ onAuthStateChanged(auth,async u=>{
 function showApp(){$('auth').hidden=true;$('app').hidden=false;startPresence();setupPush();refreshPushBanner();backupInfo=undefined;myKeys().catch(()=>{}).then(refreshBanner);
  if(offList)offList();
  stopFriends();
+ blocked={};cleared={};showArch=false;offBl.forEach(f=>f());
+ offBl=[onValue(ref(db,'users/'+me.uid+'/blocked'),x=>{blocked=x.val()||{};renderList()}),onValue(ref(db,'users/'+me.uid+'/cleared'),x=>{cleared=x.val()||{}})];
  offList=onValue(ref(db,'user_chats/'+me.uid),s=>{const nc=s.val()||{};checkIncoming(nc);chats=nc;renderList();Object.keys(chats).forEach(loadProfile);watchFriends(Object.keys(chats))})}
 async function loadProfile(uid){if(profiles[uid])return;const s=await get(ref(db,'users/'+uid));profiles[uid]=s.val()||{name:'Haba user'};renderList();if(active===uid)paintHead()}
 
@@ -561,16 +572,51 @@ const avStyle=(p)=>p&&p.photoURL?`style="background-image:url('${p.photoURL.repl
 const fmt=ts=>{if(!ts)return'';const d=new Date(ts),n=new Date();return d.toDateString()===n.toDateString()?d.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'}):d.toLocaleDateString([],{month:'short',day:'numeric'})};
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 async function preview(uid,c){const key=uid+c.timestamp;if(previews[key]!==undefined)return previews[key];previews[key]=await dec(uid,c.text);renderList();return previews[key]}
+const isArch=c=>!!c.archived&&!(c.senderUid!==me.uid&&(+c.timestamp||0)>c.archived);
+const ARCH_SVG='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>',BACK_SVG='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>';
 function renderList(){
  const q=$('q').value.trim().toLowerCase();
- const rows=Object.entries(chats).filter(([uid,c])=>c&&c.timestamp).sort((a,b)=>b[1].timestamp-a[1].timestamp)
+ const all=Object.entries(chats).filter(([uid,c])=>c&&c.timestamp).sort((a,b)=>b[1].timestamp-a[1].timestamp)
   .filter(([uid])=>!q||((profiles[uid]||{}).name||'').toLowerCase().includes(q));
- if(!rows.length){$('chats').innerHTML=`<div class="empty">${q?'No chats match your search.':'No conversations yet.<br>Tap the pencil to start one.'}</div>`;return}
- $('chats').innerHTML=rows.map(([uid,c])=>{const p=profiles[uid]||{},pv=previews[uid+c.timestamp];if(pv===undefined)preview(uid,c);
-  const un=c.unreadCount>0&&c.senderUid!==me.uid;
-  return `<div class="chat${un?' unread':''}${active===uid?' active':''}" data-uid="${esc(uid)}"><div class="av" ${avStyle(p)}>${p.photoURL?'':esc(initials(p.name))}</div><div class="cm"><div class="n">${esc(p.name||'…')}</div><div class="p">${c.senderUid===me.uid?'You: ':''}${esc(pv===undefined?'…':pv)}</div></div><div class="meta"><span class="t">${fmt(c.timestamp)}</span>${un?`<span class="badge">${c.unreadCount>99?'99+':c.unreadCount}</span>`:''}</div></div>`}).join('');
+ const archN=all.filter(([u,c])=>isArch(c)).length;
+ if(showArch&&!archN)showArch=false;
+ const rows=all.filter(([u,c])=>showArch?isArch(c):!isArch(c));
+ const top=showArch?`<div class="chat arch" data-back="1"><div class="av">${BACK_SVG}</div><div class="cm"><div class="n">Archived chats</div><div class="p">Tap to go back</div></div></div>`
+  :(archN?`<div class="chat arch" data-arch="1"><div class="av">${ARCH_SVG}</div><div class="cm"><div class="n">Archived</div></div><div class="meta"><span class="t">${archN}</span></div></div>`:'');
+ if(!rows.length&&!top){$('chats').innerHTML=`<div class="empty">${q?'No chats match your search.':'No conversations yet.<br>Tap the pencil to start one.'}</div>`;return}
+ $('chats').innerHTML=top+rows.map(([uid,c])=>{const p=profiles[uid]||{},pv=previews[uid+c.timestamp];if(pv===undefined)preview(uid,c);
+  const bl=!!blocked[uid],un=!bl&&c.unreadCount>0&&c.senderUid!==me.uid;
+  return `<div class="chat${un?' unread':''}${bl?' blocked':''}${active===uid?' active':''}" data-uid="${esc(uid)}"><div class="av" ${avStyle(p)}>${p.photoURL?'':esc(initials(p.name))}</div><div class="cm"><div class="n">${esc(p.name||'…')}</div><div class="p">${bl?'Blocked':(c.senderUid===me.uid?'You: ':'')+esc(pv===undefined?'…':pv)}</div></div><div class="meta"><span class="t">${fmt(c.timestamp)}</span>${un?`<span class="badge">${c.unreadCount>99?'99+':c.unreadCount}</span>`:''}</div></div>`}).join('');
 }
-$('chats').onclick=e=>{const r=e.target.closest('.chat');if(!r)return;if(e.target.closest('.av')&&showAvatar(r.dataset.uid))return;openChat(r.dataset.uid)};
+$('chats').onclick=e=>{if(lpFired){lpFired=false;return}const r=e.target.closest('.chat');if(!r)return;
+ if(r.dataset.arch){showArch=true;renderList();$('chats').scrollTop=0;return}if(r.dataset.back){showArch=false;renderList();return}
+ if(e.target.closest('.av')&&showAvatar(r.dataset.uid))return;openChat(r.dataset.uid)};
+/* long-press (touch) or right-click (desktop) on a chat row -> Archive / Block / Delete */
+let lpT=null,lpX=0,lpY=0,lpFired=false,csUid=null,csAt=0;
+const lpStop=()=>{clearTimeout(lpT);lpT=null};
+$('chats').addEventListener('pointerdown',e=>{const r=e.target.closest('.chat[data-uid]');if(!r||(e.pointerType==='mouse'&&e.button!==0))return;
+ lpFired=false;lpX=e.clientX;lpY=e.clientY;lpStop();lpT=setTimeout(()=>{lpT=null;lpFired=true;try{navigator.vibrate&&navigator.vibrate(12)}catch(_){}csOpen(r.dataset.uid)},480)});
+$('chats').addEventListener('pointermove',e=>{if(lpT&&Math.hypot(e.clientX-lpX,e.clientY-lpY)>10)lpStop()});
+['pointerup','pointercancel','pointerleave','scroll'].forEach(ev=>$('chats').addEventListener(ev,lpStop,{passive:true}));
+function csOpen(uid){if(!uid||!chats[uid])return;lpStop();csUid=uid;csAt=Date.now();const c=chats[uid]||{};
+ $('cs-name').textContent=(profiles[uid]||{}).name||'Chat';
+ $('cs-arch-t').textContent=isArch(c)?'Unarchive chat':'Archive chat';
+ $('cs-blk-t').textContent=blocked[uid]?'Unblock':'Block';
+ navPush('cs');$('csheet').hidden=false}
+function csHide(){$('csheet').hidden=true}
+function csClose(){navClose('cs',csHide)}
+$('csheet').onclick=e=>{if(e.target.id==='csheet'&&Date.now()-csAt>350)csClose()};
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('csheet').hidden)csClose()});
+$('cs-arch').onclick=async()=>{const uid=csUid,was=isArch(chats[uid]||{});csClose();
+ try{await update(ref(db,`user_chats/${me.uid}/${uid}`),{archived:was?null:Date.now()});toast(was?'Chat unarchived':'Chat archived')}catch(_){toast("Couldn't update the chat")}};
+$('cs-blk').onclick=()=>{const uid=csUid,was=!!blocked[uid],nm=(profiles[uid]||{}).name||'this contact';csClose();setTimeout(async()=>{
+ if(was){try{await remove(ref(db,`users/${me.uid}/blocked/${uid}`));toast(nm+' unblocked')}catch(_){toast("Couldn't unblock")}return}
+ if(!await ask('Block '+nm+'?',"You won't see their new messages or hear alerts from them, and they won't be able to reach you. You can unblock them anytime from this menu.",{ok:'Block'}))return;
+ try{await set(ref(db,`users/${me.uid}/blocked/${uid}`),true);toast(nm+' blocked')}catch(_){toast("Couldn't block")}},60)};
+$('cs-del').onclick=()=>{const uid=csUid,nm=(profiles[uid]||{}).name||'this contact';csClose();setTimeout(async()=>{
+ if(!await ask('Delete chat with '+nm+'?',"This removes the conversation from your device and account. "+nm+" keeps their copy.",{ok:'Delete'}))return;
+ try{await update(ref(db),{[`users/${me.uid}/cleared/${uid}`]:Date.now(),[`user_chats/${me.uid}/${uid}`]:null});
+  if(active===uid)navClose('chat',chatHide);toast('Chat deleted')}catch(_){toast("Couldn't delete the chat")}},60)};
 $('q').oninput=renderList;
 
 /* ---- conversation ---- */
@@ -598,7 +644,7 @@ async function openChat(uid){if(active!==uid){pauseVoices();if(rec)stopRec(false
  const markRead=()=>{update(ref(db),{[`user_chats/${me.uid}/${uid}/unreadCount`]:0,[`dm_threads/${t}/readReceipts/${me.uid}`]:Date.now()}).catch(()=>{})};markRead();
  offMsgs=onValue(query(ref(db,`dm_threads/${t}/messages`),orderByChild('createdAt'),limitToLast(150)),async s=>{
   const items=[];s.forEach(c=>{const v=c.val();items.push({k:c.key,...v});msgStore[c.key]=items[items.length-1]});
-  sweep(t,uid,items.slice());{const nw=Date.now();for(let i=items.length-1;i>=0;i--)if(items[i].expiresAt&&items[i].expiresAt<=nw)items.splice(i,1)}
+  sweep(t,uid,items.slice());{const nw=Date.now(),cl=+cleared[uid]||0;for(let i=items.length-1;i>=0;i--)if((items[i].expiresAt&&items[i].expiresAt<=nw)||(cl&&(+items[i].createdAt||0)<=cl))items.splice(i,1)}
   const out=await Promise.all(items.map(async (m,i)=>{const f=grp(items[i-1],m),l=(!items[i+1]||grp(m,items[i+1]))?' l':'';
    if(m.systemText)return `<div class="sys">${esc(m.systemText)}</div>`;
    if(m.deletedForEveryone)return `<div class="sys">Message removed</div>`;
@@ -616,15 +662,18 @@ async function openChat(uid){if(active!==uid){pauseVoices();if(rec)stopRec(false
   if(items.length&&items[items.length-1].senderUid!==me.uid)markRead();
  });
 }
+const blockedBy=async u=>{try{return (await get(ref(db,`users/${u}/blocked/${me.uid}`))).val()===true}catch(_){return false}};
 async function sendMsg(){
- const inp=$('msg'),text=inp.value.trim();if(!text||!active)return;inp.value='';syncSend();
- const uid=active,t=tid(me.uid,uid),now=Date.now(),e=await enc(uid,text);
+ const inp=$('msg'),text=inp.value.trim();if(!text||!active)return;
+ if(blocked[active]){const u=active;if(await ask('Unblock to send?',"You've blocked this contact. Unblock them to send a message.",{ok:'Unblock'}))await remove(ref(db,`users/${me.uid}/blocked/${u}`)).catch(()=>{});return}
+ inp.value='';syncSend();
+ const uid=active,t=tid(me.uid,uid),now=Date.now(),e=await enc(uid,text),bm=await blockedBy(uid);
  const key=push(ref(db,`dm_threads/${t}/messages`)).key;
  await update(ref(db),{
   [`dm_threads/${t}/messages/${key}`]:{text:e,senderUid:me.uid,createdAt:now,...(disSec>0?{expiresAt:now+disSec*1000}:{})},
   [`user_chats/${me.uid}/${uid}`]:{text:e,timestamp:now,unreadCount:0,senderUid:me.uid},
-  [`user_chats/${uid}/${me.uid}/text`]:e,[`user_chats/${uid}/${me.uid}/timestamp`]:now,
-  [`user_chats/${uid}/${me.uid}/senderUid`]:me.uid,[`user_chats/${uid}/${me.uid}/unreadCount`]:increment(1)
+  ...(bm?{}:{[`user_chats/${uid}/${me.uid}/text`]:e,[`user_chats/${uid}/${me.uid}/timestamp`]:now,
+  [`user_chats/${uid}/${me.uid}/senderUid`]:me.uid,[`user_chats/${uid}/${me.uid}/unreadCount`]:increment(1)})
  }).catch(()=>ask('Not sent',"Your message couldn't be sent. Check your connection and try again.",{cancel:false}));
 }
 function syncSend(){const h=!!$('msg').value.trim()||!!rec,b=$('sendmsg');b.classList.toggle('has',h);b.setAttribute('aria-label',h?'Send':'Voice message')}
@@ -692,6 +741,7 @@ function stopRec(send){
 }
 async function sendVoice(blob,dur,uid,mime){
  const t=tid(me.uid,uid);
+ if(blocked[uid]){toast('Unblock this contact to send');return}
  try{
   toast('Sending voice message…');
   const key=await sharedKey(uid);if(!key){toast("Can't send: encryption key unavailable");return}
@@ -700,12 +750,12 @@ async function sendVoice(blob,dur,uid,mime){
   const id=push(ref(db,`dm_threads/${t}/messages`)).key;
   const r=sref(storage,`${MEDIA_DIR(t)}/${Date.now()}_voice.bin`);
   await uploadBytes(r,out,{contentType:'application/octet-stream'});
-  const url=await getDownloadURL(r),now=Date.now(),pv='🎤 Voice message',ds=uid===active?disSec:await getDis(t);
+  const url=await getDownloadURL(r),now=Date.now(),pv='🎤 Voice message',ds=uid===active?disSec:await getDis(t),bm=await blockedBy(uid);
   await update(ref(db),{
    [`dm_threads/${t}/messages/${id}`]:{senderUid:me.uid,createdAt:now,mediaType:'audio',mediaURL:url,mediaEncrypted:true,mediaMimeType:mime,duration:Math.round(dur),...(ds>0?{expiresAt:now+ds*1000}:{})},
    [`user_chats/${me.uid}/${uid}`]:{text:pv,timestamp:now,unreadCount:0,senderUid:me.uid},
-   [`user_chats/${uid}/${me.uid}/text`]:pv,[`user_chats/${uid}/${me.uid}/timestamp`]:now,
-   [`user_chats/${uid}/${me.uid}/senderUid`]:me.uid,[`user_chats/${uid}/${me.uid}/unreadCount`]:increment(1)});
+   ...(bm?{}:{[`user_chats/${uid}/${me.uid}/text`]:pv,[`user_chats/${uid}/${me.uid}/timestamp`]:now,
+   [`user_chats/${uid}/${me.uid}/senderUid`]:me.uid,[`user_chats/${uid}/${me.uid}/unreadCount`]:increment(1)})});
  }catch(_){ask('Not sent',"Your voice message couldn't be sent. Check your connection and try again.",{cancel:false})}
 }
 $('msg').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMsg()}});

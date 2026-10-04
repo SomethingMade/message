@@ -50,6 +50,14 @@ async function lookupProfile(chatUid, groupId) {
     return out;
 }
 
+// Encrypted/garbled text reads as spam to Chrome's on-device notification filter,
+// so never show ciphertext — fall back to a plain readable line.
+function cleanBody(b) {
+    const t = (b || '').trim();
+    if (!t || t.includes('\u27e6e2e') || /^[A-Za-z0-9+\/=_-]{24,}$/.test(t)) return 'Sent you a message';
+    return t;
+}
+
 // Never let the lookup delay the notification for long
 const withTimeout = (p, ms) => Promise.race([p, new Promise((r) => setTimeout(() => r(null), ms))]);
 
@@ -70,7 +78,7 @@ messaging.onBackgroundMessage((payload) => {
         const avatar = (profile && profile.photoURL) || (isHttps(icon) ? icon : null) || NOTIF_ICON;
 
         const notificationOptions = {
-            body: body || 'Sent you a message',
+            body: cleanBody(body),
             icon: avatar,
             badge: NOTIF_ICON,
             tag: groupId ? ('group-' + groupId) : (chatUid ? ('chat-' + chatUid) : 'new-message'),

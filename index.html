@@ -208,9 +208,9 @@ button.rw:hover{background:var(--hover)}
 @media (prefers-reduced-motion:reduce){.send svg{animation:none}}
 .rec{flex:1;min-width:0;display:flex;align-items:center;gap:10px;height:44px;padding:0 16px 0 4px;border-radius:22px;background:var(--bg-input)}
 .rec .ibtn{width:36px;height:36px;background:transparent}
-.rd{width:8px;height:8px;border-radius:50%;background:#E41E3F;flex-shrink:0;animation:vbusy 1s ease-in-out infinite}
-.rw{flex:1;min-width:0;display:flex;align-items:center;justify-content:flex-end;gap:2px;height:28px;overflow:hidden}
-.rw span{width:3px;border-radius:2px;background:var(--text);flex-shrink:0;opacity:.8}
+.rcd{width:8px;height:8px;border-radius:50%;background:#E41E3F;flex-shrink:0;animation:vbusy 1s ease-in-out infinite}
+.rcw{flex:1;min-width:0;display:flex;align-items:center;justify-content:flex-end;gap:2px;height:28px;overflow:hidden}
+.rcw span{width:3px;border-radius:2px;background:var(--text);flex-shrink:0;opacity:.8}
 .rt{font:400 10px/1 var(--brand);letter-spacing:.6px;min-width:30px;text-align:right}
 /* profile sheet */
 @media (max-width:768px){#sheet .pan{max-width:none}}
@@ -272,7 +272,7 @@ button.rw:not(.dg)::after{content:'';width:8px;height:8px;border-right:2px solid
   <div id="thread" hidden style="display:flex;flex-direction:column;flex:1;min-height:0">
    <div class="ch"><button class="ibtn" id="back" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button><div class="av sm" id="t-av"></div><div class="who"><div class="n" id="t-name"></div><div class="st" id="t-sub"></div></div></div>
    <div id="msgs"></div>
-   <div class="compose"><input id="msg" class="in" placeholder="Message" autocomplete="off"><div class="rec" id="rec" hidden><button class="ibtn" id="rec-x" aria-label="Cancel recording"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg></button><span class="rd"></span><div class="rw" id="rec-w"></div><span class="rt" id="rec-t">0:00</span></div><button class="send" id="sendmsg" aria-label="Voice message"><svg class="i-mic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg><svg class="i-snd" viewBox="0 0 200 200"><polygon points="20,80 170,30 80,110" fill="currentColor" fill-opacity=".75"/><polygon points="120,180 170,30 80,110" fill="currentColor"/><polygon points="20,80 80,110 80,140" fill="currentColor" fill-opacity=".55"/></svg></button></div>
+   <div class="compose"><input id="msg" class="in" placeholder="Message" autocomplete="off"><div class="rec" id="rec" hidden><button class="ibtn" id="rec-x" aria-label="Cancel recording"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg></button><span class="rcd"></span><div class="rcw" id="rec-w"></div><span class="rt" id="rec-t">0:00</span></div><button class="send" id="sendmsg" aria-label="Voice message"><svg class="i-mic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg><svg class="i-snd" viewBox="0 0 200 200"><polygon points="20,80 170,30 80,110" fill="currentColor" fill-opacity=".75"/><polygon points="120,180 170,30 80,110" fill="currentColor"/><polygon points="20,80 80,110 80,140" fill="currentColor" fill-opacity=".55"/></svg></button></div>
   </div>
  </main>
 </div>

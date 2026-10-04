@@ -173,6 +173,12 @@ button.rw:hover{background:var(--hover)}
 .rw .tx span{display:block;color:var(--sub);font-size:13.5px;margin-top:1px;line-height:1.35}
 .rw.dg .tx b{color:#E41E3F}
 .note{color:var(--sub);font-size:13px;line-height:1.5;padding:6px 20px 8px}
+#inbn{position:fixed;left:50%;top:calc(8px + env(safe-area-inset-top,0px));width:calc(100% - 16px);max-width:460px;z-index:96;display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:18px;background:var(--bg);color:var(--text);border:1px solid var(--line);box-shadow:0 8px 28px rgba(0,0,0,.22);transform:translate(-50%,-160%);opacity:0;transition:transform .35s cubic-bezier(.2,.9,.3,1),opacity .25s;cursor:pointer;touch-action:none;user-select:none}
+#inbn.show{transform:translate(-50%,0);opacity:1}
+#inbn .av{width:40px;height:40px;flex-shrink:0}
+#inbn .bt{min-width:0;flex:1}
+#inbn .bn{font-weight:700;font-size:14.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#inbn .bm{font-size:13.5px;color:var(--sub);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #toast{position:fixed;left:50%;bottom:calc(28px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:95;max-width:90%;background:var(--accent);color:var(--bg);padding:10px 18px;border-radius:999px;font-size:14px;font-weight:600;text-align:center}
 .b.mb{padding:4px}
 .b.mb small{padding:0 8px 3px}
@@ -420,6 +426,7 @@ img,svg,video,a{-webkit-user-drag:none;user-drag:none;-webkit-touch-callout:none
 </div></div></div>
 <div id="fsh" hidden><div class="msheet"><div class="grab"></div><h3 class="dt">Forward to</h3><div class="fq"><input class="in" id="fs-q" placeholder="Search" autocomplete="off"></div><div class="fl" id="fs-l"></div></div></div>
 <div id="toast" hidden></div>
+<div id="inbn" role="status" aria-live="polite" hidden></div>
 <div id="lb" hidden><div class="lbh"><button class="ibtn" id="lb-x" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button><div class="lbw"><b id="lb-n"></b><span id="lb-d"></span></div><button class="ibtn" id="lb-dl" aria-label="Download"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><polyline points="7 11 12 16 17 11"/><path d="M5 21h14"/></svg></button></div><div class="lbs" id="lb-s"><img id="lb-i" alt=""></div><button class="lbn l" id="lb-p" aria-label="Previous">&#8249;</button><button class="lbn r" id="lb-nx" aria-label="Next">&#8250;</button></div>
 <div id="modal" hidden><div class="box"><h3 id="m-title"></h3><p id="m-text"></p><input id="m-in" class="in" hidden><div class="acts"><button id="m-cancel">Cancel</button><button class="go" id="m-ok">OK</button></div></div></div>
 
@@ -610,11 +617,31 @@ function playSound(kind){
 function paintSnd(){$('r-snd-sub').textContent=soundsOn()?'On':'Off'}
 $('r-snd').onclick=()=>{const on=soundsOn();try{localStorage.setItem('hSounds',on?'off':'on')}catch(_){}paintSnd();if(!on){sndInit();setTimeout(()=>playSound('message'),60)}};
 paintSnd();
+/* ---- in-app message banner: slides in from the top, auto-closes after a few seconds ---- */
+let inbT=null,inbHide=null;
+function inbClose(){const b=$('inbn');clearTimeout(inbT);b.classList.remove('show');clearTimeout(inbHide);inbHide=setTimeout(()=>{b.hidden=true},400)}
+async function inbShow(uid,c){
+ if(document.visibilityState!=='visible')return;
+ const p=profiles[uid]||(await loadProfile(uid).catch(()=>null),profiles[uid])||{};
+ let txt='';try{txt=await dec(uid,c.text)}catch(_){}
+ if(!txt||!String(txt).trim())txt=({image:'📷 Photo',video:'🎥 Video',audio:'🎤 Voice message',document:'📄 Document',gif:'GIF',sticker:'Sticker'})[c.mediaType]||'New message';
+ if(uid===active)return;
+ const b=$('inbn');clearTimeout(inbT);clearTimeout(inbHide);
+ b.innerHTML=`<div class="av" ${avStyle(p)}>${p.photoURL?'':esc(initials(p.name))}</div><div class="bt"><div class="bn">${esc(p.name||'New message')}</div><div class="bm">${esc(txt)}</div></div>`;
+ b.dataset.uid=uid;b.hidden=false;b.classList.remove('show');void b.offsetWidth;b.classList.add('show');
+ inbT=setTimeout(inbClose,4000)}
+(()=>{const b=$('inbn');let y0=null,moved=false;
+ b.addEventListener('pointerdown',e=>{y0=e.clientY;moved=false;clearTimeout(inbT)});
+ b.addEventListener('pointermove',e=>{if(y0===null)return;const dy=e.clientY-y0;if(dy<-6)moved=true;if(dy<0)b.style.transform=`translate(-50%,${dy}px)`});
+ b.addEventListener('pointerup',e=>{if(y0===null)return;const dy=e.clientY-y0;y0=null;b.style.transform='';
+  if(dy<-24){inbClose();return}
+  if(!moved){const u=b.dataset.uid;inbClose();if(u&&me)loadProfile(u).then(()=>openChat(u))}else inbT=setTimeout(inbClose,2000)});
+ b.addEventListener('pointercancel',()=>{y0=null;b.style.transform='';inbT=setTimeout(inbClose,2000)})})();
 /* new message in any chat -> sound; friend's status going offline -> online -> sound */
 let chatsInit=false;const seenTs={},friendOff={},fStatus={},lastOnline={};
 function checkIncoming(nc){
  if(chatsInit){let k=null;
-  for(const [u,c] of Object.entries(nc)){if(blocked[u])continue;if(c&&c.senderUid&&c.senderUid!==me.uid&&(+c.timestamp||0)>(seenTs[u]||0))k=(u===active&&document.visibilityState==='visible')?(k||'pop'):'message'}
+  for(const [u,c] of Object.entries(nc)){if(blocked[u])continue;if(c&&c.senderUid&&c.senderUid!==me.uid&&(+c.timestamp||0)>(seenTs[u]||0)){const here=(u===active&&document.visibilityState==='visible');k=here?(k||'pop'):'message';if(!here)inbShow(u,c)}}
   if(k)playSound(k)}
  Object.entries(nc).forEach(([u,c])=>{seenTs[u]=Math.max(seenTs[u]||0,(c&&+c.timestamp)||0)});chatsInit=true}
 function watchFriends(uids){uids.slice(0,60).forEach(u=>{if(friendOff[u]||u===(me&&me.uid))return;let first=true;

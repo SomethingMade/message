@@ -239,6 +239,13 @@ button.rw:not(.dg)::after{content:'';width:8px;height:8px;border-right:2px solid
 .note{padding:12px 24px 8px}
 .pf{display:flex;align-items:center;justify-content:center;gap:8px;margin:30px 0 8px;color:var(--sub);font:400 9px/1 var(--brand);letter-spacing:1.6px}
 .pf svg{width:16px;height:16px}
+/* header menu */
+#menu{position:fixed;inset:0;z-index:79;background:rgba(0,0,0,.45);display:flex;align-items:flex-end;justify-content:center}
+.msheet{width:100%;max-width:460px;background:var(--bg);border-radius:22px 22px 0 0;padding:10px 0 calc(16px + env(safe-area-inset-bottom,0px));animation:sheetUp .22s ease-out}
+.grab{width:36px;height:4px;border-radius:2px;background:var(--line);margin:0 auto 14px}
+@keyframes sheetUp{from{transform:translateY(100%)}}
+@media (min-width:769px){#menu{align-items:flex-start;justify-content:flex-start;background:transparent;padding:60px 12px}.msheet{width:340px;border-radius:16px;padding:8px 0;box-shadow:0 12px 28px rgba(0,0,0,.25);border:1px solid var(--line);animation:none}.grab{display:none}}
+@media (prefers-reduced-motion:reduce){.msheet{animation:none}}
 </style>
 </head>
 <body>
@@ -261,6 +268,7 @@ button.rw:not(.dg)::after{content:'';width:8px;height:8px;border-right:2px solid
  <aside id="list">
   <div class="head"><h1>Chats</h1><div style="display:flex;gap:8px">
    <button class="ibtn" id="new" title="New chat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></button>
+   <button class="ibtn" id="more" title="More" aria-label="More options"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/></svg></button>
    <button class="ibtn" id="me" title="Account"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg></button></div></div>
   <div class="search"><input id="q" class="in" placeholder="Search chats" autocomplete="off"></div>
   <div class="banner" id="enc-banner" hidden></div>
@@ -301,6 +309,10 @@ button.rw:not(.dg)::after{content:'';width:8px;height:8px;border-right:2px solid
   <p class="note">Haba never sees or stores your PIN, so it can&rsquo;t be emailed or recovered for you. If it&rsquo;s lost, resetting is the only way to message again from a new device, and messages encrypted with the old key can&rsquo;t be read afterwards.</p>
  </div>
 </div></div>
+<div id="menu" hidden><div class="msheet"><div class="grab"></div><div class="lst">
+ <button class="rw" id="mn-prof"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></div><div class="tx"><b>Edit profile</b><span>Your name and account settings</span></div></button>
+ <button class="rw" id="mn-ref"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg></div><div class="tx"><b>Refresh</b><span>Clear cached files and load the latest version</span></div></button>
+</div></div></div>
 <div id="toast" hidden></div>
 <div id="lb" hidden><div class="lbh"><button class="ibtn" id="lb-x" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button><div class="lbw"><b id="lb-n"></b><span id="lb-d"></span></div><button class="ibtn" id="lb-dl" aria-label="Download"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><polyline points="7 11 12 16 17 11"/><path d="M5 21h14"/></svg></button></div><div class="lbs" id="lb-s"><img id="lb-i" alt=""></div><button class="lbn l" id="lb-p" aria-label="Previous">&#8249;</button><button class="lbn r" id="lb-nx" aria-label="Next">&#8250;</button></div>
 <div id="modal" hidden><div class="box"><h3 id="m-title"></h3><p id="m-text"></p><input id="m-in" class="in" hidden><div class="acts"><button id="m-cancel">Cancel</button><button class="go" id="m-ok">OK</button></div></div></div>
@@ -332,7 +344,8 @@ const hideSplash=()=>setTimeout(()=>$('splash').classList.add('out'),Math.max(30
 const navStack=[];
 function navPush(t){if(navStack.includes(t))return;navStack.push(t);try{history.pushState({t},'')}catch(_){}}
 function navClose(t,hide){if(navStack[navStack.length-1]===t){history.back();return}const i=navStack.lastIndexOf(t);if(i>-1)navStack.splice(i,1);hide()}
-window.addEventListener('popstate',()=>{const t=navStack.pop();if(t==='lb')lbHide();else if(t==='sheet')sheetHide();else if(t==='chat')chatHide()});
+window.addEventListener('popstate',()=>{const t=navStack.pop();if(t==='lb')lbHide();else if(t==='sheet')sheetHide();else if(t==='chat')chatHide();else if(t==='menu')menuHide()});
+function navSwap(from,to){const i=navStack.lastIndexOf(from);if(i>-1){navStack[i]=to;try{history.replaceState({t:to},'')}catch(_){}}else navPush(to)}
 
 /* dialogs */
 function ask(title,text,{input=false,ok='OK',cancel=true,pin=false,value=''}={}){return new Promise(res=>{$('m-title').textContent=title;$('m-text').textContent=text;const mi=$('m-in');mi.hidden=!input;mi.value=value;mi.type=pin?'password':'text';mi.inputMode=pin?'numeric':'text';mi.maxLength=pin?6:200;mi.autocomplete='off';$('m-cancel').hidden=!cancel;$('m-ok').textContent=ok;$('modal').hidden=false;if(input)mi.focus();const done=v=>{$('modal').hidden=true;mi.onkeydown=null;res(v)};mi.onkeydown=e=>{if(e.key==='Enter')$('m-ok').click()};$('m-ok').onclick=()=>done(input?mi.value.trim():true);$('m-cancel').onclick=()=>done(input?null:false)})}
@@ -831,6 +844,19 @@ $('new').onclick=async()=>{
  catch(_){ask('Error',"Couldn't look that up. Try again.",{cancel:false})}
 };
 $('me').onclick=()=>openSheet('main');
+/* header three-dot menu: Edit profile + Refresh (clear cached files, then reload), like Haba */
+function menuHide(){$('menu').hidden=true}
+function menuClose(){navClose('menu',menuHide)}
+$('more').onclick=()=>{navPush('menu');$('menu').hidden=false};
+$('menu').onclick=e=>{if(e.target.id==='menu')menuClose()};
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('menu').hidden)menuClose()});
+$('mn-prof').onclick=()=>{menuHide();navSwap('menu','sheet');openSheet('main')};
+$('mn-ref').onclick=()=>{menuClose();setTimeout(async()=>{
+ if(!await ask('Refresh app','This clears cached files and reloads Haba Messenger so you get the latest version. Your chats and account stay safe on the server.',{ok:'Refresh'}))return;
+ toast('Refreshing…');
+ try{if('caches' in window)await Promise.all((await caches.keys()).map(k=>caches.delete(k)));
+  if('serviceWorker' in navigator)await Promise.all((await navigator.serviceWorker.getRegistrations()).map(r=>r.update().catch(()=>{})))}catch(_){}
+ location.reload()},60)};
 </script>
 </body>
 </html>

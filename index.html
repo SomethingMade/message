@@ -572,9 +572,13 @@ function showApp(){$('auth').hidden=true;$('app').hidden=false;startPresence();s
  blocked={};cleared={};showArch=false;offBl.forEach(f=>f());
  offBl=[onValue(ref(db,'users/'+me.uid+'/blocked'),x=>{blocked=x.val()||{};renderList()}),onValue(ref(db,'users/'+me.uid+'/cleared'),x=>{cleared=x.val()||{}})];
  offList=onValue(ref(db,'user_chats/'+me.uid),s=>{const nc=s.val()||{};checkIncoming(nc);chats=nc;renderList();Object.keys(chats).forEach(loadProfile);watchFriends(Object.keys(chats))})}
-const VB_SVG='<svg class="vb" viewBox="0 0 24 24" role="img" aria-label="Verified"><path fill="#1D9BF0" d="M22.5 12.5c0-1.58-.88-2.95-2.18-3.66.54-1.4.24-3.05-.88-4.17s-2.77-1.42-4.17-.88C14.58 2.5 13.2 1.5 11.62 1.5S8.67 2.4 7.96 3.7c-1.4-.54-3.05-.24-4.17.88s-1.42 2.77-.88 4.17C1.6 9.55.72 10.92.72 12.5s.88 2.95 2.19 3.66c-.54 1.4-.24 3.05.88 4.17s2.77 1.42 4.17.88c.71 1.3 2.08 2.19 3.66 2.19s2.95-.88 3.66-2.19c1.4.54 3.05.24 4.17-.88s1.42-2.77.88-4.17c1.3-.71 2.18-2.08 2.18-3.66z"/><path fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" d="M7.6 12.6l3 3 5.8-6.2"/></svg>';
-const vb=p=>p&&p.verified===true?VB_SVG:'';
-const nameHtml=(p,fb)=>'<span class="nt">'+esc((p&&p.name)||fb)+'</span>'+vb(p);
+/* same rules as Haba: gold = business account; blue = paid / streak / 5000+ followers (users/{uid} fields) */
+const VB_BLUE='<svg class="verified-badge vb" viewBox="0 0 22 22" width="16" height="16" aria-label="Verified"><path fill="#0A84FF" d="M20.396 11c-.018-.646-.215-1.275-.57-1.816-.354-.54-.852-.972-1.438-1.246.223-.607.27-1.264.14-1.897-.131-.634-.437-1.218-.882-1.687-.47-.445-1.053-.75-1.687-.882-.633-.13-1.29-.083-1.897.14-.273-.587-.704-1.086-1.245-1.44S11.647 1.62 11 1.604c-.646.017-1.273.213-1.813.568-.54.354-.972.853-1.246 1.44-.607-.223-1.264-.272-1.897-.14-.633.13-1.217.437-1.687.882-.444.47-.75 1.053-.882 1.687-.13.633-.083 1.29.14 1.897-.586.274-1.084.706-1.438 1.246-.354.54-.552 1.17-.57 1.816.018.646.216 1.276.57 1.816.354.54.852.972 1.438 1.246-.223.607-.27 1.264-.14 1.897.131.634.437 1.217.882 1.687.47.445 1.054.75 1.687.882.633.13 1.29.083 1.897-.14.274.586.706 1.084 1.246 1.438.54.354 1.17.552 1.813.57.646-.018 1.276-.216 1.816-.57.54-.354.972-.852 1.246-1.438.607.223 1.264.27 1.897.14.634-.131 1.217-.437 1.687-.882.445-.47.75-1.053.882-1.687.13-.633.083-1.29-.14-1.897.586-.274 1.084-.706 1.438-1.246.355-.54.552-1.17.57-1.816zM9.662 14.85l-3.429-3.428 1.293-1.293 2.136 2.136 4.6-4.6 1.293 1.293-5.893 5.892z"></path></svg>';
+const VB_GOLD='<svg class="verified-badge business-badge vb" viewBox="0 0 22 22" width="16" height="16" aria-label="Business Account"><path fill="#D4A017" d="M20.396 11c-.018-.646-.215-1.275-.57-1.816-.354-.54-.852-.972-1.438-1.246.223-.607.27-1.264.14-1.897-.131-.634-.437-1.218-.882-1.687-.47-.445-1.053-.75-1.687-.882-.633-.13-1.29-.083-1.897.14-.273-.587-.704-1.086-1.245-1.44S11.647 1.62 11 1.604c-.646.017-1.273.213-1.813.568-.54.354-.972.853-1.246 1.44-.607-.223-1.264-.272-1.897-.14-.633.13-1.217.437-1.687.882-.444.47-.75 1.053-.882 1.687-.13.633-.083 1.29.14 1.897-.586.274-1.084.706-1.438 1.246-.354.54-.552 1.17-.57 1.816.018.646.216 1.276.57 1.816.354.54.852.972 1.438 1.246-.223.607-.27 1.264-.14 1.897.131.634.437 1.217.882 1.687.47.445 1.054.75 1.687.882.633.13 1.29.083 1.897-.14.274.586.706 1.084 1.246 1.438.54.354 1.17.552 1.813.57.646-.018 1.276-.216 1.816-.57.54-.354.972-.852 1.246-1.438.607.223 1.264.27 1.897.14.634-.131 1.217-.437 1.687-.882.445-.47.75-1.053.882-1.687.13-.633.083-1.29-.14-1.897.586-.274 1.084-.706 1.438-1.246.355-.54.552-1.17.57-1.816zM9.662 14.85l-3.429-3.428 1.293-1.293 2.136 2.136 4.6-4.6 1.293 1.293-5.893 5.892z"></path></svg>';
+const AI_UID='goza-ai-assistant',FRIENDS_BADGE_THRESHOLD=5000;
+const isVerifiedProfile=(p,uid)=>uid===AI_UID||!!(p&&(p.isBusinessAccount||p.paidVerifiedAt||p.streakVerifiedAt||(p.followersCount||0)>FRIENDS_BADGE_THRESHOLD));
+const vb=(p,uid)=>uid===AI_UID?VB_BLUE:p&&p.isBusinessAccount?VB_GOLD:isVerifiedProfile(p,uid)?VB_BLUE:'';
+const nameHtml=(p,fb,uid)=>'<span class="nt">'+esc((p&&p.name)||fb)+'</span>'+vb(p,uid);
 async function loadProfile(uid){if(profiles[uid])return;const s=await get(ref(db,'users/'+uid));profiles[uid]=s.val()||{name:'Haba user'};renderList();if(active===uid)paintHead()}
 
 /* ---- chat list ---- */
@@ -597,7 +601,7 @@ function renderList(){
  if(!rows.length&&!top){$('chats').innerHTML=`<div class="empty">${q?'No chats match your search.':'No conversations yet.<br>Tap the pencil to start one.'}</div>`;return}
  $('chats').innerHTML=top+rows.map(([uid,c])=>{const p=profiles[uid]||{},pv=previews[uid+c.timestamp];if(pv===undefined)preview(uid,c);
   const bl=!!blocked[uid],un=!bl&&c.unreadCount>0&&c.senderUid!==me.uid;
-  return `<div class="chat${un?' unread':''}${bl?' blocked':''}${active===uid?' active':''}" data-uid="${esc(uid)}"><div class="av" ${avStyle(p)}>${p.photoURL?'':esc(initials(p.name))}</div><div class="cm"><div class="n">${nameHtml(p,'…')}</div><div class="p">${bl?'Blocked':(c.senderUid===me.uid?'You: ':'')+esc(pv===undefined?'…':pv)}</div></div><div class="meta"><span class="t">${fmt(c.timestamp)}</span>${un?`<span class="badge">${c.unreadCount>99?'99+':c.unreadCount}</span>`:''}</div></div>`}).join('');
+  return `<div class="chat${un?' unread':''}${bl?' blocked':''}${active===uid?' active':''}" data-uid="${esc(uid)}"><div class="av" ${avStyle(p)}>${p.photoURL?'':esc(initials(p.name))}</div><div class="cm"><div class="n">${nameHtml(p,'…',uid)}</div><div class="p">${bl?'Blocked':(c.senderUid===me.uid?'You: ':'')+esc(pv===undefined?'…':pv)}</div></div><div class="meta"><span class="t">${fmt(c.timestamp)}</span>${un?`<span class="badge">${c.unreadCount>99?'99+':c.unreadCount}</span>`:''}</div></div>`}).join('');
 }
 $('chats').onclick=e=>{if(lpFired){lpFired=false;return}const r=e.target.closest('.chat');if(!r)return;
  if(r.dataset.arch){showArch=true;renderList();$('chats').scrollTop=0;return}if(r.dataset.back){showArch=false;renderList();return}
@@ -610,7 +614,7 @@ $('chats').addEventListener('pointerdown',e=>{const r=e.target.closest('.chat[da
 $('chats').addEventListener('pointermove',e=>{if(lpT&&Math.hypot(e.clientX-lpX,e.clientY-lpY)>10)lpStop()});
 ['pointerup','pointercancel','pointerleave','scroll'].forEach(ev=>$('chats').addEventListener(ev,lpStop,{passive:true}));
 function csOpen(uid){if(!uid||!chats[uid])return;lpStop();csUid=uid;csAt=Date.now();const c=chats[uid]||{};
- $('cs-name').innerHTML=nameHtml(profiles[uid],'Chat');
+ $('cs-name').innerHTML=nameHtml(profiles[uid],'Chat',uid);
  $('cs-arch-t').textContent=isArch(c)?'Unarchive chat':'Archive chat';
  $('cs-blk-t').textContent=blocked[uid]?'Unblock':'Block';
  navPush('cs');$('csheet').hidden=false}
@@ -656,7 +660,7 @@ $('q').oninput=renderList;
 
 /* ---- conversation ---- */
 const tid=(a,b)=>[a,b].sort().join('_');
-function paintHead(){const p=profiles[active]||{};$('t-name').innerHTML=nameHtml(p,'…');const a=$('t-av');a.style.backgroundImage=p.photoURL?`url('${p.photoURL}')`:'';a.textContent=p.photoURL?'':initials(p.name)}
+function paintHead(){const p=profiles[active]||{};$('t-name').innerHTML=nameHtml(p,'…',active);const a=$('t-av');a.style.backgroundImage=p.photoURL?`url('${p.photoURL}')`:'';a.textContent=p.photoURL?'':initials(p.name)}
 const dk=t=>t?new Date(t).toDateString():'';
 const isSys=x=>!x||x.systemText||x.deleted||x.deletedForEveryone||x.mediaType==='call'||x.mediaType==='group_call';
 const grp=(p,m)=>(isSys(p)||p.senderUid!==m.senderUid||dk(p.createdAt)!==dk(m.createdAt))?' f':'';
@@ -886,7 +890,7 @@ function hydrate(uid){
 $('msgs').addEventListener('scroll',()=>{const b=$('msgs');pinned=b.scrollHeight-b.scrollTop-b.clientHeight<160});
 $('msgs').addEventListener('click',e=>{const b=e.target.closest('.b');if(b&&!e.target.closest('[data-lb],[data-k],audio,video'))b.classList.toggle('sh')});
 let lbList=[],lbN=0,tx=0;
-function lbShow(n){lbN=(n+lbList.length)%lbList.length;const el=lbList[lbN],im=$('lb-i');im.classList.remove('z');im.style.transformOrigin='';im.src=el.dataset.lb;
+function lbShow(n){lbN=(n+lbList.length)%lbList.length;const el=lbList[lbN],im=$('lb-i');im.classList.remove('z');im.style.transformOrigin='';im.src=el.dataset.lb;$('lb-dl').hidden=false;
  const m=msgStore[((el.closest('[data-k]')||{}).dataset||{}).k]||{};
  $('lb-n').textContent=m.senderUid?(m.senderUid===me.uid?'You':(profiles[m.senderUid]||{}).name||''):'';
  $('lb-d').textContent=m.createdAt?dayLabel(m.createdAt)+', '+tmf(m.createdAt):'';
@@ -896,7 +900,7 @@ function lbClose(){navClose('lb',lbHide)}
 $('msgs').addEventListener('click',e=>{const i=e.target.closest('img[data-lb]');if(!i)return;lbList=[...$('msgs').querySelectorAll('img[data-lb]')];lbShow(lbList.indexOf(i));$('lb').hidden=false;navPush('lb')});
 function showAvatar(uid){const p=profiles[uid]||{},u=safeUrl(p.photoURL)?p.photoURL:'';if(!u)return false;
  lbList=[];const im=$('lb-i');im.classList.remove('z');im.style.transformOrigin='';im.src=u;
- $('lb-n').textContent=p.name||'';$('lb-d').textContent='Profile photo';$('lb-p').hidden=$('lb-nx').hidden=true;
+ $('lb-n').textContent=p.name||'';$('lb-d').textContent='Profile photo';$('lb-dl').hidden=!(uid===me.uid||isVerifiedProfile(profiles[me.uid],me.uid));$('lb-p').hidden=$('lb-nx').hidden=true;
  $('lb').hidden=false;navPush('lb');return true}
 $('t-av').onclick=()=>showAvatar(active);
 $('lb-x').onclick=lbClose;$('lb-p').onclick=()=>lbShow(lbN-1);$('lb-nx').onclick=()=>lbShow(lbN+1);
@@ -1020,7 +1024,7 @@ async function paintEnc(){
 async function paintMain(){
  const u=(await get(ref(db,'users/'+me.uid)).catch(()=>null)),p=(u&&u.val())||profiles[me.uid]||{};profiles[me.uid]=p;
  const av=$('p-av');av.style.backgroundImage=p.photoURL?`url('${p.photoURL.replace(/'/g,'%27')}')`:'';av.textContent=p.photoURL?'':initials(p.name);
- $('p-name').innerHTML=esc(p.name||'Haba user')+vb(p);$('p-user').textContent=p.username?'@'+p.username:'';$('p-phone').textContent=me.phoneNumber||me.email||'';
+ $('p-name').innerHTML=esc(p.name||'Haba user')+vb(p,me.uid);$('p-user').textContent=p.username?'@'+p.username:'';$('p-phone').textContent=me.phoneNumber||me.email||'';
  await myKeys().catch(()=>null);if(backupInfo===undefined)await loadBackup();
  $('r-enc-sub').textContent=!kp?"This device can't read older chats":backupInfo?'Backup PIN is set':backupInfo===null?'No backup PIN yet':'Backup PIN for your encrypted chats';
 }

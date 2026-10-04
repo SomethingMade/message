@@ -475,7 +475,7 @@ img,svg,video,a{-webkit-user-drag:none;user-drag:none;-webkit-touch-callout:none
  <button class="rw dg" id="ms-del"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg></div><div class="tx"><b>Delete</b></div></button>
 </div></div></div>
 <div id="fsh" hidden><div class="msheet"><div class="grab"></div><h3 class="dt">Forward to</h3><div class="fq"><input class="in" id="fs-q" placeholder="Search" autocomplete="off"></div><div class="fl" id="fs-l"></div></div></div>
-<div id="nc" hidden><div class="nh"><button class="ibtn" id="nc-back" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button><h2>New chat</h2><button class="ibtn" id="nc-sync" title="Sync contacts" aria-label="Sync contacts"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 1-15.5 6.2L3 16"/><path d="M3 12A9 9 0 0 1 18.5 5.8L21 8"/><polyline points="21 3 21 8 16 8"/><polyline points="3 21 3 16 8 16"/></svg></button></div><div class="nq"><input class="in" id="nc-q" placeholder="Search name, @username or number" autocomplete="off"></div><div id="nc-l"></div></div>
+<div id="nc" hidden><div class="nh"><button class="ibtn" id="nc-back" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button><h2>New chat</h2><button class="ibtn" id="nc-sync" title="Sync contacts" aria-label="Sync contacts"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 1-15.5 6.2L3 16"/><path d="M3 12A9 9 0 0 1 18.5 5.8L21 8"/><polyline points="21 3 21 8 16 8"/><polyline points="3 21 3 16 8 16"/></svg></button></div><div class="nq"><input class="in" id="nc-q" placeholder="Search name, @username or number" autocomplete="off"></div><div id="nc-l"></div><input type="file" id="nc-vcf" accept=".vcf,text/vcard,text/x-vcard,text/directory" hidden></div>
 <div id="ssh" hidden><div class="msheet"><div class="grab"></div><h3 class="dt">Stickers</h3><div class="skq"><input class="in" id="sk-q" placeholder="Search stickers" autocomplete="off"></div><div class="skc" id="sk-c"></div><div class="skt" id="sk-t"></div><div class="sks"><div class="skg" id="sk-g"></div></div></div></div>
 <div id="toast" hidden></div>
 <div id="inbn" role="status" aria-live="polite" hidden></div>
@@ -1576,11 +1576,40 @@ async function findByPhone(num){
   let uid=null;if(s.exists())s.forEach(c=>{if(!uid)uid=c.key});return uid}
  catch(e){const c=String((e&&(e.code||e.message))||'error');ncLastErr=c;if(/permission/i.test(c))usersQueryDenied=true;console.error('users lookup failed',e);throw e}
 }
+let ncProps=Promise.resolve(['name','tel']);
+function ncLoadProps(){ncProps=(async()=>{try{if(navigator.contacts&&navigator.contacts.getProperties){const sup=await navigator.contacts.getProperties();const p=['name','tel'].filter(x=>sup.includes(x));if(p.length)return p}}catch(_){}return ['name','tel']})()}
 async function ncSync(){
  if(ncBusy)return;
- if(!ncCanPick()){toast("This browser can't share your contacts. Search by number or @username.");return}
- let picked;try{picked=await navigator.contacts.select(['name','tel'],{multiple:true})}catch(e){toast(e&&e.name==='SecurityError'?'Open Haba directly in Chrome to share contacts':'Could not open your contacts'+(e&&e.name?' ('+e.name+')':''));return}
- if(!picked||!picked.length)return;
+ if(!ncCanPick()){toast("This browser can't share contacts. Import a contacts file instead.");return}
+ let picked;
+ try{const props=await ncProps;picked=await navigator.contacts.select(props,{multiple:true})}
+ catch(e){console.error('contact picker failed',e);
+  toast(e&&e.name==='SecurityError'?'Open Haba directly in Chrome to share contacts':"Couldn't open your contacts"+(e&&e.name?' ('+e.name+')':'')+'. Try importing a contacts file.');return}
+ if(picked&&picked.length)ncProcess(picked);
+}
+/* fallback that works in every browser: a .vcf export from the phone's Contacts app */
+function parseVcf(text){
+ const out=[];text=String(text||'').replace(/\r\n?/g,'\n').replace(/\n[ \t]/g,'');
+ text.split(/BEGIN:VCARD/i).slice(1).forEach(card=>{
+  let name='';const tel=[];
+  card.split('\n').forEach(l=>{
+   let m=l.match(/^FN[^:]*:(.*)$/i);if(m&&!name)name=m[1].trim();
+   if(!name){m=l.match(/^N(?:;[^:]*)?:(.*)$/i);if(m){const q=m[1].split(';');name=((q[1]||'')+' '+(q[0]||'')).trim()}}
+   m=l.match(/^(?:item\d+\.)?TEL[^:]*:(.+)$/i);if(m&&m[1].trim())tel.push(m[1].trim());
+  });
+  if(tel.length)out.push({name:[name],tel});
+ });
+ return out;
+}
+async function ncImportFile(f){
+ if(!f)return;
+ let txt;try{txt=await f.text()}catch(_){toast("Couldn't read that file");return}
+ const list=parseVcf(txt);
+ if(!list.length){toast('No phone numbers found in that file');return}
+ ncProcess(list);
+}
+async function ncProcess(picked){
+ if(ncBusy)return;
  ncBusy=true;paintNc('Checking contacts…');
  const map=new Map();
  picked.forEach(c=>{const nm=(c.name&&c.name[0])||'';(c.tel||[]).forEach(t=>{const n=normPhone(t);if(n&&n!==me.phoneNumber&&!map.has(n))map.set(n,nm)})});
@@ -1604,11 +1633,12 @@ function paintNc(status){
  const miss=(ncData.miss||[]).filter(c=>match(c,null)).sort((a,b)=>(a.name||a.phone).localeCompare(b.name||b.phone));
  if(qd.length>=7){const n=normPhone(q);if(n)h+=`<div class="chat" data-act="num" data-v="${esc(n)}"><div class="av ac">+</div><div class="cm"><div class="n"><span class="nt">Find ${esc(n)} on Haba</span></div></div></div>`}
  else if(q.replace(/^@/,'').length>=2&&!/^[\d\s+()-]+$/.test(q))h+=`<div class="chat" data-act="user" data-v="${esc(q.replace(/^@/,''))}"><div class="av ac">@</div><div class="cm"><div class="n"><span class="nt">Find @${esc(q.replace(/^@/,''))}</span></div></div></div>`;
+ if(!q)h+=`<div class="chat" data-act="vcf"><div class="av ac">\u{1F4C7}</div><div class="cm"><div class="n"><span class="nt">Import contacts file (.vcf)</span></div></div></div>`;
  if(!q)h+=`<div class="chat" data-act="ask"><div class="av ac">@</div><div class="cm"><div class="n"><span class="nt">Find by @username</span></div></div></div>`;
  if(hits.length){h+=`<div class="nsec">Contacts on Haba</div>`+hits.map(c=>{const p=profiles[c.uid]||{};if(!profiles[c.uid])loadProfile(c.uid).then(()=>{if(!$('nc').hidden)paintNc()});
   const sub=[p.name&&p.name!==c.name?p.name:'',p.username?'@'+p.username:''].filter(Boolean).join(' · ');
   return `<div class="chat" data-act="open" data-u="${esc(c.uid)}"><div class="av" ${avStyle(p)}>${p.photoURL?'':esc(initials(c.name||p.name))}</div><div class="cm"><div class="n"><span class="nt">${esc(c.name||p.name||c.phone)}</span>${vb(p,c.uid)}</div>${sub?`<div class="p">${esc(sub)}</div>`:''}</div></div>`}).join('')}
- else if(!q&&!ncBusy)h+=`<div class="empty"><div class="et">${(ncData.t?'No contacts on Haba yet':'Find your contacts')}</div><div class="es">${canPick?(ncData.t?'None of the contacts you shared have signed up yet. You can invite them below or sync again.':'Share your contacts to see which of your friends are already on Haba.'):"This browser can't share your address book with Haba. Search by phone number or @username above."}</div>${canPick?'<button class="ninv" data-act="sync">'+(ncData.t?'Sync again':'Sync contacts')+'</button>':''}</div>`;
+ else if(!q&&!ncBusy)h+=`<div class="empty"><div class="et">${(ncData.t?'No contacts on Haba yet':'Find your contacts')}</div><div class="es">${canPick?(ncData.t?'None of the contacts you shared have signed up yet. You can invite them below or sync again.':'Share your contacts to see which of your friends are already on Haba.'):"This browser can't share your address book with Haba. Import a contacts file, or search by phone number or @username above."}</div>${canPick?'<button class="ninv" data-act="sync">'+(ncData.t?'Sync again':'Sync contacts')+'</button>':''}</div>`;
  if(miss.length)h+=`<div class="nsec">Invite to Haba</div>`+miss.slice(0,200).map(c=>`<div class="chat"><div class="av">${esc(initials(c.name||'?'))}</div><div class="cm"><div class="n"><span class="nt">${esc(c.name||c.phone)}</span></div><div class="p">${esc(c.phone)}</div></div><a class="ninv" href="sms:${esc(c.phone)}?body=${encodeURIComponent('Join me on Haba Messenger: '+location.origin)}">Invite</a></div>`).join('');
  $('nc-l').innerHTML=h;
 }
@@ -1635,11 +1665,13 @@ async function ncNumber(n){
 }
 function ncHide(){$('nc').hidden=true}
 function ncClose(){navClose('nc',ncHide)}
-$('new').onclick=()=>{ncLoad();$('nc-q').value='';navPush('nc');$('nc').hidden=false;paintNc();$('nc-l').scrollTop=0};
+$('new').onclick=()=>{ncLoadProps();ncLoad();$('nc-q').value='';navPush('nc');$('nc').hidden=false;paintNc();$('nc-l').scrollTop=0};
+$('nc-vcf').onchange=e=>{const f=e.target.files&&e.target.files[0];e.target.value='';ncImportFile(f)};
 $('nc-back').onclick=ncClose;$('nc-sync').onclick=ncSync;$('nc-q').addEventListener('input',()=>paintNc());
 $('nc-l').onclick=async e=>{
  const a=e.target.closest('[data-act]');if(!a)return;const act=a.dataset.act;
  if(act==='sync')ncSync();
+ else if(act==='vcf')$('nc-vcf').click();
  else if(act==='open')ncOpen(a.dataset.u);
  else if(act==='user')ncUsername(a.dataset.v);
  else if(act==='num')ncNumber(a.dataset.v);

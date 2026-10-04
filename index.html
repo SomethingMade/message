@@ -618,7 +618,7 @@ $('save').onclick=async()=>{const n=$('name').value.trim();if(!n){$('e-name').te
 
 /* ---- push notifications (FCM): same service worker, token store and payload as the main Haba app ---- */
 const FCM_VAPID_KEY="BKOsn-S9ti0UEtUqRA9zzegFMaI8TrL2CKA1cpPqUjvAIsZ4SJkMe7127cg9T4S-tJHrHsLpf1gLFjZazmxQvGQ";
-let fcmToken=null,messaging=null,fcmReg=null,fgBound=false;
+let fcmToken=null,messaging=null,fcmReg=null,fgBound=false,pushErr=null;
 /* the worker's notification Reply action authenticates from this cache, exactly like the main app writes it */
 const AUTH_DB='gozaAuthCache',AUTH_STORE='tokens';
 const authDb=()=>new Promise((r,j)=>{const q=indexedDB.open(AUTH_DB,1);q.onupgradeneeded=()=>q.result.createObjectStore(AUTH_STORE);q.onsuccess=()=>r(q.result);q.onerror=()=>j(q.error)});
@@ -626,9 +626,10 @@ async function cacheAuth(u){try{const token=await u.getIdToken(),d=await authDb(
 async function clearAuth(){try{const d=await authDb();d.transaction(AUTH_STORE,'readwrite').objectStore(AUTH_STORE).delete('current')}catch(_){}}
 onIdTokenChanged(auth,u=>{u?cacheAuth(u):clearAuth()});
 async function setupPush(){
+ pushErr=null;
  if(!me||!('serviceWorker' in navigator)||!('Notification' in window)||Notification.permission!=='granted')return;
  try{
-  if(!await isMessagingSupported())return;
+  if(!await isMessagingSupported()){pushErr={message:'Push messaging is not supported in this browser'};return}
   fcmReg=fcmReg||await navigator.serviceWorker.register('./firebase-messaging-sw.js');
   messaging=messaging||getMessaging(app);
   const token=await getToken(messaging,{vapidKey:FCM_VAPID_KEY,serviceWorkerRegistration:fcmReg});
@@ -642,7 +643,7 @@ async function setupPush(){
    navigator.serviceWorker.ready.then(r=>r.showNotification(d.title||who||'Haba Messenger',{silent:true,body:(plain&&!plain.startsWith('\u{1F512}')&&plain)||(d.body&&d.body.trim()&&!d.body.includes('\u27e6e2e')&&!/^[A-Za-z0-9+\/=_-]{24,}$/.test(d.body.trim())&&d.body.trim())||kind||'New message',icon:ico,
     tag:d.groupId?'group-'+d.groupId:d.chatUid?'chat-'+d.chatUid:'new-message',data:{url:d.url||'/',uid:d.chatUid,groupId:d.groupId},
     actions:[{action:'reply',title:'Reply',type:'text',placeholder:'Type a message…'},{action:'close',title:'Dismiss'}]}))})}
- }catch(_){}
+ }catch(e){pushErr=e;console.error('push setup failed',e)}
 }
 function refreshPushBanner(){$('push-banner').hidden=!(me&&'Notification' in window&&Notification.permission==='default')}
 async function enablePush(){
@@ -1699,14 +1700,15 @@ async function fixPush(){
   if(Notification.permission!=='granted'){toast('Notifications are blocked in your browser settings');return}
   if(fcmToken&&me)await remove(ref(db,`users/${me.uid}/fcmTokens/${fcmToken}`)).catch(()=>{});
   try{if(messaging)await deleteToken(messaging)}catch(_){}
-  (await navigator.serviceWorker.getRegistrations()).forEach(r=>r.unregister().catch(()=>{}));
+  await Promise.all((await navigator.serviceWorker.getRegistrations()).map(r=>r.unregister().catch(()=>false)));
+  await new Promise(r=>setTimeout(r,400));
   if('caches' in window)await Promise.all((await caches.keys()).map(k=>caches.delete(k)));
   fcmReg=null;messaging=null;fcmToken=null;
   await setupPush();
   const reg=await navigator.serviceWorker.getRegistration('./')||(await navigator.serviceWorker.getRegistrations())[0];
   let v='';if(reg){await navigator.serviceWorker.ready.catch(()=>{});v=await swVersion(reg)}
   refreshPushBanner();
-  ask('Notifications',fcmToken?(v&&v!=='old'?'Notification worker '+v+' is active on this device.':'Registered, but this device still runs an older worker. Check the update was uploaded, then try again.'):'Could not register for notifications on this device.',{cancel:false});
+  ask('Notifications',fcmToken?(v&&v!=='old'?'Notification worker '+v+' is active on this device.':'Registered, but this device still runs an older worker. Check the update was uploaded, then try again.'):'Could not register for notifications: '+(pushErr?[pushErr.code||pushErr.name||'',String(pushErr.message||'').slice(0,140)].filter(Boolean).join(' · '):'unknown error')+'.',{cancel:false});
  }catch(_){toast('Could not fix notifications')}
 }
 $('mn-push').onclick=()=>{menuClose();setTimeout(fixPush,60)};

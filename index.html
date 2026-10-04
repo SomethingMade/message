@@ -251,6 +251,10 @@ button.rw:not(.dg)::after{content:'';width:8px;height:8px;border-right:2px solid
 .or::before,.or::after{content:'';flex:1;height:1px;background:var(--line)}
 .err.ok{color:var(--sub)}
 #p-phone{overflow-wrap:anywhere}
+/* no long-press menus or text selection, except inside text inputs */
+html,body{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+input,textarea,[contenteditable="true"]{-webkit-touch-callout:default;-webkit-user-select:text;user-select:text}
+img,svg,video,a{-webkit-user-drag:none;user-drag:none;-webkit-touch-callout:none}
 </style>
 </head>
 <body>
@@ -394,6 +398,11 @@ async function dec(peer,p){
  const k=await sharedKey(peer);if(!k)return '🔒 Encrypted message';
  try{const[iv,c]=p.slice(E2E.length).split(':');return new TextDecoder().decode(await crypto.subtle.decrypt({name:'AES-GCM',iv:new Uint8Array(unb64(iv))},k,unb64(c)))}catch(_){return '🔒 Unable to decrypt'}
 }
+
+/* block the long-press / right-click menu everywhere except text inputs */
+document.addEventListener('contextmenu',e=>{if(!e.target.closest('input,textarea,[contenteditable="true"]'))e.preventDefault()});
+document.addEventListener('selectstart',e=>{if(!e.target.closest||!e.target.closest('input,textarea,[contenteditable="true"]'))e.preventDefault()});
+document.addEventListener('dragstart',e=>e.preventDefault());
 
 /* ---- phone auth ---- */
 function rc(){if(verifier)return verifier;verifier=new RecaptchaVerifier(auth,'recaptcha-container',{size:'invisible'});return verifier}

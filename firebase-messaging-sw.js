@@ -21,28 +21,75 @@ const DB_URL = "https://newstart-64c43-default-rtdb.firebaseio.com";
 // =========================================================================
 // 2. FIREBASE CLOUD MESSAGING (BACKGROUND HANDLER)
 // =========================================================================
+// Resolve the sender's avatar (and name) from the database so the notification
+// shows who the message is from. Cached in memory for the life of the worker.
+const profileCache = {};
+const isHttps = (u) => typeof u === 'string' && /^https:\/\//i.test(u);
+
+async function fetchJson(path, token) {
+    const url = `${DB_URL}/${path}.json` + (token ? `?auth=${token}` : '');
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(res.status);
+    return res.json();
+}
+
+async function lookupProfile(chatUid, groupId) {
+    const key = groupId ? 'g:' + groupId : 'u:' + chatUid;
+    if (profileCache[key]) return profileCache[key];
+    const cached = await getCachedAuth();
+    const token = cached && cached.token;
+    const path = groupId ? `groups/${groupId}` : `users/${chatUid}`;
+    let data = null;
+    try { data = await fetchJson(path, token); }
+    catch (e) {
+        // token may be expired/missing — retry once without auth (works if rules allow)
+        if (token) { try { data = await fetchJson(path, null); } catch (_) {} }
+    }
+    const out = data ? { name: data.name, photoURL: isHttps(data.photoURL) ? data.photoURL : null } : null;
+    if (out) profileCache[key] = out;
+    return out;
+}
+
+// Never let the lookup delay the notification for long
+const withTimeout = (p, ms) => Promise.race([p, new Promise((r) => setTimeout(() => r(null), ms))]);
+
 messaging.onBackgroundMessage((payload) => {
     // Extract variables directly from our data-only payload
     const { title, body, icon, url, chatUid, groupId } = payload.data || {};
 
-    const notificationOptions = {
-        body: body || 'Sent you a message',
-        icon: icon || NOTIF_ICON,
-        badge: NOTIF_ICON,
-        tag: groupId ? ('group-' + groupId) : (chatUid ? ('chat-' + chatUid) : 'new-message'),
-        data: {
-            url: url || '/',
-            uid: chatUid,
-            groupId: groupId
-        },
-        actions: [
-            { action: 'reply', title: 'Reply', type: 'text', placeholder: 'Type a message…' },
-            { action: 'close', title: 'Dismiss' }
-        ]
-    };
+    return (async () => {
+        let profile = null;
+        if (chatUid || groupId) {
+            try { profile = await withTimeout(lookupProfile(chatUid, chatUid ? null : groupId), 2500); } catch (_) {}
+            // group message with no usable sender avatar: fall back to the group photo
+            if (groupId && chatUid && !(profile && profile.photoURL)) {
+                try { profile = await withTimeout(lookupProfile(null, groupId), 2500); } catch (_) {}
+            }
+        }
 
-    // Manually trigger the singular notification
-    self.registration.showNotification(title || 'New Message', notificationOptions);
+        const avatar = (profile && profile.photoURL) || (isHttps(icon) ? icon : null) || NOTIF_ICON;
+
+        const notificationOptions = {
+            body: body || 'Sent you a message',
+            icon: avatar,
+            badge: NOTIF_ICON,
+            tag: groupId ? ('group-' + groupId) : (chatUid ? ('chat-' + chatUid) : 'new-message'),
+            data: {
+                url: url || '/',
+                uid: chatUid,
+                groupId: groupId
+            },
+            actions: [
+                { action: 'reply', title: 'Reply', type: 'text', placeholder: 'Type a message…' },
+                { action: 'close', title: 'Dismiss' }
+            ]
+        };
+
+        return self.registration.showNotification(
+            title || (profile && profile.name) || 'New Message',
+            notificationOptions
+        );
+    })();
 });
 
 // =========================================================================

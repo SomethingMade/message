@@ -187,7 +187,7 @@ button.rw:hover{background:var(--hover)}
 .b .cap{padding:6px 10px 2px;white-space:pre-wrap;word-break:break-word}
 .b.stk{background:none;padding:0}.b.stk img{width:132px;height:132px;object-fit:contain;display:block}
 .who{min-width:0}.who .n{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.st{font-size:12.5px;color:var(--sub);margin-top:1px;min-height:16px}.st.on{color:#1FA971;font-weight:600}
+.st{font-size:12.5px;color:var(--sub);margin-top:1px;min-height:16px}.st.on{color:#1FA971;font-weight:600}.st.typ{color:#1FA971;font-weight:600}.st.typ::after{content:'';display:inline-block;width:1.4em;text-align:left;animation:typdots 1.2s steps(4,end) infinite;vertical-align:bottom;overflow:hidden}@keyframes typdots{0%{content:''}25%{content:'.'}50%{content:'..'}75%{content:'...'}100%{content:''}}
 #lb{position:fixed;inset:0;z-index:85;background:rgba(0,0,0,.92);display:flex;align-items:center;justify-content:center;padding:16px;cursor:zoom-out}
 #lb img{max-width:100%;max-height:100%;object-fit:contain}
 @media (min-width:769px){#sheet{align-items:center;padding:20px}#sheet .pan{border-radius:16px;max-height:90vh;box-shadow:0 12px 28px rgba(0,0,0,.25)}}
@@ -742,6 +742,7 @@ async function openChat(uid){if(active!==uid){pauseVoices();if(rec)stopRec(false
  $('ph').hidden=true;$('thread').hidden=false;$('app').classList.add('in-chat');navPush('chat');$('msgs').innerHTML='';
  pinned=true;watchPresence(uid);loadProfile(uid);paintHead();renderList();
  const t=tid(me.uid,uid);
+ stopTyping();peerTyping=false;offPres.push(onValue(ref(db,`dm_threads/${t}/typing/${uid}`),s=>{if(active!==uid)return;peerTyping=s.val()===true;paintStatus()}));
  peerRead=0;offPres.push(onValue(ref(db,`dm_threads/${t}/readReceipts/${uid}`),s=>{peerRead=+s.val()||0;paintTicks()}));
  disSec=0;paintDis();clearTimeout(sweepT);offPres.push(onValue(ref(db,`dm_threads/${t}/settings/disappearingSeconds`),s=>{disSec=+s.val()||0;paintDis()}));
  const markRead=()=>{update(ref(db),{[`user_chats/${me.uid}/${uid}/unreadCount`]:0,[`dm_threads/${t}/readReceipts/${me.uid}`]:Date.now()}).catch(()=>{})};markRead();
@@ -769,7 +770,7 @@ const blockedBy=async u=>{try{return (await get(ref(db,`users/${u}/blocked/${me.
 async function sendMsg(){
  const inp=$('msg'),text=inp.value.trim();if(!text||!active)return;
  if(blocked[active]){const u=active;if(await ask('Unblock to send?',"You've blocked this contact. Unblock them to send a message.",{ok:'Unblock'}))await remove(ref(db,`users/${me.uid}/blocked/${u}`)).catch(()=>{});return}
- inp.value='';syncSend();const rpm=replyTo;clearReply();
+ inp.value='';syncSend();stopTyping();const rpm=replyTo;clearReply();
  const uid=active,t=tid(me.uid,uid),now=Date.now(),e=await enc(uid,text),bm=await blockedBy(uid),rp=rpm?await replyPayload(uid,rpm):null;
  const key=push(ref(db,`dm_threads/${t}/messages`)).key;
  await update(ref(db),{
@@ -781,6 +782,23 @@ async function sendMsg(){
 }
 function syncSend(){const h=!!$('msg').value.trim()||!!rec,b=$('sendmsg');b.classList.toggle('has',h);b.setAttribute('aria-label',h?'Send':'Voice message')}
 $('msg').addEventListener('input',syncSend);
+/* ---- typing indicator: I publish dm_threads/<thread>/typing/<myUid>=true while typing, cleared after 3s idle, on send, on leaving the chat, or on disconnect ---- */
+let typRef=null,typTimer=null,typBusy=false;
+function stopTyping(){clearTimeout(typTimer);typTimer=null;if(typRef){const r=typRef;typRef=null;remove(r).catch(()=>{})}}
+async function noteTyping(){
+ if(!me||!active||rec)return;
+ if(!$('msg').value.trim()){stopTyping();return}
+ if(blocked[active])return;
+ clearTimeout(typTimer);typTimer=setTimeout(stopTyping,3000);
+ if(typRef||typBusy)return;
+ typBusy=true;const uid=active;
+ try{if(await blockedBy(uid)||active!==uid)return;
+  const r=ref(db,`dm_threads/${tid(me.uid,uid)}/typing/${me.uid}`);
+  typRef=r;onDisconnect(r).remove().catch(()=>{});await set(r,true);
+  if(!typTimer)typTimer=setTimeout(stopTyping,3000)}catch(_){typRef=null}finally{typBusy=false}
+}
+$('msg').addEventListener('input',noteTyping);
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')stopTyping()});
 let rec=null;
 $('sendmsg').onclick=()=>{if(rec)stopRec(true);else if($('msg').value.trim())sendMsg();else startRec()};
 $('rec-x').onclick=()=>stopRec(false);
@@ -1101,7 +1119,7 @@ $('att').onclick=()=>{if(active)$('att-in').click()};
 $('att-in').onchange=async e=>{const fs=Array.from(e.target.files||[]),to=active;e.target.value='';if(!fs.length||!to)return;
  const list=await previewFiles(fs);if(list&&list.length)sendFiles(list,to)};
 $('msg').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMsg()}});
-function chatHide(){if(rec)stopRec(false);clearReply();pauseVoices();$('app').classList.remove('in-chat');if(offMsgs){offMsgs();offMsgs=null}active=null;stopPres();$('thread').hidden=true;$('ph').hidden=false;renderList()}
+function chatHide(){stopTyping();peerTyping=false;if(rec)stopRec(false);clearReply();pauseVoices();$('app').classList.remove('in-chat');if(offMsgs){offMsgs();offMsgs=null}active=null;stopPres();$('thread').hidden=true;$('ph').hidden=false;renderList()}
 $('back').onclick=()=>navClose('chat',chatHide);
 
 /* ---- media in chat (photos, videos, voice notes, documents, GIFs, stickers) ---- */
@@ -1237,9 +1255,12 @@ function seenText(p){
  if(d.toDateString()===y.toDateString())return{t:'Last seen yesterday at '+tm};
  return{t:'Last seen '+d.toLocaleDateString([],{month:'short',day:'numeric'})+' at '+tm};
 }
-function paintStatus(){const r=seenText(pres[active]),el=$('t-sub');el.textContent=r.t;el.classList.toggle('on',!!r.on)}
+let peerTyping=false;
+function paintStatus(){const el=$('t-sub');
+ if(peerTyping&&active&&!blocked[active]){el.textContent='typing';el.classList.remove('on');el.classList.add('typ');return}
+ el.classList.remove('typ');const r=seenText(pres[active]);el.textContent=r.t;el.classList.toggle('on',!!r.on)}
 function watchPresence(uid){
- stopPres();$('t-sub').textContent='';$('t-sub').classList.remove('on');
+ stopPres();peerTyping=false;$('t-sub').textContent='';$('t-sub').classList.remove('on','typ');
  const upd=()=>{if(active===uid)paintStatus()};
  offPres=[onValue(ref(db,`users/${uid}/status`),s=>{(pres[uid]=pres[uid]||{}).status=s.val();upd()}),
           onValue(ref(db,`users/${uid}/lastSeen`),s=>{(pres[uid]=pres[uid]||{}).lastSeen=s.val();upd()})];
@@ -1354,7 +1375,7 @@ $('r-name').onclick=async()=>{
  if(v===null)return;if(!v){toast('Enter a name');return}
  try{await update(ref(db,'users/'+me.uid),{name:v});(profiles[me.uid]=profiles[me.uid]||{}).name=v;toast('Name updated');paintMain()}catch(_){toast('Could not update name')}
 };
-$('r-out').onclick=async()=>{if(await ask('Sign out?','You will need to verify your phone number to sign back in. Keep your backup PIN safe so you can restore your chat history later.',{ok:'Sign out'})){closeSheet();stopPresence();await update(ref(db,'users/'+me.uid),{status:'offline',lastSeen:serverTimestamp()}).catch(()=>{});if(fcmToken){await remove(ref(db,`users/${me.uid}/fcmTokens/${fcmToken}`)).catch(()=>{});fcmToken=null}signOut(auth)}};
+$('r-out').onclick=async()=>{if(await ask('Sign out?','You will need to verify your phone number to sign back in. Keep your backup PIN safe so you can restore your chat history later.',{ok:'Sign out'})){closeSheet();stopTyping();stopPresence();await update(ref(db,'users/'+me.uid),{status:'offline',lastSeen:serverTimestamp()}).catch(()=>{});if(fcmToken){await remove(ref(db,`users/${me.uid}/fcmTokens/${fcmToken}`)).catch(()=>{});fcmToken=null}signOut(auth)}};
 
 /* ---- new chat / account ---- */
 $('new').onclick=async()=>{

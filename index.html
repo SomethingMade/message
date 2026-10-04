@@ -246,6 +246,11 @@ button.rw:not(.dg)::after{content:'';width:8px;height:8px;border-right:2px solid
 @keyframes sheetUp{from{transform:translateY(100%)}}
 @media (min-width:769px){#menu{align-items:flex-start;justify-content:flex-start;background:transparent;padding:60px 12px}.msheet{width:340px;border-radius:16px;padding:8px 0;box-shadow:0 12px 28px rgba(0,0,0,.25);border:1px solid var(--line);animation:none}.grab{display:none}}
 @media (prefers-reduced-motion:reduce){.msheet{animation:none}}
+.btn.alt{background:transparent;color:var(--text);border:1.5px solid var(--line)}
+.or{display:flex;align-items:center;gap:12px;color:var(--sub);font-size:13px;margin:16px 0}
+.or::before,.or::after{content:'';flex:1;height:1px;background:var(--line)}
+.err.ok{color:var(--sub)}
+#p-phone{overflow-wrap:anywhere}
 </style>
 </head>
 <body>
@@ -255,7 +260,13 @@ button.rw:not(.dg)::after{content:'';width:8px;height:8px;border-right:2px solid
  <svg class="mk" viewBox="0 0 200 200"><polygon points="20,80 170,30 80,110" fill="var(--accent)" fill-opacity=".75"/><polygon points="120,180 170,30 80,110" fill="var(--accent)"/><polygon points="20,80 80,110 80,140" fill="var(--accent)" fill-opacity=".55"/></svg>
  <div id="s-phone"><h1>Haba Messenger</h1><p>Enter your phone number to sign in or create your account.</p>
   <div class="row"><input id="cc" class="in cc" value="+1" inputmode="tel" aria-label="Country code"><input id="phone" class="in" type="tel" inputmode="tel" placeholder="Phone number" autocomplete="tel-national"></div>
-  <div class="err" id="e-phone"></div><button class="btn" id="send">Send code</button></div>
+  <div class="err" id="e-phone"></div><button class="btn" id="send">Send code</button>
+  <div class="or">or</div><button class="btn alt" id="go-email">Continue with email</button></div>
+ <div id="s-email" hidden><h1 id="em-title">Sign in with email</h1><p id="em-sub"></p>
+  <input id="em" class="in" type="email" inputmode="email" autocomplete="email" autocapitalize="none" placeholder="Email" style="margin-bottom:12px">
+  <input id="pw" class="in" type="password" autocomplete="current-password" placeholder="Password" style="margin-bottom:12px">
+  <div class="err" id="e-email"></div><button class="btn" id="em-go">Sign in</button>
+  <button class="link" id="em-forgot">Forgot password?</button><button class="link" id="em-switch"></button><button class="link" id="em-phone">Use phone number instead</button></div>
  <div id="s-otp" hidden><h1>Enter the code</h1><p id="otp-sub"></p>
   <input id="otp" class="in" inputmode="numeric" maxlength="6" placeholder="6-digit code" autocomplete="one-time-code" style="text-align:center;letter-spacing:8px;font-size:22px;margin-bottom:12px">
   <div class="err" id="e-otp"></div><button class="btn" id="verify">Verify</button><button class="link" id="resend">Resend code</button><button class="link" id="change">Use a different number</button></div>
@@ -319,7 +330,7 @@ button.rw:not(.dg)::after{content:'';width:8px;height:8px;border-right:2px solid
 
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-import {getAuth,onAuthStateChanged,onIdTokenChanged,signOut,RecaptchaVerifier,signInWithPhoneNumber} from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+import {getAuth,onAuthStateChanged,onIdTokenChanged,signOut,RecaptchaVerifier,signInWithPhoneNumber,createUserWithEmailAndPassword,signInWithEmailAndPassword,sendPasswordResetEmail} from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 import {getStorage,ref as sref,uploadBytes,getDownloadURL} from "https://www.gstatic.com/firebasejs/10.8.1/firebase-storage.js";
 import {getMessaging,getToken,onMessage,isSupported as isMessagingSupported} from "https://www.gstatic.com/firebasejs/10.8.1/firebase-messaging.js";
 import {getDatabase,ref,get,set,remove,update,push,onValue,query,orderByChild,limitToLast,increment,onDisconnect,serverTimestamp} from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
@@ -387,7 +398,7 @@ async function dec(peer,p){
 /* ---- phone auth ---- */
 function rc(){if(verifier)return verifier;verifier=new RecaptchaVerifier(auth,'recaptcha-container',{size:'invisible'});return verifier}
 function resetRc(){try{verifier&&verifier.clear()}catch(_){}verifier=null;const o=$('recaptcha-container'),n=document.createElement('div');n.id='recaptcha-container';o.replaceWith(n)}
-const step=s=>['phone','otp','name'].forEach(x=>$('s-'+x).hidden=x!==s);
+const step=s=>['phone','otp','email','name'].forEach(x=>$('s-'+x).hidden=x!==s);
 async function sendCode(){
  const raw=$('phone').value.replace(/\D/g,'').replace(/^0+/,'');const cc=($('cc').value.trim().startsWith('+')?$('cc').value.trim():'+'+$('cc').value.trim());
  if(!raw){$('e-phone').textContent='Enter your phone number.';return}
@@ -407,8 +418,40 @@ $('verify').onclick=async()=>{
 };
 $('otp').addEventListener('input',()=>{if($('otp').value.length===6)$('verify').click()});
 $('phone').addEventListener('keydown',e=>{if(e.key==='Enter')sendCode()});
+
+/* ---- optional email + password sign in / sign up ---- */
+let emMode='in';
+const emMsg=(t,ok)=>{$('e-email').className='err'+(ok?' ok':'');$('e-email').textContent=t};
+function emSet(m){emMode=m;const up=m==='up';
+ $('em-title').textContent=up?'Create your account':'Sign in with email';
+ $('em-sub').textContent=up?'Use your email and a password of at least 8 characters.':'Welcome back. Enter your email and password.';
+ $('em-go').textContent=up?'Create account':'Sign in';
+ $('em-switch').textContent=up?'Already have an account? Sign in':'New here? Create an account';
+ $('em-forgot').hidden=up;$('pw').autocomplete=up?'new-password':'current-password';emMsg('')}
+const emErr=e=>({'auth/invalid-email':'Enter a valid email address.','auth/email-already-in-use':'An account with this email already exists. Try signing in.',
+ 'auth/weak-password':'Choose a stronger password (at least 8 characters).','auth/invalid-credential':'Email or password is incorrect.','auth/user-not-found':'Email or password is incorrect.',
+ 'auth/wrong-password':'Email or password is incorrect.','auth/too-many-requests':'Too many attempts. Wait a bit and try again.','auth/operation-not-allowed':'Email sign-in is not turned on yet.',
+ 'auth/network-request-failed':'No connection. Check your internet and try again.'}[e.code]||(e.message||'Something went wrong').replace('Firebase: ',''));
+const validEmail=v=>/^\S+@\S+\.\S+$/.test(v);
+async function emGo(){
+ const email=$('em').value.trim(),pw=$('pw').value;
+ if(!validEmail(email)){emMsg('Enter a valid email address.');return}
+ if(!pw){emMsg('Enter your password.');return}
+ if(emMode==='up'&&pw.length<8){emMsg('Use a password of at least 8 characters.');return}
+ $('em-go').disabled=true;emMsg('');
+ try{if(emMode==='up')await createUserWithEmailAndPassword(auth,email,pw);else await signInWithEmailAndPassword(auth,email,pw)}catch(e){emMsg(emErr(e))}
+ $('em-go').disabled=false;
+}
+$('go-email').onclick=()=>{emSet('in');step('email');$('em').focus()};
+$('em-phone').onclick=()=>step('phone');
+$('em-switch').onclick=()=>emSet(emMode==='up'?'in':'up');
+$('em-go').onclick=emGo;
+$('pw').addEventListener('keydown',e=>{if(e.key==='Enter')emGo()});
+$('em').addEventListener('keydown',e=>{if(e.key==='Enter')$('pw').focus()});
+$('em-forgot').onclick=async()=>{const email=$('em').value.trim();if(!validEmail(email)){emMsg('Enter your email above first.');return}
+ try{await sendPasswordResetEmail(auth,email);emMsg('If an account exists, a reset link is on its way to '+email+'.',true)}catch(e){emMsg(emErr(e))}};
 $('save').onclick=async()=>{const n=$('name').value.trim();if(!n){$('e-name').textContent='Enter your name.';return}
- await update(ref(db,'users/'+me.uid),{name:n,phoneNumber:me.phoneNumber||phoneFull,createdAt:Date.now()});showApp()};
+ await update(ref(db,'users/'+me.uid),{name:n,...(me.phoneNumber?{phoneNumber:me.phoneNumber}:{}),createdAt:Date.now()});showApp()};
 
 /* ---- push notifications (FCM): same service worker, token store and payload as the main Haba app ---- */
 const FCM_VAPID_KEY="BKOsn-S9ti0UEtUqRA9zzegFMaI8TrL2CKA1cpPqUjvAIsZ4SJkMe7127cg9T4S-tJHrHsLpf1gLFjZazmxQvGQ";
@@ -803,7 +846,7 @@ async function paintEnc(){
 async function paintMain(){
  const u=(await get(ref(db,'users/'+me.uid)).catch(()=>null)),p=(u&&u.val())||profiles[me.uid]||{};profiles[me.uid]=p;
  const av=$('p-av');av.style.backgroundImage=p.photoURL?`url('${p.photoURL.replace(/'/g,'%27')}')`:'';av.textContent=p.photoURL?'':initials(p.name);
- $('p-name').textContent=p.name||'Haba user';$('p-user').textContent=p.username?'@'+p.username:'';$('p-phone').textContent=me.phoneNumber||'';
+ $('p-name').textContent=p.name||'Haba user';$('p-user').textContent=p.username?'@'+p.username:'';$('p-phone').textContent=me.phoneNumber||me.email||'';
  await myKeys().catch(()=>null);if(backupInfo===undefined)await loadBackup();
  $('r-enc-sub').textContent=!kp?"This device can't read older chats":backupInfo?'Backup PIN is set':backupInfo===null?'No backup PIN yet':'Backup PIN for your encrypted chats';
 }

@@ -58,12 +58,82 @@ function cleanBody(b) {
     return t;
 }
 
+// -------------------------------------------------------------------------
+// Decrypt end-to-end encrypted pushes so the notification shows the real text.
+// Uses the key pair the app keeps in IndexedDB ("haba-messenger" / "keys"),
+// the peer public key the app cached ("peerpub-<me>-<peer>"), or a fresh
+// fetch of it from the database using the cached login token.
+// -------------------------------------------------------------------------
+const E2E_PREFIX = '\u27e6e2e1\u27e7';
+const KEYS_DB = 'haba-messenger', KEYS_STORE = 'keys';
+const MEDIA_LABEL = { image: '\ud83d\udcf7 Photo', video: '\ud83c\udfa5 Video', audio: '\ud83c\udfa4 Voice message', document: '\ud83d\udcc4 Document', gif: 'GIF', sticker: 'Sticker' };
+
+function keysGet(key) {
+    return new Promise((resolve) => {
+        const req = indexedDB.open(KEYS_DB, 1);
+        req.onupgradeneeded = () => { if (!req.result.objectStoreNames.contains(KEYS_STORE)) req.result.createObjectStore(KEYS_STORE); };
+        req.onerror = () => resolve(null);
+        req.onsuccess = () => {
+            const db = req.result;
+            try {
+                const r = db.transaction(KEYS_STORE, 'readonly').objectStore(KEYS_STORE).get(key);
+                r.onsuccess = () => { db.close(); resolve(r.result || null); };
+                r.onerror = () => { db.close(); resolve(null); };
+            } catch (e) { db.close(); resolve(null); }
+        };
+    });
+}
+
+const fromB64 = (s) => Uint8Array.from(atob(s), (c) => c.charCodeAt(0)).buffer;
+
+async function decryptWithPeerKey(privateKey, peerJwk, payload) {
+    const pub = await crypto.subtle.importKey('jwk', peerJwk, { name: 'ECDH', namedCurve: 'P-256' }, false, []);
+    const key = await crypto.subtle.deriveKey({ name: 'ECDH', public: pub }, privateKey, { name: 'AES-GCM', length: 256 }, false, ['decrypt']);
+    const [iv, ct] = payload.slice(E2E_PREFIX.length).split(':');
+    return new TextDecoder().decode(await crypto.subtle.decrypt({ name: 'AES-GCM', iv: new Uint8Array(fromB64(iv)) }, key, fromB64(ct)));
+}
+
+// Plain text of an encrypted 1:1 push, or null if it can't be decrypted here.
+async function decryptPushBody(body, chatUid, groupId) {
+    try {
+        if (typeof body !== 'string' || !body.startsWith(E2E_PREFIX) || !chatUid || groupId) return null;
+        const auth = await getCachedAuth();
+        const uid = auth && auth.uid;
+        if (!uid) return null;
+        const kp = await keysGet('keypair-' + uid);
+        if (!kp || !kp.privateKey) return null;
+        const cached = await keysGet('peerpub-' + uid + '-' + chatUid);
+        if (cached) { try { return await decryptWithPeerKey(kp.privateKey, cached, body); } catch (_) {} }
+        if (!auth.token) return null;
+        const fresh = await fetchJson('users/' + chatUid + '/e2ee/publicKey', auth.token); // new sender, or their key changed
+        return fresh ? await decryptWithPeerKey(kp.privateKey, fresh, body) : null;
+    } catch (_) { return null; }
+}
+
+
+const toB64 = (buf) => { let t = ''; new Uint8Array(buf).forEach((c) => (t += String.fromCharCode(c))); return btoa(t); };
+
+// Encrypts text exactly like enc() in the app (AES-GCM over the ECDH shared key).
+// Throws when it can't, so a reply is never sent as plain text.
+async function encryptForPeer(text, myUid, peerUid, token) {
+    const kp = await keysGet('keypair-' + myUid);
+    if (!kp || !kp.privateKey) throw new Error('no key pair on this device');
+    let jwk = await keysGet('peerpub-' + myUid + '-' + peerUid);
+    if (!jwk) jwk = await fetchJson('users/' + peerUid + '/e2ee/publicKey', token);
+    if (!jwk) throw new Error('peer has no public key');
+    const pub = await crypto.subtle.importKey('jwk', jwk, { name: 'ECDH', namedCurve: 'P-256' }, false, []);
+    const key = await crypto.subtle.deriveKey({ name: 'ECDH', public: pub }, kp.privateKey, { name: 'AES-GCM', length: 256 }, false, ['encrypt']);
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const ct = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, new TextEncoder().encode(text));
+    return E2E_PREFIX + toB64(iv) + ':' + toB64(ct);
+}
+
 // Never let the lookup delay the notification for long
 const withTimeout = (p, ms) => Promise.race([p, new Promise((r) => setTimeout(() => r(null), ms))]);
 
 messaging.onBackgroundMessage((payload) => {
     // Extract variables directly from our data-only payload
-    const { title, body, icon, url, chatUid, groupId } = payload.data || {};
+    const { title, body, icon, url, chatUid, groupId, mediaType } = payload.data || {};
 
     return (async () => {
         let profile = null;
@@ -75,10 +145,13 @@ messaging.onBackgroundMessage((payload) => {
             }
         }
 
+        const plain = await withTimeout(decryptPushBody(body, chatUid, groupId), 2500);
+        const shownBody = plain || ((body || '').includes('\u27e6e2e') && MEDIA_LABEL[mediaType]) || cleanBody(body);
+
         const avatar = (profile && profile.photoURL) || (isHttps(icon) ? icon : null) || NOTIF_ICON;
 
         const notificationOptions = {
-            body: cleanBody(body),
+            body: shownBody,
             icon: avatar,
             badge: NOTIF_ICON,
             tag: groupId ? ('group-' + groupId) : (chatUid ? ('chat-' + chatUid) : 'new-message'),
@@ -149,20 +222,29 @@ async function restGet(path, token) {
     return res.json();
 }
 
-// --- DM reply: mirrors sendChatMessage() in the main app ---
+// --- DM reply: mirrors sendMsg() in the main app (encrypted, honours blocks + disappearing messages) ---
 async function sendDmReplyFromSW(text, myUid, otherUid, token) {
     const threadId = [myUid, otherUid].sort().join('_');
     const createdAt = Date.now();
-    const msgPayload = { text, senderUid: myUid, createdAt };
+    const e = await encryptForPeer(text, myUid, otherUid, token); // throws -> caller opens the app instead
+
+    let blockedByPeer = false, disSec = 0;
+    try { blockedByPeer = (await restGet(`users/${otherUid}/blocked/${myUid}`, token)) === true; } catch (_) {}
+    try { disSec = +(await restGet(`dm_threads/${threadId}/settings/disappearingSeconds`, token)) || 0; } catch (_) {}
+
+    const msgPayload = { text: e, senderUid: myUid, createdAt };
+    if (disSec > 0) msgPayload.expiresAt = createdAt + disSec * 1000;
 
     await restPost(`dm_threads/${threadId}/messages`, msgPayload, token);
-    await restPatch({
-        [`user_chats/${myUid}/${otherUid}`]: { text, timestamp: createdAt, unreadCount: 0, senderUid: myUid },
-        [`user_chats/${otherUid}/${myUid}/text`]: text,
-        [`user_chats/${otherUid}/${myUid}/timestamp`]: createdAt,
-        [`user_chats/${otherUid}/${myUid}/unreadCount`]: { '.sv': { increment: 1 } },
-        [`user_chats/${otherUid}/${myUid}/senderUid`]: myUid
-    }, token);
+
+    const updates = { [`user_chats/${myUid}/${otherUid}`]: { text: e, timestamp: createdAt, unreadCount: 0, senderUid: myUid } };
+    if (!blockedByPeer) {
+        updates[`user_chats/${otherUid}/${myUid}/text`] = e;
+        updates[`user_chats/${otherUid}/${myUid}/timestamp`] = createdAt;
+        updates[`user_chats/${otherUid}/${myUid}/unreadCount`] = { '.sv': { increment: 1 } };
+        updates[`user_chats/${otherUid}/${myUid}/senderUid`] = myUid;
+    }
+    await restPatch(updates, token);
 }
 
 // --- Group reply: mirrors sendGroupMessage() in the main app ---

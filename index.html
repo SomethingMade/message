@@ -137,7 +137,14 @@ input{font:inherit;color:inherit}
 .meta{text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0}
 .meta .t{font-size:12.5px;color:var(--sub)}
 .badge{min-width:20px;height:20px;padding:0 6px;border-radius:10px;background:var(--accent);color:var(--bg);font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center}
-.empty{padding:48px 24px;text-align:center;color:var(--sub);font-size:15px;line-height:1.5}
+.empty{display:flex;flex-direction:column;align-items:center;padding:56px 32px 40px}
+.empty .art{width:132px;height:132px;margin-bottom:18px;color:var(--sub)}
+.empty .art svg{width:100%;height:100%;display:block;overflow:visible}
+.empty .et{text-align:center;font-size:17px;font-weight:700;color:var(--text);margin-bottom:6px}
+.empty .es{text-align:center;font-size:14px;color:var(--sub);line-height:1.5;max-width:260px}
+.empty .art .fl{animation:efl 3.2s ease-in-out infinite}
+@keyframes efl{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+@media (prefers-reduced-motion:reduce){.empty .art .fl{animation:none}}
 .ph{flex:1;display:flex;align-items:center;justify-content:center;color:var(--sub);font-size:15px;flex-direction:column;gap:12px}
 .ph svg{width:72px;height:72px;opacity:.25}
 .ch{display:flex;align-items:center;gap:10px;padding:calc(10px + env(safe-area-inset-top,0px)) 12px 10px;border-bottom:1px solid var(--line)}
@@ -382,7 +389,7 @@ img,svg,video,a{-webkit-user-drag:none;user-drag:none;-webkit-touch-callout:none
   <div id="chats"></div>
  </aside>
  <main id="convo">
-  <div class="ph" id="ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Select a chat to start messaging</div>
+  <div class="ph" id="ph"></div>
   <div id="thread" hidden style="display:flex;flex-direction:column;flex:1;min-height:0">
    <div class="ch"><button class="ibtn" id="back" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button><div class="av sm" id="t-av"></div><div class="who"><div class="n" id="t-name"></div><div class="st" id="t-sub"></div></div><button class="ibtn" id="dis-btn" aria-label="Disappearing messages" title="Disappearing messages"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><polyline points="12 9 12 13 15 15"/><path d="M9 2h6"/></svg></button></div>
    <div class="dbanner" id="dis-banner" hidden><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><polyline points="12 9 12 13 15 15"/><path d="M9 2h6"/></svg><span id="dis-text"></span></div>
@@ -699,6 +706,27 @@ const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&g
 async function preview(uid,c){const key=uid+c.timestamp;if(previews[key]!==undefined)return previews[key];previews[key]=await dec(uid,c.text);renderList();return previews[key]}
 const isArch=c=>!!c.archived&&!(c.senderUid!==me.uid&&(+c.timestamp||0)>c.archived);
 const ARCH_SVG='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>',BACK_SVG='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>';
+/* ---- illustrated empty states ---- */
+
+const ART={
+ chats:'<g class="fl"><path d="M18 32a10 10 0 0 1 10-10h42a10 10 0 0 1 10 10v24a10 10 0 0 1-10 10H44L30 78V66h-2a10 10 0 0 1-10-10z" fill="var(--bg-input)" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/><circle cx="36" cy="44" r="3.5" fill="currentColor"/><circle cx="49" cy="44" r="3.5" fill="currentColor"/><circle cx="62" cy="44" r="3.5" fill="currentColor"/><path d="M60 62a9 9 0 0 1 9-9h25a9 9 0 0 1 9 9v22a9 9 0 0 1-9 9h-1v12L82 93H69a9 9 0 0 1-9-9z" fill="var(--accent)"/><path d="M71 68h22M71 78h13" stroke="var(--bg)" stroke-width="3" stroke-linecap="round"/></g><circle cx="100" cy="24" r="5" fill="#1FA971"/>',
+ unread:'<g class="fl"><rect x="20" y="34" width="80" height="56" rx="10" fill="var(--bg-input)" stroke="currentColor" stroke-width="2.5"/><path d="M24 40l36 28 36-28" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></g><circle cx="94" cy="34" r="16" fill="#1FA971"/><path d="M86 34l6 6 11-12" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>',
+ online:'<g class="fl"><circle cx="60" cy="42" r="17" fill="var(--bg-input)" stroke="currentColor" stroke-width="2.5"/><path d="M26 100c0-18 15-30 34-30s34 12 34 30z" fill="var(--bg-input)" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/><circle cx="74" cy="54" r="9" fill="var(--bg)"/><circle cx="74" cy="54" r="6.5" fill="#1FA971"/></g>',
+ search:'<g class="fl"><circle cx="54" cy="52" r="28" fill="var(--bg-input)" stroke="currentColor" stroke-width="3"/><path d="M75 73l24 24" stroke="currentColor" stroke-width="7" stroke-linecap="round"/><path d="M44 46h.01M64 46h.01" stroke="currentColor" stroke-width="5" stroke-linecap="round"/><path d="M45 64c5-5 13-5 18 0" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></g>',
+ archived:'<g class="fl"><rect x="18" y="30" width="84" height="22" rx="6" fill="var(--bg-input)" stroke="currentColor" stroke-width="2.5"/><path d="M26 52v38a8 8 0 0 0 8 8h52a8 8 0 0 0 8-8V52" fill="var(--bg-input)" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/><path d="M50 68h20" stroke="var(--accent)" stroke-width="5" stroke-linecap="round"/></g>',
+ select:'<g class="fl"><path d="M22 30a10 10 0 0 1 10-10h56a10 10 0 0 1 10 10v40a10 10 0 0 1-10 10H50L34 96V80h-2a10 10 0 0 1-10-10z" fill="var(--bg-input)" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/><path d="M42 42h36M42 56h22" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></g><path d="M100 14v14M93 21h14" stroke="var(--accent)" stroke-width="3" stroke-linecap="round"/>'
+};
+const EMPTY={
+ all:['chats','No conversations yet','Tap the pencil above to start your first chat.'],
+ unread:['unread',"You're all caught up",'No unread messages right now.'],
+ online:['online','No one is online','Friends who are online will show up here.'],
+ archived:['archived','Nothing archived','Archived chats will show up here.'],
+ search:['search','No matches','Try a different name.'],
+ select:['select','Select a chat','Pick a conversation to start messaging.'],
+ forward:['chats','No chats to forward to','Start a conversation first.']
+};
+function emptyHtml(k){const [a,t,sub]=EMPTY[k]||EMPTY.all;return `<div class="empty"><div class="art"><svg viewBox="0 0 120 120" aria-hidden="true">${ART[a]}</svg></div><div class="et">${t}</div><div class="es">${sub}</div></div>`}
+$('ph').innerHTML=emptyHtml('select');
 function renderList(){
  const q=$('q').value.trim().toLowerCase();
  const all=Object.entries(chats).filter(([uid,c])=>c&&c.timestamp).sort((a,b)=>b[1].timestamp-a[1].timestamp)
@@ -711,7 +739,7 @@ function renderList(){
  const nUn=all.filter(([u,c])=>!isArch(c)&&isUn(u,c)).length,cb=$('cn-unread');cb.hidden=!nUn;cb.textContent=nUn>99?'99+':nUn;
  const rows=all.filter(([u,c])=>showArch?isArch(c):!isArch(c)).filter(([u,c])=>showArch||catF==='all'||(catF==='unread'?isUn(u,c):(fStatus[u]==='online'&&!blocked[u])));
  const top='';
- if(!rows.length&&!top){$('chats').innerHTML=`<div class="empty">${q?'No chats match your search.':catF==='unread'?'No unread chats.':catF==='online'?'No friends online right now.':'No conversations yet.<br>Tap the pencil to start one.'}</div>`;return}
+ if(!rows.length&&!top){$('chats').innerHTML=emptyHtml(q?'search':catF);return}
  $('chats').innerHTML=top+rows.map(([uid,c])=>{const p=profiles[uid]||{},pv=previews[uid+c.timestamp];if(pv===undefined)preview(uid,c);
   const bl=!!blocked[uid],un=!bl&&c.unreadCount>0&&c.senderUid!==me.uid;
   return `<div class="chat${un?' unread':''}${bl?' blocked':''}${active===uid?' active':''}" data-uid="${esc(uid)}"><div class="av" ${avStyle(p)}>${p.photoURL?'':esc(initials(p.name))}</div><div class="cm"><div class="n">${nameHtml(p,'…',uid)}</div>${typNow[uid]&&!bl?'<div class="p typ">typing</div>':`<div class="p">${bl?'Blocked':(c.senderUid===me.uid?'You: ':'')+esc(pv===undefined?'…':pv)}</div>`}</div><div class="meta"><span class="t">${fmt(c.timestamp)}</span>${un?`<span class="badge">${c.unreadCount>99?'99+':c.unreadCount}</span>`:''}</div></div>`}).join('');
@@ -1132,7 +1160,7 @@ function fsPaint(){
  const rows=Object.entries(chats).filter(([u])=>!blocked[u]).sort((a,b)=>(+b[1].timestamp||0)-(+a[1].timestamp||0))
   .filter(([u])=>!q||((profiles[u]||{}).name||'').toLowerCase().includes(q));
  $('fs-l').innerHTML=rows.length?rows.map(([u])=>{const p=profiles[u]||{};if(!profiles[u])loadProfile(u).then(()=>{if(!$('fsh').hidden)fsPaint()});
-  return `<div class="chat" data-u="${esc(u)}"><div class="av" ${avStyle(p)}>${p.photoURL?'':esc(initials(p.name))}</div><div class="cm"><div class="n">${nameHtml(p,'…',u)}</div></div></div>`}).join(''):'<div class="empty">No chats to forward to.</div>'}
+  return `<div class="chat" data-u="${esc(u)}"><div class="av" ${avStyle(p)}>${p.photoURL?'':esc(initials(p.name))}</div><div class="cm"><div class="n">${nameHtml(p,'…',u)}</div></div></div>`}).join(''):emptyHtml('forward')}
 function fwdOpen(k){fwdM=msgStore[k];fwdPeer=active;if(!fwdM)return;$('fs-q').value='';fsPaint();$('fsh').hidden=false}
 $('ms-fwd').onclick=()=>{const k=msK;msHide();navSwap('ms','fs');fwdOpen(k)};
 $('fs-q').addEventListener('input',fsPaint);

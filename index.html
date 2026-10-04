@@ -735,7 +735,7 @@ function lbShow(n){lbN=(n+lbList.length)%lbList.length;const el=lbList[lbN],im=$
 function lbHide(){$('lb').hidden=true;$('lb-i').removeAttribute('src')}
 function lbClose(){navClose('lb',lbHide)}
 $('msgs').addEventListener('click',e=>{const i=e.target.closest('img[data-lb]');if(!i)return;lbList=[...$('msgs').querySelectorAll('img[data-lb]')];lbShow(lbList.indexOf(i));$('lb').hidden=false;navPush('lb')});
-function showAvatar(uid){const p=profiles[uid]||{},u=p.photoURL&&safeUrl(p.photoURL);if(!u)return false;
+function showAvatar(uid){const p=profiles[uid]||{},u=safeUrl(p.photoURL)?p.photoURL:'';if(!u)return false;
  lbList=[];const im=$('lb-i');im.classList.remove('z');im.style.transformOrigin='';im.src=u;
  $('lb-n').textContent=p.name||'';$('lb-d').textContent='Profile photo';$('lb-p').hidden=$('lb-nx').hidden=true;
  $('lb').hidden=false;navPush('lb');return true}

@@ -241,11 +241,11 @@ button.rw:not(.dg)::after{content:'';width:8px;height:8px;border-right:2px solid
 .pf{display:flex;align-items:center;justify-content:center;gap:8px;margin:30px 0 8px;color:var(--sub);font:400 9px/1 var(--brand);letter-spacing:1.6px}
 .pf svg{width:16px;height:16px}
 /* header menu */
-#menu,#dsheet,#csheet{position:fixed;inset:0;z-index:79;background:rgba(0,0,0,.45);display:flex;align-items:flex-end;justify-content:center}
+#menu,#dsheet,#csheet,#rsheet{position:fixed;inset:0;z-index:79;background:rgba(0,0,0,.45);display:flex;align-items:flex-end;justify-content:center}
 .msheet{width:100%;max-width:460px;background:var(--bg);border-radius:22px 22px 0 0;padding:10px 0 calc(16px + env(safe-area-inset-bottom,0px));animation:sheetUp .22s ease-out}
 .grab{width:36px;height:4px;border-radius:2px;background:var(--line);margin:0 auto 14px}
 @keyframes sheetUp{from{transform:translateY(100%)}}
-@media (min-width:769px){#dsheet,#csheet{align-items:center;background:rgba(0,0,0,.45);padding:20px}#menu{align-items:flex-start;justify-content:flex-start;background:transparent;padding:60px 12px}.msheet{width:340px;border-radius:16px;padding:8px 0;box-shadow:0 12px 28px rgba(0,0,0,.25);border:1px solid var(--line);animation:none}.grab{display:none}}
+@media (min-width:769px){#dsheet,#csheet,#rsheet{align-items:center;background:rgba(0,0,0,.45);padding:20px}#menu{align-items:flex-start;justify-content:flex-start;background:transparent;padding:60px 12px}.msheet{width:340px;border-radius:16px;padding:8px 0;box-shadow:0 12px 28px rgba(0,0,0,.25);border:1px solid var(--line);animation:none}.grab{display:none}}
 @media (prefers-reduced-motion:reduce){.msheet{animation:none}}
 .btn.alt{background:transparent;color:var(--text);border:1.5px solid var(--line)}
 .or{display:flex;align-items:center;gap:12px;color:var(--sub);font-size:13px;margin:16px 0}
@@ -265,7 +265,7 @@ img,svg,video,a{-webkit-user-drag:none;user-drag:none;-webkit-touch-callout:none
 .dd{font-size:13px;color:var(--sub);text-align:center;margin:0 24px 16px;line-height:1.4}
 .dopt::after{display:none!important}
 .dopt .ck{width:18px;height:18px;display:none;flex-shrink:0}
-#csheet .rw::after{display:none!important}#csheet .dt{margin-bottom:12px}
+#csheet .rw::after,#rsheet .rw::after{display:none!important}#rsheet .msheet{max-height:92vh;overflow-y:auto}#rsheet .dt{margin-bottom:6px}#csheet .dt{margin-bottom:12px}
 .chat.blocked .p{font-style:italic}.chat.blocked .av{opacity:.55}
 .chat.arch .av{background:var(--bg-input);color:var(--text)}.chat.arch .av svg{width:22px;height:22px}.chat.arch .n{font-weight:600}
 .dopt.sel .ck{display:block}.dopt.sel .tx b{font-weight:800}
@@ -348,8 +348,10 @@ img,svg,video,a{-webkit-user-drag:none;user-drag:none;-webkit-touch-callout:none
 <div id="csheet" hidden><div class="msheet"><div class="grab"></div><h3 class="dt" id="cs-name"></h3><div class="lst">
  <button class="rw" id="cs-arch"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg></div><div class="tx"><b id="cs-arch-t">Archive chat</b></div></button>
  <button class="rw" id="cs-blk"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.9" y1="4.9" x2="19.1" y2="19.1"/></svg></div><div class="tx"><b id="cs-blk-t">Block</b></div></button>
+ <button class="rw" id="cs-rep"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22V4"/><path d="M4 4h13l-2 4 2 4H4"/></svg></div><div class="tx"><b>Report</b></div></button>
  <button class="rw dg" id="cs-del"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></div><div class="tx"><b>Delete chat</b></div></button>
 </div></div></div>
+<div id="rsheet" hidden><div class="msheet"><div class="grab"></div><h3 class="dt" id="rp-title">Report</h3><p class="dd">Chats are end-to-end encrypted, so we can't read your messages. We receive only the reason you choose and this account's ID.</p><div class="lst" id="rp-opts"><button class="rw dopt" data-r="spam"><div class="tx"><b>Spam or scam</b></div><svg class="ck" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4"><polyline points="20 6 9 17 4 12"/></svg></button><button class="rw dopt" data-r="harassment"><div class="tx"><b>Harassment or threats</b></div><svg class="ck" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4"><polyline points="20 6 9 17 4 12"/></svg></button><button class="rw dopt" data-r="inappropriate"><div class="tx"><b>Inappropriate or explicit content</b></div><svg class="ck" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4"><polyline points="20 6 9 17 4 12"/></svg></button><button class="rw dopt" data-r="impersonation"><div class="tx"><b>Impersonation</b></div><svg class="ck" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4"><polyline points="20 6 9 17 4 12"/></svg></button><button class="rw dopt" data-r="other"><div class="tx"><b>Something else</b></div><svg class="ck" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4"><polyline points="20 6 9 17 4 12"/></svg></button></div><div class="lst gap"><button class="rw dopt sel" id="rp-blk"><div class="tx"><b>Also block this contact</b></div><svg class="ck" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4"><polyline points="20 6 9 17 4 12"/></svg></button></div><div style="margin:14px 16px 0"><textarea id="rp-det" class="in" maxlength="300" rows="3" placeholder="Add details (optional)" style="height:auto;padding:12px 16px;resize:none"></textarea><p id="rp-err" class="err" style="margin:8px 0 0" hidden></p><button class="btn" id="rp-send" style="margin-top:10px" disabled>Send report</button></div></div></div>
 <div id="toast" hidden></div>
 <div id="lb" hidden><div class="lbh"><button class="ibtn" id="lb-x" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button><div class="lbw"><b id="lb-n"></b><span id="lb-d"></span></div><button class="ibtn" id="lb-dl" aria-label="Download"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><polyline points="7 11 12 16 17 11"/><path d="M5 21h14"/></svg></button></div><div class="lbs" id="lb-s"><img id="lb-i" alt=""></div><button class="lbn l" id="lb-p" aria-label="Previous">&#8249;</button><button class="lbn r" id="lb-nx" aria-label="Next">&#8250;</button></div>
 <div id="modal" hidden><div class="box"><h3 id="m-title"></h3><p id="m-text"></p><input id="m-in" class="in" hidden><div class="acts"><button id="m-cancel">Cancel</button><button class="go" id="m-ok">OK</button></div></div></div>
@@ -382,7 +384,7 @@ const hideSplash=()=>setTimeout(()=>$('splash').classList.add('out'),Math.max(30
 const navStack=[];
 function navPush(t){if(navStack.includes(t))return;navStack.push(t);try{history.pushState({t},'')}catch(_){}}
 function navClose(t,hide){if(navStack[navStack.length-1]===t){history.back();return}const i=navStack.lastIndexOf(t);if(i>-1)navStack.splice(i,1);hide()}
-window.addEventListener('popstate',()=>{const t=navStack.pop();if(t==='lb')lbHide();else if(t==='sheet')sheetHide();else if(t==='chat')chatHide();else if(t==='menu')menuHide();else if(t==='dis')disHide();else if(t==='cs')csHide()});
+window.addEventListener('popstate',()=>{const t=navStack.pop();if(t==='lb')lbHide();else if(t==='sheet')sheetHide();else if(t==='chat')chatHide();else if(t==='menu')menuHide();else if(t==='dis')disHide();else if(t==='cs')csHide();else if(t==='rp')rpHide()});
 function navSwap(from,to){const i=navStack.lastIndexOf(from);if(i>-1){navStack[i]=to;try{history.replaceState({t:to},'')}catch(_){}}else navPush(to)}
 
 /* dialogs */
@@ -614,6 +616,30 @@ $('cs-blk').onclick=()=>{const uid=csUid,was=!!blocked[uid],nm=(profiles[uid]||{
  if(was){try{await remove(ref(db,`users/${me.uid}/blocked/${uid}`));toast(nm+' unblocked')}catch(_){toast("Couldn't unblock")}return}
  if(!await ask('Block '+nm+'?',"You won't see their new messages or hear alerts from them, and they won't be able to reach you. You can unblock them anytime from this menu.",{ok:'Block'}))return;
  try{await set(ref(db,`users/${me.uid}/blocked/${uid}`),true);toast(nm+' blocked')}catch(_){toast("Couldn't block")}},60)};
+/* ---- report a user: reason + optional details -> reports/{id} (falls back to an email to support if the write is refused) ---- */
+let rpUid=null,rpReason=null,rpMail=null;
+function rpHide(){$('rsheet').hidden=true}
+function rpClose(){navClose('rp',rpHide)}
+function rpSync(){document.querySelectorAll('#rp-opts .dopt').forEach(b=>b.classList.toggle('sel',b.dataset.r===rpReason));$('rp-send').disabled=!rpReason}
+$('rp-opts').onclick=e=>{const b=e.target.closest('.dopt');if(!b)return;rpReason=b.dataset.r;rpSync()};
+$('rp-blk').onclick=()=>$('rp-blk').classList.toggle('sel');
+$('rsheet').onclick=e=>{if(e.target.id==='rsheet')rpClose()};
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('rsheet').hidden&&$('modal').hidden)rpClose()});
+$('cs-rep').onclick=()=>{const uid=csUid;if(!uid)return;rpUid=uid;rpReason=null;
+ $('rp-title').textContent='Report '+(((profiles[uid]||{}).name)||'this contact');$('rp-det').value='';$('rp-err').hidden=true;rpMail=null;$('rp-blk').classList.add('sel');rpSync();
+ csHide();navSwap('cs','rp');$('rsheet').hidden=false;$('rsheet').querySelector('.msheet').scrollTop=0};
+$('rp-send').onclick=async()=>{if(!rpUid||!rpReason)return;
+ if(rpMail){location.href=rpMail;return}
+const uid=rpUid,reason=rpReason,details=$('rp-det').value.trim().slice(0,300),alsoBlock=$('rp-blk').classList.contains('sel'),btn=$('rp-send'),nm=(profiles[uid]||{}).name||'this contact';
+ btn.disabled=true;btn.textContent='Sending…';$('rp-err').hidden=true;
+ const rec={from:me.uid,about:uid,reason,details,app:'messenger',createdAt:Date.now()};
+ let ok=true;try{await set(push(ref(db,'reports')),rec)}catch(_){ok=false}
+ btn.textContent='Send report';
+ if(!ok){const sub=encodeURIComponent('Report: '+reason),body=encodeURIComponent(`Reported account ID: ${uid}\nMy account ID: ${me.uid}\nReason: ${reason}\nDetails: ${details}`);
+  $('rp-err').textContent="Couldn't send in the app. Tap Send report again to report by email instead.";$('rp-err').hidden=false;btn.disabled=false;
+  rpMail=`mailto:support@webmessenger.app?subject=${sub}&body=${body}`;return}
+ if(alsoBlock)try{await set(ref(db,`users/${me.uid}/blocked/${uid}`),true)}catch(_){}
+ rpClose();toast(alsoBlock?`Report sent. ${nm} blocked.`:'Report sent. Thank you.')};
 $('cs-del').onclick=()=>{const uid=csUid,nm=(profiles[uid]||{}).name||'this contact';csClose();setTimeout(async()=>{
  if(!await ask('Delete chat with '+nm+'?',"This removes the conversation from your device and account. "+nm+" keeps their copy.",{ok:'Delete'}))return;
  try{await update(ref(db),{[`users/${me.uid}/cleared/${uid}`]:Date.now(),[`user_chats/${me.uid}/${uid}`]:null});

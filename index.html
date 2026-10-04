@@ -718,7 +718,7 @@ onAuthStateChanged(auth,async u=>{
  if(!p.exists()||!p.val().name){$('auth').hidden=false;$('app').hidden=true;step('name');hideSplash();return}
  showApp();hideSplash();
 });
-function showApp(){$('auth').hidden=true;$('app').hidden=false;startPresence();setupPush();refreshPushBanner();backupInfo=undefined;myKeys().catch(()=>{}).then(refreshBanner);
+function showApp(){$('auth').hidden=true;$('app').hidden=false;startPresence();publishPhone();setupPush();refreshPushBanner();backupInfo=undefined;myKeys().catch(()=>{}).then(refreshBanner);
  if(offList)offList();
  stopFriends();
  blocked={};cleared={};setCat('all');offBl.forEach(f=>f());
@@ -1563,14 +1563,23 @@ const ncKey=()=>'habaContacts_'+me.uid;
 function ncLoad(){try{ncData=JSON.parse(localStorage.getItem(ncKey()))||{hits:[],miss:[]}}catch(_){ncData={hits:[],miss:[]}}}
 function ncSave(){try{localStorage.setItem(ncKey(),JSON.stringify(ncData))}catch(_){}}
 const ncCanPick=()=>'contacts' in navigator&&'ContactsManager' in window;
+let usersQueryDenied=false,ncLastErr='';
+const phoneKey=n=>String(n||'').replace(/\D/g,'');
+/* my number goes into phones/<digits> = my uid, so friends can find me by number without reading all of /users */
+function publishPhone(){const k=phoneKey(me&&me.phoneNumber);if(k)set(ref(db,'phones/'+k),me.uid).catch(()=>{})}
 async function findByPhone(num){
- const s=await get(query(ref(db,'users'),orderByChild('phoneNumber'),equalTo(num)));
- let uid=null;if(s.exists())s.forEach(c=>{if(!uid)uid=c.key});return uid;
+ const k=phoneKey(num);if(!k)return null;
+ try{const s=await get(ref(db,'phones/'+k));if(s.exists()&&typeof s.val()==='string')return s.val()}
+ catch(e){ncLastErr=e&&(e.code||e.message)||'error';console.error('phones lookup failed',e)}
+ if(usersQueryDenied)return null;
+ try{const s=await get(query(ref(db,'users'),orderByChild('phoneNumber'),equalTo(num)));
+  let uid=null;if(s.exists())s.forEach(c=>{if(!uid)uid=c.key});return uid}
+ catch(e){const c=String((e&&(e.code||e.message))||'error');ncLastErr=c;if(/permission/i.test(c))usersQueryDenied=true;console.error('users lookup failed',e);throw e}
 }
 async function ncSync(){
  if(ncBusy)return;
  if(!ncCanPick()){toast("This browser can't share your contacts. Search by number or @username.");return}
- let picked;try{picked=await navigator.contacts.select(['name','tel'],{multiple:true})}catch(_){toast('Could not open your contacts');return}
+ let picked;try{picked=await navigator.contacts.select(['name','tel'],{multiple:true})}catch(e){toast(e&&e.name==='SecurityError'?'Open Haba directly in Chrome to share contacts':'Could not open your contacts'+(e&&e.name?' ('+e.name+')':''));return}
  if(!picked||!picked.length)return;
  ncBusy=true;paintNc('Checking contacts…');
  const map=new Map();
@@ -1581,7 +1590,7 @@ async function ncSync(){
   if(uid&&uid!==me.uid){if(!hits.has(uid))hits.set(uid,{uid,name:map.get(n),phone:n})}
   else if(!uid)miss.push({name:map.get(n),phone:n})}}));
  ncBusy=false;
- if(nums.length&&fail===nums.length){toast("Couldn't check contacts. Try again.");paintNc();return}
+ if(nums.length&&fail===nums.length){toast("Couldn't check contacts"+(ncLastErr?' ('+String(ncLastErr).replace(/^[^/]*\//,'').slice(0,40)+')':'')+'. Try again.');paintNc();return}
  ncData={hits:[...hits.values()],miss,t:Date.now()};ncSave();paintNc();
  toast(hits.size?`${hits.size} contact${hits.size>1?'s':''} on Haba`:'None of those contacts are on Haba yet');
 }

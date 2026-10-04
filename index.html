@@ -19,6 +19,30 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--t
 button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 input{font:inherit;color:inherit}
 [hidden]{display:none!important}
+/* preview & crop before sending */
+#xp{position:fixed;inset:0;z-index:86;background:#000;color:#fff;display:flex;flex-direction:column}
+#xp .xph{display:flex;align-items:center;gap:12px;padding:calc(10px + env(safe-area-inset-top,0px)) 12px 10px}
+#xp .ibtn{background:rgba(255,255,255,.14);color:#fff}
+#xp .lbw b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#xp-st{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;padding:12px;overflow:hidden;touch-action:none;-webkit-user-select:none;user-select:none}
+.xpi{max-width:100%;max-height:100%;object-fit:contain;border-radius:4px}
+.xpd{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;padding:24px;max-width:90%}
+.xpd div{font-size:56px}.xpd b{font-size:16px;word-break:break-word}.xpd small{opacity:.7}
+.xpw{position:relative;line-height:0}
+.xpw canvas{display:block}
+.xcr{position:absolute;border:2px solid #fff;box-shadow:0 0 0 9999px rgba(0,0,0,.55);cursor:move;touch-action:none;background-image:linear-gradient(rgba(255,255,255,.35),rgba(255,255,255,.35)),linear-gradient(rgba(255,255,255,.35),rgba(255,255,255,.35)),linear-gradient(rgba(255,255,255,.35),rgba(255,255,255,.35)),linear-gradient(rgba(255,255,255,.35),rgba(255,255,255,.35));background-size:1px 100%,1px 100%,100% 1px,100% 1px;background-position:33.33% 0,66.66% 0,0 33.33%,0 66.66%;background-repeat:no-repeat}
+.xcr i{position:absolute;touch-action:none}
+.xcr i.c{width:44px;height:44px}
+.xcr i.c::after{content:'';position:absolute;left:15px;top:15px;width:14px;height:14px;border-radius:50%;background:#fff;box-shadow:0 0 0 1px rgba(0,0,0,.35)}
+.xcr i.nw{left:-24px;top:-24px;cursor:nwse-resize}.xcr i.ne{right:-24px;top:-24px;cursor:nesw-resize}
+.xcr i.sw{left:-24px;bottom:-24px;cursor:nesw-resize}.xcr i.se{right:-24px;bottom:-24px;cursor:nwse-resize}
+.xcr i.n{left:22px;right:22px;top:-14px;height:28px;cursor:ns-resize}.xcr i.s{left:22px;right:22px;bottom:-14px;height:28px;cursor:ns-resize}
+.xcr i.w{top:22px;bottom:22px;left:-14px;width:28px;cursor:ew-resize}.xcr i.e{top:22px;bottom:22px;right:-14px;width:28px;cursor:ew-resize}
+.xpb{padding:10px 16px calc(14px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:12px}
+.xpt{display:flex;justify-content:center;gap:10px}
+.xpt button{height:38px;padding:0 16px;border-radius:999px;background:rgba(255,255,255,.14);color:#fff;font-size:14px;font-weight:600}
+.xpgo{width:100%;height:48px;border-radius:12px;background:#fff;color:#000;font-weight:700;font-size:16px}
+.xpgo:disabled{opacity:.5}
 /* verified badge */
 .vb{width:16px;height:16px;flex-shrink:0;vertical-align:-2px;margin-left:4px;display:inline-block}
 .cm .n,.who .n{display:flex;align-items:center}
@@ -364,6 +388,7 @@ img,svg,video,a{-webkit-user-drag:none;user-drag:none;-webkit-touch-callout:none
 <div id="lb" hidden><div class="lbh"><button class="ibtn" id="lb-x" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button><div class="lbw"><b id="lb-n"></b><span id="lb-d"></span></div><button class="ibtn" id="lb-dl" aria-label="Download"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><polyline points="7 11 12 16 17 11"/><path d="M5 21h14"/></svg></button></div><div class="lbs" id="lb-s"><img id="lb-i" alt=""></div><button class="lbn l" id="lb-p" aria-label="Previous">&#8249;</button><button class="lbn r" id="lb-nx" aria-label="Next">&#8250;</button></div>
 <div id="modal" hidden><div class="box"><h3 id="m-title"></h3><p id="m-text"></p><input id="m-in" class="in" hidden><div class="acts"><button id="m-cancel">Cancel</button><button class="go" id="m-ok">OK</button></div></div></div>
 
+<div id="xp" hidden><div class="xph"><button class="ibtn" id="xp-x" aria-label="Cancel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button><div class="lbw"><b id="xp-t"></b><span id="xp-s"></span></div><button class="ibtn" id="xp-rm" aria-label="Remove this file" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg></button></div><div id="xp-st"></div><div class="xpb"><div class="xpt" id="xp-tools" hidden><button id="xp-rot" type="button">Rotate</button><button id="xp-sq" type="button">Square</button><button id="xp-rs" type="button">Reset</button></div><button class="xpgo" id="xp-go" type="button">Send</button></div></div>
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
 import {getAuth,onAuthStateChanged,onIdTokenChanged,signOut,RecaptchaVerifier,signInWithPhoneNumber,createUserWithEmailAndPassword,signInWithEmailAndPassword,sendPasswordResetEmail} from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
@@ -392,7 +417,7 @@ const hideSplash=()=>setTimeout(()=>$('splash').classList.add('out'),Math.max(30
 const navStack=[];
 function navPush(t){if(navStack.includes(t))return;navStack.push(t);try{history.pushState({t},'')}catch(_){}}
 function navClose(t,hide){if(navStack[navStack.length-1]===t){history.back();return}const i=navStack.lastIndexOf(t);if(i>-1)navStack.splice(i,1);hide()}
-window.addEventListener('popstate',()=>{const t=navStack.pop();if(t==='lb')lbHide();else if(t==='sheet')sheetHide();else if(t==='chat')chatHide();else if(t==='menu')menuHide();else if(t==='dis')disHide();else if(t==='cs')csHide();else if(t==='rp')rpHide()});
+window.addEventListener('popstate',()=>{const t=navStack.pop();if(t==='lb')lbHide();else if(t==='sheet')sheetHide();else if(t==='chat')chatHide();else if(t==='menu')menuHide();else if(t==='dis')disHide();else if(t==='cs')csHide();else if(t==='rp')rpHide();else if(t==='xp')xpHide()});
 function navSwap(from,to){const i=navStack.lastIndexOf(from);if(i>-1){navStack[i]=to;try{history.replaceState({t:to},'')}catch(_){}}else navPush(to)}
 
 /* dialogs */
@@ -813,8 +838,8 @@ async function prepImage(file){
   const b=await new Promise(r=>cv.toBlob(r,'image/jpeg',.82));if(!b||b.size>=file.size)return same(W,H);
   return{file:new File([b],(file.name||'photo').replace(/\.[^.]+$/,'')+'.jpg',{type:'image/jpeg'}),w,h}}catch(_){return same(W,H)}
 }
-async function sendFiles(files){
- const uid=active;if(!uid||!files.length)return;
+async function sendFiles(files,to){
+ const uid=to||active;if(!uid||!files.length)return;
  if(blocked[uid]){if(await ask('Unblock to send?',"You've blocked this contact. Unblock them to send a file.",{ok:'Unblock'}))await remove(ref(db,`users/${me.uid}/blocked/${uid}`)).catch(()=>{});return}
  const key=await sharedKey(uid);if(!key){toast("Can't send: encryption key unavailable");return}
  const t=tid(me.uid,uid);let ok=0;
@@ -846,8 +871,74 @@ async function sendFiles(files){
  }
  if(ok)toast(ok>1?`${ok} files sent`:'Sent');
 }
+/* ---- preview & crop before sending ---- */
+let xpRes=null,xpQ=[],xpOut=[],xpI=0,xpUrl=null,xpC=null,xpDrag=null,xpTok=0;
+function xpClear(){xpTok++;if(xpUrl){URL.revokeObjectURL(xpUrl);xpUrl=null}xpC=null;xpDrag=null;$('xp-st').innerHTML='';$('xp-tools').hidden=true}
+function xpHide(){$('xp').hidden=true;xpClear();const r=xpRes;xpRes=null;if(r)r(null)}
+function xpFinish(list){const r=xpRes;xpRes=null;if(r)r(list);navClose('xp',xpHide)}
+function previewFiles(files){return new Promise(res=>{xpRes=res;xpQ=files.slice();xpOut=[];xpI=0;navPush('xp');$('xp').hidden=false;xpShow()})}
+const xpDoc=f=>`<div class="xpd"><div>📄</div><b>${esc(f.name||'File')}</b><small>${esc(fsize(f.size))}</small></div>`;
+async function xpShow(){
+ xpClear();const f=xpQ[xpI],n=xpQ.length,st=$('xp-st'),ty=(f.type||'').toLowerCase(),tk=xpTok;
+ $('xp-t').textContent=f.name||'File';$('xp-s').textContent=(n>1?`${xpI+1} of ${n} · `:'')+fsize(f.size);
+ $('xp-go').textContent=xpI===n-1?'Send':'Next';$('xp-rm').hidden=n<2;
+ if(ty.startsWith('image/')&&ty!=='image/gif'){
+  let bmp=null;try{try{bmp=await createImageBitmap(f,{imageOrientation:'from-image'})}catch(_){bmp=await createImageBitmap(f)}}catch(_){}
+  if(tk!==xpTok)return;
+  if(bmp){xpCrop(bmp);return}
+ }
+ if(ty.startsWith('image/')){xpUrl=URL.createObjectURL(f);st.innerHTML=`<img class="xpi" src="${xpUrl}" alt="">`;st.firstChild.onerror=()=>{st.innerHTML=xpDoc(f)}}
+ else if(ty.startsWith('video/')){xpUrl=URL.createObjectURL(f);st.innerHTML=`<video class="xpi" src="${xpUrl}" controls playsinline></video>`;st.firstChild.onerror=()=>{st.innerHTML=xpDoc(f)}}
+ else st.innerHTML=xpDoc(f);
+}
+function xpCrop(bmp){
+ const sc=Math.min(1,4096/Math.max(bmp.width,bmp.height)),S=document.createElement('canvas');S.width=Math.max(1,Math.round(bmp.width*sc));S.height=Math.max(1,Math.round(bmp.height*sc));
+ S.getContext('2d').drawImage(bmp,0,0,S.width,S.height);bmp.close&&bmp.close();
+ xpC={S,dirty:false,cr:{x:0,y:0,w:1,h:1},dw:1,dh:1};
+ $('xp-st').innerHTML='<div class="xpw"><canvas id="xp-cv"></canvas><div class="xcr" id="xcr"><i class="c nw" data-m="nw"></i><i class="c ne" data-m="ne"></i><i class="c sw" data-m="sw"></i><i class="c se" data-m="se"></i><i class="n" data-m="n"></i><i class="s" data-m="s"></i><i class="w" data-m="w"></i><i class="e" data-m="e"></i></div></div>';
+ $('xp-tools').hidden=false;xpLayout();
+}
+function xpLayout(){
+ if(!xpC)return;const st=$('xp-st'),S=xpC.S,aw=st.clientWidth-24,ah=st.clientHeight-24;if(aw<=0||ah<=0)return;
+ const k=Math.min(aw/S.width,ah/S.height),dw=Math.max(1,Math.round(S.width*k)),dh=Math.max(1,Math.round(S.height*k)),dpr=Math.min(2,window.devicePixelRatio||1),cv=$('xp-cv');
+ cv.width=Math.round(dw*dpr);cv.height=Math.round(dh*dpr);cv.style.width=dw+'px';cv.style.height=dh+'px';
+ const x=cv.getContext('2d');x.imageSmoothingQuality='high';x.drawImage(S,0,0,cv.width,cv.height);
+ xpC.dw=dw;xpC.dh=dh;xpPaint();
+}
+function xpPaint(){const{cr,dw,dh}=xpC,b=$('xcr');b.style.left=cr.x*dw+'px';b.style.top=cr.y*dh+'px';b.style.width=cr.w*dw+'px';b.style.height=cr.h*dh+'px'}
+$('xp-st').addEventListener('pointerdown',e=>{
+ if(!xpC)return;const box=e.target.closest('#xcr');if(!box)return;const h=e.target.closest('#xcr i'),{cr,dw,dh}=xpC;
+ xpDrag={m:h?h.dataset.m:'move',x:e.clientX,y:e.clientY,l:cr.x*dw,t:cr.y*dh,r:(cr.x+cr.w)*dw,b:(cr.y+cr.h)*dh,id:e.pointerId};
+ try{$('xp-st').setPointerCapture(e.pointerId)}catch(_){}e.preventDefault()});
+$('xp-st').addEventListener('pointermove',e=>{
+ if(!xpDrag||!xpC||e.pointerId!==xpDrag.id)return;const d=xpDrag,{dw,dh}=xpC,dx=e.clientX-d.x,dy=e.clientY-d.y,MIN=48;let{l,t,r,b}=d;
+ if(d.m==='move'){const w=r-l,h=b-t;l=Math.min(Math.max(l+dx,0),dw-w);t=Math.min(Math.max(t+dy,0),dh-h);r=l+w;b=t+h}
+ else{if(d.m.includes('w'))l=Math.min(Math.max(l+dx,0),r-MIN);if(d.m.includes('e'))r=Math.max(Math.min(r+dx,dw),l+MIN);
+  if(d.m.includes('n'))t=Math.min(Math.max(t+dy,0),b-MIN);if(d.m.includes('s'))b=Math.max(Math.min(b+dy,dh),t+MIN)}
+ xpC.cr={x:l/dw,y:t/dh,w:(r-l)/dw,h:(b-t)/dh};xpPaint()});
+['pointerup','pointercancel'].forEach(ev=>$('xp-st').addEventListener(ev,()=>{xpDrag=null}));
+$('xp-rot').onclick=()=>{if(!xpC)return;const S=xpC.S,R=document.createElement('canvas');R.width=S.height;R.height=S.width;
+ const x=R.getContext('2d');x.translate(R.width,0);x.rotate(Math.PI/2);x.drawImage(S,0,0);xpC.S=R;xpC.dirty=true;xpC.cr={x:0,y:0,w:1,h:1};xpLayout()};
+$('xp-sq').onclick=()=>{if(!xpC)return;const{dw,dh}=xpC,m=Math.min(dw,dh);xpC.cr={x:(dw-m)/2/dw,y:(dh-m)/2/dh,w:m/dw,h:m/dh};xpPaint()};
+$('xp-rs').onclick=()=>{if(!xpC)return;xpC.cr={x:0,y:0,w:1,h:1};xpPaint()};
+async function xpFile(){
+ const f=xpQ[xpI];if(!xpC)return f;const{S,cr,dirty}=xpC;
+ if(!dirty&&cr.x<.003&&cr.y<.003&&cr.w>.994&&cr.h>.994)return f;
+ const sx=Math.round(cr.x*S.width),sy=Math.round(cr.y*S.height),sw=Math.max(1,Math.round(cr.w*S.width)),sh=Math.max(1,Math.round(cr.h*S.height));
+ const c=document.createElement('canvas');c.width=sw;c.height=sh;const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,sw,sh);x.drawImage(S,sx,sy,sw,sh,0,0,sw,sh);
+ const b=await new Promise(r=>c.toBlob(r,'image/jpeg',.92));if(!b)return f;
+ return new File([b],(f.name||'photo').replace(/\.[^.]+$/,'')+'.jpg',{type:'image/jpeg'});
+}
+$('xp-go').onclick=async()=>{const b=$('xp-go');if(b.disabled)return;b.disabled=true;
+ try{xpOut.push(await xpFile())}catch(_){xpOut.push(xpQ[xpI])}
+ b.disabled=false;xpI++;if(xpI>=xpQ.length)xpFinish(xpOut);else xpShow()};
+$('xp-rm').onclick=()=>{xpQ.splice(xpI,1);if(!xpQ.length||xpI>=xpQ.length)xpFinish(xpOut);else xpShow()};
+$('xp-x').onclick=()=>navClose('xp',xpHide);
+window.addEventListener('resize',()=>{if(!$('xp').hidden)xpLayout()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('xp').hidden)navClose('xp',xpHide)});
 $('att').onclick=()=>{if(active)$('att-in').click()};
-$('att-in').onchange=e=>{const fs=Array.from(e.target.files||[]);e.target.value='';if(fs.length)sendFiles(fs)};
+$('att-in').onchange=async e=>{const fs=Array.from(e.target.files||[]),to=active;e.target.value='';if(!fs.length||!to)return;
+ const list=await previewFiles(fs);if(list&&list.length)sendFiles(list,to)};
 $('msg').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMsg()}});
 function chatHide(){if(rec)stopRec(false);pauseVoices();$('app').classList.remove('in-chat');if(offMsgs){offMsgs();offMsgs=null}active=null;stopPres();$('thread').hidden=true;$('ph').hidden=false;renderList()}
 $('back').onclick=()=>navClose('chat',chatHide);

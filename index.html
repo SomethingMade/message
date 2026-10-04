@@ -318,6 +318,7 @@ img,svg,video,a{-webkit-user-drag:none;user-drag:none;-webkit-touch-callout:none
   <div class="lst">
    <button class="rw" id="r-name"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></div><div class="tx"><b>Edit name</b><span>How people see you in chats</span></div></button>
    <button class="rw" id="r-enc"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div><div class="tx"><b>Encryption &amp; recovery</b><span id="r-enc-sub">Backup PIN for your encrypted chats</span></div></button>
+   <button class="rw" id="r-snd"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6 9H2v6h4l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M19 5a10 10 0 0 1 0 14"/></svg></div><div class="tx"><b>Notification sounds</b><span id="r-snd-sub">On</span></div></button>
   </div>
   <div class="lst gap"><button class="rw dg" id="r-out"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></div><div class="tx"><b>Sign out</b></div></button></div>
   <div class="pf"><svg viewBox="0 0 200 200"><polygon points="20,80 170,30 80,110" fill="currentColor" fill-opacity=".75"/><polygon points="120,180 170,30 80,110" fill="currentColor"/><polygon points="20,80 80,110 80,140" fill="currentColor" fill-opacity=".55"/></svg><span>Haba Messenger</span></div>
@@ -494,7 +495,7 @@ async function setupPush(){
   await set(ref(db,`users/${me.uid}/fcmTokens/${token}`),{createdAt:serverTimestamp(),ua:navigator.userAgent});
   if(!fgBound){fgBound=true;onMessage(messaging,pl=>{const d=pl.data||{};
    if(d.chatUid&&d.chatUid===active&&document.visibilityState==='visible')return;
-   navigator.serviceWorker.ready.then(r=>r.showNotification(d.title||'New Message',{body:d.body||'Sent you a message',icon:d.icon||undefined,
+   navigator.serviceWorker.ready.then(r=>r.showNotification(d.title||'New Message',{silent:true,body:d.body||'Sent you a message',icon:d.icon||undefined,
     tag:d.groupId?'group-'+d.groupId:d.chatUid?'chat-'+d.chatUid:'new-message',data:{url:d.url||'/',uid:d.chatUid,groupId:d.groupId},
     actions:[{action:'reply',title:'Reply',type:'text',placeholder:'Type a message…'},{action:'close',title:'Dismiss'}]}))})}
  }catch(_){}
@@ -510,10 +511,39 @@ $('push-banner').onclick=enablePush;
 /* tapping a notification while the app is open asks it to jump to that chat */
 if('serviceWorker' in navigator)navigator.serviceWorker.addEventListener('message',e=>{const d=e.data||{};if(d.type==='open-chat'&&d.uid&&me)loadProfile(d.uid).then(()=>openChat(d.uid))});
 
+/* ---- sounds: synthesized (no audio files). A tone when a message arrives and when a friend comes online ---- */
+let sndCtx=null,lastSnd={};
+const soundsOn=()=>{try{return localStorage.getItem('hSounds')!=='off'}catch(_){return true}};
+function sndInit(){try{if(!sndCtx)sndCtx=new(window.AudioContext||window.webkitAudioContext)();if(sndCtx.state==='suspended')sndCtx.resume().catch(()=>{})}catch(_){}}
+['pointerdown','keydown','touchstart'].forEach(ev=>document.addEventListener(ev,sndInit,{passive:true}));
+function tone(f,t0,d,v){const o=sndCtx.createOscillator(),g=sndCtx.createGain();o.type='sine';o.frequency.value=f;
+ g.gain.setValueAtTime(0,t0);g.gain.linearRampToValueAtTime(v,t0+.012);g.gain.exponentialRampToValueAtTime(.0001,t0+d);o.connect(g);g.connect(sndCtx.destination);o.start(t0);o.stop(t0+d+.03)}
+function playSound(kind){
+ if(!soundsOn()||!sndCtx||sndCtx.state!=='running')return;
+ const now=Date.now();if(now-(lastSnd[kind]||0)<700)return;lastSnd[kind]=now;const t=sndCtx.currentTime;
+ if(kind==='message'){tone(880,t,.2,.14);tone(1318.5,t+.1,.32,.14)}
+ else if(kind==='pop'){tone(740,t,.12,.09)}
+ else if(kind==='online'){tone(523.25,t,.16,.1);tone(659.25,t+.09,.16,.1);tone(783.99,t+.18,.26,.1)}
+}
+function paintSnd(){$('r-snd-sub').textContent=soundsOn()?'On':'Off'}
+$('r-snd').onclick=()=>{const on=soundsOn();try{localStorage.setItem('hSounds',on?'off':'on')}catch(_){}paintSnd();if(!on){sndInit();setTimeout(()=>playSound('message'),60)}};
+paintSnd();
+/* new message in any chat -> sound; friend's status going offline -> online -> sound */
+let chatsInit=false;const seenTs={},friendOff={},fStatus={},lastOnline={};
+function checkIncoming(nc){
+ if(chatsInit){let k=null;
+  for(const [u,c] of Object.entries(nc)){if(c&&c.senderUid&&c.senderUid!==me.uid&&(+c.timestamp||0)>(seenTs[u]||0))k=(u===active&&document.visibilityState==='visible')?(k||'pop'):'message'}
+  if(k)playSound(k)}
+ Object.entries(nc).forEach(([u,c])=>{seenTs[u]=Math.max(seenTs[u]||0,(c&&+c.timestamp)||0)});chatsInit=true}
+function watchFriends(uids){uids.slice(0,60).forEach(u=>{if(friendOff[u]||u===(me&&me.uid))return;let first=true;
+ friendOff[u]=onValue(ref(db,`users/${u}/status`),s=>{const v=s.val(),was=fStatus[u];fStatus[u]=v;if(first){first=false;return}
+  if(v==='online'&&was!=='online'&&Date.now()-(lastOnline[u]||0)>30000){lastOnline[u]=Date.now();playSound('online')}})})}
+function stopFriends(){Object.values(friendOff).forEach(f=>f());[friendOff,fStatus,seenTs,lastOnline].forEach(o=>Object.keys(o).forEach(k=>delete o[k]));chatsInit=false}
+
 /* ---- session ---- */
 onAuthStateChanged(auth,async u=>{
  if(offList){offList();offList=null}
- if(!u){stopPresence();me=null;kp=null;backupInfo=undefined;$('sheet').hidden=true;$('app').hidden=true;$('auth').hidden=false;step('phone');hideSplash();return}
+ if(!u){stopPresence();stopFriends();me=null;kp=null;backupInfo=undefined;$('sheet').hidden=true;$('app').hidden=true;$('auth').hidden=false;step('phone');hideSplash();return}
  me=u;
  const p=await get(ref(db,'users/'+u.uid));
  if(!p.exists()||!p.val().name){$('auth').hidden=false;$('app').hidden=true;step('name');hideSplash();return}
@@ -521,7 +551,8 @@ onAuthStateChanged(auth,async u=>{
 });
 function showApp(){$('auth').hidden=true;$('app').hidden=false;startPresence();setupPush();refreshPushBanner();backupInfo=undefined;myKeys().catch(()=>{}).then(refreshBanner);
  if(offList)offList();
- offList=onValue(ref(db,'user_chats/'+me.uid),s=>{chats=s.val()||{};renderList();Object.keys(chats).forEach(loadProfile)})}
+ stopFriends();
+ offList=onValue(ref(db,'user_chats/'+me.uid),s=>{const nc=s.val()||{};checkIncoming(nc);chats=nc;renderList();Object.keys(chats).forEach(loadProfile);watchFriends(Object.keys(chats))})}
 async function loadProfile(uid){if(profiles[uid])return;const s=await get(ref(db,'users/'+uid));profiles[uid]=s.val()||{name:'Haba user'};renderList();if(active===uid)paintHead()}
 
 /* ---- chat list ---- */

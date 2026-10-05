@@ -294,6 +294,33 @@ button.rw:hover{background:var(--hover)}
 .svf{position:absolute;left:50%;bottom:calc(14px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:4;height:38px;padding:0 18px;border-radius:999px;background:rgba(255,255,255,.18);color:#fff;font-size:14px;font-weight:600}
 .svz{position:absolute;top:calc(70px + env(safe-area-inset-top,0px));bottom:70px;left:0;width:34%;z-index:2}.svz.r{left:auto;right:0;width:66%}
 @media (min-width:769px){#sv .svm,#sv .svz{max-width:460px;left:50%;right:auto;transform:translateX(-50%)}#sv .svz{width:17%;left:calc(50% - 230px);transform:none}#sv .svz.r{width:33%;left:50%;transform:translateX(-230px)}}
+/* ---- QR scanner ---- */
+#qs{position:fixed;inset:0;z-index:92;background:#000;color:#fff;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center}
+#qs video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.qsh{position:absolute;left:0;right:0;top:0;z-index:3;display:flex;align-items:center;gap:12px;padding:calc(10px + env(safe-area-inset-top,0px)) 12px 10px;background:linear-gradient(rgba(0,0,0,.55),transparent)}
+.qsh .ibtn{background:rgba(255,255,255,.18);color:#fff}.qsh b{font-size:17px}
+.qsf{position:relative;z-index:2;width:min(70vw,280px);height:min(70vw,280px);border-radius:26px;box-shadow:0 0 0 100vmax rgba(0,0,0,.55)}
+.qsf i{position:absolute;width:38px;height:38px;border:4px solid #fff}
+.qsf i:nth-child(1){left:-2px;top:-2px;border-right:none;border-bottom:none;border-top-left-radius:26px}
+.qsf i:nth-child(2){right:-2px;top:-2px;border-left:none;border-bottom:none;border-top-right-radius:26px}
+.qsf i:nth-child(3){left:-2px;bottom:-2px;border-right:none;border-top:none;border-bottom-left-radius:26px}
+.qsf i:nth-child(4){right:-2px;bottom:-2px;border-left:none;border-top:none;border-bottom-right-radius:26px}
+.qss{position:relative;z-index:2;margin-top:22px;font-size:14px;font-weight:600;text-align:center;padding:0 24px;text-shadow:0 1px 6px rgba(0,0,0,.6)}
+.qsg{position:absolute;z-index:3;left:50%;bottom:calc(28px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);height:44px;padding:0 22px;border-radius:999px;background:rgba(255,255,255,.2);color:#fff;font-size:14px;font-weight:700;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+/* ---- my QR code sheet ---- */
+#qrsheet{position:fixed;inset:0;z-index:85;background:rgba(0,0,0,.5);display:flex;align-items:flex-end;justify-content:center}
+@media (min-width:769px){#qrsheet{align-items:center;padding:20px}#qrsheet .msheet{border-radius:22px;width:380px;padding:14px 0}}
+.qrc{margin:2px 18px 14px;padding:20px 18px 16px;border-radius:22px;background:var(--grad);color:#fff;text-align:center}
+.qrh{display:flex;align-items:center;gap:12px;text-align:left;margin-bottom:16px}
+.qrh .av{width:46px;height:46px;font-size:16px;background-color:rgba(255,255,255,.25);color:#fff;border:2px solid rgba(255,255,255,.7)}
+.qrt{min-width:0;display:flex;flex-direction:column}.qrt b{font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.qrt span{font-size:13px;opacity:.85}.qrt span:empty{display:none}
+.qrbox{width:208px;height:208px;margin:0 auto;background:#fff;border-radius:18px;padding:12px;display:flex;align-items:center;justify-content:center;box-sizing:border-box}
+.qrbox canvas,.qrbox img{width:100%!important;height:100%!important;display:block;border-radius:4px}
+.qrld{color:#666;font-size:13px}
+.qrp{margin:14px 6px 0;font-size:13px;opacity:.9}
+.qrb{display:flex;gap:10px;padding:0 18px}
+.qrbtn{flex:1;height:46px;border-radius:999px;background:var(--bg-input);color:var(--text);font-size:15px;font-weight:700}
+.qrbtn.pri{background:var(--accent);color:var(--on-accent)}
 /* ---- chat header redesign ---- */
 .ch{gap:6px;padding:calc(8px + env(safe-area-inset-top,0px)) 10px 8px 4px;border-bottom:none;box-shadow:0 1px 0 var(--line),0 8px 18px -14px rgba(0,0,0,.28);position:relative;z-index:2;background:var(--bg)}
 .ch .hbk{background:transparent;width:36px;height:40px;border-radius:12px;margin-right:-2px}.ch .hbk svg{width:24px;height:24px}.ch .hbk:active{background:var(--bg-input)}
@@ -515,6 +542,7 @@ img,svg,video,a{-webkit-user-drag:none;user-drag:none;-webkit-touch-callout:none
    <button class="rw" id="r-name"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></div><div class="tx"><b>Edit name</b><span>How people see you in chats</span></div></button>
    <button class="rw" id="r-about"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="17" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="17" y1="18" x2="3" y2="18"/></svg></div><div class="tx"><b>Edit bio</b><span id="r-about-sub">Hey there! I'm using Haba</span></div></button>
    <button class="rw" id="r-web"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15 15 0 0 1 0 20 15 15 0 0 1 0-20z"/></svg></div><div class="tx"><b>Edit website</b><span id="r-web-sub">Add a link to your profile</span></div></button>
+   <button class="rw" id="r-qr"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM20 14v3M14 20h3M20 20h1"/></svg></div><div class="tx"><b>My QR code</b><span id="r-qr-sub">Let friends scan to find you on Haba</span></div></button>
    <button class="rw" id="r-enc"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div><div class="tx"><b>Encryption &amp; recovery</b><span id="r-enc-sub">Backup PIN for your encrypted chats</span></div></button>
    <button class="rw" id="r-snd"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6 9H2v6h4l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M19 5a10 10 0 0 1 0 14"/></svg></div><div class="tx"><b>Notification sounds</b><span id="r-snd-sub">On</span></div></button>
   </div>
@@ -563,6 +591,13 @@ img,svg,video,a{-webkit-user-drag:none;user-drag:none;-webkit-touch-callout:none
 </div></div></div>
 <div id="stx" hidden><div class="stxh"><button class="ibtn" id="stx-x" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button><button class="stxp" id="stx-post">Post</button></div><textarea id="stx-in" maxlength="280" placeholder="Type a story" rows="4"></textarea><div class="stxs" id="stx-sw"></div></div>
 <div id="sv" hidden><div class="svb" id="sv-bars"></div><div class="svh"><div class="av" id="sv-av"></div><div class="svt"><b id="sv-n"></b><span id="sv-t"></span></div><button class="svx" id="sv-del" hidden aria-label="Delete story"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button><button class="svx" id="sv-x" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div><div class="svm" id="sv-m"></div><div class="svc" id="sv-cap" hidden></div><button class="svf" id="sv-f" hidden></button><div class="svz" id="sv-l"></div><div class="svz r" id="sv-r"></div></div>
+<div id="qrsheet" hidden><div class="msheet"><div class="grab"></div>
+ <div class="qrc"><div class="qrh"><div class="av" id="qr-av"></div><div class="qrt"><b id="qr-n"></b><span id="qr-u"></span></div></div>
+ <div class="qrbox" id="qr-box"><div class="qrld">Generating…</div></div>
+ <p class="qrp">Scan this code with a camera to open my Haba profile.</p></div>
+ <div class="qrb"><button class="qrbtn pri" id="qr-share">Share link</button><button class="qrbtn" id="qr-dl">Download</button></div>
+</div></div>
+<div id="qs" hidden><video id="qs-v" playsinline muted></video><canvas id="qs-c" hidden></canvas><div class="qsh"><button class="ibtn" id="qs-x" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button><b>Scan QR code</b></div><div class="qsf"><i></i><i></i><i></i><i></i></div><div class="qss" id="qs-s">Starting camera…</div><button class="qsg" id="qs-g">Choose from photos</button><input type="file" id="qs-file" accept="image/*" hidden></div>
 <div id="toast" hidden></div>
 <div id="inbn" role="status" aria-live="polite" hidden></div>
 <div id="lb" hidden><div class="lbh"><button class="ibtn" id="lb-x" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button><div class="lbw"><b id="lb-n"></b><span id="lb-d"></span></div><button class="ibtn" id="lb-dl" aria-label="Download"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><polyline points="7 11 12 16 17 11"/><path d="M5 21h14"/></svg></button></div><div class="lbs" id="lb-s"><img id="lb-i" alt=""></div><button class="lbn l" id="lb-p" aria-label="Previous">&#8249;</button><button class="lbn r" id="lb-nx" aria-label="Next">&#8250;</button></div>
@@ -597,7 +632,7 @@ const hideSplash=()=>setTimeout(()=>$('splash').classList.add('out'),Math.max(30
 const navStack=[];
 function navPush(t){if(navStack.includes(t))return;navStack.push(t);try{history.pushState({t},'')}catch(_){}}
 function navClose(t,hide){if(navStack[navStack.length-1]===t){history.back();return}const i=navStack.lastIndexOf(t);if(i>-1)navStack.splice(i,1);hide()}
-window.addEventListener('popstate',()=>{const t=navStack.pop();if(t==='lb')lbHide();else if(t==='sheet')sheetHide();else if(t==='chat')chatHide();else if(t==='menu')menuHide();else if(t==='dis')disHide();else if(t==='cs')csHide();else if(t==='rp')rpHide();else if(t==='xp')xpHide();else if(t==='ms')msHide();else if(t==='fs')fsHide();else if(t==='nc')ncHide();else if(t==='sk')skHide();else if(t==='sv')svHide();else if(t==='sts')stsHide();else if(t==='stx')stxHide()});
+window.addEventListener('popstate',()=>{const t=navStack.pop();if(t==='lb')lbHide();else if(t==='sheet')sheetHide();else if(t==='chat')chatHide();else if(t==='menu')menuHide();else if(t==='dis')disHide();else if(t==='cs')csHide();else if(t==='rp')rpHide();else if(t==='xp')xpHide();else if(t==='ms')msHide();else if(t==='fs')fsHide();else if(t==='nc')ncHide();else if(t==='sk')skHide();else if(t==='sv')svHide();else if(t==='sts')stsHide();else if(t==='stx')stxHide();else if(t==='qr')qrHide();else if(t==='qs')qsHide()});
 function navSwap(from,to){const i=navStack.lastIndexOf(from);if(i>-1){navStack[i]=to;try{history.replaceState({t:to},'')}catch(_){}}else navPush(to)}
 
 /* dialogs */
@@ -1666,7 +1701,7 @@ async function paintEnc(){
 async function paintMain(){
  const u=(await get(ref(db,'users/'+me.uid)).catch(()=>null)),p=(u&&u.val())||profiles[me.uid]||{};profiles[me.uid]=p;
  const av=$('p-av');av.style.backgroundImage=p.photoURL?`url('${p.photoURL.replace(/'/g,'%27')}')`:'';av.textContent=p.photoURL?'':initials(p.name);
- $('r-photo-rm').hidden=!p.photoURL;$('r-about-sub').textContent=p.about||"Hey there! I'm using Haba";$('r-web-sub').textContent=p.website||'Add a link to your profile';$('p-name').innerHTML=esc(p.name||'Haba user')+vb(p,me.uid);$('p-user').textContent=p.username?'@'+p.username:'';$('p-phone').textContent=me.phoneNumber||me.email||'';
+ $('r-photo-rm').hidden=!p.photoURL;$('r-qr-sub').textContent=p.username?'@'+p.username:'Let friends scan to find you on Haba';$('r-about-sub').textContent=p.about||"Hey there! I'm using Haba";$('r-web-sub').textContent=p.website||'Add a link to your profile';$('p-name').innerHTML=esc(p.name||'Haba user')+vb(p,me.uid);$('p-user').textContent=p.username?'@'+p.username:'';$('p-phone').textContent=me.phoneNumber||me.email||'';
  await myKeys().catch(()=>null);if(backupInfo===undefined)await loadBackup();
  $('r-enc-sub').textContent=!kp?"This device can't read older chats":backupInfo?'Backup PIN is set':backupInfo===null?'No backup PIN yet':'Backup PIN for your encrypted chats';
 }
@@ -1834,7 +1869,7 @@ function paintNc(){
  let h='';
  if(qd.length>=7){const n=normPhone(q);if(n)h+=`<div class="chat" data-act="num" data-v="${esc(n)}"><div class="av ac">+</div><div class="cm"><div class="n"><span class="nt">Find ${esc(n)} on Haba</span></div></div></div>`}
  else if(q.replace(/^@/,'').length>=2&&!/^[\d\s+()-]+$/.test(q))h+=`<div class="chat" data-act="user" data-v="${esc(q.replace(/^@/,''))}"><div class="av ac">@</div><div class="cm"><div class="n"><span class="nt">Find @${esc(q.replace(/^@/,''))}</span></div></div></div>`;
- if(!q)h+=`<div class="chat" data-act="ask"><div class="av ac">@</div><div class="cm"><div class="n"><span class="nt">Find by @username</span></div></div></div>`;
+ if(!q)h+=`<div class="chat" data-act="scan"><div class="av ac"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8V5a2 2 0 0 1 2-2h3M16 3h3a2 2 0 0 1 2 2v3M21 16v3a2 2 0 0 1-2 2h-3M8 21H5a2 2 0 0 1-2-2v-3"/><rect x="8" y="8" width="3" height="3"/><rect x="13" y="8" width="3" height="3"/><rect x="8" y="13" width="3" height="3"/><path d="M13 13h3v3h-3z"/></svg></div><div class="cm"><div class="n"><span class="nt">Scan QR code</span></div><div class="p">Add a friend by scanning their code</div></div></div><div class="chat" data-act="ask"><div class="av ac">@</div><div class="cm"><div class="n"><span class="nt">Find by @username</span></div></div></div>`;
  /* people I already follow = my friends to chat with */
  const fl=Object.keys(myFollowing).filter(u=>myFollowing[u]&&u!==me.uid&&!blocked[u]).slice(0,100);
  fl.forEach(u=>{if(!profiles[u])loadProfile(u).then(()=>{if(!$('nc').hidden)paintNc()})});
@@ -1881,6 +1916,7 @@ $('nc-l').onclick=async e=>{
  else if(act==='open')ncOpen(a.dataset.u);
  else if(act==='user')ncUsername(a.dataset.v);
  else if(act==='num')ncNumber(a.dataset.v);
+ else if(act==='scan')qsOpen();
  else if(act==='ask'){const v=await ask('Find by username','Enter their @username.',{input:true,ok:'Start chat'});if(v)ncUsername(v)}
 };
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('modal').hidden&&!$('nc').hidden)ncClose()});
@@ -2061,6 +2097,118 @@ $('sv-f').onclick=async()=>{
 };
 document.addEventListener('keydown',e=>{if($('sv').hidden)return;if(e.key==='Escape'&&$('modal').hidden)svClose();else if(e.key==='ArrowRight')svNext();else if(e.key==='ArrowLeft')svPrev()});
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'&&svCur){svPaused=true;if(svVid)svVid.pause()}else if(svCur&&!svHeld){svPaused=false;if(svVid)svVid.play().catch(()=>{})}});
+
+/* ---- my QR code: encodes the same public profile link Haba uses (https://newstart-64c43.web.app/u/{username|uid}) ---- */
+const PROFILE_WEB_BASE_URL='https://newstart-64c43.web.app/u/';
+let qrLib=null;
+function loadQrLib(){
+ if(window.QRCode)return Promise.resolve(window.QRCode);
+ if(qrLib)return qrLib;
+ qrLib=new Promise((res,rej)=>{const sc=document.createElement('script');sc.src='https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';sc.onload=()=>window.QRCode?res(window.QRCode):rej(new Error('qr'));sc.onerror=()=>{qrLib=null;rej(new Error('qr load'))};document.head.appendChild(sc)});
+ return qrLib;
+}
+const myProfileUrl=()=>{const p=profiles[me.uid]||{};return PROFILE_WEB_BASE_URL+encodeURIComponent(p.username||me.uid)};
+function qrHide(){$('qrsheet').hidden=true}
+function qrClose(){navClose('qr',qrHide)}
+async function qrOpen(){
+ if(!me)return;
+ const p=profiles[me.uid]||{},ph=p.photoURL||me.photoURL||'';
+ const av=$('qr-av');av.style.backgroundImage=safeUrl(ph)?`url('${ph.replace(/'/g,'%27')}')`:'';av.textContent=safeUrl(ph)?'':initials(p.name||me.displayName);
+ $('qr-n').textContent=p.name||me.displayName||'Haba user';$('qr-u').textContent=p.username?'@'+p.username:'';
+ const box=$('qr-box');box.innerHTML='<div class="qrld">Generating…</div>';
+ navPush('qr');$('qrsheet').hidden=false;
+ try{
+  const Q=await loadQrLib();box.innerHTML='';
+  new Q(box,{text:myProfileUrl(),width:320,height:320,colorDark:'#000000',colorLight:'#ffffff',correctLevel:Q.CorrectLevel.M});
+ }catch(_){box.innerHTML='<div class="qrld">Couldn\'t load the QR code.<br>Check your connection.</div>'}
+}
+$('r-qr').onclick=qrOpen;
+$('qrsheet').onclick=e=>{if(e.target.id==='qrsheet')qrClose()};
+$('qr-share').onclick=async()=>{
+ const url=myProfileUrl(),p=profiles[me.uid]||{},text=p.username?`Follow me on Haba! Find me at @${p.username}:`:'Follow me on Haba!';
+ if(navigator.share){try{await navigator.share({title:'Haba',text,url})}catch(_){}}
+ else{try{await navigator.clipboard.writeText(`${text} ${url}`);toast('Profile link copied')}catch(_){ask('Share profile',`${text} ${url}`,{cancel:false})}}
+};
+$('qr-dl').onclick=()=>{
+ const box=$('qr-box'),cv=box.querySelector('canvas'),im=box.querySelector('img'),src=cv?cv.toDataURL('image/png'):(im&&im.src);
+ if(!src){toast('QR code is not ready yet');return}
+ /* white border so it scans reliably when saved */
+ const img=new Image();img.onload=()=>{const pad=48,c=document.createElement('canvas');c.width=img.width+pad*2;c.height=img.height+pad*2;const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(img,pad,pad);
+  const a=document.createElement('a');a.href=c.toDataURL('image/png');a.download=`haba-${((profiles[me.uid]||{}).username||'profile')}-qr.png`;document.body.appendChild(a);a.click();a.remove()};img.src=src;
+};
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('qrsheet').hidden&&$('modal').hidden)qrClose()});
+
+/* ---- QR scanner: reads a Haba profile QR (link, @username or uid), follows that person like Haba's "Add friend" scan, then opens the chat ---- */
+let qsStream=null,qsRaf=0,qsBusy=false,jsqrP=null;
+function loadJsQr(){
+ if(window.jsQR)return Promise.resolve(window.jsQR);
+ if(jsqrP)return jsqrP;
+ jsqrP=new Promise((res,rej)=>{const sc=document.createElement('script');sc.src='https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js';sc.onload=()=>window.jsQR?res(window.jsQR):rej(new Error('jsqr'));sc.onerror=()=>{jsqrP=null;rej(new Error('jsqr load'))};document.head.appendChild(sc)});
+ return jsqrP;
+}
+function qsStop(){if(qsRaf){cancelAnimationFrame(qsRaf);qsRaf=0}if(qsStream){qsStream.getTracks().forEach(t=>t.stop());qsStream=null}const v=$('qs-v');if(v)v.srcObject=null}
+function qsHide(){qsStop();$('qs').hidden=true;qsBusy=false}
+function qsClose(){navClose('qs',qsHide)}
+const qsSay=t=>{$('qs-s').textContent=t};
+async function qsStart(){
+ qsStop();qsBusy=false;qsSay('Starting camera…');
+ let J;try{J=await loadJsQr()}catch(_){qsSay("Scanner couldn't load. Check your connection.");return}
+ if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){qsSay('Camera not available. Try "Choose from photos".');return}
+ try{
+  qsStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
+  if($('qs').hidden){qsStop();return}
+  const v=$('qs-v');v.srcObject=qsStream;await v.play();qsSay('Point at a Haba QR code');
+  const cv=$('qs-c'),cx=cv.getContext('2d',{willReadFrequently:true});
+  const tick=()=>{
+   if(!qsStream)return;
+   if(v.readyState===v.HAVE_ENOUGH_DATA&&v.videoWidth){
+    cv.width=v.videoWidth;cv.height=v.videoHeight;cx.drawImage(v,0,0,cv.width,cv.height);
+    const d=cx.getImageData(0,0,cv.width,cv.height),code=J(d.data,d.width,d.height);
+    if(code&&code.data&&!qsBusy){qsBusy=true;qsResult(code.data.trim());return}
+   }
+   qsRaf=requestAnimationFrame(tick)};
+  qsRaf=requestAnimationFrame(tick);
+ }catch(err){qsSay(err&&err.name==='NotAllowedError'?'Camera permission denied. Try "Choose from photos".':'Couldn\'t start the camera. Try "Choose from photos".')}
+}
+function qsOpen(){navPush('qs');$('qs').hidden=false;qsStart()}
+async function qsResolve(raw){
+ let v=String(raw||'').trim();
+ const m=v.match(/\/u\/([^/?#\s]+)/i);if(m)v=decodeURIComponent(m[1]);
+ v=v.replace(/^@/,'');if(!v||v.length>128||/[.#$\[\]\/\s]/.test(v))return null;
+ const un=await get(ref(db,'usernames/'+v.toLowerCase()));
+ if(un.exists()){const x=un.val();return typeof x==='string'?x:(x&&x.uid)||Object.keys(x)[0]}
+ const us=await get(ref(db,'users/'+v));
+ return us.exists()?v:null;
+}
+async function qsResult(raw){
+ qsStop();qsSay('Code found…');
+ let uid=null;
+ try{uid=await qsResolve(raw)}catch(_){qsSay("Couldn't look that up. Try again.");setTimeout(()=>{if(!$('qs').hidden)qsStart()},1500);return}
+ if(!uid){qsSay("That isn't a Haba profile code");setTimeout(()=>{if(!$('qs').hidden)qsStart()},1800);return}
+ if(uid===me.uid){qsSay('That\u2019s your own code');setTimeout(()=>{if(!$('qs').hidden)qsStart()},1800);return}
+ navClose('qs',qsHide);
+ setTimeout(async()=>{
+  await loadProfile(uid).catch(()=>{});
+  if(!myFollowing[uid]&&!blocked[uid])await followUser(uid);
+  ncOpen(uid);
+ },160);
+}
+$('qs-x').onclick=qsClose;
+$('qs-g').onclick=()=>{$('qs-file').value='';$('qs-file').click()};
+$('qs-file').onchange=async e=>{
+ const f=e.target.files&&e.target.files[0];e.target.value='';if(!f)return;
+ qsStop();qsSay('Reading image…');
+ try{
+  const J=await loadJsQr(),url=URL.createObjectURL(f),img=new Image();
+  await new Promise((ok,no)=>{img.onload=ok;img.onerror=no;img.src=url});
+  const sc=Math.min(1,1600/Math.max(img.width,img.height)),cv=document.createElement('canvas');cv.width=Math.round(img.width*sc);cv.height=Math.round(img.height*sc);
+  const cx=cv.getContext('2d',{willReadFrequently:true});cx.drawImage(img,0,0,cv.width,cv.height);URL.revokeObjectURL(url);
+  const d=cx.getImageData(0,0,cv.width,cv.height),code=J(d.data,d.width,d.height,{inversionAttempts:'attemptBoth'});
+  if(code&&code.data){qsBusy=true;qsResult(code.data.trim())}
+  else{qsSay('No QR code found in that photo');setTimeout(()=>{if(!$('qs').hidden)qsStart()},1800)}
+ }catch(_){qsSay("Couldn't read that image");setTimeout(()=>{if(!$('qs').hidden)qsStart()},1800)}
+};
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'&&!$('qs').hidden)qsStop();else if(document.visibilityState==='visible'&&!$('qs').hidden&&!qsStream&&!qsBusy)qsStart()});
 $('me').onclick=()=>openSheet('main');
 /* header three-dot menu: Edit profile + Refresh (clear cached files, then reload), like Haba */
 function menuHide(){$('menu').hidden=true}

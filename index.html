@@ -152,6 +152,17 @@ input{font:inherit;color:inherit}
 .ibtn{width:38px;height:38px;border-radius:50%;background:var(--bg-input);display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .ibtn svg{width:20px;height:20px}
 .search{margin:4px 16px 8px}
+/* ---- header search: icon next to the menu, expands over the header ---- */
+.head.searching>.hbrand,.head.searching>.hright{display:none}
+.hsearch{flex:1;min-width:0;display:flex;align-items:center;gap:8px;transform-origin:right center;animation:sexp .22s ease-out}
+.hsearch .shell{position:relative;flex:1;min-width:0;display:flex;align-items:center}
+.hsearch .in{height:40px;border-radius:999px;font-size:15px;padding:0 40px 0 40px}
+.hsearch .si{position:absolute;left:14px;width:17px;height:17px;color:var(--sub);pointer-events:none}
+.hsearch .sx{position:absolute;right:6px;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--sub)}
+.hsearch .sx svg{width:16px;height:16px}.hsearch .sx:active{background:var(--line)}
+@keyframes sexp{from{opacity:0;transform:scaleX(.25)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.hsearch{animation:none}}
+
 .cats{display:flex;gap:8px;padding:0 16px 8px;overflow-x:auto;scrollbar-width:none}.cats::-webkit-scrollbar{display:none}
 .cat{flex-shrink:0;height:32px;padding:0 14px;border-radius:999px;background:var(--bg-input);color:var(--text);font-size:13.5px;font-weight:600;display:flex;align-items:center;gap:6px}
 .cat[hidden]{display:none}
@@ -617,10 +628,11 @@ img,svg,video,a{-webkit-user-drag:none;user-drag:none;-webkit-touch-callout:none
 
 <div id="app" hidden>
  <aside id="list">
-  <div class="head"><div class="hbrand"><svg class="hlogo" viewBox="0 0 200 200" role="img" aria-label="Haba"><path d="M60 28H140A36 36 0 0 1 176 64V104A36 36 0 0 1 140 140H60A36 36 0 0 1 24 104V64A36 36 0 0 1 60 28Z" fill="var(--accent)"/><path d="M40 128L38 172L84 138Z" fill="var(--accent)"/><g fill="var(--bg)"><rect x="66" y="49" width="18" height="70" rx="9"/><rect x="116" y="49" width="18" height="70" rx="9"/><rect x="76" y="75" width="48" height="18" rx="9"/></g></svg><h1>Chats</h1></div><div style="display:flex;gap:8px">
+  <div class="head"><div class="hbrand"><svg class="hlogo" viewBox="0 0 200 200" role="img" aria-label="Haba"><path d="M60 28H140A36 36 0 0 1 176 64V104A36 36 0 0 1 140 140H60A36 36 0 0 1 24 104V64A36 36 0 0 1 60 28Z" fill="var(--accent)"/><path d="M40 128L38 172L84 138Z" fill="var(--accent)"/><g fill="var(--bg)"><rect x="66" y="49" width="18" height="70" rx="9"/><rect x="116" y="49" width="18" height="70" rx="9"/><rect x="76" y="75" width="48" height="18" rx="9"/></g></svg><h1>Chats</h1></div><div class="hright" style="display:flex;gap:8px">
+   <button class="ibtn" id="sbtn" title="Search" aria-label="Search chats"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></button>
    <button class="ibtn" id="more" title="More" aria-label="More options"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/></svg></button>
-   <button class="ibtn" id="me" title="Account"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg></button></div></div>
-  <div class="search"><input id="q" class="in" placeholder="Search chats" autocomplete="off"></div>
+   <button class="ibtn" id="me" title="Account"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg></button></div>
+  <div class="hsearch" id="hsearch" hidden><button class="ibtn" id="sclose" type="button" aria-label="Close search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button><div class="shell"><svg class="si" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input id="q" class="in" placeholder="Search chats" autocomplete="off" enterkeyhint="search"><button class="sx" id="sclr" type="button" aria-label="Clear search" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div></div></div>
   <div class="cats" id="cats" role="tablist"><button class="cat on" data-c="all" role="tab">All</button><button class="cat" data-c="unread" role="tab">Unread<span class="cn" id="cn-unread" hidden></span></button><button class="cat" data-c="online" role="tab">Online<span class="cn" id="cn-online" hidden></span></button><button class="cat" data-c="archived" id="cat-arch" role="tab" hidden>Archived</button></div>
   <div class="stories" id="stories" aria-label="Stories"></div>
   <div class="banner" id="enc-banner" hidden></div>
@@ -756,7 +768,7 @@ const hideSplash=()=>setTimeout(()=>$('splash').classList.add('out'),Math.max(30
 const navStack=[];
 function navPush(t){if(navStack.includes(t))return;navStack.push(t);try{history.pushState({t},'')}catch(_){}}
 function navClose(t,hide){if(navStack[navStack.length-1]===t){history.back();return}const i=navStack.lastIndexOf(t);if(i>-1)navStack.splice(i,1);hide()}
-window.addEventListener('popstate',()=>{const t=navStack.pop();if(t==='lb')lbHide();else if(t==='sheet')sheetHide();else if(t==='chat')chatHide();else if(t==='menu')menuHide();else if(t==='dis')disHide();else if(t==='esh')eHide();else if(t==='vsh')vshHide();else if(t==='cs')csHide();else if(t==='rp')rpHide();else if(t==='xp')xpHide();else if(t==='ms')msHide();else if(t==='fs')fsHide();else if(t==='nc')ncHide();else if(t==='sk')skHide();else if(t==='sv')svHide();else if(t==='sts')stsHide();else if(t==='stx')stxHide();else if(t==='qr')qrHide();else if(t==='qs')qsHide();else if(t==='stc')stcHide();else if(t==='msm')msmHide();else if(t==='ph')phHide()});
+window.addEventListener('popstate',()=>{const t=navStack.pop();if(t==='lb')lbHide();else if(t==='sheet')sheetHide();else if(t==='chat')chatHide();else if(t==='menu')menuHide();else if(t==='dis')disHide();else if(t==='esh')eHide();else if(t==='srch')sHide();else if(t==='vsh')vshHide();else if(t==='cs')csHide();else if(t==='rp')rpHide();else if(t==='xp')xpHide();else if(t==='ms')msHide();else if(t==='fs')fsHide();else if(t==='nc')ncHide();else if(t==='sk')skHide();else if(t==='sv')svHide();else if(t==='sts')stsHide();else if(t==='stx')stxHide();else if(t==='qr')qrHide();else if(t==='qs')qsHide();else if(t==='stc')stcHide();else if(t==='msm')msmHide();else if(t==='ph')phHide()});
 function navSwap(from,to){const i=navStack.lastIndexOf(from);if(i>-1){navStack[i]=to;try{history.replaceState({t:to},'')}catch(_){}}else navPush(to)}
 
 /* dialogs */
@@ -1133,7 +1145,17 @@ $('cs-del').onclick=()=>{const uid=csUid,nm=(profiles[uid]||{}).name||'this cont
  if(!await ask('Delete chat with '+nm+'?',"This removes the conversation from your device and account. "+nm+" keeps their copy.",{ok:'Delete'}))return;
  try{await update(ref(db),{[`users/${me.uid}/cleared/${uid}`]:Date.now(),[`user_chats/${me.uid}/${uid}`]:null});
   if(active===uid)navClose('chat',chatHide);toast('Chat deleted')}catch(_){toast("Couldn't delete the chat")}},60)};
-$('q').oninput=renderList;
+function sIsOpen(){return !$('hsearch').hidden}
+function sSync(){$('sclr').hidden=!$('q').value}
+function sOpen(){if(sIsOpen())return;const h=document.querySelector('#list .head');h.classList.add('searching');$('hsearch').hidden=false;navPush('srch');sSync();setTimeout(()=>$('q').focus(),30)}
+function sHide(){const h=document.querySelector('#list .head');$('q').value='';$('q').blur();$('hsearch').hidden=true;h.classList.remove('searching');sSync();renderList()}
+function sClose(){navClose('srch',sHide)}
+$('sbtn').onclick=sOpen;$('sclose').onclick=sClose;
+$('sclr').onclick=()=>{$('q').value='';sSync();renderList();$('q').focus()};
+$('q').oninput=()=>{sSync();renderList()};
+$('q').addEventListener('keydown',e=>{if(e.key==='Enter')$('q').blur()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&sIsOpen()&&!['msh','esheet','vsheet','dsheet'].some(id=>$(id)&&!$(id).hidden))sClose()});
+
 function setCat(c){catF=c;document.querySelectorAll('#cats .cat').forEach(x=>{const on=x.dataset.c===c;x.classList.toggle('on',on);x.setAttribute('aria-selected',on)})}
 $('cats').addEventListener('click',e=>{const b=e.target.closest('.cat');if(!b)return;setCat(b.dataset.c);renderList();$('chats').scrollTop=0});
 

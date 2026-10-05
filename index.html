@@ -294,6 +294,24 @@ button.rw:hover{background:var(--hover)}
 .svf{position:absolute;left:50%;bottom:calc(14px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:4;height:38px;padding:0 18px;border-radius:999px;background:rgba(255,255,255,.18);color:#fff;font-size:14px;font-weight:600}
 .svz{position:absolute;top:calc(70px + env(safe-area-inset-top,0px));bottom:70px;left:0;width:34%;z-index:2}.svz.r{left:auto;right:0;width:66%}
 @media (min-width:769px){#sv .svm,#sv .svz{max-width:460px;left:50%;right:auto;transform:translateX(-50%)}#sv .svz{width:17%;left:calc(50% - 230px);transform:none}#sv .svz.r{width:33%;left:50%;transform:translateX(-230px)}}
+/* ---- chat header redesign ---- */
+.ch{gap:6px;padding:calc(8px + env(safe-area-inset-top,0px)) 10px 8px 4px;border-bottom:none;box-shadow:0 1px 0 var(--line),0 8px 18px -14px rgba(0,0,0,.28);position:relative;z-index:2;background:var(--bg)}
+.ch .hbk{background:transparent;width:36px;height:40px;border-radius:12px;margin-right:-2px}.ch .hbk svg{width:24px;height:24px}.ch .hbk:active{background:var(--bg-input)}
+.hav{position:relative;width:48px;height:48px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;margin-right:4px}
+.hav .av{width:46px;height:46px;font-size:15px;transition:width .2s,height .2s}
+.hav.has-st{background:var(--grad);padding:2.5px}.hav.has-st.seen{background:var(--line)}
+.hav.has-st .av{width:100%;height:100%;border:2.5px solid var(--bg);box-sizing:border-box}
+.hav .hdot{display:none;position:absolute;right:0;bottom:1px;width:13px;height:13px;border-radius:50%;background:#1FA971;border:2.5px solid var(--bg);box-sizing:border-box}
+.hav.is-on .hdot{display:block}
+.ch .who{display:flex;flex-direction:column;justify-content:center}
+.ch .who .n{font-size:17px;font-weight:700;letter-spacing:-.3px;line-height:1.2}
+.ch .st{font-size:12.5px;margin-top:2px;min-height:15px;line-height:1.2;display:flex;align-items:center;gap:5px}
+.ch .st.on,.ch .st.typ{color:var(--accent)}
+.ch .st.on::before{content:'';width:7px;height:7px;border-radius:50%;background:#1FA971;flex-shrink:0}
+.ch .hact{width:auto;min-width:40px;height:40px;padding:0 11px;gap:6px;border-radius:999px;background:transparent;color:var(--text);font-size:12.5px;font-weight:700}
+.ch .hact:active{background:var(--bg-input)}
+.ch .hact.on{background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--accent)}
+.ch .hact #dis-lbl:empty{display:none}
 /* ---- Haba conversation: ink bubbles, one faceted corner, brand-type timestamps ---- */
 .ch{gap:12px;padding-bottom:10px}
 .ch .n{font-weight:700;letter-spacing:-.2px}
@@ -478,7 +496,7 @@ img,svg,video,a{-webkit-user-drag:none;user-drag:none;-webkit-touch-callout:none
  <main id="convo">
   <div class="ph" id="ph"></div>
   <div id="thread" hidden style="display:flex;flex-direction:column;flex:1;min-height:0">
-   <div class="ch"><button class="ibtn" id="back" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button><div class="av sm" id="t-av"></div><div class="who"><div class="n" id="t-name"></div><div class="st" id="t-sub"></div></div><button class="ibtn" id="dis-btn" aria-label="Disappearing messages" title="Disappearing messages"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><polyline points="12 9 12 13 15 15"/><path d="M9 2h6"/></svg></button></div>
+   <div class="ch"><button class="ibtn hbk" id="back" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button><div class="hav" id="t-hav"><div class="av sm" id="t-av"></div><i class="hdot"></i></div><div class="who"><div class="n" id="t-name"></div><div class="st" id="t-sub"></div></div><button class="ibtn hact" id="dis-btn" aria-label="Disappearing messages" title="Disappearing messages"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><polyline points="12 9 12 13 15 15"/><path d="M9 2h6"/></svg><span id="dis-lbl"></span></button></div>
    <div class="dbanner" id="dis-banner" hidden><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><polyline points="12 9 12 13 15 15"/><path d="M9 2h6"/></svg><span id="dis-text"></span></div>
    <div id="msgs"></div>
    <div id="rbar" hidden><div class="rq"><b id="rb-n"></b><span id="rb-t"></span></div><button class="ibtn" id="rb-x" type="button" aria-label="Cancel reply"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button></div>
@@ -962,7 +980,7 @@ $('cats').addEventListener('click',e=>{const b=e.target.closest('.cat');if(!b)re
 
 /* ---- conversation ---- */
 const tid=(a,b)=>[a,b].sort().join('_');
-function paintHead(){const p=profiles[active]||{};$('t-name').innerHTML=nameHtml(p,'…',active);const a=$('t-av');a.style.backgroundImage=p.photoURL?`url('${p.photoURL}')`:'';a.textContent=p.photoURL?'':initials(p.name);
+function paintHead(){const p=profiles[active]||{};paintHeadStory();$('t-name').innerHTML=nameHtml(p,'…',active);const a=$('t-av');a.style.backgroundImage=p.photoURL?`url('${p.photoURL}')`:'';a.textContent=p.photoURL?'':initials(p.name);
  const ms=$('msgs'),pu=safeUrl(p.photoURL)?p.photoURL:'';
  ms.style.setProperty('--peer-av',pu?`url("${pu.replace(/["\\\n]/g,c=>encodeURIComponent(c))}")`:'none');
  ms.style.setProperty('--peer-ini',pu?"''":JSON.stringify(initials(p.name).replace(/["\\]/g,'')))}
@@ -1052,7 +1070,7 @@ const DIS=[[0,'Off'],[86400,'24 hours'],[604800,'7 days'],[7776000,'90 days']];
 let disSec=0,sweepT=null;
 const disLabel=v=>(DIS.find(o=>o[0]===v)||DIS[0])[1];
 const getDis=async t=>{try{const x=await get(ref(db,`dm_threads/${t}/settings/disappearingSeconds`));return x.exists()?(+x.val()||0):0}catch(_){return 0}};
-function paintDis(){const on=disSec>0;$('dis-btn').classList.toggle('on',on);$('dis-banner').hidden=!on;if(on)$('dis-text').textContent='Disappearing messages: '+disLabel(disSec);
+function paintDis(){const on=disSec>0;$('dis-btn').classList.toggle('on',on);$('dis-lbl').textContent=on?disLabel(disSec):'';$('dis-banner').hidden=!on;if(on)$('dis-text').textContent='Disappearing messages: '+disLabel(disSec);
  document.querySelectorAll('.dopt').forEach(b=>b.classList.toggle('sel',+b.dataset.s===disSec))}
 function disHide(){$('dsheet').hidden=true}
 function disClose(){navClose('dis',disHide)}
@@ -1522,7 +1540,7 @@ function showAvatar(uid){const p=profiles[uid]||{},u=safeUrl(p.photoURL)?p.photo
  lbList=[];const im=$('lb-i');im.classList.remove('z');im.style.transformOrigin='';im.src=u;
  $('lb-n').textContent=p.name||'';$('lb-d').textContent='Profile photo';$('lb-dl').hidden=!(uid===me.uid||isVerifiedProfile(profiles[me.uid],me.uid));$('lb-p').hidden=$('lb-nx').hidden=true;
  $('lb').hidden=false;navPush('lb');return true}
-$('t-av').onclick=()=>showAvatar(active);
+$('t-av').onclick=()=>{if(active&&!blocked[active]&&me&&stItems(active).length)svOpen(active);else showAvatar(active)};
 $('lb-x').onclick=lbClose;$('lb-p').onclick=()=>lbShow(lbN-1);$('lb-nx').onclick=()=>lbShow(lbN+1);
 $('lb-s').onclick=e=>{if(e.target.id==='lb-s')lbClose()};
 $('lb-i').onclick=e=>{const im=e.currentTarget,r=im.getBoundingClientRect();im.style.transformOrigin=((e.clientX-r.left)/r.width*100)+'% '+((e.clientY-r.top)/r.height*100)+'%';im.classList.toggle('z')};
@@ -1555,11 +1573,12 @@ function seenText(p){
  return{t:'Last seen '+d.toLocaleDateString([],{month:'short',day:'numeric'})+' at '+tm};
 }
 let peerTyping=false;
-function paintStatus(){const el=$('t-sub');
- if(peerTyping&&active&&!blocked[active]){el.textContent='typing';el.classList.remove('on');el.classList.add('typ');return}
- el.classList.remove('typ');const r=seenText(pres[active]);el.textContent=r.t;el.classList.toggle('on',!!r.on)}
+function paintStatus(){const el=$('t-sub'),hv=$('t-hav');
+ if(peerTyping&&active&&!blocked[active]){el.textContent='typing';el.classList.remove('on');el.classList.add('typ');hv.classList.remove('is-on');return}
+ el.classList.remove('typ');const r=seenText(pres[active]);el.textContent=r.t;el.classList.toggle('on',!!r.on);hv.classList.toggle('is-on',!!r.on&&!blocked[active])}
+function paintHeadStory(){const h=$('t-hav');if(!h)return;const its=active&&!blocked[active]&&me?stItems(active):[];h.classList.toggle('has-st',!!its.length);h.classList.toggle('seen',!!its.length&&stSeen(its))}
 function watchPresence(uid){
- stopPres();peerTyping=false;$('t-sub').textContent='';$('t-sub').classList.remove('on','typ');
+ stopPres();peerTyping=false;$('t-sub').textContent='';$('t-sub').classList.remove('on','typ');$('t-hav').classList.remove('is-on','has-st','seen');
  const upd=()=>{if(active===uid)paintStatus()};
  offPres=[onValue(ref(db,`users/${uid}/status`),s=>{(pres[uid]=pres[uid]||{}).status=s.val();upd()}),
           onValue(ref(db,`users/${uid}/lastSeen`),s=>{(pres[uid]=pres[uid]||{}).lastSeen=s.val();upd()})];
@@ -1885,6 +1904,7 @@ function stItems(u){
 }
 const stSeen=its=>its.every(i=>i.views&&i.views[me.uid]);
 function stPaint(){
+ if(typeof paintHeadStory==='function')paintHeadStory();
  const box=$('stories');if(!box)return;
  if(!me){box.innerHTML='';return}
  const mine=stItems(me.uid),mp=profiles[me.uid]||{},mph=mp.photoURL||me.photoURL||'';

@@ -311,6 +311,34 @@ button.rw:hover{background:var(--hover)}
 .qsf i:nth-child(4){right:-2px;bottom:-2px;border-left:none;border-top:none;border-bottom-right-radius:26px}
 .qss{position:relative;z-index:2;margin-top:22px;font-size:14px;font-weight:600;text-align:center;padding:0 24px;text-shadow:0 1px 6px rgba(0,0,0,.6)}
 .qsg{position:absolute;z-index:3;left:50%;bottom:calc(28px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);height:44px;padding:0 22px;border-radius:999px;background:rgba(255,255,255,.2);color:#fff;font-size:14px;font-weight:700;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+/* ---- story music ---- */
+.stmus{display:inline-flex;align-items:center;gap:7px;height:38px;max-width:62%;padding:0 14px;border-radius:999px;background:rgba(255,255,255,.18);color:#fff;font-size:14px;font-weight:700;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.stmus svg{width:17px;height:17px;flex-shrink:0}.stmus img{width:22px;height:22px;border-radius:5px;object-fit:cover;flex-shrink:0}
+.stmus span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.stmus .rm{margin-left:2px;opacity:.8;font-size:16px;line-height:1}
+#stc{position:fixed;inset:0;z-index:83;background:#000;color:#fff;display:flex;flex-direction:column}
+.stch{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:calc(10px + env(safe-area-inset-top,0px)) 12px 8px;position:relative;z-index:2}
+#stc .ibtn{background:rgba(255,255,255,.16);color:#fff}
+.stcp{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.stcp img,.stcp video{max-width:100%;max-height:100%;object-fit:contain;display:block}
+.stcb{display:flex;gap:10px;align-items:center;padding:10px 12px calc(14px + env(safe-area-inset-bottom,0px));position:relative;z-index:2}
+.stcb input{flex:1;min-width:0;height:44px;border-radius:999px;border:none;outline:none;background:rgba(255,255,255,.16);color:#fff;font-size:15px;padding:0 16px}.stcb input::placeholder{color:rgba(255,255,255,.65)}
+.stcb .stxp{background:var(--accent);color:var(--on-accent)}
+#msm{position:fixed;inset:0;z-index:93;background:rgba(0,0,0,.5);display:flex;align-items:flex-end;justify-content:center}
+@media (min-width:769px){#msm{align-items:center;padding:20px}#msm .msheet{border-radius:22px;width:420px}}
+#msm .msheet{display:flex;flex-direction:column;max-height:82vh;padding-bottom:calc(14px + env(safe-area-inset-bottom,0px))}
+.msmt{font-size:17px;font-weight:700;text-align:center;padding:4px 18px 12px}
+.msmq{margin:0 16px 8px;height:44px;border-radius:999px;border:none;outline:none;background:var(--bg-input);color:var(--text);font-size:15px;padding:0 16px}
+.msmr{flex:1;min-height:140px;overflow-y:auto;padding:0 10px}
+.msme{text-align:center;color:var(--sub);font-size:14px;padding:34px 10px}
+.msmi{display:flex;align-items:center;gap:12px;padding:8px 8px;border-radius:14px;cursor:pointer}.msmi:active{background:var(--hover)}
+.msmi .ar{width:46px;height:46px;border-radius:9px;background:var(--bg-input) center/cover;flex-shrink:0}
+.msmi .if{flex:1;min-width:0}.msmi .if b{display:block;font-size:14.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.msmi .if span{display:block;font-size:12.5px;color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.msmi .pv{width:34px;height:34px;border-radius:50%;background:var(--accent);color:var(--on-accent);display:flex;align-items:center;justify-content:center;flex-shrink:0}.msmi .pv svg{width:14px;height:14px}
+.msmn{margin:8px 16px 0;flex:none;width:calc(100% - 32px)}
+.svmus{position:absolute;left:12px;top:calc(78px + env(safe-area-inset-top,0px));z-index:4;display:flex;align-items:center;gap:7px;max-width:calc(100% - 24px);height:32px;padding:0 12px 0 5px;border-radius:999px;background:rgba(0,0,0,.4);color:#fff;font-size:12.5px;font-weight:600;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.svmus img{width:22px;height:22px;border-radius:5px;object-fit:cover}.svmus span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.svmus svg{width:15px;height:15px;flex-shrink:0;opacity:.9}
+.svmus.muted svg{opacity:.5}
+@media (min-width:769px){.svmus{left:calc(50% - 218px)}}
 /* ---- my QR code sheet ---- */
 #qrsheet{position:fixed;inset:0;z-index:85;background:rgba(0,0,0,.5);display:flex;align-items:flex-end;justify-content:center}
 @media (min-width:769px){#qrsheet{align-items:center;padding:20px}#qrsheet .msheet{border-radius:22px;width:380px;padding:14px 0}}
@@ -588,13 +616,13 @@ img,svg,video,a{-webkit-user-drag:none;user-drag:none;-webkit-touch-callout:none
 <div id="fsh" hidden><div class="msheet"><div class="grab"></div><h3 class="dt">Forward to</h3><div class="fq"><input class="in" id="fs-q" placeholder="Search" autocomplete="off"></div><div class="fl" id="fs-l"></div></div></div>
 <div id="nc" hidden><div class="nh"><button class="ibtn" id="nc-back" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button><h2>New chat</h2><button class="ibtn" id="nc-sync" title="Show new suggestions" aria-label="Show new suggestions"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 1-15.5 6.2L3 16"/><path d="M3 12A9 9 0 0 1 18.5 5.8L21 8"/><polyline points="21 3 21 8 16 8"/><polyline points="3 21 3 16 8 16"/></svg></button></div><div class="nq"><input class="in" id="nc-q" placeholder="Search friends, @username or number" autocomplete="off"></div><div id="nc-l"></div></div>
 <div id="ssh" hidden><div class="msheet"><div class="grab"></div><h3 class="dt">Stickers</h3><div class="skq"><input class="in" id="sk-q" placeholder="Search stickers" autocomplete="off"></div><div class="skc" id="sk-c"></div><div class="skt" id="sk-t"></div><div class="sks"><div class="skg" id="sk-g"></div></div></div></div>
-<input type="file" id="st-file" accept="image/*,video/*" multiple hidden>
+<input type="file" id="st-file" accept="image/*,video/*" hidden>
 <div id="stsheet" hidden><div class="msheet"><div class="grab"></div><div class="lst">
  <button class="rw" id="sts-media"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div><div class="tx"><b>Photo or video</b><span>Share from your gallery or camera</span></div></button>
  <button class="rw" id="sts-text"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg></div><div class="tx"><b>Text</b><span>Write something on a colour background</span></div></button>
 </div></div></div>
-<div id="stx" hidden><div class="stxh"><button class="ibtn" id="stx-x" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button><button class="stxp" id="stx-post">Post</button></div><textarea id="stx-in" maxlength="280" placeholder="Type a story" rows="4"></textarea><div class="stxs" id="stx-sw"></div></div>
-<div id="sv" hidden><div class="svb" id="sv-bars"></div><div class="svh"><div class="av" id="sv-av"></div><div class="svt"><b id="sv-n"></b><span id="sv-t"></span></div><button class="svx" id="sv-del" hidden aria-label="Delete story"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button><button class="svx" id="sv-x" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div><div class="svm" id="sv-m"></div><div class="svc" id="sv-cap" hidden></div><button class="svf" id="sv-f" hidden></button><div class="svz" id="sv-l"></div><div class="svz r" id="sv-r"></div></div>
+<div id="stx" hidden><div class="stxh"><button class="ibtn" id="stx-x" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button><button class="stmus" id="stx-mus"></button><button class="stxp" id="stx-post">Post</button></div><textarea id="stx-in" maxlength="280" placeholder="Type a story" rows="4"></textarea><div class="stxs" id="stx-sw"></div></div>
+<div id="sv" hidden><div class="svb" id="sv-bars"></div><div class="svh"><div class="av" id="sv-av"></div><div class="svt"><b id="sv-n"></b><span id="sv-t"></span></div><button class="svx" id="sv-del" hidden aria-label="Delete story"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button><button class="svx" id="sv-x" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div><div class="svm" id="sv-m"></div><button class="svmus" id="sv-mus" hidden><img id="sv-mus-i" alt=""><span id="sv-mus-t"></span><svg id="sv-mus-s" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/></svg></button><div class="svc" id="sv-cap" hidden></div><button class="svf" id="sv-f" hidden></button><div class="svz" id="sv-l"></div><div class="svz r" id="sv-r"></div></div>
 <div id="qrsheet" hidden><div class="msheet"><div class="grab"></div>
  <div class="qrc"><div class="qrh"><div class="av" id="qr-av"></div><div class="qrt"><b id="qr-n"></b><span id="qr-u"></span></div></div>
  <div class="qrbox" id="qr-box"><div class="qrld">Generating…</div></div>
@@ -602,6 +630,9 @@ img,svg,video,a{-webkit-user-drag:none;user-drag:none;-webkit-touch-callout:none
  <div class="qrb"><button class="qrbtn pri" id="qr-share">Share link</button><button class="qrbtn" id="qr-dl">Download</button></div>
 </div></div>
 <div id="qs" hidden><video id="qs-v" playsinline muted></video><canvas id="qs-c" hidden></canvas><div class="qsh"><button class="ibtn" id="qs-x" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button><b>Scan QR code</b></div><div class="qsf"><i></i><i></i><i></i><i></i></div><div class="qss" id="qs-s">Starting camera…</div><button class="qsg" id="qs-g">Choose from photos</button><input type="file" id="qs-file" accept="image/*" hidden></div>
+<div id="stc" hidden><div class="stch"><button class="ibtn" id="stc-x" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button><button class="stmus" id="stc-mus"></button></div><div class="stcp" id="stc-prev"></div><div class="stcb"><input id="stc-cap" maxlength="200" placeholder="Add a caption…" autocomplete="off"><button class="stxp" id="stc-post">Post</button></div></div>
+<div id="msm" hidden><div class="msheet"><div class="grab"></div><div class="msmt">Add music to your story</div><input id="msm-q" class="msmq" placeholder="Search for a song or artist…" autocomplete="off"><div class="msmr" id="msm-res"><div class="msme">Search for a song to add</div></div><button class="qrbtn msmn" id="msm-none">No music</button></div></div>
+<audio id="sv-au" preload="auto" hidden></audio>
 <div id="toast" hidden></div>
 <div id="inbn" role="status" aria-live="polite" hidden></div>
 <div id="lb" hidden><div class="lbh"><button class="ibtn" id="lb-x" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button><div class="lbw"><b id="lb-n"></b><span id="lb-d"></span></div><button class="ibtn" id="lb-dl" aria-label="Download"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><polyline points="7 11 12 16 17 11"/><path d="M5 21h14"/></svg></button></div><div class="lbs" id="lb-s"><img id="lb-i" alt=""></div><button class="lbn l" id="lb-p" aria-label="Previous">&#8249;</button><button class="lbn r" id="lb-nx" aria-label="Next">&#8250;</button></div>
@@ -636,7 +667,7 @@ const hideSplash=()=>setTimeout(()=>$('splash').classList.add('out'),Math.max(30
 const navStack=[];
 function navPush(t){if(navStack.includes(t))return;navStack.push(t);try{history.pushState({t},'')}catch(_){}}
 function navClose(t,hide){if(navStack[navStack.length-1]===t){history.back();return}const i=navStack.lastIndexOf(t);if(i>-1)navStack.splice(i,1);hide()}
-window.addEventListener('popstate',()=>{const t=navStack.pop();if(t==='lb')lbHide();else if(t==='sheet')sheetHide();else if(t==='chat')chatHide();else if(t==='menu')menuHide();else if(t==='dis')disHide();else if(t==='cs')csHide();else if(t==='rp')rpHide();else if(t==='xp')xpHide();else if(t==='ms')msHide();else if(t==='fs')fsHide();else if(t==='nc')ncHide();else if(t==='sk')skHide();else if(t==='sv')svHide();else if(t==='sts')stsHide();else if(t==='stx')stxHide();else if(t==='qr')qrHide();else if(t==='qs')qsHide()});
+window.addEventListener('popstate',()=>{const t=navStack.pop();if(t==='lb')lbHide();else if(t==='sheet')sheetHide();else if(t==='chat')chatHide();else if(t==='menu')menuHide();else if(t==='dis')disHide();else if(t==='cs')csHide();else if(t==='rp')rpHide();else if(t==='xp')xpHide();else if(t==='ms')msHide();else if(t==='fs')fsHide();else if(t==='nc')ncHide();else if(t==='sk')skHide();else if(t==='sv')svHide();else if(t==='sts')stsHide();else if(t==='stx')stxHide();else if(t==='qr')qrHide();else if(t==='qs')qsHide();else if(t==='stc')stcHide();else if(t==='msm')msmHide()});
 function navSwap(from,to){const i=navStack.lastIndexOf(from);if(i>-1){navStack[i]=to;try{history.replaceState({t:to},'')}catch(_){}}else navPush(to)}
 
 /* dialogs */
@@ -1982,23 +2013,72 @@ $('stsheet').onclick=e=>{if(e.target.id==='stsheet')stsClose()};
 $('sts-media').onclick=()=>{stsClose();setTimeout(()=>{const f=$('st-file');f.value='';f.click()},60)};
 $('sts-text').onclick=()=>{stsClose();setTimeout(stxOpen,60)};
 const vidDur=f=>new Promise(res=>{const v=document.createElement('video'),u=URL.createObjectURL(f);v.preload='metadata';v.onloadedmetadata=()=>{const d=v.duration;URL.revokeObjectURL(u);res(isFinite(d)?Math.round(d):null)};v.onerror=()=>{URL.revokeObjectURL(u);res(null)};v.src=u});
-$('st-file').onchange=async e=>{
- const files=[...(e.target.files||[])].slice(0,10);e.target.value='';
- if(!files.length||!me||stPostBusy)return;
- stPostBusy=true;toast('Posting your story…');let ok=0;
+/* --- music picker (iTunes Search, 30s previews; stored as story.music = {trackName,artistName,artworkUrl,previewUrl} like Haba) --- */
+const NOTE_SVG='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>';
+const PLAY_SVG='<svg viewBox="0 0 24 24" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"/></svg>',PAUSE_SVG='<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>';
+let msmCb=null,msmDeb=null,msmAudio=null,msmBtn=null,msmSeq=0;
+function msmStopPrev(){if(msmAudio){msmAudio.pause();msmAudio=null}if(msmBtn){msmBtn.innerHTML=PLAY_SVG;msmBtn=null}}
+function msmHide(){clearTimeout(msmDeb);msmStopPrev();$('msm').hidden=true;msmCb=null}
+function msmClose(){navClose('msm',msmHide)}
+function msmOpen(cb){msmCb=cb;$('msm-q').value='';$('msm-res').innerHTML='<div class="msme">Search for a song to add</div>';navPush('msm');$('msm').hidden=false;setTimeout(()=>$('msm-q').focus(),250)}
+function msmPick(m){const cb=msmCb;msmClose();if(cb)cb(m)}
+async function msmSearch(q){
+ const my=++msmSeq,box=$('msm-res');
  try{
-  for(let i=0;i<files.length;i++){
-   const f=files[i],vid=/^video\//.test(f.type);
-   if(!vid&&!/^image\//.test(f.type)){continue}
-   if(f.size>(vid?100:25)*1024*1024){toast(vid?'That video is too large (max 100 MB)':'That image is too large (max 25 MB)');continue}
-   const safe=(f.name||(vid?'video':'image')).replace(/[^a-zA-Z0-9.\-_]/g,'_');
-   const r=sref(storage,`stories/${me.uid}/${Date.now()}_${i}_${safe}`);
-   await uploadBytes(r,f,{contentType:f.type});
-   const url=await getDownloadURL(r),dur=vid?await vidDur(f):null;
-   await set(push(ref(db,'stories/'+me.uid)),{mediaURL:url,type:vid?'video':'image',createdAt:Date.now(),...(vid&&dur?{duration:dur}:{})});ok++;
-  }
-  if(ok)toast(ok>1?'Stories added':'Story added')
- }catch(err){console.error('story upload failed',err);toast("Couldn't post your story. Try again.")}
+  const r=await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(q)}&media=music&entity=song&limit=15`),d=await r.json();
+  if(my!==msmSeq)return;
+  const tr=(d.results||[]).filter(t=>t.previewUrl&&/^https:\/\//i.test(t.previewUrl));
+  if(!tr.length){box.innerHTML='<div class="msme">No previewable songs found</div>';return}
+  box.innerHTML='';
+  tr.forEach(t=>{
+   const art=(t.artworkUrl100||'').replace('100x100','200x200'),row=document.createElement('div');row.className='msmi';
+   row.innerHTML=`<div class="ar"${/^https:\/\//i.test(art)?` style="background-image:url('${art.replace(/'/g,'%27')}')"`:''}></div><div class="if"><b></b><span></span></div><button type="button" class="pv" aria-label="Preview">${PLAY_SVG}</button>`;
+   row.querySelector('b').textContent=t.trackName||'Unknown';row.querySelector('span').textContent=t.artistName||'';
+   row.querySelector('.pv').onclick=e=>{e.stopPropagation();const b=e.currentTarget;if(msmBtn===b){msmStopPrev();return}msmStopPrev();msmAudio=new Audio(t.previewUrl);msmAudio.play().catch(()=>{});msmAudio.onended=msmStopPrev;b.innerHTML=PAUSE_SVG;msmBtn=b};
+   row.onclick=()=>msmPick({trackName:String(t.trackName||'Unknown').slice(0,120),artistName:String(t.artistName||'').slice(0,120),artworkUrl:/^https:\/\//i.test(art)?art:'',previewUrl:t.previewUrl});
+   box.appendChild(row)});
+ }catch(_){if(my===msmSeq)box.innerHTML='<div class="msme">Couldn\'t load results. Check your connection.</div>'}
+}
+$('msm-q').oninput=()=>{const q=$('msm-q').value.trim();clearTimeout(msmDeb);if(!q){msmSeq++;$('msm-res').innerHTML='<div class="msme">Search for a song to add</div>';return}$('msm-res').innerHTML='<div class="msme">Searching…</div>';msmDeb=setTimeout(()=>msmSearch(q),400)};
+$('msm-none').onclick=()=>msmPick(null);
+$('msm').onclick=e=>{if(e.target.id==='msm')msmClose()};
+function musicBtn(el,m,onPick){
+ el.innerHTML=m?`${m.artworkUrl?`<img src="${esc(m.artworkUrl)}" alt="">`:NOTE_SVG}<span>${esc(m.trackName)}${m.artistName?' — '+esc(m.artistName):''}</span><b class="rm" aria-label="Remove music">✕</b>`:`${NOTE_SVG}<span>Add music</span>`;
+ el.onclick=e=>{if(m&&e.target.closest('.rm')){onPick(null);return}msmOpen(onPick)};
+}
+/* --- photo/video story composer: preview + music (photos) + caption, then post --- */
+let stcFile=null,stcUrl=null,stcMusic=null;
+function stcHide(){const v=$('stc-prev').querySelector('video');if(v)v.pause();$('stc-prev').innerHTML='';if(stcUrl){URL.revokeObjectURL(stcUrl);stcUrl=null}stcFile=null;$('stc').hidden=true}
+function stcClose(){navClose('stc',stcHide)}
+function stcPaintMusic(){musicBtn($('stc-mus'),stcMusic,m=>{stcMusic=m;stcPaintMusic()})}
+function stcOpen(f){
+ stcFile=f;stcMusic=null;stcUrl=URL.createObjectURL(f);const vid=/^video\//.test(f.type);
+ $('stc-prev').innerHTML=vid?'<video playsinline muted loop autoplay controls></video>':'<img alt="">';
+ const el=$('stc-prev').firstChild;el.src=stcUrl;
+ $('stc-mus').hidden=vid;$('stc-cap').value='';$('stc-post').disabled=false;stcPaintMusic();
+ navPush('stc');$('stc').hidden=false;
+}
+$('stc-x').onclick=stcClose;
+$('st-file').onchange=e=>{
+ const f=e.target.files&&e.target.files[0];e.target.value='';
+ if(!f||!me)return;
+ const vid=/^video\//.test(f.type);
+ if(!vid&&!/^image\//.test(f.type)){toast('Choose a photo or video');return}
+ if(f.size>(vid?100:25)*1024*1024){toast(vid?'That video is too large (max 100 MB)':'That image is too large (max 25 MB)');return}
+ stcOpen(f);
+};
+$('stc-post').onclick=async()=>{
+ const f=stcFile;if(!f||!me||stPostBusy)return;
+ const vid=/^video\//.test(f.type),cap=$('stc-cap').value.trim().slice(0,200),music=vid?null:stcMusic;
+ stPostBusy=true;$('stc-post').disabled=true;toast('Posting your story…');
+ try{
+  const safe=(f.name||(vid?'video':'image')).replace(/[^a-zA-Z0-9.\-_]/g,'_');
+  const r=sref(storage,`stories/${me.uid}/${Date.now()}_0_${safe}`);
+  await uploadBytes(r,f,{contentType:f.type});
+  const url=await getDownloadURL(r),dur=vid?await vidDur(f):null;
+  await set(push(ref(db,'stories/'+me.uid)),{mediaURL:url,type:vid?'video':'image',createdAt:Date.now(),...(vid&&dur?{duration:dur}:{}),...(cap?{caption:cap}:{}),...(music?{music}:{})});
+  toast('Story added');stcClose();
+ }catch(err){console.error('story upload failed',err);toast("Couldn't post your story. Try again.");$('stc-post').disabled=false}
  stPostBusy=false;
 };
 /* text story composer */
@@ -2007,12 +2087,14 @@ function stxClose(){navClose('stx',stxHide)}
 function stxPaintBg(){$('stx').style.background=stBg;$('stx-sw').querySelectorAll('button').forEach((b,i)=>b.classList.toggle('on',ST_BG[i]===stBg))}
 $('stx-sw').innerHTML=ST_BG.map((c,i)=>`<button type="button" data-i="${i}" style="background:${c}" aria-label="Background ${i+1}"></button>`).join('');
 $('stx-sw').onclick=e=>{const b=e.target.closest('button');if(!b)return;stBg=ST_BG[+b.dataset.i];stxPaintBg()};
-function stxOpen(){stBg=ST_BG[0];$('stx-in').value='';stxPaintBg();navPush('stx');$('stx').hidden=false;setTimeout(()=>$('stx-in').focus(),200)}
+let stxMusic=null;
+function stxPaintMusic(){musicBtn($('stx-mus'),stxMusic,m=>{stxMusic=m;stxPaintMusic()})}
+function stxOpen(){stBg=ST_BG[0];stxMusic=null;$('stx-in').value='';stxPaintBg();stxPaintMusic();navPush('stx');$('stx').hidden=false;setTimeout(()=>$('stx-in').focus(),200)}
 $('stx-x').onclick=stxClose;
 $('stx-post').onclick=async()=>{
  const text=$('stx-in').value.trim();if(!text){toast('Write something first');return}
  if(!me||stPostBusy)return;stPostBusy=true;$('stx-post').disabled=true;
- try{await set(push(ref(db,'stories/'+me.uid)),{type:'text',text,bgColor:stBg,createdAt:Date.now()});toast('Story added');stxClose()}
+ try{await set(push(ref(db,'stories/'+me.uid)),{type:'text',text,bgColor:stBg,createdAt:Date.now(),...(stxMusic?{music:stxMusic}:{})});toast('Story added');stxClose()}
  catch(err){console.error('text story failed',err);toast("Couldn't post your story")}
  stPostBusy=false;$('stx-post').disabled=false;
 };
@@ -2039,7 +2121,19 @@ function svRefreshItems(){
  const n=its.findIndex(x=>x.key===key);if(n>-1)svCur.i=n;else if(svCur.i>=its.length)svCur.i=its.length-1;
  if($('sv-f')&&svCur.uid===me.uid)svPaintFoot();paintBars();
 }
-function svStop(){clearInterval(svTimer);svTimer=null;if(svVid){try{svVid.pause()}catch(_){}svVid=null}}
+let svMuted=false;
+function svPauseAll(){if(svVid)svVid.pause();const a=$('sv-au');if(a)a.pause()}
+function svPlayAll(){if(svVid)svVid.play().catch(()=>{});const a=$('sv-au');if(a&&a.getAttribute('src'))a.play().catch(()=>{})}
+function svStop(){clearInterval(svTimer);svTimer=null;if(svVid){try{svVid.pause()}catch(_){}svVid=null}const a=$('sv-au');if(a){a.pause();a.removeAttribute('src');a.load()}}
+function svPaintMusic(it){
+ const a=$('sv-au'),chip=$('sv-mus'),m=it&&it.music;
+ if(m&&safeUrl(m.previewUrl)){
+  a.src=m.previewUrl;a.muted=svMuted;a.currentTime=0;a.play().catch(()=>{});
+  const im=$('sv-mus-i');im.hidden=!safeUrl(m.artworkUrl);if(safeUrl(m.artworkUrl))im.src=m.artworkUrl;
+  $('sv-mus-t').textContent=`${m.trackName||''}${m.artistName?' — '+m.artistName:''}`;chip.classList.toggle('muted',svMuted);chip.hidden=false;
+ }else{a.removeAttribute('src');chip.hidden=true}
+}
+$('sv-mus').onclick=()=>{svMuted=!svMuted;$('sv-au').muted=svMuted;$('sv-mus').classList.toggle('muted',svMuted);if(!svMuted)$('sv-au').play().catch(()=>{})};
 function paintBars(){if(!svCur)return;const bars=$('sv-bars').children;[...bars].forEach((el,i)=>{el.firstChild.style.width=i<svCur.i?'100%':i>svCur.i?'0':el.firstChild.style.width})}
 function svPaintFoot(){const it=svCur.items[svCur.i],f=$('sv-f');if(!it||svCur.uid!==me.uid){f.hidden=true;return}const n=Object.keys(it.views||{}).length;f.hidden=false;f.textContent=n?`👁 ${n} view${n>1?'s':''}`:'👁 No views yet'}
 async function svShow(){
@@ -2052,7 +2146,7 @@ async function svShow(){
  $('sv-bars').innerHTML=svCur.items.map(()=>'<i><b></b></i>').join('');paintBars();
  const m=$('sv-m');m.innerHTML='';m.style.background='#000';
  const cap=$('sv-cap');cap.hidden=!(it.caption&&it.type!=='text');if(!cap.hidden)cap.textContent=it.caption;
- svPaintFoot();
+ svPaintFoot();svPaintMusic(it);
  const fill=()=>$('sv-bars').children[svCur.i]&&$('sv-bars').children[svCur.i].firstChild;
  svEl=0;svDur=5000;
  if(it.type==='text'){const d=document.createElement('div');d.className='svtx';d.style.background=it.bgColor&&/^[#a-z0-9(),.%\s-]+$/i.test(it.bgColor)?it.bgColor:'#111';d.textContent=it.text;m.appendChild(d)}
@@ -2084,21 +2178,21 @@ function svPrev(){
  if(svEl>1500||svCur.i===0){if(svCur.i===0&&svEl<=1500&&svCur.qi>0){for(let n=svCur.qi-1;n>=0;n--){const u=svCur.q[n],its=stItems(u);if(its.length){svCur={...svCur,qi:n,uid:u,items:its,i:its.length-1};svShow();return}}}svShow();return}
  svCur.i--;svShow();
 }
-function svHide(){svStop();svCur=null;$('sv').hidden=true;$('sv-m').innerHTML='';stPaint()}
+function svHide(){svStop();$('sv-mus').hidden=true;svCur=null;$('sv').hidden=true;$('sv-m').innerHTML='';stPaint()}
 function svClose(){navClose('sv',svHide)}
 $('sv-x').onclick=svClose;
 /* tap = prev/next, press-and-hold = pause */
 [['sv-l',svPrev],['sv-r',()=>svNext()]].forEach(([id,fn])=>{const z=$(id);
- z.addEventListener('pointerdown',()=>{svHeld=false;clearTimeout(svHold);svHold=setTimeout(()=>{svHeld=true;svPaused=true;if(svVid)svVid.pause()},220)});
- const up=()=>{clearTimeout(svHold);if(svHeld){svPaused=false;if(svVid)svVid.play().catch(()=>{});svHeld=false;return false}return true};
+ z.addEventListener('pointerdown',()=>{svHeld=false;clearTimeout(svHold);svHold=setTimeout(()=>{svHeld=true;svPaused=true;svPauseAll()},220)});
+ const up=()=>{clearTimeout(svHold);if(svHeld){svPaused=false;svPlayAll();svHeld=false;return false}return true};
  z.addEventListener('pointerup',()=>{if(up())fn()});
  z.addEventListener('pointercancel',up);z.addEventListener('pointerleave',()=>{clearTimeout(svHold)});
 });
 $('sv-del').onclick=async()=>{
  if(!svCur||svCur.uid!==me.uid)return;const it=svCur.items[svCur.i];if(!it)return;
- svPaused=true;if(svVid)svVid.pause();
+ svPaused=true;svPauseAll();
  const yes=await ask('Delete story?','This story will be removed for everyone.',{ok:'Delete'});
- if(!yes){svPaused=false;if(svVid)svVid.play().catch(()=>{});return}
+ if(!yes){svPaused=false;svPlayAll();return}
  try{await remove(ref(db,`stories/${me.uid}/${it.key}`));if(stRaw[me.uid])delete stRaw[me.uid][it.key];toast('Story deleted')}catch(_){toast("Couldn't delete the story");svPaused=false;return}
  const its=stItems(me.uid);if(!its.length){svClose();stPaint();return}
  svCur.items=its;svCur.i=Math.min(svCur.i,its.length-1);svShow();stPaint();
@@ -2106,12 +2200,12 @@ $('sv-del').onclick=async()=>{
 $('sv-f').onclick=async()=>{
  if(!svCur||svCur.uid!==me.uid)return;const it=svCur.items[svCur.i];if(!it)return;
  const names=Object.values(it.views||{}).map(v=>v&&v.name||'Someone');
- svPaused=true;if(svVid)svVid.pause();
+ svPaused=true;svPauseAll();
  await ask('Viewed by',names.length?names.join(', '):'No one has viewed this story yet.',{cancel:false});
- svPaused=false;if(svVid)svVid.play().catch(()=>{});
+ svPaused=false;svPlayAll();
 };
 document.addEventListener('keydown',e=>{if($('sv').hidden)return;if(e.key==='Escape'&&$('modal').hidden)svClose();else if(e.key==='ArrowRight')svNext();else if(e.key==='ArrowLeft')svPrev()});
-document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'&&svCur){svPaused=true;if(svVid)svVid.pause()}else if(svCur&&!svHeld){svPaused=false;if(svVid)svVid.play().catch(()=>{})}});
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'&&svCur){svPaused=true;svPauseAll()}else if(svCur&&!svHeld){svPaused=false;svPlayAll()}});
 
 /* ---- my QR code: encodes the same public profile link Haba uses (https://newstart-64c43.web.app/u/{username|uid}) ---- */
 const PROFILE_WEB_BASE_URL='https://newstart-64c43.web.app/u/';

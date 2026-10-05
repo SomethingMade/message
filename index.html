@@ -553,6 +553,27 @@ img,svg,video,a{-webkit-user-drag:none;user-drag:none;-webkit-touch-callout:none
 .eacts{display:flex;flex-direction:column;gap:8px;padding:16px 16px 0}
 .eacts .qrbtn{flex:none;width:100%}
 @media (min-width:769px){#esheet{align-items:center;background:rgba(0,0,0,.45);padding:20px}#esheet .msheet{width:420px;max-width:420px;border-radius:18px;padding:18px 0 16px}}
+
+/* ---- story "Viewed by" bottom sheet ---- */
+#vsheet{position:fixed;inset:0;z-index:95;background:rgba(0,0,0,.55);display:flex;align-items:flex-end;justify-content:center}
+#vsheet .vpan{width:100%;max-width:460px;max-height:72vh;display:flex;flex-direction:column;background:var(--bg);color:var(--text);border-radius:22px 22px 0 0;padding-bottom:calc(14px + env(safe-area-inset-bottom,0px));animation:sheetUp .22s ease-out;transition:transform .2s ease-out;will-change:transform}
+#vsheet .vpan.drag{transition:none}
+#vsheet .vhd{padding:10px 20px 12px;touch-action:none;cursor:grab;flex-shrink:0}
+#vsheet .grab{margin-bottom:12px}
+#vsheet .vtt{display:flex;align-items:center;justify-content:space-between;gap:10px}
+#vsheet h3{margin:0;font-size:20px;font-weight:800;letter-spacing:-.3px}
+#vsheet .vct{display:flex;align-items:center;gap:6px;height:30px;padding:0 12px;border-radius:999px;background:var(--bg-input);font-size:13px;font-weight:700;color:var(--sub)}
+#vsheet .vct svg{width:15px;height:15px}
+#vsheet .vls{overflow-y:auto;padding:0 8px;-webkit-overflow-scrolling:touch;border-top:1px solid var(--line)}
+#vsheet .vr{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:12px}
+#vsheet .vr .av{width:46px;height:46px;font-size:15px}
+#vsheet .vr .vn{flex:1;min-width:0;font-size:15.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#vsheet .vr .vt{font-size:13px;color:var(--sub);flex-shrink:0}
+#vsheet .ve{display:flex;flex-direction:column;align-items:center;gap:10px;padding:34px 24px 26px;text-align:center;color:var(--sub);font-size:14px;line-height:1.4}
+#vsheet .ve i{width:56px;height:56px;border-radius:50%;background:var(--bg-input);display:flex;align-items:center;justify-content:center}
+#vsheet .ve svg{width:26px;height:26px}
+@media (min-width:769px){#vsheet{align-items:center;padding:20px}#vsheet .vpan{width:400px;border-radius:20px;padding-bottom:12px}#vsheet .grab{display:none}}
+@media (prefers-reduced-motion:reduce){#vsheet .vpan{animation:none}}
 .dopt::after{display:none!important}
 .dopt .ck{width:18px;height:18px;display:none;flex-shrink:0}
 #csheet .rw::after,#rsheet .rw::after{display:none!important}#rsheet .msheet{max-height:92vh;overflow-y:auto}#rsheet .dt{margin-bottom:6px}#csheet .dt{margin-bottom:12px}
@@ -646,6 +667,7 @@ img,svg,video,a{-webkit-user-drag:none;user-drag:none;-webkit-touch-callout:none
  <button class="rw" id="mn-ref"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg></div><div class="tx"><b>Refresh</b><span>Clear cached files and load the latest version</span></div></button>
 </div></div></div>
 <div id="esheet" hidden><div class="msheet"><div class="grab"></div><div class="ehero" id="e2e-hero"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div><h3 class="dt">End-to-end encrypted</h3><div class="ewarn" id="e2e-warn" hidden></div><p class="dd">Your personal chats are secured so that only you and the person you are talking to can read or see what is sent.</p><div class="eis"><div class="ei"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div><div><b>What's protected</b><span>Your text messages, photos, videos, voice messages and files in one-to-one chats are locked on your phone before they are sent, and only unlocked on the other person's device.</span></div></div><div class="ei"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="7.5" cy="15.5" r="5.5"/><path d="M21 2l-9.6 9.6"/><path d="M15.5 7.5l3 3"/></svg></div><div><b>How it works</b><span>Each person has a private key that is created on their device and never leaves it. Haba combines your private key with your contact's public key to make a secret only the two of you share, and uses it to scramble every message with AES-256 encryption. A new random lock is used for each message.</span></div></div><div class="ei"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div><div><b>Only you two can read them</b><span>Not Haba, not our servers, and not anyone who gets into our database. What is stored there is scrambled text that can't be read without your keys.</span></div></div><div class="ei"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg></div><div><b>Your backup PIN</b><span>A backup PIN lets you restore your chat history on a new phone. Haba never sees or stores your PIN. If you forget it and lose your device, older messages can't be recovered, and that is by design.</span></div></div><div class="ei"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div><div><b>What isn't encrypted</b><span>Your name, profile photo, bio and stories, the time a message was sent, and who you chat with are visible to Haba so the app can work. Anyone with access to your unlocked phone, or a contact who screenshots or forwards a message, can still see what you share.</span></div></div></div><div class="eacts"><button class="qrbtn pri" id="esh-set">Encryption &amp; recovery settings</button><button class="qrbtn" id="esh-ok">Got it</button></div></div></div>
+<div id="vsheet" hidden><div class="vpan" id="vpan"><div class="vhd" id="vhd"><div class="grab"></div><div class="vtt"><h3>Viewed by</h3><span class="vct" id="vct"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg><span id="vcn">0</span></span></div></div><div class="vls" id="vls"></div></div></div>
 <div id="dsheet" hidden><div class="msheet"><div class="grab"></div><h3 class="dt">Disappearing messages</h3><p class="dd">New messages you send in this chat will disappear after the timer you pick. This doesn't affect messages already sent.</p><div class="lst" id="dis-opts"><button class="rw dopt" data-s="0"><div class="tx"><b>Off</b></div><svg class="ck" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4"><polyline points="20 6 9 17 4 12"/></svg></button><button class="rw dopt" data-s="86400"><div class="tx"><b>24 hours</b></div><svg class="ck" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4"><polyline points="20 6 9 17 4 12"/></svg></button><button class="rw dopt" data-s="604800"><div class="tx"><b>7 days</b></div><svg class="ck" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4"><polyline points="20 6 9 17 4 12"/></svg></button><button class="rw dopt" data-s="7776000"><div class="tx"><b>90 days</b></div><svg class="ck" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4"><polyline points="20 6 9 17 4 12"/></svg></button></div></div></div>
 <div id="csheet" hidden><div class="msheet"><div class="grab"></div><h3 class="dt" id="cs-name"></h3><div class="lst">
  <button class="rw" id="cs-arch"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg></div><div class="tx"><b id="cs-arch-t">Archive chat</b></div></button>
@@ -723,7 +745,7 @@ const hideSplash=()=>setTimeout(()=>$('splash').classList.add('out'),Math.max(30
 const navStack=[];
 function navPush(t){if(navStack.includes(t))return;navStack.push(t);try{history.pushState({t},'')}catch(_){}}
 function navClose(t,hide){if(navStack[navStack.length-1]===t){history.back();return}const i=navStack.lastIndexOf(t);if(i>-1)navStack.splice(i,1);hide()}
-window.addEventListener('popstate',()=>{const t=navStack.pop();if(t==='lb')lbHide();else if(t==='sheet')sheetHide();else if(t==='chat')chatHide();else if(t==='menu')menuHide();else if(t==='dis')disHide();else if(t==='esh')eHide();else if(t==='cs')csHide();else if(t==='rp')rpHide();else if(t==='xp')xpHide();else if(t==='ms')msHide();else if(t==='fs')fsHide();else if(t==='nc')ncHide();else if(t==='sk')skHide();else if(t==='sv')svHide();else if(t==='sts')stsHide();else if(t==='stx')stxHide();else if(t==='qr')qrHide();else if(t==='qs')qsHide();else if(t==='stc')stcHide();else if(t==='msm')msmHide();else if(t==='ph')phHide()});
+window.addEventListener('popstate',()=>{const t=navStack.pop();if(t==='lb')lbHide();else if(t==='sheet')sheetHide();else if(t==='chat')chatHide();else if(t==='menu')menuHide();else if(t==='dis')disHide();else if(t==='esh')eHide();else if(t==='vsh')vshHide();else if(t==='cs')csHide();else if(t==='rp')rpHide();else if(t==='xp')xpHide();else if(t==='ms')msHide();else if(t==='fs')fsHide();else if(t==='nc')ncHide();else if(t==='sk')skHide();else if(t==='sv')svHide();else if(t==='sts')stsHide();else if(t==='stx')stxHide();else if(t==='qr')qrHide();else if(t==='qs')qsHide();else if(t==='stc')stcHide();else if(t==='msm')msmHide();else if(t==='ph')phHide()});
 function navSwap(from,to){const i=navStack.lastIndexOf(from);if(i>-1){navStack[i]=to;try{history.replaceState({t:to},'')}catch(_){}}else navPush(to)}
 
 /* dialogs */
@@ -2221,7 +2243,7 @@ function svRefreshItems(){
  if(!its.length){svNextUser();return}
  const key=(svCur.items[svCur.i]||{}).key;svCur.items=its;
  const n=its.findIndex(x=>x.key===key);if(n>-1)svCur.i=n;else if(svCur.i>=its.length)svCur.i=its.length-1;
- if($('sv-f')&&svCur.uid===me.uid)svPaintFoot();paintBars();
+ if($('sv-f')&&svCur.uid===me.uid)svPaintFoot();paintBars();if(!$('vsheet').hidden)vshPaint();
 }
 let svMuted=false;
 function svPauseAll(){if(svVid)svVid.pause();const a=$('sv-au');if(a)a.pause()}
@@ -2299,13 +2321,26 @@ $('sv-del').onclick=async()=>{
  const its=stItems(me.uid);if(!its.length){svClose();stPaint();return}
  svCur.items=its;svCur.i=Math.min(svCur.i,its.length-1);svShow();stPaint();
 };
-$('sv-f').onclick=async()=>{
- if(!svCur||svCur.uid!==me.uid)return;const it=svCur.items[svCur.i];if(!it)return;
- const names=Object.values(it.views||{}).map(v=>v&&v.name||'Someone');
- svPaused=true;svPauseAll();
- await ask('Viewed by',names.length?names.join(', '):'No one has viewed this story yet.',{cancel:false});
- svPaused=false;svPlayAll();
+const vAgo=t=>{const m=Math.floor((Date.now()-(+t||0))/6e4);if(!(+t))return'';if(m<1)return'Just now';if(m<60)return m+'m ago';const h=Math.floor(m/60);return h<24?h+'h ago':Math.floor(h/24)+'d ago'};
+function vshPaint(){
+ if(!svCur)return;const it=svCur.items[svCur.i];if(!it)return;
+ const list=Object.entries(it.views||{}).map(([u,v])=>({u,...(v||{})})).sort((a,b)=>(+b.viewedAt||0)-(+a.viewedAt||0));
+ $('vcn').textContent=list.length;
+ $('vls').innerHTML=list.length?list.map(v=>{const ph=safeUrl(v.photoURL)?v.photoURL:'';return `<div class="vr"><div class="av" ${ph?`style="background-image:url('${ph.replace(/'/g,'%27')}')"`:''}>${ph?'':esc(initials(v.name||'?'))}</div><div class="vn">${esc(v.name||'Someone')}</div><span class="vt">${esc(vAgo(v.viewedAt))}</span></div>`}).join(''):`<div class="ve"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></i><span>No views yet.<br>Anyone who watches your story will show up here.</span></div>`;
+}
+function vshHide(){$('vsheet').hidden=true;const pn=$('vpan');pn.style.transform='';pn.classList.remove('drag');if(svCur){svPaused=false;svPlayAll()}}
+function vshClose(){navClose('vsh',vshHide)}
+$('sv-f').onclick=()=>{
+ if(!svCur||svCur.uid!==me.uid||!svCur.items[svCur.i])return;
+ svPaused=true;svPauseAll();vshPaint();navPush('vsh');$('vsheet').hidden=false;$('vls').scrollTop=0;
 };
+$('vsheet').onclick=e=>{if(e.target.id==='vsheet')vshClose()};
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('vsheet').hidden)vshClose()});
+(function(){const pn=$('vpan'),hd=$('vhd');let y0=null,dy=0;
+ hd.addEventListener('pointerdown',e=>{y0=e.clientY;dy=0;pn.classList.add('drag');try{hd.setPointerCapture(e.pointerId)}catch(_){}});
+ hd.addEventListener('pointermove',e=>{if(y0==null)return;dy=Math.max(0,e.clientY-y0);pn.style.transform=`translateY(${dy}px)`});
+ const end=()=>{if(y0==null)return;const close=dy>90;y0=null;pn.classList.remove('drag');if(close)vshClose();else pn.style.transform=''};
+ hd.addEventListener('pointerup',end);hd.addEventListener('pointercancel',end)})();
 document.addEventListener('keydown',e=>{if($('sv').hidden)return;if(e.key==='Escape'&&$('modal').hidden)svClose();else if(e.key==='ArrowRight')svNext();else if(e.key==='ArrowLeft')svPrev()});
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'&&svCur){svPaused=true;svPauseAll()}else if(svCur&&!svHeld){svPaused=false;svPlayAll()}});
 

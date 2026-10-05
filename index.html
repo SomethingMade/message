@@ -267,6 +267,10 @@ button.rw:hover{background:var(--hover)}
 .sti.none .rg{background:none;border:2px dashed var(--sub);padding:2px}
 .sti .rg .av{width:100%;height:100%;font-size:18px;border:2px solid var(--bg);box-sizing:border-box}
 .sti.none .rg .av{border:none;opacity:.85}
+.sti .rg .av{overflow:hidden;position:relative}
+.sti .rg .av video{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none;background:#222}
+.sti .rg .av.stt{color:#fff;font-weight:700;font-size:9.5px;line-height:1.15;text-align:center;padding:6px;word-break:break-word;overflow:hidden}
+.sti .rg .av.stt span{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 .sti .pl{position:absolute;right:2px;top:42px;width:22px;height:22px;border-radius:50%;background:var(--accent);color:var(--on-accent);border:2px solid var(--bg);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;line-height:1;padding:0}
 .sti .sn{font-size:12px;color:var(--sub);max-width:68px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .sti.unseen .sn{color:var(--text);font-weight:600}
@@ -1939,19 +1943,30 @@ function stItems(u){
  return Object.entries(raw).map(([k,v])=>({...v,key:k})).filter(x=>x&&+x.createdAt&&now-x.createdAt<STORY_TTL&&(x.type==='text'?typeof x.text==='string':safeUrl(x.mediaURL))).sort((a,b)=>a.createdAt-b.createdAt);
 }
 const stSeen=its=>its.every(i=>i.views&&i.views[me.uid]);
+/* circle content = the most recent story (image, first video frame, or the text on its colour) */
+function stThumb(it,fb){
+ const q=u=>String(u).replace(/'/g,'%27').replace(/"/g,'%22');
+ if(it){
+  if(it.type==='text'){const bg=it.bgColor&&/^[#a-z0-9(),.%\s-]+$/i.test(it.bgColor)?it.bgColor:'#111';return `<div class="av stt" style="background:${bg}"><span>${esc(String(it.text).slice(0,18))}</span></div>`}
+  if(it.type==='video')return `<div class="av"><video src="${q(it.mediaURL)}#t=0.1" preload="metadata" muted playsinline tabindex="-1"></video></div>`;
+  return `<div class="av" style="background-image:url('${q(it.mediaURL)}')"></div>`;
+ }
+ return fb;
+}
 function stPaint(){
  if(typeof paintHeadStory==='function')paintHeadStory();
  const box=$('stories');if(!box)return;
  if(!me){box.innerHTML='';return}
  const mine=stItems(me.uid),mp=profiles[me.uid]||{},mph=mp.photoURL||me.photoURL||'';
  const mav=mph&&safeUrl(mph)?`style="background-image:url('${mph.replace(/'/g,'%27')}')"`:'';
- let h=`<div class="sti ${mine.length?'mine':'none'}" data-act="${mine.length?'view':'add'}" data-u="${esc(me.uid)}"><div class="rg"><div class="av" ${mav}>${mav?'':esc(initials(mp.name||me.displayName))}</div></div><button class="pl" data-act="add" aria-label="Add story">+</button><span class="sn">Your story</span></div>`;
+ let h=`<div class="sti ${mine.length?'mine':'none'}" data-act="${mine.length?'view':'add'}" data-u="${esc(me.uid)}"><div class="rg">${stThumb(mine[mine.length-1],`<div class="av" ${mav}>${mav?'':esc(initials(mp.name||me.displayName))}</div>`)}</div><button class="pl" data-act="add" aria-label="Add story">+</button><span class="sn">Your story</span></div>`;
  const others=Object.keys(stRaw).filter(u=>u!==me.uid&&!blocked[u]).map(u=>({u,its:stItems(u)})).filter(x=>x.its.length);
  others.forEach(x=>{x.seen=stSeen(x.its);x.t=x.its[x.its.length-1].createdAt});
  others.sort((a,b)=>(a.seen-b.seen)||(b.t-a.t));
  others.forEach(x=>{const p=profiles[x.u]||{};if(!profiles[x.u])loadProfile(x.u).then(stPaint);
   const nm=(p.name||'Haba user').split(/\s+/)[0];
-  h+=`<div class="sti ${x.seen?'seen':'unseen'}" data-act="view" data-u="${esc(x.u)}"><div class="rg"><div class="av" ${avStyle(p)}>${p.photoURL?'':esc(initials(p.name))}</div></div><span class="sn">${esc(nm)}</span></div>`});
+  h+=`<div class="sti ${x.seen?'seen':'unseen'}" data-act="view" data-u="${esc(x.u)}"><div class="rg">${stThumb(x.its[x.its.length-1],'')}</div><span class="sn">${esc(nm)}</span></div>`});
+ if(box.dataset.h===h)return;box.dataset.h=h;
  const sl=box.scrollLeft;box.innerHTML=h;box.scrollLeft=sl;
 }
 $('stories').onclick=e=>{

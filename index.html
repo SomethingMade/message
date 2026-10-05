@@ -348,6 +348,16 @@ button.rw:hover{background:var(--hover)}
 .phb .row{display:flex;gap:8px}.phb .row .cc{width:84px;flex:none;text-align:center}
 .phe{min-height:18px;color:#E5484D;font-size:13px;text-align:center}.phe.ok{color:var(--accent)}
 .phb .qrbtn{flex:none;width:100%}
+/* ---- background story upload progress ---- */
+#upl{position:fixed;left:0;right:0;top:calc(10px + env(safe-area-inset-top,0px));z-index:97;display:flex;justify-content:center;padding:0 12px;pointer-events:none}
+.upc{pointer-events:auto;width:100%;max-width:420px;display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:18px;background:var(--bg);color:var(--text);box-shadow:0 8px 28px rgba(0,0,0,.22),0 0 0 1px var(--line);animation:uplin .25s ease}
+@keyframes uplin{from{transform:translateY(-14px);opacity:0}to{transform:none;opacity:1}}
+.upi{width:42px;height:42px;border-radius:10px;background:var(--bg-input) center/cover no-repeat;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:var(--sub)}.upi svg{width:20px;height:20px}
+.upx{flex:1;min-width:0}.upt{display:flex;justify-content:space-between;gap:8px;font-size:13.5px;font-weight:600;margin-bottom:7px}.upt b{font-variant-numeric:tabular-nums;color:var(--sub);font-weight:600}
+.upb{height:6px;border-radius:99px;background:var(--bg-input);overflow:hidden}.upb i{display:block;height:100%;width:0;border-radius:99px;background:var(--grad);transition:width .15s linear}
+#upl.err .upb i{background:#E5484D}#upl.err .upt span{color:#E5484D}
+.upr{height:34px;padding:0 14px;border-radius:999px;background:var(--accent);color:var(--on-accent);font-size:13px;font-weight:700;flex-shrink:0}
+.upk{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--sub);flex-shrink:0}.upk svg{width:16px;height:16px}.upk:active{background:var(--bg-input)}
 /* ---- my QR code sheet ---- */
 #qrsheet{position:fixed;inset:0;z-index:85;background:rgba(0,0,0,.5);display:flex;align-items:flex-end;justify-content:center}
 @media (min-width:769px){#qrsheet{align-items:center;padding:20px}#qrsheet .msheet{border-radius:22px;width:380px;padding:14px 0}}
@@ -651,6 +661,7 @@ img,svg,video,a{-webkit-user-drag:none;user-drag:none;-webkit-touch-callout:none
  <button class="qrbtn pri" id="ph-go">Send code</button><button class="qrbtn" id="ph-back" hidden>Use a different number</button></div>
  <div id="ph-rc"></div>
 </div></div>
+<div id="upl" hidden><div class="upc"><div class="upi" id="upl-i"></div><div class="upx"><div class="upt"><span id="upl-t">Posting your story…</span><b id="upl-p">0%</b></div><div class="upb"><i id="upl-b"></i></div></div><button class="upr" id="upl-r" hidden>Retry</button><button class="upk" id="upl-c" aria-label="Cancel upload"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div></div>
 <div id="toast" hidden></div>
 <div id="inbn" role="status" aria-live="polite" hidden></div>
 <div id="lb" hidden><div class="lbh"><button class="ibtn" id="lb-x" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button><div class="lbw"><b id="lb-n"></b><span id="lb-d"></span></div><button class="ibtn" id="lb-dl" aria-label="Download"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><polyline points="7 11 12 16 17 11"/><path d="M5 21h14"/></svg></button></div><div class="lbs" id="lb-s"><img id="lb-i" alt=""></div><button class="lbn l" id="lb-p" aria-label="Previous">&#8249;</button><button class="lbn r" id="lb-nx" aria-label="Next">&#8250;</button></div>
@@ -660,7 +671,7 @@ img,svg,video,a{-webkit-user-drag:none;user-drag:none;-webkit-touch-callout:none
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
 import {getAuth,onAuthStateChanged,onIdTokenChanged,signOut,RecaptchaVerifier,signInWithPhoneNumber,createUserWithEmailAndPassword,signInWithEmailAndPassword,sendPasswordResetEmail,updateProfile,PhoneAuthProvider,updatePhoneNumber,reauthenticateWithPhoneNumber} from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-import {getStorage,ref as sref,uploadBytes,getDownloadURL} from "https://www.gstatic.com/firebasejs/10.8.1/firebase-storage.js";
+import {getStorage,ref as sref,uploadBytes,uploadBytesResumable,getDownloadURL} from "https://www.gstatic.com/firebasejs/10.8.1/firebase-storage.js";
 import {getMessaging,getToken,deleteToken,onMessage,isSupported as isMessagingSupported} from "https://www.gstatic.com/firebasejs/10.8.1/firebase-messaging.js";
 import {getDatabase,ref,get,set,remove,update,push,onValue,query,orderByChild,orderByKey,startAt,limitToFirst,equalTo,limitToLast,increment,onDisconnect,serverTimestamp} from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 const app=initializeApp({
@@ -2086,19 +2097,43 @@ $('st-file').onchange=e=>{
  if(f.size>(vid?100:25)*1024*1024){toast(vid?'That video is too large (max 100 MB)':'That image is too large (max 25 MB)');return}
  stcOpen(f);
 };
-$('stc-post').onclick=async()=>{
- const f=stcFile;if(!f||!me||stPostBusy)return;
+/* post = close the composer right away, then upload in the background with a progress banner */
+let upJob=null,upTask=null,upThumb=null,upHide=null;
+function upShow(job){
+ clearTimeout(upHide);const u=$('upl');u.classList.remove('err');u.hidden=false;
+ $('upl-t').textContent='Posting your story…';$('upl-p').textContent='0%';$('upl-b').style.width='0%';$('upl-r').hidden=true;$('upl-c').hidden=false;
+ const i=$('upl-i');if(upThumb){URL.revokeObjectURL(upThumb);upThumb=null}
+ if(job.vid){i.style.backgroundImage='';i.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>'}
+ else{upThumb=URL.createObjectURL(job.f);i.innerHTML='';i.style.backgroundImage=`url('${upThumb}')`}
+}
+function upProg(pct){pct=Math.max(0,Math.min(100,Math.round(pct)));$('upl-b').style.width=pct+'%';$('upl-p').textContent=pct+'%'}
+function upEnd(){clearTimeout(upHide);$('upl').hidden=true;if(upThumb){URL.revokeObjectURL(upThumb);upThumb=null}upJob=null;upTask=null}
+function upFail(msg){$('upl').classList.add('err');$('upl-t').textContent=msg||"Couldn't post your story";$('upl-p').textContent='';$('upl-r').hidden=false;$('upl-c').hidden=false;upTask=null;stPostBusy=false}
+function upRun(job){
+ if(!me)return;stPostBusy=true;upJob=job;upShow(job);
+ const safe=(job.f.name||(job.vid?'video':'image')).replace(/[^a-zA-Z0-9.\-_]/g,'_');
+ const r=sref(storage,`stories/${me.uid}/${Date.now()}_0_${safe}`);
+ const task=uploadBytesResumable(r,job.f,{contentType:job.f.type});upTask=task;
+ task.on('state_changed',sn=>{if(sn.totalBytes)upProg(sn.bytesTransferred/sn.totalBytes*96)},
+  err=>{if(err&&err.code==='storage/canceled'){stPostBusy=false;upEnd();return}console.error('story upload failed',err);upFail("Couldn't post your story")},
+  async()=>{
+   try{
+    $('upl-t').textContent='Finishing up…';upProg(98);
+    const url=await getDownloadURL(r),dur=job.vid?await vidDur(job.f):null;
+    await set(push(ref(db,'stories/'+me.uid)),{mediaURL:url,type:job.vid?'video':'image',createdAt:Date.now(),...(job.vid&&dur?{duration:dur}:{}),...(job.cap?{caption:job.cap}:{}),...(job.music?{music:job.music}:{})});
+    upProg(100);$('upl-t').textContent='Story posted';$('upl-c').hidden=true;stPostBusy=false;upTask=null;
+    upHide=setTimeout(upEnd,1600);
+   }catch(err){console.error('story save failed',err);upFail("Couldn't post your story")}
+  });
+}
+$('upl-c').onclick=()=>{if(upTask)upTask.cancel();else{stPostBusy=false;upEnd()}};
+$('upl-r').onclick=()=>{if(upJob)upRun(upJob)};
+$('stc-post').onclick=()=>{
+ const f=stcFile;if(!f||!me)return;
+ if(stPostBusy){toast('Wait for your current story to finish posting');return}
  const vid=/^video\//.test(f.type),cap=$('stc-cap').value.trim().slice(0,200),music=vid?null:stcMusic;
- stPostBusy=true;$('stc-post').disabled=true;toast('Posting your story…');
- try{
-  const safe=(f.name||(vid?'video':'image')).replace(/[^a-zA-Z0-9.\-_]/g,'_');
-  const r=sref(storage,`stories/${me.uid}/${Date.now()}_0_${safe}`);
-  await uploadBytes(r,f,{contentType:f.type});
-  const url=await getDownloadURL(r),dur=vid?await vidDur(f):null;
-  await set(push(ref(db,'stories/'+me.uid)),{mediaURL:url,type:vid?'video':'image',createdAt:Date.now(),...(vid&&dur?{duration:dur}:{}),...(cap?{caption:cap}:{}),...(music?{music}:{})});
-  toast('Story added');stcClose();
- }catch(err){console.error('story upload failed',err);toast("Couldn't post your story. Try again.");$('stc-post').disabled=false}
- stPostBusy=false;
+ stcClose();
+ setTimeout(()=>upRun({f,vid,cap,music}),50);
 };
 /* text story composer */
 function stxHide(){$('stx').hidden=true}
@@ -2110,12 +2145,12 @@ let stxMusic=null;
 function stxPaintMusic(){musicBtn($('stx-mus'),stxMusic,m=>{stxMusic=m;stxPaintMusic()})}
 function stxOpen(){stBg=ST_BG[0];stxMusic=null;$('stx-in').value='';stxPaintBg();stxPaintMusic();navPush('stx');$('stx').hidden=false;setTimeout(()=>$('stx-in').focus(),200)}
 $('stx-x').onclick=stxClose;
-$('stx-post').onclick=async()=>{
+$('stx-post').onclick=()=>{
  const text=$('stx-in').value.trim();if(!text){toast('Write something first');return}
- if(!me||stPostBusy)return;stPostBusy=true;$('stx-post').disabled=true;
- try{await set(push(ref(db,'stories/'+me.uid)),{type:'text',text,bgColor:stBg,createdAt:Date.now(),...(stxMusic?{music:stxMusic}:{})});toast('Story added');stxClose()}
- catch(err){console.error('text story failed',err);toast("Couldn't post your story")}
- stPostBusy=false;$('stx-post').disabled=false;
+ if(!me||stPostBusy)return;
+ const payload={type:'text',text,bgColor:stBg,createdAt:Date.now(),...(stxMusic?{music:stxMusic}:{})};
+ stxClose();stPostBusy=true;
+ set(push(ref(db,'stories/'+me.uid)),payload).then(()=>toast('Story added')).catch(err=>{console.error('text story failed',err);toast("Couldn't post your story")}).finally(()=>{stPostBusy=false});
 };
 /* --- viewer --- */
 let svCur=null,svTimer=null,svEl=0,svDur=5000,svPaused=false,svHold=null,svHeld=false,svVid=null;

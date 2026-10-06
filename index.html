@@ -676,6 +676,21 @@ img,video,canvas{max-width:100%}
  .fab{width:52px;height:52px;bottom:calc(64px + env(safe-area-inset-bottom,0px))}#chats{padding-bottom:calc(130px + env(safe-area-inset-bottom,0px))}
  .head{padding-top:calc(6px + env(safe-area-inset-top,0px));padding-bottom:4px}
 }
+
+/* ---- header v2: gradient logo tile, brand wordmark, soft action buttons, avatar with gradient ring ---- */
+.head{padding:calc(12px + env(safe-area-inset-top,0px)) 14px 10px 16px;gap:12px}
+.hbrand{gap:11px}
+.hmark{width:38px;height:38px;border-radius:12px;background:var(--grad);display:flex;align-items:center;justify-content:center;flex:none;box-shadow:0 4px 12px rgba(109,74,255,.35)}
+.hmark svg{width:24px;height:24px;display:block}
+.head h1{font-family:var(--brand);font-size:21px;font-weight:400;letter-spacing:.5px;color:var(--text);line-height:1}
+.head .hright{display:flex;align-items:center;gap:8px!important}
+.head .ibtn{width:40px;height:40px;background:var(--bg-input)}
+.head .ibtn svg{width:20px;height:20px}
+.head #me{width:42px;height:42px;padding:2px;background:var(--grad)}
+.hav{width:100%;height:100%;border-radius:50%;background:var(--bg-input) center/cover no-repeat;border:2px solid var(--bg);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:var(--text)}
+.hav svg{width:18px!important;height:18px!important}
+.head .ibtn:active{transform:scale(.94)}
+@media (max-width:380px){.head h1{font-size:18px}.hmark{width:34px;height:34px}}
 </style>
 </head>
 <body>
@@ -702,13 +717,12 @@ img,video,canvas{max-width:100%}
 
 <div id="app" hidden>
  <aside id="list">
-  <div class="head"><div class="hbrand"><svg class="hlogo" viewBox="0 0 200 200" role="img" aria-label="Haba"><path d="M60 28H140A36 36 0 0 1 176 64V104A36 36 0 0 1 140 140H60A36 36 0 0 1 24 104V64A36 36 0 0 1 60 28Z" fill="var(--accent)"/><path d="M40 128L38 172L84 138Z" fill="var(--accent)"/><g fill="var(--bg)"><rect x="66" y="49" width="18" height="70" rx="9"/><rect x="116" y="49" width="18" height="70" rx="9"/><rect x="76" y="75" width="48" height="18" rx="9"/></g></svg><h1>Haba</h1></div><div class="hright" style="display:flex;gap:8px">
+  <div class="head"><div class="hbrand"><span class="hmark"><svg viewBox="0 0 200 200" role="img" aria-label="Haba"><path d="M60 28H140A36 36 0 0 1 176 64V104A36 36 0 0 1 140 140H60A36 36 0 0 1 24 104V64A36 36 0 0 1 60 28Z" fill="#fff"/><path d="M40 128L38 172L84 138Z" fill="#fff"/><g fill="#6D4AFF"><rect x="66" y="49" width="18" height="70" rx="9"/><rect x="116" y="49" width="18" height="70" rx="9"/><rect x="76" y="75" width="48" height="18" rx="9"/></g></svg></span><h1>Haba</h1></div><div class="hright">
    <button class="ibtn" id="more" title="More" aria-label="More options"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/></svg></button>
-   <button class="ibtn" id="me" title="Account"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg></button></div></div>
+   <button class="ibtn" id="me" title="Account" aria-label="Account"><span class="hav" id="me-av"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg></span></button></div></div>
   <div class="search"><svg class="si" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input id="q" class="in" placeholder="Search chats" autocomplete="off" enterkeyhint="search"><button class="sx" id="sclr" type="button" aria-label="Clear search" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
   <div id="lscroll">
   <div class="cats" id="cats" role="tablist"><button class="cat on" data-c="all" role="tab">All</button><button class="cat" data-c="unread" role="tab">Unread<span class="cn" id="cn-unread" hidden></span></button><button class="cat" data-c="online" role="tab">Online<span class="cn" id="cn-online" hidden></span></button><button class="cat" data-c="archived" id="cat-arch" role="tab" hidden>Archived</button></div>
-  <div class="stories" id="stories" aria-label="Stories"></div>
   <div class="banner" id="enc-banner" hidden></div>
   <div class="banner" id="push-banner" hidden>Turn on notifications so you never miss a message.</div>
   <div id="chats"></div>
@@ -2241,6 +2255,9 @@ $('nc-l').onclick=async e=>{
 };
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('modal').hidden&&!$('nc').hidden)ncClose()});
 
+function paintMe(){const el=document.getElementById('me-av');if(!el||!me)return;const p=profiles[me.uid]||{},u=p.photoURL||me.photoURL||'';
+ if(u&&safeUrl(u)){el.style.backgroundImage=`url('${u.replace(/'/g,'%27')}')`;el.innerHTML=''}
+ else{const n=p.name||me.displayName||'';if(n){el.style.backgroundImage='';el.textContent=initials(n)}}}
 /* ---- stories: stories/{uid}/{key} = {mediaURL,type:'image'|'video',createdAt,duration?} or {type:'text',text,bgColor,createdAt}; views at .../views/{viewerUid} (same as Haba) ---- */
 const ST_IMG_MS=30000,ST_VID_MAX_MS=60000,STORY_TTL=864e5,ST_BG=['linear-gradient(135deg, #2E2E2E, #111111)','linear-gradient(135deg, #833AB4, #FD1D1D, #FCB045)','linear-gradient(135deg, #0A84FF, #5E9CFF)','linear-gradient(135deg, #FF6B6B, #FFD93D)','linear-gradient(135deg, #2C3E50, #4CA1AF)','linear-gradient(135deg, #6D4AFF, #E5148C)','#000000'];
 const stRaw={},stOff={},stPriv={},stPOff={};let stBg=ST_BG[0],stPostBusy=false;
@@ -2276,25 +2293,8 @@ function stPaint(){
  if(typeof paintNav==='function')paintNav();
  if(curTab==='upd'&&typeof paintUpdates==='function')paintUpdates();
  if(typeof paintHeadStory==='function')paintHeadStory();
- const box=$('stories');if(!box)return;
- if(!me){box.innerHTML='';return}
- const mine=stItems(me.uid),mp=profiles[me.uid]||{},mph=mp.photoURL||me.photoURL||'';
- const mav=mph&&safeUrl(mph)?`style="background-image:url('${mph.replace(/'/g,'%27')}')"`:'';
- let h=`<div class="sti ${mine.length?'mine':'none'}" data-act="${mine.length?'view':'add'}" data-u="${esc(me.uid)}"><div class="rg">${stThumb(mine[mine.length-1],`<div class="av" ${mav}>${mav?'':esc(initials(mp.name||me.displayName))}</div>`)}</div><button class="pl" data-act="add" aria-label="Add story">+</button><span class="sn">Your story</span></div>`;
- const others=Object.keys(stRaw).filter(u=>u!==me.uid&&!blocked[u]).map(u=>({u,its:stItems(u)})).filter(x=>x.its.length);
- others.forEach(x=>{x.seen=stSeen(x.its);x.t=x.its[x.its.length-1].createdAt});
- others.sort((a,b)=>(a.seen-b.seen)||(b.t-a.t));
- others.forEach(x=>{const p=profiles[x.u]||{};if(!profiles[x.u])loadProfile(x.u).then(stPaint);
-  const nm=(p.name||'Haba user').split(/\s+/)[0];
-  h+=`<div class="sti ${x.seen?'seen':'unseen'}" data-act="view" data-u="${esc(x.u)}"><div class="rg">${stThumb(x.its[x.its.length-1],'')}</div><span class="sn">${esc(nm)}</span></div>`});
- if(box.dataset.h===h)return;box.dataset.h=h;
- const sl=box.scrollLeft;box.innerHTML=h;box.scrollLeft=sl;
+ paintMe();
 }
-$('stories').onclick=e=>{
- const pl=e.target.closest('.pl');if(pl){e.stopPropagation();stsOpen();return}
- const a=e.target.closest('[data-act]');if(!a)return;
- if(a.dataset.act==='add')stsOpen();else if(a.dataset.act==='view')svOpen(a.dataset.u);
-};
 /* --- add story --- */
 function stsHide(){$('stsheet').hidden=true}
 function stsClose(){navClose('sts',stsHide)}

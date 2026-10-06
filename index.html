@@ -371,6 +371,15 @@ button.rw:hover{background:var(--hover)}
 .qs>img,.qs>video,.qs>i{width:28px;height:38px;border-radius:6px;object-fit:cover;flex-shrink:0;background:rgba(127,127,127,.25)}
 .qs>i{display:flex;align-items:center;justify-content:center;padding:2px;overflow:hidden;color:#fff;font:700 7px/1.1 'Inter',system-ui,sans-serif;text-align:center;word-break:break-word}
 .qs span{font-size:11.5px;opacity:.85}#msgs .b.mb>.qs{margin:5px 6px 6px}
+#pv{position:fixed;inset:0;z-index:99;background:rgba(0,0,0,.5);display:flex;align-items:flex-end;justify-content:center}
+#pv .msheet{display:flex;flex-direction:column;max-height:82vh}#pv .dt{padding:4px 20px 12px}
+#pv .rd{margin-left:auto;width:20px;height:20px;border-radius:50%;border:2px solid var(--sub);flex-shrink:0}#pv .rw.on .rd{border:6px solid var(--accent)}
+.pvh{padding:14px 20px 6px;font-size:12px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.4px}
+#pv-p{overflow-y:auto;flex:1;min-height:80px;padding:0 8px}
+.pvp{display:flex;align-items:center;gap:12px;width:100%;padding:8px 12px;border-radius:12px;text-align:left}.pvp span{flex:1;min-width:0;font-size:15px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pvp .ck{width:22px;height:22px;border-radius:50%;border:2px solid var(--sub);flex-shrink:0}.pvp.on .ck{border-color:var(--accent);background:var(--accent);box-shadow:inset 0 0 0 3px var(--bg)}
+.pve{padding:20px;text-align:center;color:var(--sub);font-size:14px}
+@media (min-width:769px){#pv{align-items:center;padding:20px}#pv .msheet{width:420px;border-radius:18px}}
 .svmus{position:absolute;left:12px;top:calc(78px + env(safe-area-inset-top,0px));z-index:4;display:flex;align-items:center;gap:7px;max-width:calc(100% - 24px);height:32px;padding:0 12px 0 5px;border-radius:999px;background:rgba(0,0,0,.4);color:#fff;font-size:12.5px;font-weight:600;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
 .svmus img{width:22px;height:22px;border-radius:5px;object-fit:cover}.svmus span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.svmus svg{width:15px;height:15px;flex-shrink:0;opacity:.9}
 .svmus.muted svg{opacity:.5}
@@ -692,6 +701,8 @@ img,svg,video,a{-webkit-user-drag:none;user-drag:none;-webkit-touch-callout:none
    <button class="rw" id="r-qr"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM20 14v3M14 20h3M20 20h1"/></svg></div><div class="tx"><b>My QR code</b><span id="r-qr-sub">Let friends scan to find you on Haba</span></div></button>
    <button class="rw" id="r-enc"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div><div class="tx"><b>Encryption &amp; recovery</b><span id="r-enc-sub">Backup PIN for your encrypted chats</span></div></button>
    <button class="rw" id="r-snd"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6 9H2v6h4l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M19 5a10 10 0 0 1 0 14"/></svg></div><div class="tx"><b>Notification sounds</b><span id="r-snd-sub">On</span></div></button>
+   <button class="rw" id="r-ls"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg></div><div class="tx"><b>Last seen &amp; online</b><span id="r-ls-sub">Visible to everyone</span></div></button>
+   <button class="rw" id="r-sp"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.5"/></svg></div><div class="tx"><b>Who can see my stories</b><span id="r-sp-sub">Everyone</span></div></button>
   </div>
   <div class="lst gap"><button class="rw dg" id="r-out"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></div><div class="tx"><b>Sign out</b></div></button></div>
   <div class="pf"><svg viewBox="0 0 200 200"><polygon points="20,80 170,30 80,110" fill="currentColor" fill-opacity=".75"/><polygon points="120,180 170,30 80,110" fill="currentColor"/><polygon points="20,80 80,110 80,140" fill="currentColor" fill-opacity=".55"/></svg><span>Haba Messenger</span></div>
@@ -723,6 +734,7 @@ img,svg,video,a{-webkit-user-drag:none;user-drag:none;-webkit-touch-callout:none
  <button class="rw" id="cs-rep"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22V4"/><path d="M4 4h13l-2 4 2 4H4"/></svg></div><div class="tx"><b>Report</b></div></button>
  <button class="rw dg" id="cs-del"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></div><div class="tx"><b>Delete chat</b></div></button>
 </div></div></div>
+<div id="pv" hidden><div class="msheet"><div class="grab"></div><h3 class="dt">Who can see my stories</h3><div class="lst" id="pv-m"><button class="rw" data-m="everyone"><div class="tx"><b>Everyone</b></div><i class="rd"></i></button><button class="rw" data-m="only"><div class="tx"><b>Only people I select</b></div><i class="rd"></i></button><button class="rw" data-m="except"><div class="tx"><b>Everyone except…</b></div><i class="rd"></i></button></div><div class="pvh" id="pv-h" hidden></div><div id="pv-p" hidden></div><div class="eacts"><button class="qrbtn pri" id="pv-save">Done</button></div></div></div>
 <div id="rsheet" hidden><div class="msheet"><div class="grab"></div><h3 class="dt" id="rp-title">Report</h3><p class="dd">Chats are end-to-end encrypted, so we can't read your messages. We receive only the reason you choose and this account's ID.</p><div class="lst" id="rp-opts"><button class="rw dopt" data-r="spam"><div class="tx"><b>Spam or scam</b></div><svg class="ck" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4"><polyline points="20 6 9 17 4 12"/></svg></button><button class="rw dopt" data-r="harassment"><div class="tx"><b>Harassment or threats</b></div><svg class="ck" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4"><polyline points="20 6 9 17 4 12"/></svg></button><button class="rw dopt" data-r="inappropriate"><div class="tx"><b>Inappropriate or explicit content</b></div><svg class="ck" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4"><polyline points="20 6 9 17 4 12"/></svg></button><button class="rw dopt" data-r="impersonation"><div class="tx"><b>Impersonation</b></div><svg class="ck" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4"><polyline points="20 6 9 17 4 12"/></svg></button><button class="rw dopt" data-r="other"><div class="tx"><b>Something else</b></div><svg class="ck" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4"><polyline points="20 6 9 17 4 12"/></svg></button></div><div class="lst gap"><button class="rw dopt sel" id="rp-blk"><div class="tx"><b>Also block this contact</b></div><svg class="ck" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4"><polyline points="20 6 9 17 4 12"/></svg></button></div><div style="margin:14px 16px 0"><textarea id="rp-det" class="in" maxlength="300" rows="3" placeholder="Add details (optional)" style="height:auto;padding:12px 16px;resize:none"></textarea><p id="rp-err" class="err" style="margin:8px 0 0" hidden></p><button class="btn" id="rp-send" style="margin-top:10px" disabled>Send report</button></div></div></div>
 <div id="msh" hidden><div class="msheet"><div class="grab"></div><h3 class="dt" id="ms-pv"></h3><div class="rxp" id="ms-rx" role="group" aria-label="React to message"><button type="button" data-e="👍" aria-label="React 👍">👍</button><button type="button" data-e="❤️" aria-label="React ❤️">❤️</button><button type="button" data-e="😂" aria-label="React 😂">😂</button><button type="button" data-e="😮" aria-label="React 😮">😮</button><button type="button" data-e="😢" aria-label="React 😢">😢</button><button type="button" data-e="🙏" aria-label="React 🙏">🙏</button></div><div class="lst">
  <button class="rw" id="ms-reply"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 17 4 12 9 7"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/></svg></div><div class="tx"><b>Reply</b></div></button>
@@ -1051,7 +1063,7 @@ onAuthStateChanged(auth,async u=>{
  if(!p.exists()||!p.val().name){$('auth').hidden=false;$('app').hidden=true;step('name');hideSplash();return}
  showApp();hideSplash();
 });
-function showApp(){$('auth').hidden=true;$('app').hidden=false;startPresence();publishPhone();setupPush();refreshPushBanner();backupInfo=undefined;myKeys().catch(()=>{}).then(refreshBanner);
+function showApp(){$('auth').hidden=true;$('app').hidden=false;startPriv();startPresence();publishPhone();setupPush();refreshPushBanner();backupInfo=undefined;myKeys().catch(()=>{}).then(refreshBanner);
  if(offList)offList();
  stopFriends();stReset();
  blocked={};cleared={};setCat('all');offBl.forEach(f=>f());
@@ -1060,7 +1072,7 @@ function showApp(){$('auth').hidden=true;$('app').hidden=false;startPresence();p
  outLoad().then(()=>{offFlush=onValue(ref(db,'.info/connected'),s=>{rtOnline=s.val()===true;if(rtOnline)flushOutbox()})});
  let liveList=false;const myUid=me.uid;
  cGet('list',myUid).then(d=>{if(!d||liveList||!me||me.uid!==myUid)return;chats=d.chats||{};Object.entries(d.profiles||{}).forEach(([u,p])=>{if(!profiles[u]){profiles[u]=p;staleProf[u]=1}});renderList();stSync()});
- cGet('list','st_'+myUid).then(d=>{if(!d||!me||me.uid!==myUid)return;Object.entries(d.profiles||{}).forEach(([u,p])=>{if(!profiles[u]){profiles[u]=p;staleProf[u]=1}});Object.entries(d.raw||{}).forEach(([u,v])=>{if(!(u in stRaw))stRaw[u]=v});stPaint()});
+ cGet('list','st_'+myUid).then(d=>{if(!d||!me||me.uid!==myUid)return;Object.entries(d.profiles||{}).forEach(([u,p])=>{if(!profiles[u]){profiles[u]=p;staleProf[u]=1}});Object.entries(d.raw||{}).forEach(([u,v])=>{if(!(u in stRaw))stRaw[u]=v});Object.entries(d.priv||{}).forEach(([u,v])=>{if(!(u in stPriv))stPriv[u]=v});stPaint()});
  offList=onValue(ref(db,'user_chats/'+me.uid),s=>{liveList=true;const nc=s.val()||{};checkIncoming(nc);chats=nc;saveListCache();renderList();Object.keys(chats).forEach(loadProfile);watchFriends(Object.keys(chats));ncWatchFollowing();stSync()})}
 /* same rules as Haba: gold = business account; blue = paid / streak / 5000+ followers (users/{uid} fields) */
 const VB_BLUE='<svg class="verified-badge vbd" viewBox="0 0 22 22" width="16" height="16" aria-label="Verified"><path fill="#0A84FF" d="M20.396 11c-.018-.646-.215-1.275-.57-1.816-.354-.54-.852-.972-1.438-1.246.223-.607.27-1.264.14-1.897-.131-.634-.437-1.218-.882-1.687-.47-.445-1.053-.75-1.687-.882-.633-.13-1.29-.083-1.897.14-.273-.587-.704-1.086-1.245-1.44S11.647 1.62 11 1.604c-.646.017-1.273.213-1.813.568-.54.354-.972.853-1.246 1.44-.607-.223-1.264-.272-1.897-.14-.633.13-1.217.437-1.687.882-.444.47-.75 1.053-.882 1.687-.13.633-.083 1.29.14 1.897-.586.274-1.084.706-1.438 1.246-.354.54-.552 1.17-.57 1.816.018.646.216 1.276.57 1.816.354.54.852.972 1.438 1.246-.223.607-.27 1.264-.14 1.897.131.634.437 1.217.882 1.687.47.445 1.054.75 1.687.882.633.13 1.29.083 1.897-.14.274.586.706 1.084 1.246 1.438.54.354 1.17.552 1.813.57.646-.018 1.276-.216 1.816-.57.54-.354.972-.852 1.246-1.438.607.223 1.264.27 1.897.14.634-.131 1.217-.437 1.687-.882.445-.47.75-1.053.882-1.687.13-.633.083-1.29-.14-1.897.586-.274 1.084-.706 1.438-1.246.355-.54.552-1.17.57-1.816zM9.662 14.85l-3.429-3.428 1.293-1.293 2.136 2.136 4.6-4.6 1.293 1.293-5.893 5.892z"></path></svg>';
@@ -1818,18 +1830,51 @@ let offConn=null,offPres=[];const pres={};
 function startPresence(){
  if(offConn){offConn();offConn=null}
  offConn=onValue(ref(db,'.info/connected'),s=>{
-  if(s.val()!==true||!me)return;
-  const st=ref(db,`users/${me.uid}/status`),ls=ref(db,`users/${me.uid}/lastSeen`);
-  onDisconnect(st).set('offline').catch(()=>{});onDisconnect(ls).set(serverTimestamp()).catch(()=>{});
-  set(st,'online').catch(()=>{});set(ls,serverTimestamp()).catch(()=>{});
+  isConn=s.val()===true;if(!isConn||!me)return;
+  privReady.then(presApply);
  });
 }
-function stopPresence(){if(offConn){offConn();offConn=null}stopPres()}
+/* ---- privacy: users/{me}/privacy = {hideLastSeen:true, stories:{mode:'everyone'|'only'|'except', list:{uid:true}}} ---- */
+let priv={},offPriv=null,privReady=Promise.resolve(),isConn=false;
+function startPriv(){
+ if(offPriv)offPriv();priv={};let done;privReady=Promise.race([new Promise(r=>done=r),new Promise(r=>setTimeout(r,2500))]);
+ offPriv=onValue(ref(db,`users/${me.uid}/privacy`),x=>{priv=x.val()||{};done();presApply();paintPriv()},()=>done());
+}
+function presApply(){
+ if(!me||!isConn)return;const st=ref(db,`users/${me.uid}/status`),ls=ref(db,`users/${me.uid}/lastSeen`);
+ if(priv.hideLastSeen){onDisconnect(st).cancel().catch(()=>{});onDisconnect(ls).cancel().catch(()=>{});remove(st).catch(()=>{});remove(ls).catch(()=>{});return}
+ onDisconnect(st).set('offline').catch(()=>{});onDisconnect(ls).set(serverTimestamp()).catch(()=>{});
+ set(st,'online').catch(()=>{});set(ls,serverTimestamp()).catch(()=>{});
+}
+function paintPriv(){
+ const sp=priv.stories||{},n=Object.keys(sp.list||{}).length;
+ $('r-ls-sub').textContent=priv.hideLastSeen?'Hidden':'Visible to everyone';
+ $('r-sp-sub').textContent=sp.mode==='only'?`Only ${n} ${n===1?'person':'people'}`:sp.mode==='except'?`Everyone except ${n}`:'Everyone';
+}
+$('r-ls').onclick=async()=>{try{await update(ref(db,`users/${me.uid}/privacy`),{hideLastSeen:priv.hideLastSeen?null:true})}catch(_){toast("Couldn't update this setting")}};
+let pvMode='everyone',pvSel=new Set();
+function pvPaint(){
+ $('pv-m').querySelectorAll('.rw').forEach(b=>b.classList.toggle('on',b.dataset.m===pvMode));
+ const h=$('pv-h'),l=$('pv-p');h.hidden=l.hidden=pvMode==='everyone';if(l.hidden)return;
+ h.textContent=pvMode==='only'?'Share my stories only with':'Hide my stories from';
+ const ids=[...new Set([...Object.keys(chats||{}),...Object.keys(myFollowing||{}).filter(u=>myFollowing[u]),...pvSel])].filter(u=>u!==me.uid&&u!==AI_UID);
+ ids.forEach(u=>{if(!profiles[u])loadProfile(u).then(()=>{if(!$('pv').hidden)pvPaint()})});
+ ids.sort((a,b)=>((profiles[a]||{}).name||'~').localeCompare((profiles[b]||{}).name||'~'));
+ l.innerHTML=ids.length?ids.map(u=>{const p=profiles[u]||{},ph=safeUrl(p.photoURL)?p.photoURL:'';return `<button class="pvp${pvSel.has(u)?' on':''}" data-u="${esc(u)}"><div class="av sm" ${ph?`style="background-image:url('${ph.replace(/'/g,'%27')}')"`:''}>${ph?'':esc(initials(p.name||'?'))}</div><span>${esc(p.name||'Haba user')}</span><i class="ck"></i></button>`}).join(''):'<p class="pve">No contacts yet.</p>';
+}
+function pvHide(){$('pv').hidden=true}function pvClose(){navClose('pv',pvHide)}
+$('r-sp').onclick=()=>{const sp=priv.stories||{};pvMode=sp.mode||'everyone';pvSel=new Set(Object.keys(sp.list||{}));pvPaint();navPush('pv');$('pv').hidden=false};
+$('pv-m').onclick=e=>{const b=e.target.closest('.rw');if(!b)return;pvMode=b.dataset.m;pvPaint()};
+$('pv-p').onclick=e=>{const b=e.target.closest('.pvp');if(!b)return;const u=b.dataset.u;pvSel.has(u)?pvSel.delete(u):pvSel.add(u);b.classList.toggle('on',pvSel.has(u))};
+$('pv').addEventListener('click',e=>{if(e.target.id==='pv')pvClose()});
+$('pv-save').onclick=async()=>{const list={};if(pvMode!=='everyone')pvSel.forEach(u=>list[u]=true);
+ try{await set(ref(db,`users/${me.uid}/privacy/stories`),pvMode==='everyone'?{mode:'everyone'}:{mode:pvMode,list});pvClose();toast('Story privacy updated')}catch(_){toast("Couldn't save your story privacy")}};
+function stopPresence(){if(offConn){offConn();offConn=null}if(offPriv){offPriv();offPriv=null}isConn=false;stopPres()}
 function stopPres(){offPres.forEach(f=>f());offPres=[]}
 function seenText(p){
  if(!p)return{t:''};
  if(p.status==='online')return{t:'Active now',on:true};
- if(!p.lastSeen)return{t:'Offline'};
+ if(!p.lastSeen)return{t:p.status==='offline'?'Offline':''};
  const d=new Date(p.lastSeen),n=new Date(),y=new Date(n);y.setDate(n.getDate()-1);
  const tm=d.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'});
  if(d.toDateString()===n.toDateString())return{t:'Last seen today at '+tm};
@@ -2152,8 +2197,8 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('modal').hidden&&
 
 /* ---- stories: stories/{uid}/{key} = {mediaURL,type:'image'|'video',createdAt,duration?} or {type:'text',text,bgColor,createdAt}; views at .../views/{viewerUid} (same as Haba) ---- */
 const ST_IMG_MS=30000,ST_VID_MAX_MS=60000,STORY_TTL=864e5,ST_BG=['linear-gradient(135deg, #2E2E2E, #111111)','linear-gradient(135deg, #833AB4, #FD1D1D, #FCB045)','linear-gradient(135deg, #0A84FF, #5E9CFF)','linear-gradient(135deg, #FF6B6B, #FFD93D)','linear-gradient(135deg, #2C3E50, #4CA1AF)','linear-gradient(135deg, #6D4AFF, #E5148C)','#000000'];
-const stRaw={},stOff={};let stBg=ST_BG[0],stPostBusy=false;
-function stReset(){Object.values(stOff).forEach(f=>f());[stOff,stRaw].forEach(o=>Object.keys(o).forEach(k=>delete o[k]));if(typeof svHide==='function'&&$('sv')&&!$('sv').hidden)svHide();stPaint()}
+const stRaw={},stOff={},stPriv={},stPOff={};let stBg=ST_BG[0],stPostBusy=false;
+function stReset(){Object.values(stOff).forEach(f=>f());Object.values(stPOff).forEach(f=>f());[stOff,stRaw,stPOff,stPriv].forEach(o=>Object.keys(o).forEach(k=>delete o[k]));if(typeof svHide==='function'&&$('sv')&&!$('sv').hidden)svHide();stPaint()}
 function stSync(){
  if(!me)return;
  const want=new Set([me.uid]);
@@ -2161,11 +2206,13 @@ function stSync(){
  Object.keys(myFollowing||{}).filter(u=>myFollowing[u]).slice(0,60).forEach(u=>want.add(u));
  want.delete(AI_UID);
  want.forEach(u=>{if(stOff[u])return;
+  if(u!==me.uid)stPOff[u]=onValue(ref(db,`users/${u}/privacy/stories`),x=>{stPriv[u]=x.val()||{mode:'everyone'};stSave();stPaint();if(!$('sv').hidden&&svCur&&svCur.uid===u)svRefreshItems()},()=>{stPriv[u]={mode:'everyone'};stPaint()});
   stOff[u]=onValue(ref(db,'stories/'+u),s=>{stRaw[u]=s.val()||null;stSave();stPaint();if(!$('sv').hidden&&svCur&&svCur.uid===u)svRefreshItems()},()=>{})});
 }
-function stSave(){if(!me)return;const uid=me.uid;cLater('stsave',()=>{const raw={},pr={};Object.keys(stRaw).forEach(u=>{if(stItems(u).length){raw[u]=stRaw[u];if(profiles[u]&&!staleProf[u])pr[u]=profiles[u]}});cSet('list','st_'+uid,{raw,profiles:pr,at:Date.now()})},1200)}
+function stSave(){if(!me)return;const uid=me.uid;cLater('stsave',()=>{const raw={},pr={};Object.keys(stRaw).forEach(u=>{if(stItems(u).length){raw[u]=stRaw[u];if(profiles[u]&&!staleProf[u])pr[u]=profiles[u]}});cSet('list','st_'+uid,{raw,profiles:pr,priv:{...stPriv},at:Date.now()})},1200)}
+function stAllowed(u){if(u===me.uid)return true;const pv=stPriv[u];if(!pv)return false;const l=pv.list||{};return pv.mode==='only'?!!l[me.uid]:pv.mode==='except'?!l[me.uid]:true}
 function stItems(u){
- const raw=stRaw[u];if(!raw)return[];const now=Date.now();
+ const raw=stRaw[u];if(!raw||!stAllowed(u))return[];const now=Date.now();
  return Object.entries(raw).map(([k,v])=>({...v,key:k})).filter(x=>x&&+x.createdAt&&now-x.createdAt<STORY_TTL&&(x.type==='text'?typeof x.text==='string':safeUrl(x.mediaURL))).sort((a,b)=>a.createdAt-b.createdAt);
 }
 const stSeen=its=>its.every(i=>i.views&&i.views[me.uid]);

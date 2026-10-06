@@ -346,6 +346,25 @@ button.rw:hover{background:var(--hover)}
 .msmi .if{flex:1;min-width:0}.msmi .if b{display:block;font-size:14.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.msmi .if span{display:block;font-size:12.5px;color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .msmi .pv{width:34px;height:34px;border-radius:50%;background:var(--accent);color:var(--on-accent);display:flex;align-items:center;justify-content:center;flex-shrink:0}.msmi .pv svg{width:14px;height:14px}
 .msmn{margin:8px 16px 0;flex:none;width:calc(100% - 32px)}
+
+/* ---- story like + reply (same nodes as Haba) ---- */
+.svz{bottom:150px}#sv:not(.own) .svc{bottom:calc(122px + env(safe-area-inset-bottom,0px))}
+.svq{position:absolute;left:0;right:0;bottom:0;z-index:4;padding:6px 12px calc(10px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:8px;background:linear-gradient(transparent,rgba(0,0,0,.6))}
+.svr{display:flex;align-items:center;gap:6px;height:44px;padding:0 6px 0 16px;border-radius:999px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.3);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+.svr input{flex:1;min-width:0;background:transparent;border:0;outline:0;color:#fff;font-size:15px}.svr input::placeholder{color:rgba(255,255,255,.75)}
+.svr button{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0}.svr button svg{width:20px;height:20px}
+.svs{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}.svs::-webkit-scrollbar{display:none}
+.svs button{flex:0 0 auto;width:40px;height:40px;padding:5px;border-radius:50%;background:rgba(255,255,255,.12)}.svs img{width:100%;height:100%;display:block}
+.svlk{position:absolute;right:12px;bottom:calc(158px + env(safe-area-inset-bottom,0px));z-index:4;width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.35);color:#fff;transition:transform .15s}.svlk:active{transform:scale(.9)}.svlk svg{width:22px;height:22px}
+.svlk.on{background:rgba(255,255,255,.92);color:#ff3b4e}.svlk.on svg{fill:currentColor}
+.svq[hidden],.svlk[hidden],.svr button[hidden]{display:none!important}
+.svfl{position:absolute;z-index:5;pointer-events:none;animation:svfly 1.2s ease-out forwards}.svfl img{width:44px;height:44px}
+@keyframes svfly{0%{transform:translateY(0) scale(.6);opacity:1}100%{transform:translateY(-240px) scale(1.4);opacity:0}}
+@media (min-width:769px){#sv .svq{width:100%;max-width:460px;left:50%;right:auto;transform:translateX(-50%)}#sv .svlk{right:auto;left:calc(50% + 170px)}}
+.qs{display:flex;align-items:center;gap:8px;padding:5px 6px;margin-bottom:6px;border-radius:8px;background:rgba(127,127,127,.18);cursor:pointer;white-space:normal;letter-spacing:0}
+.qs>img,.qs>video,.qs>i{width:34px;height:46px;border-radius:6px;object-fit:cover;flex-shrink:0;background:rgba(127,127,127,.25)}
+.qs>i{display:flex;align-items:center;justify-content:center;padding:2px;overflow:hidden;color:#fff;font:700 7px/1.1 'Inter',system-ui,sans-serif;text-align:center;word-break:break-word}
+.qs span{font-size:12px;opacity:.85}#msgs .b.mb>.qs{margin:5px 6px 6px}
 .svmus{position:absolute;left:12px;top:calc(78px + env(safe-area-inset-top,0px));z-index:4;display:flex;align-items:center;gap:7px;max-width:calc(100% - 24px);height:32px;padding:0 12px 0 5px;border-radius:999px;background:rgba(0,0,0,.4);color:#fff;font-size:12.5px;font-weight:600;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
 .svmus img{width:22px;height:22px;border-radius:5px;object-fit:cover}.svmus span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.svmus svg{width:15px;height:15px;flex-shrink:0;opacity:.9}
 .svmus.muted svg{opacity:.5}
@@ -712,7 +731,7 @@ img,svg,video,a{-webkit-user-drag:none;user-drag:none;-webkit-touch-callout:none
  <button class="rw" id="sts-text"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg></div><div class="tx"><b>Text</b><span>Write something on a colour background</span></div></button>
 </div></div></div>
 <div id="stx" hidden><div class="stxh"><button class="ibtn" id="stx-x" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button><button class="stmus" id="stx-mus"></button><button class="stxp" id="stx-post">Post</button></div><textarea id="stx-in" maxlength="280" placeholder="Type a story" rows="4"></textarea><div class="stxs" id="stx-sw"></div></div>
-<div id="sv" hidden><div class="svb" id="sv-bars"></div><div class="svh"><div class="av" id="sv-av"></div><div class="svt"><b id="sv-n"></b><span id="sv-t"></span></div><button class="svx" id="sv-del" hidden aria-label="Delete story"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button><button class="svx" id="sv-x" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div><div class="svm" id="sv-m"></div><button class="svmus" id="sv-mus" hidden><img id="sv-mus-i" alt=""><span id="sv-mus-t"></span><svg id="sv-mus-s" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/></svg></button><div class="svc" id="sv-cap" hidden></div><button class="svf" id="sv-f" hidden></button><div class="svz" id="sv-l"></div><div class="svz r" id="sv-r"></div></div>
+<div id="sv" hidden><div class="svb" id="sv-bars"></div><div class="svh"><div class="av" id="sv-av"></div><div class="svt"><b id="sv-n"></b><span id="sv-t"></span></div><button class="svx" id="sv-del" hidden aria-label="Delete story"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button><button class="svx" id="sv-x" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div><div class="svm" id="sv-m"></div><button class="svmus" id="sv-mus" hidden><img id="sv-mus-i" alt=""><span id="sv-mus-t"></span><svg id="sv-mus-s" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/></svg></button><div class="svc" id="sv-cap" hidden></div><button class="svf" id="sv-f" hidden></button><button class="svlk" id="sv-lk" hidden aria-label="Like story"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></button><div class="svq" id="svq" hidden><div class="svr"><input id="sv-ri" placeholder="Reply to story…" autocomplete="off" maxlength="1000"><button id="sv-rs" hidden aria-label="Send reply"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button></div><div class="svs" id="sv-sr"></div></div><div class="svz" id="sv-l"></div><div class="svz r" id="sv-r"></div></div>
 <div id="qrsheet" hidden><div class="msheet"><div class="grab"></div>
  <div class="qrc"><div class="qrh"><div class="av" id="qr-av"></div><div class="qrt"><b id="qr-n"></b><span id="qr-u"></span></div></div>
  <div class="qrbox" id="qr-box"><div class="qrld">Generating…</div></div>
@@ -1451,6 +1470,11 @@ const ptext={},MLBL={image:'📷 Photo',video:'🎥 Video',audio:'🎤 Voice mes
 let replyTo=null,msK=null,msAt=0,fwdM=null,fwdPeer=null;
 async function quoteHtml(uid,m){
  let h='';if(m.isForwarded)h+='<div class="fw">↪ Forwarded</div>';
+ const rs=m.replyToStory;
+ if(rs&&typeof rs==='object'&&(rs.type==='text'||safeUrl(rs.mediaURL))){
+  const bg=/^[#a-z0-9(),.%\s-]+$/i.test(rs.bgColor||'')?rs.bgColor:ST_BG[0];
+  const th=rs.type==='text'?`<i style="background:${esc(bg)}">${esc(String(rs.text||'').slice(0,40))}</i>`:rs.type==='video'?`<video src="${esc(rs.mediaURL)}#t=0.5" muted playsinline preload="metadata"></video>`:`<img src="${esc(rs.mediaURL)}" alt="Story">`;
+  h+=`<div class="qs" data-so="${esc(rs.ownerUid||'')}" data-sk="${esc(rs.storyKey||'')}">${th}<span>Replied to story</span></div>`}
  const r=m.replyToMessage;
  if(r&&typeof r==='object'){
   const nm=r.senderUid===me.uid?'You':((profiles[r.senderUid]||profiles[uid]||{}).name||'User');
@@ -2331,7 +2355,7 @@ async function svShow(){
  $('sv-bars').innerHTML=svCur.items.map(()=>'<i><b></b></i>').join('');paintBars();
  const m=$('sv-m');m.innerHTML='';m.style.background='#000';
  const cap=$('sv-cap');cap.hidden=!(it.caption&&it.type!=='text');if(!cap.hidden)cap.textContent=it.caption;
- svPaintFoot();svPaintMusic(it);
+ svPaintFoot();svPaintMusic(it);svPaintReact(it,mineS);
  const fill=()=>$('sv-bars').children[svCur.i]&&$('sv-bars').children[svCur.i].firstChild;
  svEl=0;svDur=it.type==='video'?ST_VID_MAX_MS:ST_IMG_MS;
  if(it.type==='text'){const d=document.createElement('div');d.className='svtx';d.style.background=it.bgColor&&/^[#a-z0-9(),.%\s-]+$/i.test(it.bgColor)?it.bgColor:'#111';d.textContent=it.text;m.appendChild(d)}
@@ -2363,7 +2387,7 @@ function svPrev(){
  if(svEl>1500||svCur.i===0){if(svCur.i===0&&svEl<=1500&&svCur.qi>0){for(let n=svCur.qi-1;n>=0;n--){const u=svCur.q[n],its=stItems(u);if(its.length){svCur={...svCur,qi:n,uid:u,items:its,i:its.length-1};svShow();return}}}svShow();return}
  svCur.i--;svShow();
 }
-function svHide(){svStop();$('sv-mus').hidden=true;svCur=null;$('sv').hidden=true;$('sv-m').innerHTML='';stPaint()}
+function svHide(){$('sv-ri').blur();svStop();$('sv-mus').hidden=true;svCur=null;$('sv').hidden=true;$('sv-m').innerHTML='';stPaint()}
 function svClose(){navClose('sv',svHide)}
 $('sv-x').onclick=svClose;
 /* tap = prev/next, press-and-hold = pause */
@@ -2382,6 +2406,57 @@ $('sv-del').onclick=async()=>{
  const its=stItems(me.uid);if(!its.length){svClose();stPaint();return}
  svCur.items=its;svCur.i=Math.min(svCur.i,its.length-1);svShow();stPaint();
 };
+/* ---- story likes + replies: likes at stories/{owner}/{key}/likes/{me}=true; replies are DMs carrying replyToStory (same payloads as Haba) ---- */
+const HEART='<path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>';
+function svPaintReact(it,mineS){
+ $('sv').classList.toggle('own',mineS);$('svq').hidden=mineS;$('sv-lk').hidden=mineS;
+ $('sv-ri').value='';$('sv-rs').hidden=true;$('sv-lk').classList.toggle('on',!!(it.likes&&it.likes[me.uid]));
+ if(!mineS&&!$('sv-sr').children.length)SK_PACKS.flatMap(k=>k.s).forEach(([cp,ch])=>$('sv-sr').appendChild(skItem(skUrl(cp),ch,function(){svSticker(skUrl(cp),ch,this)})));
+}
+function svFly(node,from){const sv=$('sv'),a=sv.getBoundingClientRect(),b=from.getBoundingClientRect();node.className='svfl';node.style.left=(b.left-a.left)+'px';node.style.top=(b.top-a.top)+'px';sv.appendChild(node);setTimeout(()=>node.remove(),1200)}
+$('sv-lk').onclick=async e=>{
+ e.stopPropagation();const it=svCur&&svCur.items[svCur.i];if(!it||svCur.uid===me.uid)return;
+ const uid=svCur.uid,r=ref(db,`stories/${uid}/${it.key}/likes/${me.uid}`),raw=stRaw[uid]&&stRaw[uid][it.key],on=!(it.likes&&it.likes[me.uid]);
+ it.likes=it.likes||{};if(raw)raw.likes=raw.likes||{};
+ if(on){it.likes[me.uid]=true;if(raw)raw.likes[me.uid]=true;const h=document.createElement('div');h.innerHTML='<svg viewBox="0 0 24 24" width="40" height="40" fill="#ff3b4e">'+HEART+'</svg>';svFly(h,$('sv-lk'))}
+ else{delete it.likes[me.uid];if(raw)delete raw.likes[me.uid]}
+ $('sv-lk').classList.toggle('on',on);
+ try{if(on)await set(r,true);else await remove(r)}catch(_){toast("Couldn't update your like")}
+};
+const svRef=(it,uid)=>it.type==='text'?{type:'text',text:it.text||'',bgColor:it.bgColor||ST_BG[0],ownerUid:uid,storyKey:it.key||null}:{mediaURL:it.mediaURL,type:it.type||'image',ownerUid:uid,storyKey:it.key||null};
+async function svSend(uid,it,extra,mine,theirs){
+ if(blocked[uid]){toast('Unblock this contact to send');return false}
+ const t=tid(me.uid,uid),now=Date.now(),[ds,bm]=await Promise.all([getDis(t),blockedBy(uid)]),id=push(ref(db,`dm_threads/${t}/messages`)).key,c=`user_chats/${uid}/${me.uid}`;
+ await update(ref(db),{
+  [`dm_threads/${t}/messages/${id}`]:{...extra,senderUid:me.uid,createdAt:now,replyToStory:svRef(it,uid),...(ds>0?{expiresAt:now+ds*1000}:{})},
+  [`user_chats/${me.uid}/${uid}`]:{text:mine,timestamp:now,unreadCount:0,senderUid:me.uid},
+  ...(bm?{}:{[c+'/text']:theirs,[c+'/timestamp']:now,[c+'/senderUid']:me.uid,[c+'/unreadCount']:increment(1)})});
+ return true}
+async function svReply(){
+ const inp=$('sv-ri'),text=inp.value.trim(),uid=svCur&&svCur.uid,it=svCur&&svCur.items[svCur.i];
+ if(!text||!it||uid===me.uid)return;
+ inp.value='';$('sv-rs').hidden=true;inp.blur();
+ try{if(await svSend(uid,it,{text:await enc(uid,text)},'You replied to their story','Replied to your story'))toast('Reply sent')}
+ catch(_){ask('Not sent',"Your reply couldn't be sent. Check your connection and try again.",{cancel:false})}
+}
+async function svSticker(url,ch,btn){
+ const uid=svCur&&svCur.uid,it=svCur&&svCur.items[svCur.i];if(!it||uid===me.uid||!stkOk(url))return;
+ const pv=ch?ch+' Sticker':'Sticker',im=btn.querySelector('img');if(im)svFly(im.cloneNode(),btn);
+ try{if(await svSend(uid,it,{mediaType:'sticker',mediaURL:url},'You replied: '+pv,'Replied to your story with '+pv))toast('Sticker sent')}
+ catch(_){toast("Couldn't send the sticker")}
+}
+$('sv-ri').addEventListener('input',()=>{$('sv-rs').hidden=!$('sv-ri').value.trim()});
+$('sv-ri').addEventListener('focus',()=>{svPaused=true;svPauseAll()});
+$('sv-ri').addEventListener('blur',()=>{if(svCur){svPaused=false;svPlayAll()}});
+$('sv-ri').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();svReply()}});
+$('sv-rs').addEventListener('mousedown',e=>e.preventDefault());$('sv-rs').onclick=e=>{e.stopPropagation();svReply()};
+$('svq').addEventListener('click',e=>e.stopPropagation());
+/* tapping the "Replied to story" tag in a chat reopens that story (if it is still live) */
+$('msgs').addEventListener('click',e=>{
+ const q=e.target.closest('.qs');if(!q)return;
+ const uid=q.dataset.so,its=uid?stItems(uid):[],i=its.findIndex(x=>x.key===q.dataset.sk);
+ if(i<0){toast('This story is no longer available');return}
+ svCur={q:[uid],qi:0,uid,items:its,i};navPush('sv');$('sv').hidden=false;svShow()});
 const vAgo=t=>{const m=Math.floor((Date.now()-(+t||0))/6e4);if(!(+t))return'';if(m<1)return'Just now';if(m<60)return m+'m ago';const h=Math.floor(m/60);return h<24?h+'h ago':Math.floor(h/24)+'d ago'};
 function vshPaint(){
  if(!svCur)return;const it=svCur.items[svCur.i];if(!it)return;

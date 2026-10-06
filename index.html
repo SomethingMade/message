@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content">
 <title>Haba Messenger</title>
 <meta name="theme-color" content="#FFFFFF">
 <meta name="apple-mobile-web-app-title" content="Haba Messenger">
@@ -376,12 +376,18 @@ button.rw:hover{background:var(--hover)}
 .pvp .ck{width:22px;height:22px;border-radius:50%;border:2px solid var(--sub);flex-shrink:0}.pvp.on .ck{border-color:var(--accent);background:var(--accent);box-shadow:inset 0 0 0 3px var(--bg)}
 .pve{padding:20px;text-align:center;color:var(--sub);font-size:14px}
 @media (min-width:769px){#pv{align-items:center;padding:20px}#pv .msheet{width:420px;border-radius:18px}}
-#bnav{flex-shrink:0;display:flex;border-top:1px solid var(--line);background:var(--bg);padding-bottom:env(safe-area-inset-bottom,0px)}
-#bnav button{flex:1;position:relative;display:flex;flex-direction:column;align-items:center;gap:3px;padding:9px 0 8px;color:var(--sub);font-size:11.5px;font-weight:600}
-#bnav button svg{width:24px;height:24px}#bnav button.on{color:var(--accent)}#bnav button:active{background:var(--hover)}
-#bnav .bd{position:absolute;top:4px;left:calc(50% + 7px);min-width:17px;height:17px;padding:0 4px;border-radius:9px;background:var(--accent);color:var(--on-accent);font-size:10.5px;font-weight:700;display:flex;align-items:center;justify-content:center}
+#list{isolation:isolate}
+#bnav{--i:0;position:absolute;left:14px;right:14px;bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:5;height:64px;padding:6px;display:flex;border-radius:32px;background:color-mix(in srgb,var(--bg) 80%,transparent);-webkit-backdrop-filter:saturate(1.8) blur(22px);backdrop-filter:saturate(1.8) blur(22px);box-shadow:0 12px 32px rgba(0,0,0,.18),0 0 0 1px color-mix(in srgb,var(--line) 75%,transparent)}
+#bnav::before{content:'';position:absolute;top:6px;bottom:6px;left:6px;width:calc((100% - 12px)/4);border-radius:26px;background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 20%,transparent),color-mix(in srgb,#E5148C 14%,transparent));transform:translateX(calc(var(--i)*100%));transition:transform .38s cubic-bezier(.34,1.45,.64,1)}
+#bnav button{flex:1;position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;color:var(--sub);font-size:10.5px;font-weight:600;letter-spacing:.1px;border-radius:26px;transition:color .2s}
+#bnav button svg{width:24px;height:24px;transition:transform .3s cubic-bezier(.34,1.56,.64,1),fill .2s}
+#bnav button.on{color:var(--accent);font-weight:700}#bnav button.on svg{transform:translateY(-1px) scale(1.1);fill:color-mix(in srgb,var(--accent) 22%,transparent)}
+#bnav button:active svg{transform:scale(.86)}
+#bnav .bd{position:absolute;top:5px;left:calc(50% + 4px);min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:linear-gradient(135deg,var(--accent),#E5148C);color:#fff;font-size:10.5px;font-weight:700;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 2px var(--bg)}
+.fab{bottom:calc(92px + env(safe-area-inset-bottom,0px))}#chats{padding-bottom:calc(168px + env(safe-area-inset-bottom,0px))}
+@media (prefers-reduced-motion:reduce){#bnav::before,#bnav button svg{transition:none}}
 .fab{display:flex}#list.tabx>.search,#list.tabx>#lscroll,#list.tabx>.fab{display:none!important}
-#tabv{flex:1;min-height:0;overflow-y:auto;padding-bottom:12px}#tabv h2{padding:6px 16px 8px;font-size:22px;font-weight:800;letter-spacing:-.4px}
+#tabv{flex:1;min-height:0;overflow-y:auto;padding-bottom:calc(100px + env(safe-area-inset-bottom,0px))}#tabv h2{padding:6px 16px 8px;font-size:22px;font-weight:800;letter-spacing:-.4px}
 .uh{padding:14px 16px 6px;font-size:13px;font-weight:700;color:var(--sub)}
 .ur{display:flex;align-items:center;gap:14px;width:100%;padding:9px 16px;text-align:left}.ur:active{background:var(--hover)}
 .ua{display:flex;padding:3px;border-radius:50%;border:2.5px solid var(--line);flex-shrink:0}.ua.unseen,.ua.mine{border-color:var(--accent)}.ua.none{border-color:transparent}
@@ -643,6 +649,33 @@ img,svg,video,a{-webkit-user-drag:none;user-drag:none;-webkit-touch-callout:none
 .chat.blocked .p{font-style:italic}.chat.blocked .av{opacity:.55}
 .chat.arch .av{background:var(--bg-input);color:var(--text)}.chat.arch .av svg{width:22px;height:22px}.chat.arch .n{font-weight:600}
 .dopt.sel .ck{display:block}.dopt.sel .tx b{font-weight:800}
+
+/* ---- responsive / mobile fit: any phone, tablet, fold or landscape ---- */
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+html,body{max-width:100%;overflow-x:hidden;overscroll-behavior:none}
+img,video,canvas{max-width:100%}
+#app{height:var(--app-h,100%);padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px)}
+@media (min-width:769px){#list{width:clamp(320px,34vw,440px)}}
+@media (max-width:768px){#convo,#sv{height:var(--app-h,auto)}}
+.kb #bnav,.kb .fab{display:none!important}
+@supports (height:1dvh){
+ #ssh .msheet{height:68dvh;max-height:68dvh}.fl{max-height:50dvh}#sheet .pan{max-height:90dvh}
+ #msm .msheet,#pv .msheet{max-height:82dvh}#esheet .msheet{max-height:90dvh}#vsheet .vpan{max-height:72dvh}#rsheet .msheet{max-height:92dvh}
+}
+@media (max-width:380px){
+ .head h1{font-size:26px}.chat{gap:11px;padding:9px 12px}.chat .av{width:50px;height:50px}
+ #chats .cm .n{font-size:16.5px}#chats .cm .p{font-size:14.5px}.cat{height:34px;padding:0 14px;font-size:14px}
+ #msgs .b{max-width:84%;font-size:14.5px}
+ #bnav{left:8px;right:8px;height:60px}#bnav button{font-size:10px}#bnav button svg{width:22px;height:22px}
+ .fab{right:14px;width:56px;height:56px;border-radius:18px;bottom:calc(86px + env(safe-area-inset-bottom,0px))}
+ .svr{height:40px}.svs button{width:36px;height:36px}
+}
+@media (max-width:330px){#bnav button{font-size:9.5px}.head h1{font-size:23px}#chats .cm .n{font-size:15.5px}.cat{padding:0 12px}}
+@media (max-height:480px) and (orientation:landscape){
+ #bnav{height:50px;bottom:calc(6px + env(safe-area-inset-bottom,0px))}#bnav button span{display:none}#bnav .bd{top:3px}
+ .fab{width:52px;height:52px;bottom:calc(64px + env(safe-area-inset-bottom,0px))}#chats{padding-bottom:calc(130px + env(safe-area-inset-bottom,0px))}
+ .head{padding-top:calc(6px + env(safe-area-inset-top,0px));padding-bottom:4px}
+}
 </style>
 </head>
 <body>
@@ -2750,7 +2783,7 @@ $('ph-num').onkeydown=$('ph-otp').onkeydown=e=>{if(e.key==='Enter')$('ph-go').cl
 $('phsheet').onclick=e=>{if(e.target.id==='phsheet')phClose()};
 $('r-ph').onclick=phOpen;
 var curTab='chats';
-function setTab(t){curTab=t;$('list').classList.toggle('tabx',t!=='chats');$('tabv').hidden=t==='chats';document.querySelectorAll('#bnav button').forEach(x=>x.classList.toggle('on',x.dataset.t===t));if(t!=='chats')paintTab()}
+function setTab(t){curTab=t;$('bnav').style.setProperty('--i',['chats','upd','com','call'].indexOf(t));$('list').classList.toggle('tabx',t!=='chats');$('tabv').hidden=t==='chats';document.querySelectorAll('#bnav button').forEach(x=>x.classList.toggle('on',x.dataset.t===t));if(t!=='chats')paintTab()}
 function paintTab(){
  if(curTab==='upd'){$('tv-t').textContent='Updates';paintUpdates();return}
  const E={com:['Communities',"Communities aren't available in Haba Messenger yet.",'<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>'],
@@ -2769,7 +2802,7 @@ function paintUpdates(){
  if(!o.length)h+='<p class="tve">No updates from your contacts yet.</p>';
  const sc=$('tabv').scrollTop;$('tv-b').innerHTML=h;$('tabv').scrollTop=sc}
 $('tv-b').onclick=e=>{const b=e.target.closest('.ur');if(!b)return;if(b.dataset.act==='add')stsOpen();else svOpen(b.dataset.u)};
-document.querySelectorAll('#bnav button').forEach(b=>b.onclick=()=>{const t=b.dataset.t;
+document.querySelectorAll('#bnav button').forEach(b=>b.onclick=()=>{const t=b.dataset.t;try{navigator.vibrate&&navigator.vibrate(8)}catch(_){}
  if(t==='chats'&&curTab==='chats'){if(catF!=='all'){setCat('all');renderList()}$('lscroll').scrollTo({top:0,behavior:'smooth'});return}
  setTab(t)});
 $('me').onclick=()=>openSheet('main');
@@ -2811,5 +2844,16 @@ $('mn-ref').onclick=()=>{menuClose();setTimeout(async()=>{
   if('serviceWorker' in navigator)await Promise.all((await navigator.serviceWorker.getRegistrations()).map(r=>r.update().catch(()=>{})))}catch(_){}
  location.reload()},60)};
 </script>
+<script>/* keep the app sized to the visible area when the on-screen keyboard opens or the phone rotates */
+(function(){var vv=window.visualViewport,r=document.documentElement;if(!vv)return;
+var base=vv.height,lw=vv.width,was=false;
+function f(){var h=vv.height;if(Math.abs(vv.width-lw)>20){lw=vv.width;base=h}
+ var kb=base-h>140;if(!kb)base=h;
+ r.classList.toggle('kb',kb);r.style.setProperty('--app-h',kb?h+'px':'');
+ if(kb){window.scrollTo(0,0);if(!was){var m=document.getElementById('msgs');if(m)m.scrollTop=m.scrollHeight}}
+ was=kb}
+vv.addEventListener('resize',f);vv.addEventListener('scroll',function(){if(r.classList.contains('kb'))window.scrollTo(0,0)});
+window.addEventListener('orientationchange',function(){setTimeout(function(){base=vv.height;lw=vv.width;f()},350)});
+})();</script>
 </body>
 </html>

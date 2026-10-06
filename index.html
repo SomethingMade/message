@@ -376,6 +376,18 @@ button.rw:hover{background:var(--hover)}
 .pvp .ck{width:22px;height:22px;border-radius:50%;border:2px solid var(--sub);flex-shrink:0}.pvp.on .ck{border-color:var(--accent);background:var(--accent);box-shadow:inset 0 0 0 3px var(--bg)}
 .pve{padding:20px;text-align:center;color:var(--sub);font-size:14px}
 @media (min-width:769px){#pv{align-items:center;padding:20px}#pv .msheet{width:420px;border-radius:18px}}
+#bnav{flex-shrink:0;display:flex;border-top:1px solid var(--line);background:var(--bg);padding-bottom:env(safe-area-inset-bottom,0px)}
+#bnav button{flex:1;position:relative;display:flex;flex-direction:column;align-items:center;gap:3px;padding:9px 0 8px;color:var(--sub);font-size:11.5px;font-weight:600}
+#bnav button svg{width:24px;height:24px}#bnav button.on{color:var(--accent)}#bnav button:active{background:var(--hover)}
+#bnav .bd{position:absolute;top:4px;left:calc(50% + 7px);min-width:17px;height:17px;padding:0 4px;border-radius:9px;background:var(--accent);color:var(--on-accent);font-size:10.5px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.fab{display:flex}#list.tabx>.search,#list.tabx>#lscroll,#list.tabx>.fab{display:none!important}
+#tabv{flex:1;min-height:0;overflow-y:auto;padding-bottom:12px}#tabv h2{padding:6px 16px 8px;font-size:22px;font-weight:800;letter-spacing:-.4px}
+.uh{padding:14px 16px 6px;font-size:13px;font-weight:700;color:var(--sub)}
+.ur{display:flex;align-items:center;gap:14px;width:100%;padding:9px 16px;text-align:left}.ur:active{background:var(--hover)}
+.ua{display:flex;padding:3px;border-radius:50%;border:2.5px solid var(--line);flex-shrink:0}.ua.unseen,.ua.mine{border-color:var(--accent)}.ua.none{border-color:transparent}
+.ua .av{width:48px;height:48px;font-size:16px}.ux{min-width:0}.ux b{display:block;font-size:16px;font-weight:600}.ux small{display:block;color:var(--sub);font-size:13.5px;margin-top:1px}
+.tve{display:flex;flex-direction:column;align-items:center;gap:8px;padding:48px 28px;text-align:center;color:var(--sub);font-size:14px;line-height:1.45}.tve i{width:64px;height:64px;border-radius:50%;background:var(--bg-input);display:flex;align-items:center;justify-content:center;color:var(--text)}.tve i svg{width:30px;height:30px}.tve b{color:var(--text);font-size:17px}
+
 .svmus{position:absolute;left:12px;top:calc(78px + env(safe-area-inset-top,0px));z-index:4;display:flex;align-items:center;gap:7px;max-width:calc(100% - 24px);height:32px;padding:0 12px 0 5px;border-radius:999px;background:rgba(0,0,0,.4);color:#fff;font-size:12.5px;font-weight:600;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
 .svmus img{width:22px;height:22px;border-radius:5px;object-fit:cover}.svmus span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.svmus svg{width:15px;height:15px;flex-shrink:0;opacity:.9}
 .svmus.muted svg{opacity:.5}
@@ -669,6 +681,8 @@ img,svg,video,a{-webkit-user-drag:none;user-drag:none;-webkit-touch-callout:none
   <div id="chats"></div>
   </div>
   <button class="fab" id="new" title="New chat" aria-label="New chat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.4 8.4 0 0 1-8.5 8.5 8.6 8.6 0 0 1-3.8-.9L3 21l1.9-5.4A8.4 8.4 0 0 1 4 11.5 8.5 8.5 0 0 1 12.5 3 8.4 8.4 0 0 1 21 11.5z"/><line x1="12.5" y1="8" x2="12.5" y2="15"/><line x1="9" y1="11.5" x2="16" y2="11.5"/></svg></button>
+ <div id="tabv" hidden><h2 id="tv-t"></h2><div id="tv-b"></div></div>
+ <nav id="bnav" aria-label="Main"><button class="on" data-t="chats" id="bn-chats" aria-label="Chats"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Chats</span><b class="bd" id="bd-chats" hidden></b></button><button data-t="upd" id="bn-upd" aria-label="Updates"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9" stroke-dasharray="3.5 3"/><circle cx="12" cy="12" r="4"/></svg><span>Updates</span><b class="bd" id="bd-stories" hidden></b></button><button data-t="com" id="bn-com" aria-label="Communities"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span>Communities</span></button><button data-t="call" id="bn-call" aria-label="Calls"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg><span>Calls</span></button></nav>
  </aside>
  <main id="convo">
   <div class="ph" id="ph"></div>
@@ -1059,7 +1073,7 @@ onAuthStateChanged(auth,async u=>{
  if(!p.exists()||!p.val().name){$('auth').hidden=false;$('app').hidden=true;step('name');hideSplash();return}
  showApp();hideSplash();
 });
-function showApp(){$('auth').hidden=true;$('app').hidden=false;startPriv();startPresence();publishPhone();setupPush();refreshPushBanner();backupInfo=undefined;myKeys().catch(()=>{}).then(refreshBanner);
+function showApp(){$('auth').hidden=true;$('app').hidden=false;if(curTab!=='chats')setTab('chats');startPriv();startPresence();publishPhone();setupPush();refreshPushBanner();backupInfo=undefined;myKeys().catch(()=>{}).then(refreshBanner);
  if(offList)offList();
  stopFriends();stReset();
  blocked={};cleared={};setCat('all');offBl.forEach(f=>f());
@@ -1109,7 +1123,10 @@ const EMPTY={
 };
 function emptyHtml(k){const [a,t,sub]=EMPTY[k]||EMPTY.all;return `<div class="empty"><div class="art"><svg viewBox="0 0 120 120" aria-hidden="true">${ART[a]}</svg></div><div class="et">${t}</div><div class="es">${sub}</div></div>`}
 $('ph').innerHTML=emptyHtml('select');
-function renderList(){
+function paintNav(){
+ try{if(!me)return;const n=Object.values(chats||{}).filter(c=>c&&c.timestamp&&!isArch(c)&&c.unreadCount>0&&c.senderUid!==me.uid).length,b=$('bd-chats');b.hidden=!n;b.textContent=n>99?'99+':n;
+ const u=Object.keys(stRaw).filter(x=>x!==me.uid&&!blocked[x]&&stItems(x).length&&!stSeen(stItems(x))).length,d=$('bd-stories');d.hidden=!u;d.textContent=u>99?'99+':u}catch(_){}}
+function renderList(){paintNav();
  const q=$('q').value.trim().toLowerCase();
  const all=Object.entries(chats).filter(([uid,c])=>c&&c.timestamp).sort((a,b)=>b[1].timestamp-a[1].timestamp)
   .filter(([uid])=>!q||((profiles[uid]||{}).name||'').toLowerCase().includes(q));
@@ -1207,7 +1224,7 @@ const cardTick=(uid,c)=>{const rd=(rcTs[uid]||0)>=(+c.timestamp||0)&&(+c.timesta
 let peerRead=0;
 const meta=m=>`<span class="mt">${tmf(m.createdAt)}${m.senderUid===me.uid?(m.pending?`<i class="pd" title="Sending">🕓</i>`:`<i class="tk" data-ts="${+m.createdAt||0}"></i>`):''}</span>`;
 function paintTicks(){$('msgs').querySelectorAll('.tk').forEach(e=>{const r=+e.dataset.ts<=peerRead;e.classList.toggle('rd',r);e.innerHTML=r?DBL:SGL})}
-async function openChat(uid){if(active!==uid){pauseVoices();if(rec)stopRec(false);clearReply()}
+async function openChat(uid){if(curTab!=='chats')setTab('chats');if(active!==uid){pauseVoices();if(rec)stopRec(false);clearReply()}
  active=uid;if(offMsgs){offMsgs();offMsgs=null}
  $('ph').hidden=true;$('thread').hidden=false;$('app').classList.add('in-chat');navPush('chat');$('msgs').innerHTML='';
  pinned=true;watchPresence(uid);loadProfile(uid);paintHead();renderList();paintE2E(uid);
@@ -2223,6 +2240,8 @@ function stThumb(it,fb){
  return fb;
 }
 function stPaint(){
+ if(typeof paintNav==='function')paintNav();
+ if(curTab==='upd'&&typeof paintUpdates==='function')paintUpdates();
  if(typeof paintHeadStory==='function')paintHeadStory();
  const box=$('stories');if(!box)return;
  if(!me){box.innerHTML='';return}
@@ -2730,6 +2749,29 @@ $('ph-back').onclick=()=>{phPhoneReset();phMsg('');phStep('send')};
 $('ph-num').onkeydown=$('ph-otp').onkeydown=e=>{if(e.key==='Enter')$('ph-go').click()};
 $('phsheet').onclick=e=>{if(e.target.id==='phsheet')phClose()};
 $('r-ph').onclick=phOpen;
+var curTab='chats';
+function setTab(t){curTab=t;$('list').classList.toggle('tabx',t!=='chats');$('tabv').hidden=t==='chats';document.querySelectorAll('#bnav button').forEach(x=>x.classList.toggle('on',x.dataset.t===t));if(t!=='chats')paintTab()}
+function paintTab(){
+ if(curTab==='upd'){$('tv-t').textContent='Updates';paintUpdates();return}
+ const E={com:['Communities',"Communities aren't available in Haba Messenger yet.",'<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>'],
+  call:['Calls',"Call history isn't available in Haba Messenger yet.",'<path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/>']}[curTab];
+ $('tv-t').textContent=E[0];$('tv-b').innerHTML=`<div class="tve"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${E[2]}</svg></i><b>${E[0]}</b><span>${E[1]}</span></div>`}
+function paintUpdates(){
+ if(!me)return;const av=p=>safeUrl(p.photoURL)?`style="background-image:url('${p.photoURL.replace(/'/g,'%27')}')"`:'';
+ const row=(u,p,t,sub,cls,act)=>`<button class="ur" data-act="${act}" data-u="${esc(u)}"><span class="ua ${cls}"><span class="av" ${av(p)}>${safeUrl(p.photoURL)?'':esc(initials(p.name||'?'))}</span></span><span class="ux"><b>${esc(t)}</b><small>${esc(sub)}</small></span></button>`;
+ const mp=profiles[me.uid]||{name:me.displayName,photoURL:me.photoURL},mine=stItems(me.uid);
+ let h='<div class="uh">Status</div>'+row(me.uid,mp,'My status',mine.length?svAgo(mine[mine.length-1].createdAt):'Tap to add status update',mine.length?'mine':'none',mine.length?'view':'add');
+ const o=Object.keys(stRaw).filter(u=>u!==me.uid&&!blocked[u]&&stItems(u).length).map(u=>{const its=stItems(u);return{u,seen:stSeen(its),t:its[its.length-1].createdAt}}).sort((a,b)=>b.t-a.t);
+ const r2=x=>{const p=profiles[x.u]||{};if(!profiles[x.u])loadProfile(x.u).then(()=>{if(curTab==='upd')paintUpdates()});return row(x.u,p,p.name||'Haba user',svAgo(x.t),x.seen?'seen':'unseen','view')};
+ const rec=o.filter(x=>!x.seen),vw=o.filter(x=>x.seen);
+ if(rec.length)h+='<div class="uh">Recent updates</div>'+rec.map(r2).join('');
+ if(vw.length)h+='<div class="uh">Viewed updates</div>'+vw.map(r2).join('');
+ if(!o.length)h+='<p class="tve">No updates from your contacts yet.</p>';
+ const sc=$('tabv').scrollTop;$('tv-b').innerHTML=h;$('tabv').scrollTop=sc}
+$('tv-b').onclick=e=>{const b=e.target.closest('.ur');if(!b)return;if(b.dataset.act==='add')stsOpen();else svOpen(b.dataset.u)};
+document.querySelectorAll('#bnav button').forEach(b=>b.onclick=()=>{const t=b.dataset.t;
+ if(t==='chats'&&curTab==='chats'){if(catF!=='all'){setCat('all');renderList()}$('lscroll').scrollTo({top:0,behavior:'smooth'});return}
+ setTab(t)});
 $('me').onclick=()=>openSheet('main');
 /* header three-dot menu: Edit profile + Refresh (clear cached files, then reload), like Haba */
 function menuHide(){$('menu').hidden=true}

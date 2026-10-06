@@ -691,6 +691,10 @@ img,video,canvas{max-width:100%}
 .hme svg{width:18px!important;height:18px!important}
 .head .ibtn:active{transform:scale(.94)}
 @media (max-width:380px){.head h1{font-size:18px}.hmark{width:34px;height:34px}}
+
+/* hide bottom nav + new-chat button while profile/settings is open; full-height panel on phones */
+html.sheet-open #bnav,html.sheet-open .fab{display:none!important}
+@media (max-width:768px){#sheet .pan{max-height:100dvh;height:100dvh;padding-top:env(safe-area-inset-top,0px)}}
 </style>
 </head>
 <body>
@@ -2039,8 +2043,8 @@ async function paintMain(){
  await myKeys().catch(()=>null);if(backupInfo===undefined)await loadBackup();
  $('r-enc-sub').textContent=!kp?"This device can't read older chats":backupInfo?'Backup PIN is set':backupInfo===null?'No backup PIN yet':'Backup PIN for your encrypted chats';
 }
-function openSheet(v){navPush('sheet');$('sheet').hidden=false;showView(v||'main')}
-function sheetHide(){$('sheet').hidden=true;refreshBanner()}
+function openSheet(v){navPush('sheet');$('sheet').hidden=false;document.documentElement.classList.add('sheet-open');showView(v||'main')}
+function sheetHide(){$('sheet').hidden=true;document.documentElement.classList.remove('sheet-open');refreshBanner()}
 function closeSheet(){navClose('sheet',sheetHide)}
 function showView(v){$('v-main').hidden=v!=='main';$('v-enc').hidden=v!=='enc';v==='main'?paintMain():paintEnc();$('sheet').querySelector('.pan').scrollTop=0}
 async function refreshBanner(){

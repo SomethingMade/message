@@ -386,7 +386,7 @@ button.rw:hover{background:var(--hover)}
 #bnav .bd{position:absolute;top:5px;left:calc(50% + 4px);min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:linear-gradient(135deg,var(--accent),#E5148C);color:#fff;font-size:10.5px;font-weight:700;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 2px var(--bg)}
 .fab{bottom:calc(92px + env(safe-area-inset-bottom,0px))}#chats{padding-bottom:calc(168px + env(safe-area-inset-bottom,0px))}
 @media (prefers-reduced-motion:reduce){#bnav::before,#bnav button svg{transition:none}}
-.fab{display:flex}#list.tabx>.search,#list.tabx>#lscroll,#list.tabx>.fab{display:none!important}
+.fab{display:flex}#list.tabx>.search,#list.tabx>#lscroll{display:none!important}#list.nofab>.fab{display:none!important}
 #tabv{flex:1;min-height:0;overflow-y:auto;padding-bottom:calc(100px + env(safe-area-inset-bottom,0px))}#tabv h2{padding:6px 16px 8px;font-size:22px;font-weight:800;letter-spacing:-.4px}
 .uh{padding:14px 16px 6px;font-size:13px;font-weight:700;color:var(--sub)}
 .ur{display:flex;align-items:center;gap:14px;width:100%;padding:9px 16px;text-align:left}.ur:active{background:var(--hover)}
@@ -695,6 +695,8 @@ img,video,canvas{max-width:100%}
 /* hide bottom nav + new-chat button while profile/settings is open; full-height panel on phones */
 html.sheet-open #bnav,html.sheet-open .fab{display:none!important}
 @media (max-width:768px){#sheet .pan{max-height:100dvh;height:100dvh;padding-top:env(safe-area-inset-top,0px)}}
+.fab.pop{animation:fabpop .28s cubic-bezier(.34,1.56,.64,1)}@keyframes fabpop{from{transform:scale(.6) rotate(-25deg);opacity:.4}to{transform:none;opacity:1}}
+#tv-b{padding-bottom:calc(170px + env(safe-area-inset-bottom,0px))}
 </style>
 </head>
 <body>
@@ -2244,7 +2246,8 @@ async function ncNumber(n){
 }
 function ncHide(){$('nc').hidden=true}
 function ncClose(){navClose('nc',ncHide)}
-$('new').onclick=()=>{ncWatchFollowing();$('nc-q').value='';navPush('nc');$('nc').hidden=false;paintNc();$('nc-l').scrollTop=0;ncLoadSuggestions(false)};
+function newChatOpen(){ncWatchFollowing();$('nc-q').value='';navPush('nc');$('nc').hidden=false;paintNc();$('nc-l').scrollTop=0;ncLoadSuggestions(false)}
+$('new').onclick=()=>{if(curTab==='upd')stsOpen();else if(curTab==='chats')newChatOpen()};
 $('nc-back').onclick=ncClose;$('nc-sync').onclick=()=>ncLoadSuggestions(true);$('nc-q').addEventListener('input',()=>paintNc());
 $('nc-l').onclick=async e=>{
  const a=e.target.closest('[data-act]');if(!a)return;const act=a.dataset.act;
@@ -2787,7 +2790,11 @@ $('ph-num').onkeydown=$('ph-otp').onkeydown=e=>{if(e.key==='Enter')$('ph-go').cl
 $('phsheet').onclick=e=>{if(e.target.id==='phsheet')phClose()};
 $('r-ph').onclick=phOpen;
 var curTab='chats';
-function setTab(t){curTab=t;$('bnav').style.setProperty('--i',['chats','upd','com','call'].indexOf(t));$('list').classList.toggle('tabx',t!=='chats');$('tabv').hidden=t==='chats';document.querySelectorAll('#bnav button').forEach(x=>x.classList.toggle('on',x.dataset.t===t));if(t!=='chats')paintTab()}
+var FAB={chats:['New chat',$('new').innerHTML],upd:['Add status','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>']};
+function fabPaint(){const f=$('new'),d=FAB[curTab];$('list').classList.toggle('nofab',!d);if(!d)return;
+ if(f.dataset.t===curTab)return;f.dataset.t=curTab;f.title=d[0];f.setAttribute('aria-label',d[0]);f.innerHTML=d[1];
+ f.classList.remove('pop');void f.offsetWidth;f.classList.add('pop')}
+function setTab(t){curTab=t;$('bnav').style.setProperty('--i',['chats','upd','com','call'].indexOf(t));$('list').classList.toggle('tabx',t!=='chats');$('tabv').hidden=t==='chats';document.querySelectorAll('#bnav button').forEach(x=>x.classList.toggle('on',x.dataset.t===t));if(t!=='chats')paintTab();fabPaint()}
 function paintTab(){
  if(curTab==='upd'){$('tv-t').textContent='Updates';paintUpdates();return}
  const E={com:['Communities',"Communities aren't available in Haba Messenger yet.",'<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>'],

@@ -697,6 +697,8 @@ html.sheet-open #bnav,html.sheet-open .fab{display:none!important}
 @media (max-width:768px){#sheet .pan{max-height:100dvh;height:100dvh;padding-top:env(safe-area-inset-top,0px)}}
 .fab.pop{animation:fabpop .28s cubic-bezier(.34,1.56,.64,1)}@keyframes fabpop{from{transform:scale(.6) rotate(-25deg);opacity:.4}to{transform:none;opacity:1}}
 #tv-b{padding-bottom:calc(170px + env(safe-area-inset-bottom,0px))}
+.ua.seg{border:0;padding:3px}.ua.seg .av{width:52px;height:52px;box-sizing:border-box;border:3px solid var(--bg)}
+.hav.has-st{padding:3px}
 </style>
 </head>
 <body>
@@ -1951,7 +1953,7 @@ let peerTyping=false;
 function paintStatus(){const el=$('t-sub'),hv=$('t-hav');
  if(peerTyping&&active&&!blocked[active]){el.textContent='typing';el.classList.remove('on');el.classList.add('typ');hv.classList.remove('is-on');return}
  el.classList.remove('typ');const r=seenText(pres[active]);el.textContent=r.t;el.classList.toggle('on',!!r.on);hv.classList.toggle('is-on',!!r.on&&!blocked[active])}
-function paintHeadStory(){const h=$('t-hav');if(!h)return;const its=active&&!blocked[active]&&me?stItems(active):[];h.classList.toggle('has-st',!!its.length);h.classList.toggle('seen',!!its.length&&stSeen(its))}
+function paintHeadStory(){const h=$('t-hav');if(!h)return;const its=active&&!blocked[active]&&me?stItems(active):[];h.classList.toggle('has-st',!!its.length);h.classList.toggle('seen',!!its.length&&stSeen(its));h.style.background=its.length?stRingBg(its):''}
 function watchPresence(uid){
  stopPres();peerTyping=false;$('t-sub').textContent='';$('t-sub').classList.remove('on','typ');$('t-hav').classList.remove('is-on','has-st','seen');
  const upd=()=>{if(active===uid)paintStatus()};
@@ -2286,6 +2288,12 @@ function stItems(u){
  return Object.entries(raw).map(([k,v])=>({...v,key:k})).filter(x=>x&&+x.createdAt&&now-x.createdAt<STORY_TTL&&(x.type==='text'?typeof x.text==='string':safeUrl(x.mediaURL))).sort((a,b)=>a.createdAt-b.createdAt);
 }
 const stSeen=its=>its.every(i=>i.views&&i.views[me.uid]);
+/* segmented story ring: one arc per story (oldest first, clockwise from the top); viewed arcs are grey */
+function stRingBg(its,own){
+ const n=its.length;if(!n)return'';const g=n>1?Math.min(10,120/n):0,seg=360/n;let p=0,parts=[];
+ its.forEach((it,i)=>{const a=+(i*seg+g/2).toFixed(2),b=+((i+1)*seg-g/2).toFixed(2),seen=!own&&it.views&&it.views[me.uid];
+  if(a>p)parts.push(`transparent ${p}deg ${a}deg`);parts.push(`${seen?'var(--line)':'var(--accent)'} ${a}deg ${b}deg`);p=b});
+ if(p<360)parts.push(`transparent ${p}deg 360deg`);return`conic-gradient(from 0deg,${parts.join(',')})`}
 /* circle content = the most recent story (image, first video frame, or the text on its colour) */
 function stThumb(it,fb){
  const q=u=>String(u).replace(/'/g,'%27').replace(/"/g,'%22');
@@ -2802,11 +2810,11 @@ function paintTab(){
  $('tv-t').textContent=E[0];$('tv-b').innerHTML=`<div class="tve"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${E[2]}</svg></i><b>${E[0]}</b><span>${E[1]}</span></div>`}
 function paintUpdates(){
  if(!me)return;const av=p=>safeUrl(p.photoURL)?`style="background-image:url('${p.photoURL.replace(/'/g,'%27')}')"`:'';
- const row=(u,p,t,sub,cls,act)=>`<button class="ur" data-act="${act}" data-u="${esc(u)}"><span class="ua ${cls}"><span class="av" ${av(p)}>${safeUrl(p.photoURL)?'':esc(initials(p.name||'?'))}</span></span><span class="ux"><b>${esc(t)}</b><small>${esc(sub)}</small></span></button>`;
+ const row=(u,p,t,sub,cls,act,its,own)=>`<button class="ur" data-act="${act}" data-u="${esc(u)}"><span class="ua ${cls}${its&&its.length?' seg':''}"${its&&its.length?` style="background:${stRingBg(its,own)}"`:''}><span class="av" ${av(p)}>${safeUrl(p.photoURL)?'':esc(initials(p.name||'?'))}</span></span><span class="ux"><b>${esc(t)}</b><small>${esc(sub)}</small></span></button>`;
  const mp=profiles[me.uid]||{name:me.displayName,photoURL:me.photoURL},mine=stItems(me.uid);
- let h='<div class="uh">Status</div>'+row(me.uid,mp,'My status',mine.length?svAgo(mine[mine.length-1].createdAt):'Tap to add status update',mine.length?'mine':'none',mine.length?'view':'add');
+ let h='<div class="uh">Status</div>'+row(me.uid,mp,'My status',mine.length?svAgo(mine[mine.length-1].createdAt):'Tap to add status update',mine.length?'mine':'none',mine.length?'view':'add',mine,true);
  const o=Object.keys(stRaw).filter(u=>u!==me.uid&&!blocked[u]&&stItems(u).length).map(u=>{const its=stItems(u);return{u,seen:stSeen(its),t:its[its.length-1].createdAt}}).sort((a,b)=>b.t-a.t);
- const r2=x=>{const p=profiles[x.u]||{};if(!profiles[x.u])loadProfile(x.u).then(()=>{if(curTab==='upd')paintUpdates()});return row(x.u,p,p.name||'Haba user',svAgo(x.t),x.seen?'seen':'unseen','view')};
+ const r2=x=>{const p=profiles[x.u]||{};if(!profiles[x.u])loadProfile(x.u).then(()=>{if(curTab==='upd')paintUpdates()});return row(x.u,p,p.name||'Haba user',svAgo(x.t),x.seen?'seen':'unseen','view',stItems(x.u))};
  const rec=o.filter(x=>!x.seen),vw=o.filter(x=>x.seen);
  if(rec.length)h+='<div class="uh">Recent updates</div>'+rec.map(r2).join('');
  if(vw.length)h+='<div class="uh">Viewed updates</div>'+vw.map(r2).join('');

@@ -468,8 +468,8 @@ button.rw:hover{background:var(--hover)}
 #msgs .b:not(.me){margin-left:36px}
 #msgs .b.l:not(.me)::before{content:var(--peer-ini,'');position:absolute;left:-36px;bottom:0;width:28px;height:28px;border-radius:50%;background:var(--peer-av,none) center/cover no-repeat,var(--bg-input);color:var(--sub);font:700 11px/28px var(--sans,Inter,system-ui,sans-serif);text-align:center;letter-spacing:0;white-space:normal;pointer-events:none}
 #msgs .b:not(.l):not(.ov):not(.sh) .mt{display:none}
-.tk{display:inline-flex;opacity:1}.tk svg{width:15px;height:15px;display:block}
-.b.me .tk{color:rgba(255,255,255,.72)}.b.me .tk.rd{color:#fff}
+.tk{display:inline-flex;opacity:1}.tk svg{width:16px;height:16px;display:block}
+.b.me .tk{color:rgba(255,255,255,.72)}.b.me .tk.rd{color:#7FE3FF}
 .b:not(.me) .tk{color:var(--sub)}
 .b.me .mt:has(.tk){opacity:1}.b.me .mt:has(.tk) .tk{margin-left:1px}
 .ctk{display:inline-flex;vertical-align:-3px;margin-right:5px;color:var(--sub)}.ctk svg{width:16px;height:16px;display:block}
@@ -1312,7 +1312,7 @@ function dayLabel(t){const d=new Date(t),n=new Date(),y=new Date(n);y.setDate(n.
  return Date.now()-t<6*864e5?d.toLocaleDateString([],{weekday:'long'}):d.toLocaleDateString([],{day:'numeric',month:'long',year:'numeric'})}
 const dayChip=(p,m)=>m&&m.createdAt&&(!p||dk(p.createdAt)!==dk(m.createdAt))?`<div class="day">${esc(dayLabel(m.createdAt))}</div>`:'';
 const tmf=t=>t?new Date(t).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'}):'';
-const SGL='<svg viewBox="0 0 200 200"><polygon points="120,180 170,30 80,110" fill="none" stroke="currentColor" stroke-width="16" stroke-linejoin="round"/></svg>',DBL='<svg viewBox="0 0 200 200"><polygon points="20,80 170,30 80,110" fill="currentColor" fill-opacity=".75"/><polygon points="120,180 170,30 80,110" fill="currentColor"/><polygon points="20,80 80,110 80,140" fill="currentColor" fill-opacity=".55"/></svg>';
+const TK='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">',SGL=TK+'<path d="M4.5 12.8l4.7 4.7L19.5 7"/></svg>',DBL=TK+'<path d="M1.5 12.8l4.7 4.7L16.5 7"/><path d="M10.2 16.6l.9.9L21.8 7"/></svg>';
 const cardTick=(uid,c)=>{const rd=(rcTs[uid]||0)>=(+c.timestamp||0)&&(+c.timestamp||0)>0;return `<i class="ctk${rd?' rd':''}" aria-label="${rd?'Read':'Sent'}" title="${rd?'Read':'Sent'}">${rd?DBL:SGL}</i>`};
 let peerRead=0;
 const meta=m=>`<span class="mt">${tmf(m.createdAt)}${m.senderUid===me.uid?(m.pending?`<i class="pd" title="Sending">🕓</i>`:`<i class="tk" data-ts="${+m.createdAt||0}"></i>`):''}</span>`;

@@ -764,22 +764,25 @@ html.sheet-open #bnav,html.sheet-open .fab{display:none!important}
 .meta{align-self:stretch;justify-content:flex-start;gap:8px;padding-top:2px}
 #chats .meta .t{font-size:12px;color:var(--sub);font-weight:400}.chat.unread .meta .t{color:var(--sub);font-weight:400}
 .badge{min-width:26px;height:26px;border-radius:13px;background:var(--accent);color:#fff;font-size:13px;font-weight:500;padding:0 7px}
-#chats{padding-bottom:calc(130px + env(safe-area-inset-bottom,0px))}
-/* nav: home | New Chat pill | profile */
-#bnav{left:0;right:0;bottom:0;height:calc(92px + env(safe-area-inset-bottom,0px));padding:0 22px calc(10px + env(safe-area-inset-bottom,0px));display:flex;align-items:center;justify-content:space-between;border:0;border-radius:0;box-shadow:none;background:linear-gradient(to top,var(--bg) 58%,color-mix(in srgb,var(--bg) 0%,transparent));-webkit-backdrop-filter:none;backdrop-filter:none;pointer-events:none}
-#bnav::before{display:none}#bnav>*{pointer-events:auto}
-#bnav button{flex:0 0 auto;width:52px;height:52px;display:flex;align-items:center;justify-content:center;color:var(--text);border-radius:50%;font-size:17px}
-#bnav button svg,#bnav button.on svg{width:28px;height:28px;padding:0;border-radius:0;background:none;fill:none;transform:none;color:inherit}
-#bnav button.on{color:var(--accent);font-weight:400}#bnav button.on svg{color:var(--accent)}
-#bnav .npill{width:auto;height:54px;padding:0 30px;gap:8px;border-radius:999px;background:#111;color:#fff;font-weight:500;box-shadow:0 8px 20px rgba(0,0,0,.16)}
-#bnav .npill svg,#bnav .npill:active svg{width:20px;height:20px;color:#fff}#bnav .npill:active{transform:scale(.96)}
-@media (prefers-color-scheme:dark){#bnav .npill{background:#fff;color:#000}#bnav .npill svg{color:#000}}
-#bnav #bn-chats .bd{top:6px;left:30px;background:var(--accent);box-shadow:0 0 0 2px var(--bg)}#bd-stories{display:none!important}
+#chats{padding-bottom:calc(120px + env(safe-area-inset-bottom,0px))}
+/* nav: floating bar — home | New Chat pill | profile */
+#lscroll>*{flex-shrink:0}
+.stories{min-height:112px}
+.cats{margin-top:2px;min-height:38px}
+#bnav{left:16px;right:16px;bottom:calc(14px + env(safe-area-inset-bottom,0px));height:70px;padding:0 10px;display:flex;align-items:center;justify-content:space-between;gap:6px;border:1px solid var(--line);border-radius:35px;background:color-mix(in srgb,var(--bg) 92%,transparent);-webkit-backdrop-filter:saturate(1.6) blur(18px);backdrop-filter:saturate(1.6) blur(18px);box-shadow:0 10px 30px rgba(20,24,40,.14),0 2px 6px rgba(20,24,40,.06);pointer-events:auto}
+#bnav::before{display:none}
+#bnav button{flex:0 0 auto;width:54px;height:54px;display:flex;align-items:center;justify-content:center;color:var(--sub);border-radius:50%;position:relative;transition:background .2s,color .2s}
+#bnav button svg,#bnav button.on svg{width:26px;height:26px;padding:0;border-radius:0;background:none;fill:none;transform:none;color:inherit}
+#bnav button.on{color:var(--accent);background:color-mix(in srgb,var(--accent) 12%,transparent)}
+#bnav button:active{background:var(--hover)}
+#bnav .npill{width:auto;height:52px;padding:0 26px 0 22px;gap:8px;flex:1 1 auto;max-width:190px;border-radius:26px;background:var(--accent);color:#fff;font-size:16px;font-weight:500;box-shadow:0 6px 16px color-mix(in srgb,var(--accent) 45%,transparent)}
+#bnav .npill svg,#bnav .npill:active svg{width:20px;height:20px;color:#fff}#bnav .npill:active{transform:scale(.96);background:var(--accent)}
+#bnav #bn-me.ph{background-size:cover;background-position:center;box-shadow:0 0 0 2px var(--bg),0 0 0 3.5px var(--line)}#bnav #bn-me.ph svg{display:none}
+#bnav #bn-chats .bd{top:6px;left:32px;background:var(--accent);box-shadow:0 0 0 2px var(--bg)}#bd-stories{display:none!important}
 #list:not(.tabx)>.fab{display:none!important}
 .fab{border-radius:50%;background:var(--accent);bottom:calc(100px + env(safe-area-inset-bottom,0px))}
 #tabv h2{font-weight:500}
-@media (max-width:380px){#bnav{left:0;right:0;height:calc(86px + env(safe-area-inset-bottom,0px))}.chat{padding:13px 16px}}
-@media (max-height:480px) and (orientation:landscape){#bnav{height:calc(66px + env(safe-area-inset-bottom,0px));bottom:0}}
+@media (max-width:380px){#bnav{left:10px;right:10px;height:64px}#bnav button{width:48px;height:48px}.chat{padding:13px 16px}}
 /* message action sheet */
 #msh{background:rgba(24,24,30,.28)!important;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
 #msh .msheet{border-radius:30px 30px 0 0;padding:10px 20px calc(16px + env(safe-area-inset-bottom,0px))}
@@ -3100,6 +3103,9 @@ $('me').onclick=()=>openSheet('main');
 /* ---- redesign wiring: pill New Chat, profile, search toggle, stories strip, Updates/Calls via menu ---- */
 $('bn-new').onclick=()=>{try{navigator.vibrate&&navigator.vibrate(8)}catch(_){}if(curTab!=='chats')setTab('chats');callPick=false;newChatOpen()};
 $('bn-me').onclick=()=>openSheet('main');
+function paintNavMe(){const b=$('bn-me'),p=me&&(profiles[me.uid]||{}),u=(p&&p.photoURL)||(me&&me.photoURL)||'';if(u&&safeUrl(u)){b.style.backgroundImage=`url('${u.replace(/'/g,'%27')}')`;b.classList.add('ph')}else{b.style.backgroundImage='';b.classList.remove('ph')}}
+{const _pm=paintMe;paintMe=function(){_pm();try{paintNavMe()}catch(_){}}}
+setTimeout(()=>{try{paintNavMe()}catch(_){}},900);
 $('hsearch').onclick=()=>{const l=$('list'),o=l.classList.toggle('sopen');if(o)setTimeout(()=>$('q').focus(),30);else{$('q').value='';$('q').dispatchEvent(new Event('input'))}};
 function paintStrip(){const el=$('ststrip');if(!el||!me)return;
  const av=p=>p&&safeUrl(p.photoURL)?`style="background-image:url('${p.photoURL.replace(/'/g,'%27')}')"`:'';

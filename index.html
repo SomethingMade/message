@@ -803,6 +803,37 @@ html.sheet-open #bnav,html.sheet-open .fab{display:none!important}
 #msh .rw .ic{background:none;width:auto;height:auto;color:var(--text);margin:0}#msh .rw .ic svg{width:24px;height:24px}
 #msh .rw .tx{flex:1;text-align:left}#msh .rw .tx b{font-size:16px;font-weight:400}
 #ms-copy{order:1}#ms-reply{order:2}#ms-fwd{order:3}#ms-del{order:4}
+/* ===== Conversation redesign ===== */
+#thread{position:relative}
+.ch{gap:10px;padding:calc(8px + env(safe-area-inset-top,0px)) 8px 8px 4px;box-shadow:none;border-bottom:1px solid var(--line)}
+.ch .who .n{font-size:16px;font-weight:500;letter-spacing:0}
+.ch .st{font-size:12px;color:var(--sub);font-weight:400}.ch .st.on{color:var(--sub)}.ch .st.typ{color:var(--accent);font-weight:500}
+.hav .av{width:44px;height:44px}.hav{width:46px;height:46px}
+.ch .hact,.ch #call-btn,.ch #vcall-btn{color:var(--text);background:transparent}
+.ch #call-btn svg,.ch #vcall-btn svg{width:23px;height:23px}
+.ch .hact.on{color:var(--accent)}
+#msgs{padding:14px 14px 12px;gap:3px;scroll-behavior:smooth}
+#msgs .b{font-size:15px;line-height:1.45;letter-spacing:0;padding:10px 14px;border-radius:20px 20px 20px 6px;max-width:min(80%,460px)}
+#msgs .b.me{border-radius:20px 20px 6px 20px}
+#msgs .b.f{margin-top:10px}
+#msgs .b.me .tk.rd{color:#fff}
+.mt{font:400 11px/1 'Poppins',sans-serif;letter-spacing:0;opacity:.6;margin-top:4px}
+.day{align-self:center;display:block;margin:14px 0 8px;padding:5px 14px;border-radius:999px;background:var(--bg-input);font:500 12px/1.3 'Poppins',sans-serif;letter-spacing:0;color:var(--sub)}
+.day::before,.day::after{display:none}
+.qt{border-left-color:var(--accent);background:rgba(127,127,127,.14);border-radius:10px}
+#msgs .b.me .qt{border-left-color:rgba(255,255,255,.85);background:rgba(255,255,255,.18)}
+#rbar{margin:0 12px;padding:8px 10px 8px 12px;border:0;border-radius:14px 14px 0 0;background:var(--bg-input)}
+#rbar .rq b{font-size:13px;font-weight:600;color:var(--accent)}#rbar .rq span{font-size:13px;color:var(--sub)}
+.compose{align-items:center;gap:8px;padding:8px 12px calc(10px + env(safe-area-inset-bottom,0px));border-top:0;background:var(--bg)}
+.compose .in{height:46px;border:0;background:var(--bg-input);font-size:15px;padding:0 18px}.compose .in:focus{box-shadow:0 0 0 1.5px color-mix(in srgb,var(--accent) 55%,transparent)}
+.compose .att{color:var(--sub)}.compose .att:active{color:var(--accent)}
+.send{width:46px;height:46px;background:var(--accent);box-shadow:0 4px 12px color-mix(in srgb,var(--accent) 38%,transparent)}.send:active{transform:scale(.94)}
+/* smart replies + jump to latest */
+#smart{display:flex;gap:8px;overflow-x:auto;padding:8px 12px 2px;scrollbar-width:none;background:var(--bg)}#smart::-webkit-scrollbar{display:none}#smart:empty{display:none}
+#smart button{flex:0 0 auto;padding:8px 15px;border-radius:999px;border:1px solid color-mix(in srgb,var(--accent) 35%,transparent);background:color-mix(in srgb,var(--accent) 9%,var(--bg));color:var(--accent);font:500 13.5px/1 'Poppins',sans-serif;white-space:nowrap}
+#smart button:active{background:color-mix(in srgb,var(--accent) 20%,var(--bg))}
+#jmp{position:absolute;right:16px;bottom:calc(86px + env(safe-area-inset-bottom,0px));width:40px;height:40px;border-radius:50%;background:var(--bg);color:var(--text);border:1px solid var(--line);box-shadow:0 4px 14px rgba(0,0,0,.14);display:none;align-items:center;justify-content:center;z-index:3}
+#jmp.show{display:flex}#jmp svg{width:20px;height:20px}
 </style>
 </head>
 <body>
@@ -852,6 +883,8 @@ html.sheet-open #bnav,html.sheet-open .fab{display:none!important}
    <div class="dbanner" id="dis-banner" hidden><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><polyline points="12 9 12 13 15 15"/><path d="M9 2h6"/></svg><span id="dis-text"></span></div>
    <div id="msgs"></div>
    <div id="rbar" hidden><div class="rq"><b id="rb-n"></b><span id="rb-t"></span></div><button class="ibtn" id="rb-x" type="button" aria-label="Cancel reply"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button></div>
+   <div id="smart"></div>
+   <button id="jmp" type="button" aria-label="Jump to latest"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>
    <div class="compose"><div class="mwrap" id="mwrap"><input id="msg" class="in" placeholder="Message" autocomplete="off"><button class="att skb" id="skb" type="button" aria-label="Stickers"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><path d="M9 9.5h.01M15 9.5h.01"/></svg></button><button class="att" id="att" type="button" aria-label="Attach photo, video or file"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.4 11.6l-8.5 8.5a5.5 5.5 0 0 1-7.8-7.8l8.5-8.5a3.7 3.7 0 0 1 5.2 5.2l-8.5 8.5a1.8 1.8 0 0 1-2.6-2.6l7.8-7.8"/></svg></button></div><input type="file" id="att-in" multiple hidden accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip"><div class="rec" id="rec" hidden><button class="ibtn" id="rec-x" aria-label="Cancel recording"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg></button><span class="rcd"></span><div class="rcw" id="rec-w"></div><span class="rt" id="rec-t">0:00</span></div><button class="send" id="sendmsg" aria-label="Voice message"><svg class="i-mic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg><svg class="i-snd" viewBox="0 0 200 200"><polygon points="20,80 170,30 80,110" fill="currentColor" fill-opacity=".75"/><polygon points="120,180 170,30 80,110" fill="currentColor"/><polygon points="20,80 80,110 80,140" fill="currentColor" fill-opacity=".55"/></svg></button></div>
   </div>
  </main>
@@ -1886,6 +1919,21 @@ async function fwdSend(to,m,peer){
 $('att').onclick=()=>{if(active)$('att-in').click()};
 $('att-in').onchange=async e=>{const fs=Array.from(e.target.files||[]),to=active;e.target.value='';if(!fs.length||!to)return;
  const list=await previewFiles(fs);if(list&&list.length)sendFiles(list,to)};
+
+/* ---- smart replies + jump-to-latest ---- */
+const SMART=[[/\b(thank|thanks|thx|dankie|ngiyabonga|ke a leboga)\b/,["You're welcome 😊","Anytime","No problem"]],[/\b(sorry|apologi[sz]e|pardon)\b/,["No worries","It's okay","All good 👍"]],[/\bhow (are|r) (you|u|ya)\b/,["I'm good, you?","Doing great 😊","All good, thanks"]],[/\b(good ?night|goodnight|nite|bye|cheers|later)\b/,["Bye 👋","Good night 🌙","Talk soon"]],[/\b(call me|can you call|please call|phone me)\b/,["Calling you now","I'll call later","Can't talk now"]],[/^(hi|hey|hello|howzit|heita|sawubona|molo|dumela|yo|good (morning|afternoon|evening))\b/,["Hey! 👋","How are you?","Hi, what's up?"]],[/^(ok|okay|sharp|cool|alright|fine|noted|lekker)\b/,["👍","Sharp","Sounds good"]],[/^(can|could|are|do|does|did|is|will|would|should|have|has|shall)\b.*\?$/,["Yes","No","Let me check"]],[/^(when|where|what|why|who|how|which)\b.*\?$/,["Let me check","I'll tell you later","Not sure yet"]],[/\?$/,["Yes","No","Maybe"]]];
+let smartT;
+function paintSmart(){const box=$('smart');if(!box)return;box.innerHTML='';
+ if($('msg').value.trim())return;const bs=$('msgs').querySelectorAll('.b'),last=bs[bs.length-1];
+ if(!last||last.classList.contains('me')||last.querySelector('.mw,.dc,img,video,audio')||last.classList.contains('stk'))return;
+ const c=last.cloneNode(true);c.querySelectorAll('.mt,.qt,.fw,small').forEach(n=>n.remove());
+ const t=c.textContent.trim().toLowerCase();if(!t||t.length>200)return;
+ const hit=SMART.find(r=>r[0].test(t));if(!hit)return;
+ hit[1].forEach(x=>{const b=document.createElement('button');b.type='button';b.textContent=x;b.onclick=()=>{$('msg').value=x;box.innerHTML='';sendMsg()};box.appendChild(b)})}
+new MutationObserver(()=>{clearTimeout(smartT);smartT=setTimeout(paintSmart,180)}).observe($('msgs'),{childList:true});
+$('msg').addEventListener('input',()=>{if($('msg').value)$('smart').innerHTML='';else paintSmart()});
+$('msgs').addEventListener('scroll',()=>{const m=$('msgs');$('jmp').classList.toggle('show',m.scrollHeight-m.scrollTop-m.clientHeight>420)},{passive:true});
+$('jmp').onclick=()=>{const m=$('msgs');m.scrollTo({top:m.scrollHeight,behavior:'smooth'})};
 $('msg').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMsg()}});
 function chatHide(){stopTyping();peerTyping=false;if(rec)stopRec(false);clearReply();pauseVoices();$('app').classList.remove('in-chat');if(offMsgs){offMsgs();offMsgs=null}active=null;stopPres();$('thread').hidden=true;$('ph').hidden=false;renderList()}
 $('back').onclick=()=>navClose('chat',chatHide);

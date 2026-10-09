@@ -767,7 +767,7 @@ html.sheet-open #bnav,html.sheet-open .fab{display:none!important}
 .meta{align-self:stretch;justify-content:flex-start;gap:8px;padding-top:2px}
 #chats .meta .t{font-size:12px;color:var(--sub);font-weight:400}.chat.unread .meta .t{color:var(--sub);font-weight:400}
 .badge{min-width:26px;height:26px;border-radius:13px;background:var(--accent);color:#fff;font-size:13px;font-weight:500;padding:0 7px}
-#chats{padding-bottom:calc(90px + env(safe-area-inset-bottom,0px))}
+#chats{padding-bottom:calc(110px + env(safe-area-inset-bottom,0px))}
 /* nav: floating bar — home | New Chat pill | profile */
 #lscroll>*{flex-shrink:0}
 .stories{min-height:112px}
@@ -782,8 +782,11 @@ html.sheet-open #bnav,html.sheet-open .fab{display:none!important}
 #bnav .npill svg,#bnav .npill:active svg{width:20px;height:20px;color:#fff}#bnav .npill:active{transform:scale(.96);background:var(--accent)}
 #bnav #bn-me.ph{background-size:cover;background-position:center;box-shadow:0 0 0 2px var(--bg),0 0 0 3.5px var(--line)}#bnav #bn-me.ph svg{display:none}
 #bnav #bn-chats .bd{top:6px;left:32px;background:var(--accent);box-shadow:0 0 0 2px var(--bg)}#bd-stories{display:none!important}
-#list:not(.tabx)>.fab{display:none!important}
-.fab{border-radius:50%;background:var(--accent);bottom:calc(88px + env(safe-area-inset-bottom,0px))}
+#bnav{display:none!important}
+.fab{width:60px;height:60px;right:20px;border-radius:20px;background:var(--accent);color:#fff;bottom:calc(24px + env(safe-area-inset-bottom,0px));box-shadow:0 8px 22px color-mix(in srgb,var(--accent) 40%,transparent),0 2px 6px rgba(0,0,0,.12)}
+.head #hme{width:44px;height:44px}.head #hme svg{width:26px;height:26px}
+.head #hme.ph{background-size:cover;background-position:center;background-clip:content-box;padding:5px;border-radius:50%}.head #hme.ph svg{display:none}
+.tvh{display:flex;align-items:center;gap:4px;padding:calc(10px + env(safe-area-inset-top,0px)) 8px 4px}.tvh .ibtn{background:transparent;width:42px;height:42px}.tvh h2{padding:0!important;flex:1}
 #tabv h2{font-weight:500}
 @media (max-width:380px){#bnav{padding-left:12px;padding-right:12px}#bnav button{width:48px;height:48px}.chat{padding:13px 16px}}
 /* message action sheet */
@@ -826,7 +829,7 @@ html.sheet-open #bnav,html.sheet-open .fab{display:none!important}
 
 <div id="app" hidden>
  <aside id="list">
-  <div class="head"><div class="hbrand"><span class="hmark"><svg viewBox="0 0 200 200" role="img" aria-label="Haba"><path d="M60 28H140A36 36 0 0 1 176 64V104A36 36 0 0 1 140 140H60A36 36 0 0 1 24 104V64A36 36 0 0 1 60 28Z" fill="var(--lg-fg)"/><path d="M40 128L38 172L84 138Z" fill="var(--lg-fg)"/><g fill="var(--lg-bg)"><rect x="66" y="49" width="18" height="70" rx="9"/><rect x="116" y="49" width="18" height="70" rx="9"/><rect x="76" y="75" width="48" height="18" rx="9"/></g></svg></span><h1>Haba</h1></div><div class="hright"><button class="ibtn" id="hsearch" aria-label="Search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7.5"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></button></div></div>
+  <div class="head"><div class="hbrand"><span class="hmark"><svg viewBox="0 0 200 200" role="img" aria-label="Haba"><path d="M60 28H140A36 36 0 0 1 176 64V104A36 36 0 0 1 140 140H60A36 36 0 0 1 24 104V64A36 36 0 0 1 60 28Z" fill="var(--lg-fg)"/><path d="M40 128L38 172L84 138Z" fill="var(--lg-fg)"/><g fill="var(--lg-bg)"><rect x="66" y="49" width="18" height="70" rx="9"/><rect x="116" y="49" width="18" height="70" rx="9"/><rect x="76" y="75" width="48" height="18" rx="9"/></g></svg></span><h1>Haba</h1></div><div class="hright"><button class="ibtn" id="hsearch" aria-label="Search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7.5"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></button><button class="ibtn" id="hme" aria-label="Profile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg></button></div></div>
   <div class="search"><svg class="si" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input id="q" class="in" placeholder="Search chats" autocomplete="off" enterkeyhint="search"><button class="sx" id="sclr" type="button" aria-label="Clear search" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
   <div id="lscroll">
   <div id="ststrip" class="stories"></div>
@@ -838,7 +841,7 @@ html.sheet-open #bnav,html.sheet-open .fab{display:none!important}
   </div>
   <button class="fab" id="new" title="New chat" aria-label="New chat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.4 8.4 0 0 1-8.5 8.5 8.6 8.6 0 0 1-3.8-.9L3 21l1.9-5.4A8.4 8.4 0 0 1 4 11.5 8.5 8.5 0 0 1 12.5 3 8.4 8.4 0 0 1 21 11.5z"/><line x1="12.5" y1="8" x2="12.5" y2="15"/><line x1="9" y1="11.5" x2="16" y2="11.5"/></svg></button>
  <span hidden><button class="ibtn" id="me" title="Account" aria-label="Account"><span class="hme" id="me-av"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg></span></button></span>
- <div id="tabv" hidden><h2 id="tv-t"></h2><div id="tv-b"></div></div>
+ <div id="tabv" hidden><div class="tvh"><button class="ibtn" id="tv-back" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button><h2 id="tv-t"></h2></div><div id="tv-b"></div></div>
  <nav id="bnav" aria-label="Main"><button class="on" data-t="chats" id="bn-chats" aria-label="Home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg><b class="bd" id="bd-chats" hidden></b></button><button class="npill" id="bn-new" aria-label="New chat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span>New Chat</span></button><button id="bn-me" aria-label="Profile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg></button><b class="bd" id="bd-stories" hidden></b></nav>
  </aside>
  <main id="convo">
@@ -3105,8 +3108,8 @@ document.querySelectorAll('#bnav button[data-t]').forEach(b=>b.onclick=()=>{cons
 $('me').onclick=()=>openSheet('main');
 /* ---- redesign wiring: pill New Chat, profile, search toggle, stories strip, Updates/Calls via menu ---- */
 $('bn-new').onclick=()=>{try{navigator.vibrate&&navigator.vibrate(8)}catch(_){}if(curTab!=='chats')setTab('chats');callPick=false;newChatOpen()};
-$('bn-me').onclick=()=>openSheet('main');
-function paintNavMe(){const b=$('bn-me'),p=me&&(profiles[me.uid]||{}),u=(p&&p.photoURL)||(me&&me.photoURL)||'';if(u&&safeUrl(u)){b.style.backgroundImage=`url('${u.replace(/'/g,'%27')}')`;b.classList.add('ph')}else{b.style.backgroundImage='';b.classList.remove('ph')}}
+$('hme').onclick=()=>openSheet('main');$('tv-back').onclick=()=>setTab('chats');
+function paintNavMe(){const b=$('hme'),p=me&&(profiles[me.uid]||{}),u=(p&&p.photoURL)||(me&&me.photoURL)||'';if(u&&safeUrl(u)){b.style.backgroundImage=`url('${u.replace(/'/g,'%27')}')`;b.classList.add('ph')}else{b.style.backgroundImage='';b.classList.remove('ph')}}
 {const _pm=paintMe;paintMe=function(){_pm();try{paintNavMe()}catch(_){}}}
 setTimeout(()=>{try{paintNavMe()}catch(_){}},900);
 $('hsearch').onclick=()=>{const l=$('list'),o=l.classList.toggle('sopen');if(o)setTimeout(()=>$('q').focus(),30);else{$('q').value='';$('q').dispatchEvent(new Event('input'))}};

@@ -8,7 +8,9 @@
 m.content='width='+w+', initial-scale='+K+', minimum-scale='+K+', maximum-scale='+K+', user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content'}catch(e){}}
 fit();addEventListener('orientationchange',function(){setTimeout(fit,300)})})();</script>
 <title>Haba Messenger</title>
-<meta name="theme-color" content="#FFFFFF">
+<meta name="theme-color" content="#FFFFFF" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
+<meta name="color-scheme" content="light dark">
 <meta name="apple-mobile-web-app-title" content="Haba Messenger">
 <link rel="manifest" href="manifest-messenger.json">
 <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20200%20200'%3E%3Crect%20width='200'%20height='200'%20rx='45'%20fill='%23111111'/%3E%3Cg%20transform='translate(100%20100)%20scale(1.0)%20translate(-100%20-100)'%3E%3Cpath%20d='M60%2028H140A36%2036%200%200%201%20176%2064V104A36%2036%200%200%201%20140%20140H60A36%2036%200%200%201%2024%20104V64A36%2036%200%200%201%2060%2028Z'%20fill='white'/%3E%3Cpath%20d='M40%20128L38%20172L84%20138Z'%20fill='white'/%3E%3Cg%20fill='%23111111'%3E%3Crect%20x=%2266%22%20y=%2249%22%20width=%2218%22%20height=%2270%22%20rx=%229%22/%3E%3Crect%20x=%22116%22%20y=%2249%22%20width=%2218%22%20height=%2270%22%20rx=%229%22/%3E%3Crect%20x=%2276%22%20y=%2275%22%20width=%2248%22%20height=%2218%22%20rx=%229%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E">
@@ -18,7 +20,7 @@ fit();addEventListener('orientationchange',function(){setTimeout(fit,300)})})();
 :root{--accent:#2F7BF6;--on-accent:#fff;--grad:#2F7BF6;--bg:#fff;--bg-input:#F4F4F6;--hover:#F6F6F8;--line:#ECECEF;--text:#111;--sub:#8A8A92;--bubble-in:#F2F2F4;--bubble-out:#2F7BF6;--bubble-out-solid:#2F7BF6;--bubble-out-text:#fff;--brand:'Poppins',sans-serif}
 @media (prefers-color-scheme:dark){:root{--accent:#3D87FF;--on-accent:#fff;--grad:#3D87FF;--bg:#000;--bg-input:#1C1C1E;--hover:#1C1C1E;--line:#2A2A2C;--text:#F2F2F7;--sub:#8E8E93;--bubble-in:#2C2C2E;--bubble-out:#3D87FF;--bubble-out-solid:#3D87FF;--bubble-out-text:#fff}}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-html,body{height:100%}
+html,body{height:100%}html{background:var(--bg)}
 body{font-family:'Poppins','Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);overflow:hidden}
 button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 input{font:inherit;color:inherit}

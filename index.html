@@ -734,6 +734,50 @@ html.sheet-open #bnav,html.sheet-open .fab{display:none!important}
 #callui.vid.hasv .cl-mid{margin-top:0;align-self:flex-start;align-items:flex-start;text-shadow:0 1px 6px rgba(0,0,0,.6)}
 .cr .cb svg{width:22px;height:22px}
 .cr .ux{flex:1;min-width:0}.cr .time{flex:none;margin-left:auto}.cr .cb{margin-left:4px!important;margin-right:-6px}
+
+/* ===== Lightweight WhatsApp-style chat list (header, search, chips, rows, FAB, flat nav) ===== */
+#list{--wa-tint:color-mix(in srgb,var(--accent) 14%,var(--bg));--wa-tint-ink:var(--accent);--bg-input:#F3F3F3;--hover:#F5F5F5;--line:#E6E6E6}
+@media (prefers-color-scheme:dark){#list{--bg-input:#1C1C1E;--hover:#161616;--line:#262628}}
+/* header: bold wordmark left, flat icons right */
+.head{padding:calc(12px + env(safe-area-inset-top,0px)) 8px 6px 18px}
+.hmark{display:none}
+.head h1{font-family:'Inter',system-ui,sans-serif;font-size:28px;font-weight:800;letter-spacing:-.8px;color:var(--accent);line-height:1}
+.head .hright{gap:0!important}
+.head .ibtn,.head .ibtn:active{background:transparent;box-shadow:none}
+.head .ibtn{width:44px;height:44px}.head .ibtn svg{width:24px;height:24px}
+.head #me{background:transparent;padding:0}.head #me .hme{width:30px;height:30px;border:0;background-color:var(--bg-input)}
+/* search: tall soft pill */
+.search{margin:6px 16px 14px}
+.search .in,.search .in:focus{height:50px;border-radius:999px;background:var(--bg-input);font-size:16px;box-shadow:none;outline:none}
+/* filter chips */
+.cats{gap:8px;padding:0 16px 8px}
+.cat{height:36px;padding:0 16px;font-size:15px;font-weight:400;color:var(--sub);border:1px solid var(--line);background:transparent}
+.cat.on{background:var(--wa-tint);border-color:color-mix(in srgb,var(--accent) 45%,var(--bg));color:var(--wa-tint-ink);font-weight:500}
+.cat .cn{background:var(--accent)}.cat.on .cn{background:var(--accent);color:#fff}
+/* chat rows: flat, airy, no dividers */
+.chat{gap:14px;padding:11px 16px}
+#chats .cm .n{font-size:17px;font-weight:500}.chat.unread .n{font-weight:600}
+#chats .cm .p{font-size:15px;color:var(--sub);margin-top:3px}
+.chat.unread .p{font-weight:400;color:var(--text)}
+.meta{gap:5px}
+#chats .meta .t{font-size:12.5px;color:var(--sub)}
+.badge{background:var(--accent);color:#fff;min-width:21px;height:21px;border-radius:11px;font-size:12px}
+/* FAB: rounded-square, solid, soft shadow */
+.fab{width:60px;height:60px;border-radius:18px;background:var(--accent);color:#fff;box-shadow:0 4px 12px rgba(0,0,0,.2)}
+.fab svg{width:26px;height:26px}
+/* bottom nav: flat full-width bar, pill indicator behind the icon */
+#bnav{left:0;right:0;bottom:0;height:calc(72px + env(safe-area-inset-bottom,0px));padding:8px 4px calc(6px + env(safe-area-inset-bottom,0px));border-radius:0;background:var(--bg);-webkit-backdrop-filter:none;backdrop-filter:none;box-shadow:none;border-top:1px solid var(--line)}
+#bnav::before{display:none}
+#bnav button{gap:3px;font-size:12px;font-weight:500;color:var(--sub);border-radius:0}
+#bnav button svg{width:64px;height:32px;padding:4px 20px;border-radius:16px;transition:background .2s}
+#bnav button.on{color:var(--text);font-weight:700}
+#bnav button.on svg{transform:none;background:var(--wa-tint);color:var(--wa-tint-ink);fill:color-mix(in srgb,var(--accent) 35%,transparent)}
+#bnav button:active svg{transform:none;background:var(--hover)}
+#bnav .bd{top:2px;left:calc(50% + 6px);background:var(--accent);box-shadow:0 0 0 2px var(--bg)}
+.fab{bottom:calc(88px + env(safe-area-inset-bottom,0px))}
+#chats{padding-bottom:calc(170px + env(safe-area-inset-bottom,0px))}
+@media (max-width:380px){#bnav{left:0;right:0;height:calc(66px + env(safe-area-inset-bottom,0px))}#bnav button svg{width:56px;height:30px;padding:4px 16px}.fab{width:56px;height:56px;right:16px;bottom:calc(82px + env(safe-area-inset-bottom,0px))}.head h1{font-size:26px}}
+@media (max-height:480px) and (orientation:landscape){#bnav{height:calc(52px + env(safe-area-inset-bottom,0px));bottom:0;padding-top:4px}#bnav button svg{height:26px;padding:2px 18px}.fab{bottom:calc(64px + env(safe-area-inset-bottom,0px))}}
 </style>
 </head>
 <body>

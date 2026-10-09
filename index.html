@@ -1034,7 +1034,7 @@ const cClearAll=async()=>{try{const d=await cdb();await new Promise(r=>{const t=
 const cTimers={};
 function cLater(id,fn,ms=800){clearTimeout(cTimers[id]);cTimers[id]=setTimeout(fn,ms)}
 /* ---- offline outbox: text messages are saved to disk first, shown as pending (🕓), and sent as soon as the realtime connection is up -- survives app restarts ---- */
-const outbox=[];let curRepaint=null,rtOnline=false,flushing=false,flushAgain=false,offFlush=null;const inflight=new Set();
+const outbox=[];let curRepaint=null,rtOnline=false,flushing=false,flushAgain=false,offFlush=null;const inflight=new Set();let srvOff=0;const srvNow=()=>Date.now()+srvOff;
 const outAdd=async p=>{outbox.push(p);await cSet('outbox',p.key,p)};
 const outDel=async k=>{const i=outbox.findIndex(x=>x.key===k);if(i>-1)outbox.splice(i,1);try{const d=await cdb();await new Promise(r=>{const t=d.transaction('outbox','readwrite');t.objectStore('outbox').delete(k);t.oncomplete=r;t.onerror=r;t.onabort=r})}catch(_){}};
 async function outLoad(){outbox.length=0;try{const d=await cdb();const all=await new Promise(r=>{const q=d.transaction('outbox').objectStore('outbox').getAll();q.onsuccess=()=>r(q.result||[]);q.onerror=()=>r([])});all.filter(x=>x&&me&&x.owner===me.uid).forEach(x=>{if(!outbox.some(o=>o.key===x.key))outbox.push(x)})}catch(_){}}
@@ -1053,7 +1053,7 @@ async function flushOutbox(){
     const ex=await get(ref(db,`dm_threads/${p.t}/messages/${p.key}`));
     if(!ex.exists()){ /* not already delivered by an interrupted earlier attempt */
      if(!p.enc&&!(typeof p.text==='string'&&p.text.startsWith(E2E)))p.text=await enc(p.uid,p.text);
-     const bm=await blockedBy2(p.uid),now=p.createdAt;
+     const bm=await blockedBy2(p.uid),now=Math.max(srvNow(),p.createdAt);
      await update(ref(db),{
       [`dm_threads/${p.t}/messages/${p.key}`]:{text:p.text,senderUid:me.uid,createdAt:now,...(p.rp?{replyToMessage:p.rp}:{}),...(p.exp?{expiresAt:p.exp}:{})},
       [`user_chats/${me.uid}/${p.uid}`]:{text:p.text,timestamp:now,unreadCount:0,senderUid:me.uid},
@@ -1245,6 +1245,10 @@ async function inbShow(uid,c){
  b.addEventListener('pointercancel',()=>{y0=null;b.style.transform='';inbT=setTimeout(inbClose,2000)})})();
 /* new message in any chat -> sound; friend's status going offline -> online -> sound */
 let chatsInit=false;const seenTs={},friendOff={},fStatus={},lastOnline={};
+function ackDeliveries(nc){if(!me)return;
+ for(const [u,c] of Object.entries(nc||{})){if(blocked[u]||!c||!c.senderUid||c.senderUid===me.uid)continue;
+  const ts=+c.timestamp||0;if(!ts||!(+c.unreadCount>0)||ts<=(dAck[u]||0))continue;dAck[u]=ts;
+  set(ref(db,`dm_threads/${tid(me.uid,u)}/deliveryReceipts/${me.uid}`),ts).catch(()=>{delete dAck[u]})}}
 function checkIncoming(nc){
  if(chatsInit){let k=null;
   for(const [u,c] of Object.entries(nc)){if(blocked[u])continue;if(c&&c.senderUid&&c.senderUid!==me.uid&&(+c.timestamp||0)>(seenTs[u]||0)){const here=(u===active&&document.visibilityState==='visible');k=here?(k||'pop'):'message';if(!here)inbShow(u,c)}}
@@ -1252,16 +1256,18 @@ function checkIncoming(nc){
  Object.entries(nc).forEach(([u,c])=>{seenTs[u]=Math.max(seenTs[u]||0,(c&&+c.timestamp)||0)});chatsInit=true}
 let catF='all';
 function paintOnlineCount(){if(!me)return;const n=Object.entries(chats).filter(([u,c])=>c&&c.timestamp&&!isArch(c)&&!blocked[u]&&fStatus[u]==='online').length,b=$('cn-online');b.hidden=!n;b.textContent=n>99?'99+':n}
-const typOff={},typNow={},rcOff={},rcTs={};
-function watchReceipt(u){if(rcOff[u]||!me||u===me.uid)return;
- rcOff[u]=onValue(ref(db,`dm_threads/${tid(me.uid,u)}/readReceipts/${u}`),s=>{const v=+s.val()||0;if(rcTs[u]===v)return;rcTs[u]=v;renderList();if(active===u)peerRead=Math.max(peerRead,v)},()=>{})}
+const typOff={},typNow={},rcOff={},rcTs={},dcTs={},dAck={};
+function watchReceipt(u){if(rcOff[u]||!me||u===me.uid)return;const T=tid(me.uid,u);
+ const a=onValue(ref(db,`dm_threads/${T}/readReceipts/${u}`),s=>{const v=+s.val()||0;if(rcTs[u]===v)return;rcTs[u]=v;renderList();if(active===u)peerRead=Math.max(peerRead,v)},()=>{});
+ const b=onValue(ref(db,`dm_threads/${T}/deliveryReceipts/${u}`),s=>{const v=+s.val()||0;if(dcTs[u]===v)return;dcTs[u]=v;renderList()},()=>{});
+ rcOff[u]=()=>{a();b()}}
 function watchTyping(u){if(typOff[u]||!me||u===me.uid)return;
  typOff[u]=onValue(ref(db,`dm_threads/${tid(me.uid,u)}/typing/${u}`),s=>{const v=s.val()===true;if(!!typNow[u]===v)return;typNow[u]=v;paintCardTyping(u)})}
 function paintCardTyping(){renderList()}
 function watchFriends(uids){uids.slice(0,60).forEach(u=>{watchTyping(u);watchReceipt(u);if(friendOff[u]||u===(me&&me.uid))return;let first=true;
  friendOff[u]=onValue(ref(db,`users/${u}/status`),s=>{const v=s.val(),was=fStatus[u];fStatus[u]=v;if(v!==was){paintOnlineCount();if(catF==='online')renderList()}if(first){first=false;return}
   if(v==='online'&&was!=='online'&&Date.now()-(lastOnline[u]||0)>30000){lastOnline[u]=Date.now();playSound('online')}})})}
-function stopFriends(){Object.values(rcOff).forEach(f=>f());[rcOff,rcTs].forEach(o=>Object.keys(o).forEach(k=>delete o[k]));Object.values(typOff).forEach(f=>f());[typOff,typNow].forEach(o=>Object.keys(o).forEach(k=>delete o[k]));Object.values(friendOff).forEach(f=>f());[friendOff,fStatus,seenTs,lastOnline].forEach(o=>Object.keys(o).forEach(k=>delete o[k]));chatsInit=false}
+function stopFriends(){Object.values(rcOff).forEach(f=>f());[rcOff,rcTs,dcTs,dAck].forEach(o=>Object.keys(o).forEach(k=>delete o[k]));Object.values(typOff).forEach(f=>f());[typOff,typNow].forEach(o=>Object.keys(o).forEach(k=>delete o[k]));Object.values(friendOff).forEach(f=>f());[friendOff,fStatus,seenTs,lastOnline].forEach(o=>Object.keys(o).forEach(k=>delete o[k]));chatsInit=false}
 
 /* ---- session ---- */
 onAuthStateChanged(auth,async u=>{
@@ -1277,12 +1283,13 @@ function showApp(){$('auth').hidden=true;$('app').hidden=false;if(curTab!=='chat
  stopFriends();stReset();
  blocked={};cleared={};setCat('all');offBl.forEach(f=>f());
  offBl=[onValue(ref(db,'users/'+me.uid+'/blocked'),x=>{blocked=x.val()||{};renderList()}),onValue(ref(db,'users/'+me.uid+'/cleared'),x=>{cleared=x.val()||{}})];
+ if(!window._soOn){window._soOn=1;onValue(ref(db,'.info/serverTimeOffset'),s=>{srvOff=+s.val()||0},()=>{})}
  if(offFlush){offFlush();offFlush=null}
  outLoad().then(()=>{offFlush=onValue(ref(db,'.info/connected'),s=>{rtOnline=s.val()===true;if(rtOnline)flushOutbox()})});
  let liveList=false;const myUid=me.uid;
  cGet('list',myUid).then(d=>{if(!d||liveList||!me||me.uid!==myUid)return;chats=d.chats||{};Object.entries(d.profiles||{}).forEach(([u,p])=>{if(!profiles[u]){profiles[u]=p;staleProf[u]=1}});renderList();stSync()});
  cGet('list','st_'+myUid).then(d=>{if(!d||!me||me.uid!==myUid)return;Object.entries(d.profiles||{}).forEach(([u,p])=>{if(!profiles[u]){profiles[u]=p;staleProf[u]=1}});Object.entries(d.raw||{}).forEach(([u,v])=>{if(!(u in stRaw))stRaw[u]=v});Object.entries(d.priv||{}).forEach(([u,v])=>{if(!(u in stPriv))stPriv[u]=v});stPaint()});
- offList=onValue(ref(db,'user_chats/'+me.uid),s=>{liveList=true;const nc=s.val()||{};checkIncoming(nc);chats=nc;saveListCache();renderList();Object.keys(chats).forEach(loadProfile);watchFriends(Object.keys(chats));ncWatchFollowing();stSync()});callsStart()}
+ offList=onValue(ref(db,'user_chats/'+me.uid),s=>{liveList=true;const nc=s.val()||{};checkIncoming(nc);chats=nc;ackDeliveries(nc);saveListCache();renderList();Object.keys(chats).forEach(loadProfile);watchFriends(Object.keys(chats));ncWatchFollowing();stSync()});callsStart()}
 /* same rules as Haba: gold = business account; blue = paid / streak / 5000+ followers (users/{uid} fields) */
 const VB_BLUE='<svg class="verified-badge vbd" viewBox="0 0 22 22" width="16" height="16" aria-label="Verified"><path fill="#0A84FF" d="M20.396 11c-.018-.646-.215-1.275-.57-1.816-.354-.54-.852-.972-1.438-1.246.223-.607.27-1.264.14-1.897-.131-.634-.437-1.218-.882-1.687-.47-.445-1.053-.75-1.687-.882-.633-.13-1.29-.083-1.897.14-.273-.587-.704-1.086-1.245-1.44S11.647 1.62 11 1.604c-.646.017-1.273.213-1.813.568-.54.354-.972.853-1.246 1.44-.607-.223-1.264-.272-1.897-.14-.633.13-1.217.437-1.687.882-.444.47-.75 1.053-.882 1.687-.13.633-.083 1.29.14 1.897-.586.274-1.084.706-1.438 1.246-.354.54-.552 1.17-.57 1.816.018.646.216 1.276.57 1.816.354.54.852.972 1.438 1.246-.223.607-.27 1.264-.14 1.897.131.634.437 1.217.882 1.687.47.445 1.054.75 1.687.882.633.13 1.29.083 1.897-.14.274.586.706 1.084 1.246 1.438.54.354 1.17.552 1.813.57.646-.018 1.276-.216 1.816-.57.54-.354.972-.852 1.246-1.438.607.223 1.264.27 1.897.14.634-.131 1.217-.437 1.687-.882.445-.47.75-1.053.882-1.687.13-.633.083-1.29-.14-1.897.586-.274 1.084-.706 1.438-1.246.355-.54.552-1.17.57-1.816zM9.662 14.85l-3.429-3.428 1.293-1.293 2.136 2.136 4.6-4.6 1.293 1.293-5.893 5.892z"></path></svg>';
 const VB_GOLD='<svg class="verified-badge business-badge vbd" viewBox="0 0 22 22" width="16" height="16" aria-label="Business Account"><path fill="#D4A017" d="M20.396 11c-.018-.646-.215-1.275-.57-1.816-.354-.54-.852-.972-1.438-1.246.223-.607.27-1.264.14-1.897-.131-.634-.437-1.218-.882-1.687-.47-.445-1.053-.75-1.687-.882-.633-.13-1.29-.083-1.897.14-.273-.587-.704-1.086-1.245-1.44S11.647 1.62 11 1.604c-.646.017-1.273.213-1.813.568-.54.354-.972.853-1.246 1.44-.607-.223-1.264-.272-1.897-.14-.633.13-1.217.437-1.687.882-.444.47-.75 1.053-.882 1.687-.13.633-.083 1.29.14 1.897-.586.274-1.084.706-1.438 1.246-.354.54-.552 1.17-.57 1.816.018.646.216 1.276.57 1.816.354.54.852.972 1.438 1.246-.223.607-.27 1.264-.14 1.897.131.634.437 1.217.882 1.687.47.445 1.054.75 1.687.882.633.13 1.29.083 1.897-.14.274.586.706 1.084 1.246 1.438.54.354 1.17.552 1.813.57.646-.018 1.276-.216 1.816-.57.54-.354.972-.852 1.246-1.438.607.223 1.264.27 1.897.14.634-.131 1.217-.437 1.687-.882.445-.47.75-1.053.882-1.687.13-.633.083-1.29-.14-1.897.586-.274 1.084-.706 1.438-1.246.355-.54.552-1.17.57-1.816zM9.662 14.85l-3.429-3.428 1.293-1.293 2.136 2.136 4.6-4.6 1.293 1.293-5.893 5.892z"></path></svg>';
@@ -1394,7 +1401,7 @@ const uid=rpUid,reason=rpReason,details=$('rp-det').value.trim().slice(0,300),al
  rpClose();toast(alsoBlock?`Report sent. ${nm} blocked.`:'Report sent. Thank you.')};
 $('cs-del').onclick=()=>{const uid=csUid,nm=(profiles[uid]||{}).name||'this contact';csClose();setTimeout(async()=>{
  if(!await ask('Delete chat with '+nm+'?',"This removes the conversation from your device and account. "+nm+" keeps their copy.",{ok:'Delete'}))return;
- try{await update(ref(db),{[`users/${me.uid}/cleared/${uid}`]:Date.now(),[`user_chats/${me.uid}/${uid}`]:null});
+ try{await update(ref(db),{[`users/${me.uid}/cleared/${uid}`]:srvNow(),[`user_chats/${me.uid}/${uid}`]:null});
   if(active===uid)navClose('chat',chatHide);toast('Chat deleted')}catch(_){toast("Couldn't delete the chat")}},60)};
 function sSync(){$('sclr').hidden=!$('q').value}
 $('sclr').onclick=()=>{$('q').value='';sSync();renderList();$('q').focus()};
@@ -1419,22 +1426,23 @@ function dayLabel(t){const d=new Date(t),n=new Date(),y=new Date(n);y.setDate(n.
 const dayChip=(p,m)=>m&&m.createdAt&&(!p||dk(p.createdAt)!==dk(m.createdAt))?`<div class="day">${esc(dayLabel(m.createdAt))}</div>`:'';
 const tmf=t=>t?new Date(t).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'}):'';
 const TK='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">',SGL=TK+'<path d="M4.5 12.8l4.7 4.7L19.5 7"/></svg>',DBL=TK+'<path d="M1.5 12.8l4.7 4.7L16.5 7"/><path d="M10.2 16.6l.9.9L21.8 7"/></svg>';
-const cardTick=(uid,c)=>{const rd=(rcTs[uid]||0)>=(+c.timestamp||0)&&(+c.timestamp||0)>0;return `<i class="ctk${rd?' rd':''}" aria-label="${rd?'Read':'Sent'}" title="${rd?'Read':'Sent'}">${rd?DBL:SGL}</i>`};
-let peerRead=0;
+const cardTick=(uid,c)=>{const ts=+c.timestamp||0,rd=ts>0&&(rcTs[uid]||0)>=ts,dl=!rd&&ts>0&&(dcTs[uid]||0)>=ts,l=rd?'Read':dl?'Delivered':'Sent';return `<i class="ctk${rd?' rd':''}" aria-label="${l}" title="${l}">${rd||dl?DBL:SGL}</i>`};
+let peerRead=0,peerDeliv=0,curMarkRead=null;
 const meta=m=>`<span class="mt">${tmf(m.createdAt)}${m.senderUid===me.uid?(m.pending?`<i class="pd" title="Sending">🕓</i>`:`<i class="tk" data-ts="${+m.createdAt||0}"></i>`):''}</span>`;
-function paintTicks(){$('msgs').querySelectorAll('.tk').forEach(e=>{const r=+e.dataset.ts<=peerRead;e.classList.toggle('rd',r);e.innerHTML=r?DBL:SGL})}
+function paintTicks(){$('msgs').querySelectorAll('.tk').forEach(e=>{const ts=+e.dataset.ts,r=ts<=peerRead,d=r||ts<=peerDeliv,l=r?'Read':d?'Delivered':'Sent';e.classList.toggle('rd',r);e.classList.toggle('dl',d&&!r);e.innerHTML=d?DBL:SGL;e.title=l;e.setAttribute('aria-label',l)})}
 async function openChat(uid){if(curTab!=='chats')setTab('chats');if(active!==uid){pauseVoices();if(rec)stopRec(false);clearReply()}
  active=uid;if(offMsgs){offMsgs();offMsgs=null}
  $('ph').hidden=true;$('thread').hidden=false;$('app').classList.add('in-chat');navPush('chat');$('msgs').innerHTML='';
  pinned=true;watchPresence(uid);loadProfile(uid);paintHead();renderList();paintE2E(uid);
  const t=tid(me.uid,uid);
  stopTyping();peerTyping=false;offPres.push(onValue(ref(db,`dm_threads/${t}/typing/${uid}`),s=>{if(active!==uid)return;peerTyping=s.val()===true;paintStatus()}));
- peerRead=0;offPres.push(onValue(ref(db,`dm_threads/${t}/readReceipts/${uid}`),s=>{peerRead=+s.val()||0;paintTicks()}));
+ peerRead=0;peerDeliv=0;offPres.push(onValue(ref(db,`dm_threads/${t}/readReceipts/${uid}`),s=>{peerRead=+s.val()||0;paintTicks()}));
+ offPres.push(onValue(ref(db,`dm_threads/${t}/deliveryReceipts/${uid}`),s=>{peerDeliv=+s.val()||0;paintTicks()}));
  disSec=0;paintDis();clearTimeout(sweepT);offPres.push(onValue(ref(db,`dm_threads/${t}/settings/disappearingSeconds`),s=>{disSec=+s.val()||0;paintDis()}));
- const markRead=()=>{update(ref(db),{[`user_chats/${me.uid}/${uid}/unreadCount`]:0,[`dm_threads/${t}/readReceipts/${me.uid}`]:Date.now()}).catch(()=>{})};markRead();
+ const markRead=()=>{if(document.visibilityState!=='visible'||active!==uid)return;update(ref(db),{[`user_chats/${me.uid}/${uid}/unreadCount`]:0,[`dm_threads/${t}/readReceipts/${me.uid}`]:srvNow()}).catch(()=>{})};markRead();curMarkRead=markRead;
  let gotLive=false,seq=0,lastItems=[];curRepaint=()=>{if(active===uid)paintMsgs(lastItems.slice(),!gotLive)};
  const paintMsgs=async(items,fromCache)=>{const my=++seq;
-  lastItems=items.filter(x=>!x.pending);if(!fromCache)sweep(t,uid,items.slice());pendingFor(t).forEach(p=>{if(!items.some(x=>x.k===p.k))items.push(p)});{const nw=Date.now(),cl=+cleared[uid]||0;for(let i=items.length-1;i>=0;i--)if((items[i].expiresAt&&items[i].expiresAt<=nw)||(cl&&(+items[i].createdAt||0)<=cl))items.splice(i,1)}
+  lastItems=items.filter(x=>!x.pending);if(!fromCache)sweep(t,uid,items.slice());pendingFor(t).forEach(p=>{if(!items.some(x=>x.k===p.k))items.push(p)});{const nw=srvNow(),cl=+cleared[uid]||0;for(let i=items.length-1;i>=0;i--)if((items[i].expiresAt&&items[i].expiresAt<=nw)||(cl&&(+items[i].createdAt||0)<=cl))items.splice(i,1)}
   const out=await Promise.all(items.map(async (m,i)=>{const f=grp(items[i-1],m),l=(!items[i+1]||grp(m,items[i+1]))?' l':'';
    if(m.systemText)return `<div class="sys">${esc(m.systemText)}</div>`;
    if(m.deletedForEveryone)return `<div class="sys">Message removed</div>`;
@@ -1462,7 +1470,7 @@ async function sendMsg(){
  const inp=$('msg'),text=inp.value.trim();if(!text||!active)return;
  if(blocked[active]){const u=active;if(await ask('Unblock to send?',"You've blocked this contact. Unblock them to send a message.",{ok:'Unblock'}))await remove(ref(db,`users/${me.uid}/blocked/${u}`)).catch(()=>{});return}
  inp.value='';syncSend();stopTyping();const rpm=replyTo;clearReply();
- const uid=active,t=tid(me.uid,uid),now=Date.now(),e=await enc(uid,text),rp=rpm?await replyPayload(uid,rpm).catch(()=>null):null;
+ const uid=active,t=tid(me.uid,uid),now=srvNow(),e=await enc(uid,text),rp=rpm?await replyPayload(uid,rpm).catch(()=>null):null;
  const key=push(ref(db,`dm_threads/${t}/messages`)).key;
  await outAdd({key,owner:me.uid,uid,t,text:e,enc:typeof e==='string'&&e.startsWith(E2E),createdAt:now,rp:rp||null,exp:disSec>0?now+disSec*1000:0});
  if(curRepaint)curRepaint(); /* show it right away as pending */
@@ -1486,7 +1494,7 @@ async function noteTyping(){
   if(!typTimer)typTimer=setTimeout(stopTyping,3000)}catch(_){typRef=null}finally{typBusy=false}
 }
 $('msg').addEventListener('input',noteTyping);
-document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')stopTyping()});
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')stopTyping();else if(active&&curMarkRead)curMarkRead()});
 let rec=null;
 $('sendmsg').onclick=()=>{if(rec)stopRec(true);else if($('msg').value.trim())sendMsg();else startRec()};
 $('rec-x').onclick=()=>stopRec(false);
@@ -1531,12 +1539,12 @@ async function setDis(sec){
  const uid=active,t=tid(me.uid,uid);let nm='You';try{nm=(await get(ref(db,`users/${me.uid}/name`))).val()||'You'}catch(_){}
  const label=disLabel(sec),systemText=sec>0?`${nm} set disappearing messages to ${label}`:`${nm} turned off disappearing messages`;
  try{const k=push(ref(db,`dm_threads/${t}/messages`)).key;
-  await update(ref(db),{[`dm_threads/${t}/settings/disappearingSeconds`]:sec,[`dm_threads/${t}/settings/disappearingSetBy`]:me.uid,[`dm_threads/${t}/messages/${k}`]:{systemText,createdAt:Date.now(),senderUid:me.uid}});
+  await update(ref(db),{[`dm_threads/${t}/settings/disappearingSeconds`]:sec,[`dm_threads/${t}/settings/disappearingSetBy`]:me.uid,[`dm_threads/${t}/messages/${k}`]:{systemText,createdAt:srvNow(),senderUid:me.uid}});
   toast(sec>0?'Disappearing messages set to '+label:'Disappearing messages turned off')}
  catch(_){toast("Couldn't update disappearing messages")}
 }
 /* hide expired messages right away, delete them from the database, and arm a timer for the next expiry */
-function sweep(t,uid,list){clearTimeout(sweepT);const now=Date.now(),ex=list.filter(m=>m.expiresAt);
+function sweep(t,uid,list){clearTimeout(sweepT);const now=srvNow(),ex=list.filter(m=>m.expiresAt);
  const gone=ex.filter(m=>m.expiresAt<=now);
  if(gone.length){const u={};gone.forEach(m=>{u[`dm_threads/${t}/messages/${m.k}`]=null});update(ref(db),u).catch(()=>{})}
  const fut=ex.filter(m=>m.expiresAt>now).map(m=>m.expiresAt);
@@ -1580,7 +1588,7 @@ async function sendVoice(blob,dur,uid,mime,fwd){
   const id=push(ref(db,`dm_threads/${t}/messages`)).key;
   const r=sref(storage,`${MEDIA_DIR(t)}/${Date.now()}_voice.bin`);
   await uploadBytes(r,out,{contentType:'application/octet-stream'});
-  const url=await getDownloadURL(r),now=Date.now(),pv='🎤 Voice message',ds=uid===active?disSec:await getDis(t),bm=await blockedBy(uid);
+  const url=await getDownloadURL(r),now=srvNow(),pv='🎤 Voice message',ds=uid===active?disSec:await getDis(t),bm=await blockedBy(uid);
   await update(ref(db),{
    [`dm_threads/${t}/messages/${id}`]:{senderUid:me.uid,createdAt:now,...(fwd?{isForwarded:true}:{}),mediaType:'audio',mediaURL:url,mediaEncrypted:true,mediaMimeType:mime,duration:Math.round(dur),...(ds>0?{expiresAt:now+ds*1000}:{})},
    [`user_chats/${me.uid}/${uid}`]:{text:pv,timestamp:now,unreadCount:0,senderUid:me.uid},
@@ -1618,7 +1626,7 @@ async function sendFiles(files,to,opts={}){
    const safe=(send.name||(isVid?'video':'photo')).replace(/[^a-zA-Z0-9.\-_]/g,'_');
    const r=sref(storage,`${doc?'documents':'dm_media'}/${t}/${Date.now()}_${safe}`);
    await uploadBytes(r,out,{contentType:'application/octet-stream'});
-   const url=await getDownloadURL(r),now=Date.now(),mime=send.type||(isVid?'video/mp4':isImg?'image/jpeg':'application/octet-stream');
+   const url=await getDownloadURL(r),now=srvNow(),mime=send.type||(isVid?'video/mp4':isImg?'image/jpeg':'application/octet-stream');
    const ds=uid===active?disSec:await getDis(t),bm=await blockedBy(uid);
    const pv=await enc(uid,doc?'📄 '+(f.name||'Document'):isVid?'🎥 Video':'📷 Photo');
    const id=push(ref(db,`dm_threads/${t}/messages`)).key,rp=rpm&&i===0?await replyPayload(uid,rpm):null;
@@ -1788,7 +1796,7 @@ async function setReaction(k,emoji){
    let tx=String(ptext[k]||'').replace(/\s+/g,' ').trim();
    const what=tx?`\u201C${tx.length>40?tx.slice(0,40)+'\u2026':tx}\u201D`:(MLBL[m.mediaType]||'a message');
    const nm=String((profiles[me.uid]||{}).name||me.displayName||'Someone').trim().split(/\s+/)[0]||'Someone';
-   const now=Date.now(),[pvMine,pvPeer,bm]=await Promise.all([enc(uid,`You reacted ${next} to ${what}`),enc(uid,`${nm} reacted ${next} to ${what}`),blockedBy(uid)]);
+   const now=srvNow(),[pvMine,pvPeer,bm]=await Promise.all([enc(uid,`You reacted ${next} to ${what}`),enc(uid,`${nm} reacted ${next} to ${what}`),blockedBy(uid)]);
    up[`user_chats/${me.uid}/${uid}`]={text:pvMine,timestamp:now,unreadCount:0,senderUid:me.uid};
    if(!bm){up[`user_chats/${uid}/${me.uid}/text`]=pvPeer;up[`user_chats/${uid}/${me.uid}/timestamp`]=now;up[`user_chats/${uid}/${me.uid}/senderUid`]=me.uid;up[`user_chats/${uid}/${me.uid}/unreadCount`]=increment(1)}
   }
@@ -1896,7 +1904,7 @@ $('fsh').onclick=e=>{
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('fsh').hidden)navClose('fs',fsHide)});
 async function postMsg(to,p,pv){
  if(blocked[to]){toast('Unblock this contact to send');return false}
- const t=tid(me.uid,to),now=Date.now(),ds=to===active?disSec:await getDis(t),bm=await blockedBy(to),pe=await enc(to,pv),id=push(ref(db,`dm_threads/${t}/messages`)).key;
+ const t=tid(me.uid,to),now=srvNow(),ds=to===active?disSec:await getDis(t),bm=await blockedBy(to),pe=await enc(to,pv),id=push(ref(db,`dm_threads/${t}/messages`)).key;
  await update(ref(db),{
   [`dm_threads/${t}/messages/${id}`]:{senderUid:me.uid,createdAt:now,...p,...(ds>0?{expiresAt:now+ds*1000}:{})},
   [`user_chats/${me.uid}/${to}`]:{text:pe,timestamp:now,unreadCount:0,senderUid:me.uid},
@@ -1938,7 +1946,7 @@ $('msg').addEventListener('input',()=>{if($('msg').value)$('smart').innerHTML=''
 $('msgs').addEventListener('scroll',()=>{const m=$('msgs');$('jmp').classList.toggle('show',m.scrollHeight-m.scrollTop-m.clientHeight>420)},{passive:true});
 $('jmp').onclick=()=>{const m=$('msgs');m.scrollTo({top:m.scrollHeight,behavior:'smooth'})};
 $('msg').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMsg()}});
-function chatHide(){stopTyping();peerTyping=false;if(rec)stopRec(false);clearReply();pauseVoices();$('app').classList.remove('in-chat');if(offMsgs){offMsgs();offMsgs=null}active=null;stopPres();$('thread').hidden=true;$('ph').hidden=false;renderList()}
+function chatHide(){stopTyping();peerTyping=false;if(rec)stopRec(false);clearReply();pauseVoices();$('app').classList.remove('in-chat');if(offMsgs){offMsgs();offMsgs=null}active=null;curMarkRead=null;stopPres();$('thread').hidden=true;$('ph').hidden=false;renderList()}
 $('back').onclick=()=>navClose('chat',chatHide);
 
 /* ---- media in chat (photos, videos, voice notes, documents, GIFs, stickers) ---- */
@@ -2706,7 +2714,7 @@ $('sv-lk').onclick=async e=>{
 const svRef=(it,uid)=>it.type==='text'?{type:'text',text:it.text||'',bgColor:it.bgColor||ST_BG[0],ownerUid:uid,storyKey:it.key||null}:{mediaURL:it.mediaURL,type:it.type||'image',ownerUid:uid,storyKey:it.key||null};
 async function svSend(uid,it,extra,mine,theirs){
  if(blocked[uid]){toast('Unblock this contact to send');return false}
- const t=tid(me.uid,uid),now=Date.now(),[ds,bm]=await Promise.all([getDis(t),blockedBy(uid)]),id=push(ref(db,`dm_threads/${t}/messages`)).key,c=`user_chats/${uid}/${me.uid}`;
+ const t=tid(me.uid,uid),now=srvNow(),[ds,bm]=await Promise.all([getDis(t),blockedBy(uid)]),id=push(ref(db,`dm_threads/${t}/messages`)).key,c=`user_chats/${uid}/${me.uid}`;
  await update(ref(db),{
   [`dm_threads/${t}/messages/${id}`]:{...extra,senderUid:me.uid,createdAt:now,replyToStory:svRef(it,uid),...(ds>0?{expiresAt:now+ds*1000}:{})},
   [`user_chats/${me.uid}/${uid}`]:{text:mine,timestamp:now,unreadCount:0,senderUid:me.uid},
@@ -3084,7 +3092,7 @@ async function callLogMsg(c,outcome,dur){
  if(!me)return;
  try{
   const tx=await runTransaction(ref(db,`calls/${c.id}/messageLogged`),cur=>{if(cur)return;return true});if(!tx.committed)return;
-  const t=tid(me.uid,c.peer),key=push(ref(db,`dm_threads/${t}/messages`)).key,now=Date.now(),caller=c.dir==='out',other=c.peer;
+  const t=tid(me.uid,c.peer),key=push(ref(db,`dm_threads/${t}/messages`)).key,now=srvNow(),caller=c.dir==='out',other=c.peer;
   const msg={senderUid:caller?me.uid:other,createdAt:now,mediaType:'call',callStatus:outcome,callDuration:dur||0,callIsVideo:c.video};
   const ic=c.video?'📹':'📞',lb=c.video?'Video call':'Voice call';
   const pv=outcome==='missed'?`${ic} Missed ${lb.toLowerCase()}`:outcome==='declined'?`${ic} ${lb} declined`:`${ic} ${lb}`;

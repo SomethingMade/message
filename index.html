@@ -885,54 +885,6 @@ html.sheet-open #bnav,html.sheet-open .fab{display:none!important}
 .sti .rg .av{overflow:hidden;background-size:cover;background-position:center}
 .sti .rg .av video{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none}
 .sti .rg .av.stx{display:flex;align-items:center;justify-content:center;padding:6px;font:500 11px/1.2 'Poppins',sans-serif;color:#fff;text-align:center;word-break:break-word;overflow:hidden}
-
-/* ===== WhatsApp-style chat ===== */
-html[data-theme="light"]{--wall:#EBEFF6;--inb:#fff;--inp:#fff}
-html[data-theme="dark"]{--wall:#0B0B0D;--inb:var(--bubble-in);--inp:#1C1C1E}
-html[data-theme="ocean"]{--wall:#08141F;--inb:var(--bubble-in);--inp:#13293D}
-html[data-theme="sunset"]{--wall:#F8E7D6;--inb:#fff;--inp:#fff}
-#thread{background:var(--wall)}
-#msgs{background:transparent;padding:10px 10px 8px;gap:2px}
-/* header */
-.ch{gap:6px;padding:calc(6px + env(safe-area-inset-top,0px)) 4px 6px 0;box-shadow:0 1px 0 var(--line)}
-.ch .hbk{width:34px;height:44px;margin-right:-4px}
-.hav,.hav .av{width:42px;height:42px}.hav{margin-right:6px}
-.hav.has-st{padding:2px}
-.ch .who{flex:1;min-width:0}
-.ch .who .n{font-size:17.5px;font-weight:600;letter-spacing:-.2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.ch .st{font-size:13px;margin-top:1px;min-height:0;overflow:hidden;white-space:nowrap}
-.ch .hact{min-width:40px;padding:0 8px;height:44px;border-radius:50%}
-.ch .hact svg{width:22px;height:22px}
-/* bubbles */
-#msgs .b{max-width:min(82%,520px);padding:6px 9px 7px;border-radius:10px;font-size:16px;line-height:1.35;background:var(--inb);box-shadow:0 1px .5px rgba(0,0,0,.14);overflow-wrap:anywhere}
-#msgs .b.me{border-radius:10px;background:var(--bubble-out)}
-#msgs .b.f{margin-top:8px}
-#msgs .b.f:not(.me){border-top-left-radius:0}
-#msgs .b.f.me{border-top-right-radius:0}
-#msgs .b:not(.me){margin-left:0}
-#msgs .b.l:not(.me)::before{content:none}
-#msgs .b.stk{background:none;box-shadow:none;padding:0}
-#msgs .b.mb{padding:3px}
-#msgs .b.mb .mw{border-radius:8px}
-#msgs .b.ov.me .mw,#msgs .b.ov:not(.me) .mw{border-radius:8px}
-#msgs .b.f:not(.stk)::after{content:'';position:absolute;top:0;width:9px;height:13px;background:inherit}
-#msgs .b.f:not(.me):not(.stk)::after{left:-8px;clip-path:polygon(100% 0,100% 100%,0 0)}
-#msgs .b.f.me:not(.stk)::after{right:-8px;clip-path:polygon(0 0,0 100%,100% 0)}
-#msgs .b.mb.f::after{display:none}
-/* time + ticks inline at the bottom-right of every bubble */
-#msgs .b .mt,#msgs .b:not(.l):not(.ov):not(.sh) .mt{display:inline-flex;float:right;margin:7px -2px -3px 12px;gap:3px;font-size:11.5px;line-height:15px;height:15px;opacity:.62;align-items:center}
-#msgs .b.me .mt{justify-content:flex-end;opacity:.8}
-#msgs .b .cap .mt{margin-right:0}
-.tk svg{width:17px;height:17px}
-/* date chips + system notes */
-.day{border-radius:8px;padding:5px 12px;margin:12px 0 8px;background:var(--inb);color:var(--sub);box-shadow:0 1px .5px rgba(0,0,0,.14);font:500 12.5px/1.3 'Poppins',sans-serif}
-#msgs .sys{align-self:center;max-width:86%;text-align:center;margin:8px 0;padding:5px 12px;border-radius:8px;background:var(--inb);color:var(--sub);font-size:13px;box-shadow:0 1px .5px rgba(0,0,0,.14)}
-/* composer */
-.compose{background:transparent;padding:6px 8px calc(8px + env(safe-area-inset-bottom,0px));gap:6px}
-.compose .in{height:46px;background:var(--inp);box-shadow:0 1px .5px rgba(0,0,0,.14)}
-.compose .mwrap .in{padding-left:46px;padding-right:16px}
-.compose .mwrap .att{left:4px;right:auto}
-.compose .send{width:48px;height:48px;box-shadow:0 1px 3px rgba(0,0,0,.25)}
 </style>
 </head>
 <body>

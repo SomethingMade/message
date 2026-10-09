@@ -834,6 +834,9 @@ html.sheet-open #bnav,html.sheet-open .fab{display:none!important}
 #smart button:active{background:color-mix(in srgb,var(--accent) 20%,var(--bg))}
 #jmp{position:absolute;right:16px;bottom:calc(86px + env(safe-area-inset-bottom,0px));width:40px;height:40px;border-radius:50%;background:var(--bg);color:var(--text);border:1px solid var(--line);box-shadow:0 4px 14px rgba(0,0,0,.14);display:none;align-items:center;justify-content:center;z-index:3}
 #jmp.show{display:flex}#jmp svg{width:20px;height:20px}
+.sti .rg .av{overflow:hidden;background-size:cover;background-position:center}
+.sti .rg .av video{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none}
+.sti .rg .av.stx{display:flex;align-items:center;justify-content:center;padding:6px;font:500 10px/1.2 'Poppins',sans-serif;color:#fff;text-align:center;word-break:break-word;overflow:hidden}
 </style>
 </head>
 <body>
@@ -3163,10 +3166,15 @@ setTimeout(()=>{try{paintNavMe()}catch(_){}},900);
 $('hsearch').onclick=()=>{const l=$('list'),o=l.classList.toggle('sopen');if(o)setTimeout(()=>$('q').focus(),30);else{$('q').value='';$('q').dispatchEvent(new Event('input'))}};
 function paintStrip(){const el=$('ststrip');if(!el||!me)return;
  const av=p=>p&&safeUrl(p.photoURL)?`style="background-image:url('${p.photoURL.replace(/'/g,'%27')}')"`:'';
- const tile=(u,p,seen,own)=>`<div class="sti ${seen?'seen':'unseen'}" data-u="${esc(u)}"><span class="rg"><span class="av" ${av(p)}>${p&&safeUrl(p.photoURL)?'':esc(initials((p&&p.name)||'?'))}</span></span><span class="sn">${own?'You':esc(((p&&p.name)||'User').split(' ')[0])}</span></div>`;
+ const tile=(u,p,seen,own,it)=>{let inner;
+  if(it&&it.type==='text')inner=`<span class="av stx" style="background:${/^#[0-9a-f]{3,8}$/i.test(it.bgColor||'')?it.bgColor:'#2F7BF6'}">${esc(String(it.text||'').trim().slice(0,18))}</span>`;
+  else if(it&&it.type==='video'&&safeUrl(it.mediaURL))inner=`<span class="av"><video src="${esc(it.mediaURL)}#t=0.1" muted playsinline preload="metadata" tabindex="-1"></video></span>`;
+  else if(it&&safeUrl(it.mediaURL))inner=`<span class="av" style="background-image:url('${String(it.mediaURL).replace(/'/g,'%27')}')"></span>`;
+  else inner=`<span class="av" ${av(p)}>${p&&safeUrl(p.photoURL)?'':esc(initials((p&&p.name)||'?'))}</span>`;
+  return `<div class="sti ${seen?'seen':'unseen'}" data-u="${esc(u)}"><span class="rg">${inner}</span><span class="sn">${own?'You':esc(((p&&p.name)||'User').split(' ')[0])}</span></div>`};
  let h='<div class="sti none" data-add="1"><span class="rg"><span class="pl">+</span></span><span class="sn">&nbsp;</span></div>';
- const mine=stItems(me.uid);if(mine.length)h+=tile(me.uid,profiles[me.uid]||{name:me.displayName,photoURL:me.photoURL},stSeen(mine),true);
- Object.keys(stRaw).filter(u=>u!==me.uid&&!blocked[u]&&stItems(u).length).map(u=>({u,seen:stSeen(stItems(u)),t:stItems(u).slice(-1)[0].createdAt})).sort((a,b)=>a.seen-b.seen||b.t-a.t).forEach(x=>{if(!profiles[x.u])loadProfile(x.u).then(paintStrip);h+=tile(x.u,profiles[x.u]||{},x.seen,false)});
+ const mine=stItems(me.uid);if(mine.length)h+=tile(me.uid,profiles[me.uid]||{name:me.displayName,photoURL:me.photoURL},stSeen(mine),true,mine[mine.length-1]);
+ Object.keys(stRaw).filter(u=>u!==me.uid&&!blocked[u]&&stItems(u).length).map(u=>({u,seen:stSeen(stItems(u)),t:stItems(u).slice(-1)[0].createdAt})).sort((a,b)=>a.seen-b.seen||b.t-a.t).forEach(x=>{if(!profiles[x.u])loadProfile(x.u).then(paintStrip);h+=tile(x.u,profiles[x.u]||{},x.seen,false,stItems(x.u).slice(-1)[0])});
  el.innerHTML=h}
 $('ststrip').onclick=e=>{const t=e.target.closest('.sti');if(!t)return;if(t.dataset.add)stsOpen();else svOpen(t.dataset.u)};
 {const _sp=stPaint;stPaint=function(){_sp();try{paintStrip()}catch(_){}}}

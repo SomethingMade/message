@@ -897,6 +897,88 @@ html[data-theme="dark"]{--bubble-in:#2C2C2E;--bubble-out:#25B1F5;--bubble-out-so
  mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 14'%3E%3Cpath d='M0 0H4C4 7 7 12 12 14C7 14.5 2 13 0 10Z'/%3E%3C/svg%3E") center/100% 100% no-repeat}
 #msgs .b.me:not(.stk):not(.mb)::after{right:-8px}
 #msgs .b:not(.me):not(.stk):not(.mb)::after{left:-8px;transform:scaleX(-1)}
+
+/* message box grows with long text, then scrolls */
+#msg.in{display:block;resize:none;height:46px;min-height:46px;max-height:140px;overflow-y:auto;padding:12px 88px 12px 18px;line-height:22px;border-radius:23px;font-family:inherit;scrollbar-width:thin}
+.compose{align-items:flex-end}
+.compose .send{margin-bottom:1px}
+#mwrap .att{top:auto;bottom:3px;margin-top:0}
+
+/* clone of the pressed bubble reuses the chat bubble styles */
+#mscl .b[data-mk]{touch-action:pan-y;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+#mscl .b.mb>.qt,#mscl .b.mb>.fw{margin:5px 6px 6px}
+#mscl .b.mb>.fw{margin-bottom:0}
+#mscl .b.hl{animation:bhl 1.3s ease-out}
+#mscl .b.mb>.qs{margin:5px 6px 6px}
+#mscl .b{position:relative;max-width:min(78%,460px);padding:9px 14px 9px;border-radius:20px 20px 20px 5px;font-size:16.5px;line-height:1.38;letter-spacing:-.1px;background:var(--bubble-in);color:var(--text)}
+#mscl .b.me{border-radius:20px 20px 5px 20px;background:var(--bubble-out);color:var(--bubble-out-text)}
+#mscl .b.f{margin-top:9px}
+#mscl .b.stk{background:none;padding:0}
+#mscl .b.mb{padding:3px}
+#mscl .b .cap{padding:6px 11px 4px}
+#mscl .b.me .mt{justify-content:flex-end}
+#mscl .b:not(.me){margin-left:36px}
+#mscl .b.l:not(.me)::before{content:var(--peer-ini,'');position:absolute;left:-36px;bottom:0;width:28px;height:28px;border-radius:50%;background:var(--peer-av,none) center/cover no-repeat,var(--bg-input);color:var(--sub);font:700 11px/28px var(--sans,Inter,system-ui,sans-serif);text-align:center;letter-spacing:0;white-space:normal;pointer-events:none}
+#mscl .b:not(.l):not(.ov):not(.sh) .mt{display:none}
+#mscl .b.mb .mw{width:min(300px,68vw);min-width:0;min-height:0;border-radius:6px}
+#mscl .b.mb .mw[data-t="image"]{aspect-ratio:4/3}
+#mscl .b.mb .mw img,#mscl .b.mb .mw video{width:100%;height:100%;max-width:none;max-height:none;object-fit:cover}
+#mscl .b.mb .mw video{object-fit:contain;background:#000}
+#mscl .b.mb .mw:has(audio){width:auto;min-height:0}
+#mscl .b.mb>.mt{float:none;justify-content:flex-end;margin:3px 5px 1px}
+#mscl .b.ov>.mt{position:absolute;right:8px;bottom:7px;margin:0;color:#fff;padding:2px 6px;border-radius:10px;background:rgba(0,0,0,.4)}
+#mscl .b.mb .mw{border-radius:17px}
+#mscl .b.mb:not(.me)>.mt{justify-content:flex-start}
+#mscl .b.ov.me .mw{border-bottom-right-radius:3px}
+#mscl .b.ov:not(.me) .mw{border-bottom-left-radius:3px}
+#mscl .b.ov>.mt{opacity:1;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+#mscl .b.vb{padding:10px 12px 9px;width:min(290px,76vw)}
+#mscl .b.me .vp{background:var(--bubble-out-text);color:var(--bubble-out-solid)}
+@media (max-width:380px){#mscl .b{max-width:84%;font-size:16px}}
+#mscl .b{font-size:16.5px;line-height:1.45;letter-spacing:0;padding:10px 14px;border-radius:20px 20px 20px 6px;max-width:min(80%,460px)}
+#mscl .b.me{border-radius:20px 20px 6px 20px}
+#mscl .b.f{margin-top:10px}
+#mscl .b.me .tk.rd{color:#fff}
+#mscl .b.me .qt{border-left-color:rgba(255,255,255,.85);background:rgba(255,255,255,.18)}
+#mscl .b{border-radius:18px 18px 18px 4px}
+#mscl .b.me{border-radius:18px 18px 4px 18px}
+#mscl .b.stk,#mscl .b.mb{border-radius:18px}
+#mscl .b:not(.stk):not(.mb)::after{content:'';position:absolute;bottom:0;width:12px;height:14px;background:inherit;pointer-events:none;
+ -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 14'%3E%3Cpath d='M0 0H4C4 7 7 12 12 14C7 14.5 2 13 0 10Z'/%3E%3C/svg%3E") center/100% 100% no-repeat;
+ mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 14'%3E%3Cpath d='M0 0H4C4 7 7 12 12 14C7 14.5 2 13 0 10Z'/%3E%3C/svg%3E") center/100% 100% no-repeat}
+#mscl .b.me:not(.stk):not(.mb)::after{right:-8px}
+#mscl .b:not(.me):not(.stk):not(.mb)::after{left:-8px;transform:scaleX(-1)}
+
+/* ---- long-press menu (floating reactions + bubble + actions) ---- */
+#msh{display:block;align-items:initial;background:rgba(0,0,0,.3);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px)}
+#ms-stack{position:fixed;left:0;right:0;top:0;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+#ms-stack>*{pointer-events:auto;align-self:flex-start;animation:msPop .16s ease-out}
+#ms-stack>#mscl{pointer-events:none;animation:none;display:block;position:relative}
+@keyframes msPop{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){#ms-stack>*{animation:none}}
+#mscl .b{margin:0!important;animation:none!important;transform:none!important}
+#mscl .b::before{display:none!important}
+#ms-rxbox{width:min(330px,calc(100vw - 24px));padding:8px;border-radius:22px;background:var(--bg-input);box-shadow:0 10px 32px rgba(0,0,0,.3)}
+#ms-rx,#ms-rxm{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
+#ms-rxm{max-height:180px;overflow-y:auto;margin-top:6px;padding-top:6px;border-top:1px solid var(--line)}
+#ms-rx button,#ms-rxm button{height:44px;border-radius:50%;font-size:27px;line-height:1;display:flex;align-items:center;justify-content:center;transition:transform .12s}
+#ms-rx button:active,#ms-rxm button:active{transform:scale(1.25)}
+#ms-rx button.sel,#ms-rxm button.sel{background:color-mix(in srgb,var(--accent) 22%,transparent);box-shadow:inset 0 0 0 1.5px var(--accent)}
+#ms-rx .mo{width:36px;height:36px;margin:4px auto;border:1.5px solid var(--sub);color:var(--text)}
+#ms-rx .mo svg{width:18px;height:18px}
+.msm{width:max-content;min-width:min(240px,calc(100vw - 24px));max-width:calc(100vw - 24px);border-radius:22px;background:var(--bg-input);overflow:hidden;box-shadow:0 10px 32px rgba(0,0,0,.3)}
+.msm .mi{display:flex;align-items:center;justify-content:space-between;gap:28px;width:100%;height:50px;padding:0 18px;border-top:1px solid var(--line);font-size:17px;color:var(--text);text-align:left}
+.msm .mi:first-child{border-top:0}
+.msm .mi b{font-weight:600}
+.msm .mi svg{width:22px;height:22px;flex-shrink:0;opacity:.85}
+.msm .mi.dg{color:#f2453d}
+.msm .mi:active{background:var(--hover)}
+#ms-cols{padding:14px 16px 16px}
+#ms-cols p{font-size:13px;font-weight:600;color:var(--sub);margin-bottom:12px}
+#ms-cols .sg{display:grid;grid-template-columns:repeat(5,40px);gap:12px}
+#ms-cols .sw{width:40px;height:40px;border-radius:50%;color:var(--text);font-size:20px;line-height:1}
+#ms-cols .sw.def{border:1.5px dashed var(--sub)}
+#ms-cols .sw:active{transform:scale(1.1)}
 </style>
 </head>
 <body>
@@ -948,7 +1030,7 @@ html[data-theme="dark"]{--bubble-in:#2C2C2E;--bubble-out:#25B1F5;--bubble-out-so
    <div id="rbar" hidden><div class="rq"><b id="rb-n"></b><span id="rb-t"></span></div><button class="ibtn" id="rb-x" type="button" aria-label="Cancel reply"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button></div>
    <div id="smart"></div>
    <button id="jmp" type="button" aria-label="Jump to latest"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>
-   <div class="compose"><div class="mwrap" id="mwrap"><input id="msg" class="in" placeholder="Message" autocomplete="off"><button class="att skb" id="skb" type="button" aria-label="Stickers"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><path d="M9 9.5h.01M15 9.5h.01"/></svg></button><button class="att" id="att" type="button" aria-label="Attach photo, video or file"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.4 11.6l-8.5 8.5a5.5 5.5 0 0 1-7.8-7.8l8.5-8.5a3.7 3.7 0 0 1 5.2 5.2l-8.5 8.5a1.8 1.8 0 0 1-2.6-2.6l7.8-7.8"/></svg></button></div><input type="file" id="att-in" multiple hidden accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip"><div class="rec" id="rec" hidden><button class="ibtn" id="rec-x" aria-label="Cancel recording"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg></button><span class="rcd"></span><div class="rcw" id="rec-w"></div><span class="rt" id="rec-t">0:00</span></div><button class="send" id="sendmsg" aria-label="Voice message"><svg class="i-mic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg><svg class="i-snd" viewBox="0 0 200 200"><polygon points="20,80 170,30 80,110" fill="currentColor" fill-opacity=".75"/><polygon points="120,180 170,30 80,110" fill="currentColor"/><polygon points="20,80 80,110 80,140" fill="currentColor" fill-opacity=".55"/></svg></button></div>
+   <div class="compose"><div class="mwrap" id="mwrap"><textarea id="msg" class="in" rows="1" placeholder="Message" autocomplete="off" enterkeyhint="send"></textarea><button class="att skb" id="skb" type="button" aria-label="Stickers"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><path d="M9 9.5h.01M15 9.5h.01"/></svg></button><button class="att" id="att" type="button" aria-label="Attach photo, video or file"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.4 11.6l-8.5 8.5a5.5 5.5 0 0 1-7.8-7.8l8.5-8.5a3.7 3.7 0 0 1 5.2 5.2l-8.5 8.5a1.8 1.8 0 0 1-2.6-2.6l7.8-7.8"/></svg></button></div><input type="file" id="att-in" multiple hidden accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip"><div class="rec" id="rec" hidden><button class="ibtn" id="rec-x" aria-label="Cancel recording"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg></button><span class="rcd"></span><div class="rcw" id="rec-w"></div><span class="rt" id="rec-t">0:00</span></div><button class="send" id="sendmsg" aria-label="Voice message"><svg class="i-mic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg><svg class="i-snd" viewBox="0 0 200 200"><polygon points="20,80 170,30 80,110" fill="currentColor" fill-opacity=".75"/><polygon points="120,180 170,30 80,110" fill="currentColor"/><polygon points="20,80 80,110 80,140" fill="currentColor" fill-opacity=".55"/></svg></button></div>
   </div>
  </main>
 </div>
@@ -1006,12 +1088,20 @@ html[data-theme="dark"]{--bubble-in:#2C2C2E;--bubble-out:#25B1F5;--bubble-out-so
 <div id="ld" hidden><div class="msheet"><div class="grab"></div><h3 class="dt">Linked devices</h3><div class="ldh">This device</div><div class="lst" id="ld-me"></div><div class="ldh" id="ld-oh">Other devices</div><div id="ld-list"></div><div class="eacts"><button class="qrbtn" id="ld-all" hidden>Log out all other devices</button><button class="qrbtn pri" id="ld-done">Done</button></div></div></div>
 <div id="pv" hidden><div class="msheet"><div class="grab"></div><h3 class="dt">Who can see my stories</h3><div class="lst" id="pv-m"><button class="rw" data-m="everyone"><div class="tx"><b>Everyone</b></div><i class="rd"></i></button><button class="rw" data-m="only"><div class="tx"><b>Only people I select</b></div><i class="rd"></i></button><button class="rw" data-m="except"><div class="tx"><b>Everyone except…</b></div><i class="rd"></i></button></div><div class="pvh" id="pv-h" hidden></div><div id="pv-p" hidden></div><div class="eacts"><button class="qrbtn pri" id="pv-save">Done</button></div></div></div>
 <div id="rsheet" hidden><div class="msheet"><div class="grab"></div><h3 class="dt" id="rp-title">Report</h3><p class="dd">Chats are end-to-end encrypted, so we can't read your messages. We receive only the reason you choose and this account's ID.</p><div class="lst" id="rp-opts"><button class="rw dopt" data-r="spam"><div class="tx"><b>Spam or scam</b></div><svg class="ck" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4"><polyline points="20 6 9 17 4 12"/></svg></button><button class="rw dopt" data-r="harassment"><div class="tx"><b>Harassment or threats</b></div><svg class="ck" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4"><polyline points="20 6 9 17 4 12"/></svg></button><button class="rw dopt" data-r="inappropriate"><div class="tx"><b>Inappropriate or explicit content</b></div><svg class="ck" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4"><polyline points="20 6 9 17 4 12"/></svg></button><button class="rw dopt" data-r="impersonation"><div class="tx"><b>Impersonation</b></div><svg class="ck" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4"><polyline points="20 6 9 17 4 12"/></svg></button><button class="rw dopt" data-r="other"><div class="tx"><b>Something else</b></div><svg class="ck" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4"><polyline points="20 6 9 17 4 12"/></svg></button></div><div class="lst gap"><button class="rw dopt sel" id="rp-blk"><div class="tx"><b>Also block this contact</b></div><svg class="ck" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4"><polyline points="20 6 9 17 4 12"/></svg></button></div><div style="margin:14px 16px 0"><textarea id="rp-det" class="in" maxlength="300" rows="3" placeholder="Add details (optional)" style="height:auto;padding:12px 16px;resize:none"></textarea><p id="rp-err" class="err" style="margin:8px 0 0" hidden></p><button class="btn" id="rp-send" style="margin-top:10px" disabled>Send report</button></div></div></div>
-<div id="msh" hidden><div class="msheet"><div class="grab"></div><h3 class="dt" id="ms-pv"></h3><div class="rxl">React</div><div class="rxp" id="ms-rx" role="group" aria-label="React to message"><button type="button" data-e="🔥" aria-label="React 🔥">🔥</button><button type="button" data-e="🙌" aria-label="React 🙌">🙌</button><button type="button" data-e="😭" aria-label="React 😭">😭</button><button type="button" data-e="🙈" aria-label="React 🙈">🙈</button><button type="button" data-e="🙏" aria-label="React 🙏">🙏</button><button type="button" data-e="🤐" aria-label="React 🤐">🤐</button><button type="button" data-e="✨" aria-label="React ✨">✨</button></div><div class="lst">
- <button class="rw" id="ms-reply"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 17 4 12 9 7"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/></svg></div><div class="tx"><b>Reply</b></div></button>
- <button class="rw" id="ms-copy"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></div><div class="tx"><b>Copy text</b></div></button>
- <button class="rw" id="ms-fwd"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 17 20 12 15 7"/><path d="M4 18v-2a4 4 0 0 1 4-4h12"/></svg></div><div class="tx"><b>Forward</b></div></button>
- <button class="rw dg" id="ms-del"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg></div><div class="tx"><b>Delete</b></div></button>
-</div></div></div>
+<div id="msh" hidden><div id="ms-stack">
+<div id="ms-rxbox"><div id="ms-rx" role="group" aria-label="React to message"></div><div id="ms-rxm" hidden></div></div>
+<div id="mscl"></div>
+<div class="msm" id="ms-menu">
+<button class="mi" id="ms-reply"><b>Reply</b><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 17 4 12 9 7"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/></svg></button>
+<button class="mi" id="ms-copy"><b>Copy text</b><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+<button class="mi" id="ms-fwd"><b>Forward</b><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 17 20 12 15 7"/><path d="M4 18v-2a4 4 0 0 1 4-4h12"/></svg></button>
+<button class="mi" id="ms-info"><b>Info</b><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"/><path d="M12 11v6"/><path d="M12 7.5h.01"/></svg></button>
+<button class="mi" id="ms-color"><b>Bubble color</b><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"/><circle cx="8.5" cy="11" r="1" fill="currentColor"/><circle cx="12" cy="7.8" r="1" fill="currentColor"/><circle cx="15.5" cy="11" r="1" fill="currentColor"/><circle cx="12.5" cy="15" r="1.6" fill="currentColor"/></svg></button>
+<button class="mi dg" id="ms-delme"><b>Delete for me</b><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg></button>
+<button class="mi dg" id="ms-del"><b>Delete for everyone</b><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg></button>
+</div>
+<div class="msm" id="ms-cols" hidden></div>
+</div></div>
 <div id="fsh" hidden><div class="msheet"><div class="grab"></div><h3 class="dt">Forward to</h3><div class="fq"><input class="in" id="fs-q" placeholder="Search" autocomplete="off"></div><div class="fl" id="fs-l"></div></div></div>
 <div id="nc" hidden><div class="nh"><button class="ibtn" id="nc-back" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button><h2>New chat</h2><button class="ibtn" id="nc-sync" title="Show new suggestions" aria-label="Show new suggestions"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 1-15.5 6.2L3 16"/><path d="M3 12A9 9 0 0 1 18.5 5.8L21 8"/><polyline points="21 3 21 8 16 8"/><polyline points="3 21 3 16 8 16"/></svg></button></div><div class="nq"><input class="in" id="nc-q" placeholder="Search friends, @username or number" autocomplete="off"></div><div id="nc-l"></div></div>
 <div id="ssh" hidden><div class="msheet"><div class="grab"></div><h3 class="dt">Stickers</h3><div class="skq"><input class="in" id="sk-q" placeholder="Search stickers" autocomplete="off"></div><div class="skc" id="sk-c"></div><div class="skt" id="sk-t"></div><div class="sks"><div class="skg" id="sk-g"></div></div></div></div>
@@ -1500,7 +1590,7 @@ const tid=(a,b)=>[a,b].sort().join('_');
 function paintHead(){const p=profiles[active]||{};paintHeadStory();$('t-name').innerHTML=nameHtml(p,'…',active);const a=$('t-av');a.style.backgroundImage=p.photoURL?`url('${p.photoURL}')`:'';a.textContent=p.photoURL?'':initials(p.name);
  const ms=$('msgs'),pu=safeUrl(p.photoURL)?p.photoURL:'';
  ms.style.setProperty('--peer-av',pu?`url("${pu.replace(/["\\\n]/g,c=>encodeURIComponent(c))}")`:'none');
- ms.style.setProperty('--peer-ini',pu?"''":JSON.stringify(initials(p.name).replace(/["\\]/g,'')))}
+ ms.style.setProperty('--peer-ini',pu?"''":JSON.stringify(initials(p.name).replace(/["\\]/g,'')));try{applyBc(active)}catch(_){}}
 const dk=t=>t?new Date(t).toDateString():'';
 const isSys=x=>!x||x.systemText||x.deleted||x.deletedForEveryone||x.mediaType==='call'||x.mediaType==='group_call';
 const grp=(p,m)=>(isSys(p)||p.senderUid!==m.senderUid||dk(p.createdAt)!==dk(m.createdAt))?' f':'';
@@ -1526,7 +1616,7 @@ async function openChat(uid){if(curTab!=='chats')setTab('chats');if(active!==uid
  const markRead=()=>{if(document.visibilityState!=='visible'||active!==uid)return;update(ref(db),{[`user_chats/${me.uid}/${uid}/unreadCount`]:0,[`dm_threads/${t}/readReceipts/${me.uid}`]:srvNow()}).catch(()=>{})};markRead();curMarkRead=markRead;
  let gotLive=false,seq=0,lastItems=[];curRepaint=()=>{if(active===uid)paintMsgs(lastItems.slice(),!gotLive)};
  const paintMsgs=async(items,fromCache)=>{const my=++seq;
-  lastItems=items.filter(x=>!x.pending);if(!fromCache)sweep(t,uid,items.slice());pendingFor(t).forEach(p=>{if(!items.some(x=>x.k===p.k))items.push(p)});{const nw=srvNow(),cl=+cleared[uid]||0;for(let i=items.length-1;i>=0;i--)if((items[i].expiresAt&&items[i].expiresAt<=nw)||(cl&&(+items[i].createdAt||0)<=cl))items.splice(i,1)}
+  lastItems=items.filter(x=>!x.pending);if(!fromCache)sweep(t,uid,items.slice());pendingFor(t).forEach(p=>{if(!items.some(x=>x.k===p.k))items.push(p)});{const nw=srvNow(),cl=+cleared[uid]||0;for(let i=items.length-1;i>=0;i--)if((items[i].expiresAt&&items[i].expiresAt<=nw)||(cl&&(+items[i].createdAt||0)<=cl)||hidK[items[i].k])items.splice(i,1)}
   const out=await Promise.all(items.map(async (m,i)=>{const f=grp(items[i-1],m),l=(!items[i+1]||grp(m,items[i+1]))?' l':'';
    if(m.systemText)return `<div class="sys">${esc(m.systemText)}</div>`;
    if(m.deletedForEveryone)return `<div class="sys">Message removed</div>`;
@@ -1560,7 +1650,8 @@ async function sendMsg(){
  if(curRepaint)curRepaint(); /* show it right away as pending */
  flushOutbox();
 }
-function syncSend(){const h=!!$('msg').value.trim()||!!rec,b=$('sendmsg');b.classList.toggle('has',h);b.setAttribute('aria-label',h?'Send':'Voice message')}
+function msgFit(){const m=$('msg');if(!m||!m.offsetParent)return;m.style.height='auto';const bd=m.offsetHeight-m.clientHeight;m.style.height=Math.min(m.scrollHeight+bd,140)+'px'}
+function syncSend(){msgFit();const h=!!$('msg').value.trim()||!!rec,b=$('sendmsg');b.classList.toggle('has',h);b.setAttribute('aria-label',h?'Send':'Voice message')}
 $('msg').addEventListener('input',syncSend);
 /* ---- typing indicator: I publish dm_threads/<thread>/typing/<myUid>=true while typing, cleared after 3s idle, on send, on leaving the chat, or on disconnect ---- */
 let typRef=null,typTimer=null,typBusy=false;
@@ -1853,13 +1944,33 @@ $('msgs').addEventListener('click',e=>{
  t.scrollIntoView({block:'center',behavior:'smooth'});t.classList.remove('hl');void t.offsetWidth;t.classList.add('hl')},true);
 $('msgs').addEventListener('contextmenu',e=>{const el=e.target.closest('.b[data-mk]');if(!el)return;e.preventDefault();if(Date.now()-gSup<700)return;gSup=Date.now();msOpen(el.dataset.mk)});
 
+let msRect=null,msMe=false;
 function msOpen(k){
- const m=msgStore[k];if(!m||m.deleted||m.systemText)return;msK=k;msAt=Date.now();
- const own=m.senderUid===me.uid,txt=ptext[k]||'';
- $('ms-copy').hidden=!txt;$('ms-del').hidden=!own;$('ms-fwd').hidden=!!m.viewOnce||m.mediaType==='call'||m.mediaType==='group_call';
- $('ms-pv').textContent=txt||MLBL[m.mediaType]||'Message';
- {const can=!m.pending&&m.mediaType!=='call'&&m.mediaType!=='group_call',mine=(m.reactions||{})[me.uid];$('ms-rx').hidden=!can;$('ms-rx').querySelectorAll('button').forEach(b=>b.classList.toggle('sel',b.dataset.e===mine))}
- navPush('ms');$('msh').hidden=false;try{navigator.vibrate&&navigator.vibrate(12)}catch(_){}}
+ const m=msgStore[k];if(!m||m.deleted||m.systemText)return;
+ const el=$('msgs').querySelector(`.b[data-mk="${CSS.escape(k)}"]`);if(!el)return;
+ msK=k;msAt=Date.now();
+ const own=m.senderUid===me.uid,txt=ptext[k]||'',call=m.mediaType==='call'||m.mediaType==='group_call';
+ $('ms-copy').hidden=!txt;$('ms-del').hidden=!own;$('ms-fwd').hidden=!!m.viewOnce||call;
+ {const can=!m.pending&&!call,mine=(m.reactions||{})[me.uid];$('ms-rxbox').hidden=!can;document.querySelectorAll('#ms-rx button[data-e],#ms-rxm button[data-e]').forEach(b=>b.classList.toggle('sel',b.dataset.e===mine))}
+ $('ms-rxm').hidden=true;$('ms-cols').hidden=true;$('ms-menu').hidden=false;
+ /* copy of the pressed bubble, shown in the same spot above the blurred chat */
+ const r=el.getBoundingClientRect(),cl=$('mscl'),c=el.cloneNode(true);
+ msRect=r;msMe=el.classList.contains('me');
+ c.removeAttribute('data-mk');c.classList.remove('hl');c.querySelectorAll('.swi').forEach(n=>n.remove());c.querySelectorAll('[id]').forEach(n=>n.removeAttribute('id'));
+ c.querySelectorAll('video,audio').forEach(v=>{v.removeAttribute('autoplay');v.muted=true;try{v.pause()}catch(_){}});
+ c.style.cssText='width:'+r.width+'px;max-width:none;margin:0;transform:none;transition:none';
+ cl.replaceChildren(c);
+ ['--peer-av','--peer-ini','--bubble-out','--bubble-out-solid'].forEach(p=>{const v=$('msgs').style.getPropertyValue(p);if(v)cl.style.setProperty(p,v);else cl.style.removeProperty(p)});
+ navPush('ms');$('ms-stack').style.visibility='hidden';$('msh').hidden=false;msLayout();$('ms-stack').style.visibility='';
+ try{navigator.vibrate&&navigator.vibrate(12)}catch(_){}}
+function msLayout(){
+ const st=$('ms-stack'),vw=innerWidth,vh=innerHeight,r=msRect,pn=$('ms-rxbox'),cl=$('mscl'),mn=$('ms-menu'),cp=$('ms-cols'),act=mn.hidden?cp:mn,gap=8;
+ if(!r)return;
+ const ph=pn.hidden?0:pn.offsetHeight+gap,mh=act.offsetHeight,c=cl.firstElementChild;
+ if(c){c.style.maxHeight=Math.max(70,vh-40-ph-mh-gap)+'px';c.style.overflow=c.scrollHeight>c.clientHeight+1?'hidden':''}
+ const place=(el,exact)=>{const w=el.offsetWidth;let x=msMe?r.right-w:r.left;if(!exact)x=Math.max(12,Math.min(x,vw-12-w));el.style.marginLeft=x+'px'};
+ place(pn);place(cl,true);place(mn);place(cp);
+ let top=r.top-ph;top=Math.max(20,Math.min(top,vh-16-st.offsetHeight));st.style.top=top+'px'}
 /* ---- reactions: dm_threads/{t}/messages/{key}/reactions/{uid} = emoji (null removes) ---- */
 const RX_OK=['👍','❤️','😂','😮','😢','🙏','🔥','🙌','😭','🙈','🤐','✨'];
 function rxHtml(m,peer){
@@ -1888,6 +1999,41 @@ async function setReaction(k,emoji){
  }catch(err){console.error('reaction failed',err);apply(prev);toast("Couldn't add your reaction")}
 }
 $('ms-rx').onclick=e=>{const b=e.target.closest('button[data-e]');if(!b||!RX_OK.includes(b.dataset.e))return;const k=msK,em=b.dataset.e;msClose();setTimeout(()=>setReaction(k,em),60)};
+/* ---- long-press menu: reactions above, bubble in place, actions below ---- */
+const RX_MAIN=['🎉','🔥','🤠','💯','👍','🤔','😭','❤️','😂','👎','😢','😬','🧠'];
+const RX_EXTRA=['😀','😃','😄','😁','😆','😅','🤣','🙂','😉','😊','😍','🥰','😘','😎','🤩','🥳','😏','😒','😞','😔','😟','😕','🙁','😣','😖','😫','😩','🥺','😠','😡','🤯','😳','🥵','🥶','😱','😰','🤗','🤭','🫡','🙄','😴','🤮','🤧','😈','💀','👏','🙌','🙏','💪','👀','🫶','🤝','✌️','🤞','👌','👋','💔','💙','💜','🖤','✨','🎊','🏆','😮','🙈','🤐'];
+RX_MAIN.concat(RX_EXTRA).forEach(e=>{if(!RX_OK.includes(e))RX_OK.push(e)});
+{const rb=e=>`<button type="button" data-e="${e}" aria-label="React ${e}">${e}</button>`;
+ $('ms-rx').innerHTML=RX_MAIN.map(rb).join('')+'<button type="button" class="mo" id="ms-more" aria-label="More reactions"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg></button>';
+ $('ms-rxm').innerHTML=RX_EXTRA.map(rb).join('')}
+$('ms-rxm').onclick=$('ms-rx').onclick;
+$('ms-more').onclick=()=>{$('ms-rxm').hidden=!$('ms-rxm').hidden;msLayout()};
+addEventListener('resize',()=>{if(!$('msh').hidden)msClose()});
+/* Info */
+$('ms-info').onclick=()=>{const k=msK,m=msgStore[k];msClose();if(!m)return;
+ const own=m.senderUid===me.uid,f=t=>new Date(+t).toLocaleString([],{dateStyle:'medium',timeStyle:'short'}),L=[];
+ L.push((own?'Sent: ':'Received: ')+f(m.createdAt));
+ if(own){const ts=+m.createdAt||0;L.push('Status: '+(m.pending?'Sending…':ts<=peerRead?'Read':ts<=peerDeliv?'Delivered':'Sent'))}
+ if(m.editedAt)L.push('Edited: '+f(m.editedAt));
+ if(m.expiresAt)L.push('Disappears: '+f(m.expiresAt));
+ setTimeout(()=>{$('m-text').style.whiteSpace='pre-line';ask('Message info',L.join('\n'),{cancel:false}).then(()=>{$('m-text').style.whiteSpace=''})},60)};
+/* Delete for me: hides the message on this device only */
+const hidK=(()=>{try{return JSON.parse(localStorage.getItem('hHid')||'{}')||{}}catch(_){return{}}})();
+$('ms-delme').onclick=()=>{const k=msK;msClose();setTimeout(async()=>{
+ if(!await ask('Delete for me?','This removes the message from this device only. The other person will still see it.',{ok:'Delete'}))return;
+ hidK[k]=1;try{const ks=Object.keys(hidK);if(ks.length>3000)ks.slice(0,ks.length-3000).forEach(x=>delete hidK[x]);localStorage.setItem('hHid',JSON.stringify(hidK))}catch(_){}
+ if(curRepaint)curRepaint();toast('Message deleted for you')},60)};
+/* Bubble color: colour of your own bubbles in this chat (saved on this device) */
+const BC_COL=['#25B1F5','#6C5CE7','#E84393','#F26B3A','#1FA971','#E5484D','#D9822B','#2B2F3A','#0E8FB0'];
+const bcMap=()=>{try{return JSON.parse(localStorage.getItem('hBc')||'{}')||{}}catch(_){return{}}};
+function applyBc(uid){const ms=$('msgs'),c=bcMap()[uid];
+ if(c&&/^#[0-9a-f]{6}$/i.test(c)){ms.style.setProperty('--bubble-out',c);ms.style.setProperty('--bubble-out-solid',c)}
+ else{ms.style.removeProperty('--bubble-out');ms.style.removeProperty('--bubble-out-solid')}}
+$('ms-cols').innerHTML='<p>Your bubbles in this chat</p><div class="sg">'+BC_COL.map(c=>`<button type="button" class="sw" data-c="${c}" style="background:${c}" aria-label="Color ${c}"></button>`).join('')+'<button type="button" class="sw def" data-c="" aria-label="Default color">↺</button></div>';
+$('ms-color').onclick=()=>{$('ms-menu').hidden=true;$('ms-cols').hidden=false;msLayout()};
+$('ms-cols').onclick=e=>{const b=e.target.closest('.sw');if(!b||!active)return;const mp=bcMap();if(b.dataset.c)mp[active]=b.dataset.c;else delete mp[active];
+ try{localStorage.setItem('hBc',JSON.stringify(mp))}catch(_){}applyBc(active);msClose()};
+
 $('msgs').addEventListener('click',e=>{
  const el=e.target.closest('.rxr');if(!el)return;
  const m=msgStore[el.dataset.rk];if(!m||!m.reactions)return;
@@ -2029,7 +2175,7 @@ new MutationObserver(()=>{clearTimeout(smartT);smartT=setTimeout(paintSmart,180)
 $('msg').addEventListener('input',()=>{if($('msg').value)$('smart').innerHTML='';else paintSmart()});
 $('msgs').addEventListener('scroll',()=>{const m=$('msgs');$('jmp').classList.toggle('show',m.scrollHeight-m.scrollTop-m.clientHeight>420)},{passive:true});
 $('jmp').onclick=()=>{const m=$('msgs');m.scrollTo({top:m.scrollHeight,behavior:'smooth'})};
-$('msg').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMsg()}});
+$('msg').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing&&!matchMedia('(pointer:coarse)').matches){e.preventDefault();sendMsg()}});
 function chatHide(){stopTyping();peerTyping=false;if(rec)stopRec(false);clearReply();pauseVoices();$('app').classList.remove('in-chat');if(offMsgs){offMsgs();offMsgs=null}active=null;curMarkRead=null;stopPres();$('thread').hidden=true;$('ph').hidden=false;renderList()}
 $('back').onclick=()=>navClose('chat',chatHide);
 

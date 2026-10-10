@@ -1289,17 +1289,20 @@ let lastKey=0;
 function keySound(e){
  if(!soundsOn()||!sndCtx||sndCtx.state!=='running')return;
  const n=performance.now();if(n-lastKey<35)return;lastKey=n;
- const del=e&&e.inputType&&e.inputType.indexOf('delete')===0,t=sndCtx.currentTime,len=Math.floor(sndCtx.sampleRate*.025),buf=sndCtx.createBuffer(1,len,sndCtx.sampleRate),d=buf.getChannelData(0);
- for(let i=0;i<len;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/len,3);
- const src=sndCtx.createBufferSource(),f=sndCtx.createBiquadFilter(),g=sndCtx.createGain();
- src.buffer=buf;f.type='bandpass';f.frequency.value=(del?1500:2300)+Math.random()*400;f.Q.value=1.2;g.gain.value=.5;
- src.connect(f);f.connect(g);g.connect(sndCtx.destination);src.start(t)}
+ const del=e&&e.inputType&&e.inputType.indexOf('delete')===0,t=sndCtx.currentTime,o=sndCtx.createOscillator(),g=sndCtx.createGain();
+ /* soft "tok" like a phone keyboard tap */
+ o.type='sine';o.frequency.setValueAtTime(del?620:880,t);o.frequency.exponentialRampToValueAtTime(del?360:520,t+.03);
+ g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.16,t+.003);g.gain.exponentialRampToValueAtTime(.0001,t+.045);
+ o.connect(g);g.connect(sndCtx.destination);o.start(t);o.stop(t+.06)}
 function sendSound(){
  if(!soundsOn()||!sndCtx||sndCtx.state!=='running')return;
- const t=sndCtx.currentTime,o=sndCtx.createOscillator(),g=sndCtx.createGain();
- o.type='sine';o.frequency.setValueAtTime(520,t);o.frequency.exponentialRampToValueAtTime(1250,t+.16);
- g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.13,t+.015);g.gain.exponentialRampToValueAtTime(.0001,t+.2);
- o.connect(g);g.connect(sndCtx.destination);o.start(t);o.stop(t+.23)}
+ const t=sndCtx.currentTime;
+ /* WhatsApp-style send "pop": quick rising bubble + a tiny high tick */
+ [[320,950,0,.09,.2],[1500,1800,.07,.05,.07]].forEach(([f0,f1,dt,d,v])=>{
+  const o=sndCtx.createOscillator(),g=sndCtx.createGain();o.type='sine';
+  o.frequency.setValueAtTime(f0,t+dt);o.frequency.exponentialRampToValueAtTime(f1,t+dt+d*.8);
+  g.gain.setValueAtTime(0,t+dt);g.gain.linearRampToValueAtTime(v,t+dt+.006);g.gain.exponentialRampToValueAtTime(.0001,t+dt+d);
+  o.connect(g);g.connect(sndCtx.destination);o.start(t+dt);o.stop(t+dt+d+.03)})}
 $('msg').addEventListener('input',keySound);
 function paintSnd(){$('r-snd-sub').textContent=soundsOn()?'On':'Off'}
 $('r-snd').onclick=()=>{const on=soundsOn();try{localStorage.setItem('hSounds',on?'off':'on')}catch(_){}paintSnd();if(!on){sndInit();setTimeout(()=>playSound('message'),60)}};

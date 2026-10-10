@@ -1479,7 +1479,7 @@ const initials=n=>(n||'?').trim().split(/\s+/).slice(0,2).map(w=>w[0]).join('').
 const avStyle=(p)=>p&&p.photoURL?`style="background-image:url('${p.photoURL.replace(/'/g,'%27')}')"`:'';
 const fmt=ts=>{if(!ts)return'';const d=new Date(ts),n=new Date();return d.toDateString()===n.toDateString()?d.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'}):d.toLocaleDateString([],{month:'short',day:'numeric'})};
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-async function preview(uid,c){const key=uid+c.timestamp;if(previews[key]!==undefined)return previews[key];previews[key]=await dec(uid,c.text);renderList();return previews[key]}
+async function preview(uid,c){const key=uid+c.timestamp+'|'+(c.text||'');if(previews[key]!==undefined)return previews[key];previews[key]=await dec(uid,c.text);renderList();return previews[key]}
 const isArch=c=>!!c.archived&&!(c.senderUid!==me.uid&&(+c.timestamp||0)>c.archived);
 const ARCH_SVG='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>',BACK_SVG='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>';
 /* ---- illustrated empty states ---- */
@@ -1519,7 +1519,7 @@ function renderList(){paintNav();
  const rows=all.filter(([u,c])=>showArch?isArch(c):!isArch(c)).filter(([u,c])=>showArch||catF==='all'||(catF==='unread'?isUn(u,c):(fStatus[u]==='online'&&!blocked[u])));
  const top='';
  if(!rows.length&&!top){$('chats').innerHTML=emptyHtml(q?'search':catF);return}
- $('chats').innerHTML=top+rows.map(([uid,c])=>{const p=profiles[uid]||{},pv=previews[uid+c.timestamp];if(pv===undefined)preview(uid,c);
+ $('chats').innerHTML=top+rows.map(([uid,c])=>{const p=profiles[uid]||{},pv=previews[uid+c.timestamp+'|'+(c.text||'')];if(pv===undefined)preview(uid,c);
   const bl=!!blocked[uid],un=!bl&&c.unreadCount>0&&c.senderUid!==me.uid;
   return `<div class="chat${un?' unread':''}${bl?' blocked':''}${active===uid?' active':''}" data-uid="${esc(uid)}"><div class="av" ${avStyle(p)}>${p.photoURL?'':esc(initials(p.name))}</div><div class="cm"><div class="n">${nameHtml(p,'…',uid)}</div>${typNow[uid]&&!bl?'<div class="p typ">typing</div>':`<div class="p${!bl&&c.senderUid===me.uid?' mine':''}">${bl?'Blocked':(c.senderUid===me.uid?cardTick(uid,c):'')+esc(pv===undefined?'…':pv)}</div>`}</div><div class="meta"><span class="t">${fmt(c.timestamp)}</span>${un?`<span class="badge">${c.unreadCount>99?'99+':c.unreadCount}</span>`:''}</div></div>`}).join('');
 }

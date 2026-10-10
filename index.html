@@ -1284,6 +1284,23 @@ function playSound(kind){
  else if(kind==='pop'){tone(740,t,.12,.09)}
  else if(kind==='online'){tone(523.25,t,.16,.1);tone(659.25,t+.09,.16,.1);tone(783.99,t+.18,.26,.1)}
 }
+/* typing + send sounds (respect the Sounds setting) */
+let lastKey=0;
+function keySound(e){
+ if(!soundsOn()||!sndCtx||sndCtx.state!=='running')return;
+ const n=performance.now();if(n-lastKey<35)return;lastKey=n;
+ const del=e&&e.inputType&&e.inputType.indexOf('delete')===0,t=sndCtx.currentTime,len=Math.floor(sndCtx.sampleRate*.025),buf=sndCtx.createBuffer(1,len,sndCtx.sampleRate),d=buf.getChannelData(0);
+ for(let i=0;i<len;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/len,3);
+ const src=sndCtx.createBufferSource(),f=sndCtx.createBiquadFilter(),g=sndCtx.createGain();
+ src.buffer=buf;f.type='bandpass';f.frequency.value=(del?1500:2300)+Math.random()*400;f.Q.value=1.2;g.gain.value=.5;
+ src.connect(f);f.connect(g);g.connect(sndCtx.destination);src.start(t)}
+function sendSound(){
+ if(!soundsOn()||!sndCtx||sndCtx.state!=='running')return;
+ const t=sndCtx.currentTime,o=sndCtx.createOscillator(),g=sndCtx.createGain();
+ o.type='sine';o.frequency.setValueAtTime(520,t);o.frequency.exponentialRampToValueAtTime(1250,t+.16);
+ g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.13,t+.015);g.gain.exponentialRampToValueAtTime(.0001,t+.2);
+ o.connect(g);g.connect(sndCtx.destination);o.start(t);o.stop(t+.23)}
+$('msg').addEventListener('input',keySound);
 function paintSnd(){$('r-snd-sub').textContent=soundsOn()?'On':'Off'}
 $('r-snd').onclick=()=>{const on=soundsOn();try{localStorage.setItem('hSounds',on?'off':'on')}catch(_){}paintSnd();if(!on){sndInit();setTimeout(()=>playSound('message'),60)}};
 paintSnd();
@@ -1533,7 +1550,7 @@ const blockedBy=async u=>{try{return (await get(ref(db,`users/${u}/blocked/${me.
 async function sendMsg(){
  const inp=$('msg'),text=inp.value.trim();if(!text||!active)return;
  if(blocked[active]){const u=active;if(await ask('Unblock to send?',"You've blocked this contact. Unblock them to send a message.",{ok:'Unblock'}))await remove(ref(db,`users/${me.uid}/blocked/${u}`)).catch(()=>{});return}
- inp.value='';syncSend();stopTyping();const rpm=replyTo;clearReply();
+ inp.value='';sendSound();syncSend();stopTyping();const rpm=replyTo;clearReply();
  const uid=active,t=tid(me.uid,uid),now=srvNow(),e=await enc(uid,text),rp=rpm?await replyPayload(uid,rpm).catch(()=>null):null;
  const key=push(ref(db,`dm_threads/${t}/messages`)).key;
  await outAdd({key,owner:me.uid,uid,t,text:e,enc:typeof e==='string'&&e.startsWith(E2E),createdAt:now,rp:rp||null,exp:disSec>0?now+disSec*1000:0});

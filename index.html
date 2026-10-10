@@ -2051,14 +2051,17 @@ $('ms-copy').onclick=async()=>{const t=ptext[msK];msClose();if(t)toast(await cop
 $('ms-del').onclick=()=>{const k=msK;msClose();setTimeout(()=>delMsg(k),60)};
 async function delMsg(k){
  const m=msgStore[k],uid=active;if(!m||!uid||m.senderUid!==me.uid)return;
+ const createdAt=m.createdAt,origText=m.text;
  if(!await ask('Delete message?','This message will be removed for everyone in this chat.',{ok:'Delete'}))return;
  const t=tid(me.uid,uid),f={deleted:true,deletedAt:Date.now(),text:null,mediaURL:null,mediaType:null,reactions:null,replyToMessage:null,replyToStory:null,fileName:null,fileSize:null,duration:null,isForwarded:null,editedAt:null};
  try{await update(ref(db,`dm_threads/${t}/messages/${k}`),f);
   /* if it was the latest message, update the chat-list preview on both sides (same as Haba) */
-  try{const[a,b]=await Promise.all([get(ref(db,`user_chats/${me.uid}/${uid}`)),get(ref(db,`user_chats/${uid}/${me.uid}`))]),u={};
-   if(a.exists()&&a.val().timestamp===m.createdAt)u[`user_chats/${me.uid}/${uid}/text`]='This message was deleted';
-   if(b.exists()&&b.val().timestamp===m.createdAt)u[`user_chats/${uid}/${me.uid}/text`]='This message was deleted';
-   if(Object.keys(u).length)await update(ref(db),u)}catch(_){}
+  /* the card preview is the deleted message if it carries the same timestamp or the same (encrypted) text; each side is written on its own so one refusal can't block the other */
+  {const DEL='This message was deleted',hit=v=>!!v&&((+v.timestamp||0)===(+createdAt||0)||(!!origText&&v.text===origText));
+   await Promise.all([[me.uid,uid],[uid,me.uid]].map(async([o,pe])=>{
+    try{const r=ref(db,`user_chats/${o}/${pe}`),sn=await get(r);
+     if(sn.exists()&&hit(sn.val()))await update(r,{text:DEL})}
+    catch(err){console.warn('preview update failed for',o,err)}}))}
   toast('Message deleted')}
  catch(_){toast('Could not delete')}}
 

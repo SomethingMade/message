@@ -61,8 +61,13 @@ button:disabled{opacity:.5;cursor:not-allowed}
 </div>
 
 <div class="wrap login hidden" id="s-denied">
-  <h1>Admins only</h1>
-  <p class="sub">This account isn’t an active admin. Ask an existing admin to change your role, or set <code>role: "admin"</code> and <code>active: true</code> on your record in <code>support_agents</code> in the Firebase console.</p>
+  <h1>Request access</h1>
+  <p class="sub" id="d-sub"></p>
+  <div class="card" id="d-form">
+    <div class="field"><label for="d-name">Your name</label><input id="d-name" autocomplete="name"></div>
+    <div class="msg" id="d-msg"></div>
+    <button class="primary" id="d-req">Request access</button>
+  </div>
   <button id="d-out">Sign out</button>
 </div>
 
@@ -91,6 +96,11 @@ button:disabled{opacity:.5;cursor:not-allowed}
     </div>
     <div class="msg" id="a-msg"></div>
     <button class="primary" id="a-go">Give access</button>
+  </div>
+
+  <div class="card hidden" id="req-card">
+    <h2>Access requests</h2>
+    <div id="reqs"></div>
   </div>
 
   <div class="card">
@@ -123,7 +133,7 @@ const auth2 = getAuth(app2);
 
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-let me = null, agents = {}, unsub = null, mode = 'new';
+let me = null, agents = {}, reqs = {}, unsub = null, mode = 'new', reqUser = null, reqA = null;
 
 function show(id){ ['s-login','s-denied','s-app'].forEach(x => $('#'+x).classList.toggle('hidden', x !== id)); }
 function toast(t){ const e = $('#toast'); e.textContent = t; e.classList.remove('hidden'); clearTimeout(toast.t); toast.t = setTimeout(() => e.classList.add('hidden'), 2800); }
@@ -143,12 +153,59 @@ onAuthStateChanged(auth, async user => {
   if (!user) { show('s-login'); return; }
   try {
     const a = (await get(ref(db, 'support_agents/' + user.uid))).val();
-    if (!a || a.active !== true || a.role !== 'admin') { show('s-denied'); return; }
+    if (!a || a.active !== true || a.role !== 'admin') { await showRequest(user, a); return; }
     me = { uid: user.uid, name: a.name || user.email };
     $('#me-name').textContent = me.name;
     show('s-app');
-    unsub = onValue(ref(db, 'support_agents'), s => { agents = s.val() || {}; draw(); }, e => { $('#list').innerHTML = `<div class="empty">${esc(errText(e))}</div>`; });
-  } catch (e) { show('s-denied'); }
+    const u1 = onValue(ref(db, 'support_agents'), s => { agents = s.val() || {}; draw(); }, e => { $('#list').innerHTML = `<div class="empty">${esc(errText(e))}</div>`; });
+    const u2 = onValue(ref(db, 'support_access_requests'), s => { reqs = s.val() || {}; drawReqs(); }, () => {});
+    unsub = () => { u1(); u2(); };
+  } catch (e) { await showRequest(user, null); }
+});
+
+// Any signed-in user lands here and can ask for access. An admin has to approve.
+async function showRequest(user, a){
+  reqUser = user; reqA = a; show('s-denied');
+  $('#d-name').value = $('#d-name').value || user.displayName || '';
+  const isAgent = !!(a && a.active === true);
+  let pending = false;
+  try { pending = !!(await get(ref(db, 'support_access_requests/' + user.uid))).val(); } catch (_) {}
+  $('#d-sub').textContent = isAgent
+    ? 'You already have agent access to Haba Support. This page is for admins, so you can ask for admin access below.'
+    : pending ? 'Your request is with the admins. You’ll get in as soon as someone approves it.'
+    : `Signed in as ${user.email || user.uid}. Send a request and an admin will review it.`;
+  $('#d-form').classList.toggle('hidden', pending);
+  $('#d-req').textContent = isAgent ? 'Request admin access' : 'Request access';
+}
+$('#d-req').onclick = async () => {
+  const m = $('#d-msg'), name = $('#d-name').value.trim();
+  if (!name) { m.textContent = 'Enter your name.'; m.className = 'msg bad'; return; }
+  try {
+    await set(ref(db, 'support_access_requests/' + reqUser.uid), { name, email: reqUser.email || '', role: reqA && reqA.active === true ? 'admin' : 'agent', status: 'pending', createdAt: serverTimestamp() });
+    m.textContent = '';
+    await showRequest(reqUser, reqA);
+  } catch (e) { m.textContent = errText(e); m.className = 'msg bad'; }
+};
+
+function drawReqs(){
+  const rows = Object.entries(reqs);
+  $('#req-card').classList.toggle('hidden', !rows.length);
+  $('#reqs').innerHTML = rows.map(([uid, r]) => `<div class="agent">
+    <div class="who"><b>${esc(r.name || uid)}</b><span>${esc(r.email || uid)} · wants ${esc(r.role || 'agent')}</span></div>
+    <div class="acts"><button class="sm primary" data-q="approve" data-u="${esc(uid)}">Approve</button><button class="sm danger" data-q="decline" data-u="${esc(uid)}">Decline</button></div>
+  </div>`).join('');
+}
+$('#reqs').addEventListener('click', async e => {
+  const b = e.target.closest('button'); if (!b) return;
+  const uid = b.dataset.u, r = reqs[uid]; if (!r) return;
+  try {
+    if (b.dataset.q === 'approve') {
+      const rec = { name: r.name, role: r.role === 'admin' ? 'admin' : 'agent', active: true, addedBy: me.name, createdAt: serverTimestamp() };
+      if (r.email) rec.email = r.email;
+      await update(ref(db), { ['support_agents/' + uid]: rec, ['support_access_requests/' + uid]: null });
+      toast(`${r.name} approved`);
+    } else { await remove(ref(db, 'support_access_requests/' + uid)); toast('Request declined'); }
+  } catch (err) { toast(errText(err)); }
 });
 
 $('#l-go').onclick = async () => {

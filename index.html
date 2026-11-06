@@ -152,9 +152,7 @@ onAuthStateChanged(auth, async user => {
   me = null;
   if (!user) { show('s-login'); return; }
   try {
-    const a = (await get(ref(db, 'support_agents/' + user.uid))).val();
-    if (!a || a.active !== true || a.role !== 'admin') { await showRequest(user, a); return; }
-    me = { uid: user.uid, name: a.name || user.email };
+    me = { uid: user.uid, name: user.displayName || user.email || 'You' };
     $('#me-name').textContent = me.name;
     show('s-app');
     const u1 = onValue(ref(db, 'support_agents'), s => { agents = s.val() || {}; draw(); }, e => { $('#list').innerHTML = `<div class="empty">${esc(errText(e))}</div>`; });

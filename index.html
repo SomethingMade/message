@@ -124,8 +124,19 @@ input,textarea{font:inherit;color:inherit}
 .res{display:flex;gap:12px;align-items:center;padding:9px 4px;cursor:pointer;border-radius:10px}
 .res:hover{background:var(--alt)}
 .res small{color:var(--muted);display:block}
-#toast{position:fixed;left:50%;bottom:calc(90px + var(--sab));transform:translateX(-50%);background:#111;color:#fff;padding:10px 18px;border-radius:50px;font-size:14px;z-index:99;opacity:0;pointer-events:none;transition:opacity .2s;max-width:90%}
-#toast.show{opacity:1}
+/* bottom snackbar for alerts */
+#toast{position:fixed;left:50%;bottom:calc(76px + var(--sab));width:min(460px,calc(100% - 24px));transform:translate(-50%,24px);background:#2B2B2E;color:#fff;padding:12px 16px;border-radius:12px;font-size:14px;line-height:1.35;z-index:99;opacity:0;pointer-events:none;transition:opacity .22s,transform .28s cubic-bezier(.2,.9,.3,1.1);display:flex;align-items:center;gap:12px;box-shadow:0 6px 22px rgba(0,0,0,.35)}
+#toast.show{opacity:1;transform:translate(-50%,0);pointer-events:auto}
+#toast span{flex:1}
+#toast button{color:var(--accent);font-weight:700;text-transform:uppercase;font-size:13px;letter-spacing:.4px;padding:4px 2px;flex-shrink:0}
+:root[data-theme="dark"] #toast{background:#3A3A3C}
+
+/* top slide-in notification */
+#notif{position:fixed;left:50%;top:calc(10px + var(--sat));width:min(440px,calc(100% - 20px));transform:translate(-50%,-160%);z-index:90;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:18px;box-shadow:0 10px 32px rgba(0,0,0,.3);padding:10px 14px;display:flex;gap:12px;align-items:center;transition:transform .38s cubic-bezier(.2,.9,.3,1.08);cursor:pointer;touch-action:none;pointer-events:none}
+#notif.show{transform:translate(-50%,0);pointer-events:auto}
+#notif .nmid{flex:1;min-width:0}
+#notif .nmid b,#notif .nmid span{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#notif .nmid span{color:var(--muted);font-size:14px;margin-top:1px}
 .spin{width:22px;height:22px;border:3px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:sp .7s linear infinite;margin:20px auto}
 @keyframes sp{to{transform:rotate(360deg)}}
 
@@ -292,7 +303,8 @@ input,textarea{-webkit-user-select:text;user-select:text;-webkit-touch-callout:d
 </div>
 
 <div id="menu" class="hidden"></div>
-<div id="toast"></div>
+<div id="notif"><div class="av sm" id="notif-av"></div><div class="nmid"><b id="notif-name"></b><span id="notif-text"></span></div></div>
+<div id="toast"><span id="toast-t"></span><button id="toast-a" class="hidden"></button></div>
 <div id="modal-root"></div>
 
 <script type="module">
@@ -322,7 +334,13 @@ const cssUrl = u => String(u || DEFAULT_AVATAR).replace(/['"()\\\s]/g, c => enco
 const linkify = h => h.replace(/\bhttps?:\/\/[^\s<]+/g, u => `<a href="${u}" target="_blank" rel="noopener noreferrer">${u}</a>`);
 const threadIdFor = (a, b) => [a, b].sort().join('_');
 let toastT;
-function toast(msg){ const t=$('#toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'),2800); }
+function toast(msg, action){
+  const t = $('#toast'), a = $('#toast-a');
+  $('#toast-t').textContent = msg;
+  if (action && action.label) { a.textContent = action.label; a.classList.remove('hidden'); a.onclick = () => { t.classList.remove('show'); action.fn && action.fn(); }; }
+  else { a.classList.add('hidden'); a.onclick = null; }
+  t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), action ? 6000 : 3200);
+}
 
 /* ---------- theme ---------- */
 function applyTheme(){
@@ -570,6 +588,7 @@ function teardown(){
   closeThread(true);
   Object.keys(chats).forEach(k => delete chats[k]); Object.keys(previews).forEach(k => delete previews[k]);
   Object.values(typingWatch).forEach(f => f()); Object.keys(typingWatch).forEach(k => delete typingWatch[k]); Object.keys(typingMap).forEach(k => delete typingMap[k]);
+  chatsLoaded = false; hideNotif();
   kp = null; Object.keys(shared).forEach(k => delete shared[k]); decCache.clear();
 }
 
@@ -588,9 +607,12 @@ function startChatList(){
   const r = ref(db, `user_chats/${me.uid}`);
   const cb = onValue(r, snap => {
     const v = snap.val() || {};
+    const old = {}; Object.entries(chats).forEach(([k, c]) => old[k] = c.timestamp || 0);
     Object.keys(chats).forEach(k => delete chats[k]);
     Object.entries(v).forEach(([uid, meta]) => { if (uid !== AI_UID && meta && typeof meta === 'object') chats[uid] = meta; });
     const uids = Object.keys(chats);
+    if (chatsLoaded) uids.forEach(uid => { const c = chats[uid]; if (c.senderUid !== me.uid && (c.timestamp || 0) > (old[uid] || 0) && uid !== activeUid) notifyMsg(uid, c); });
+    chatsLoaded = true;
     uids.forEach(uid => {   // live "typing…" per conversation
       if (typingWatch[uid]) return;
       const tr = ref(db, `dm_threads/${threadIdFor(me.uid, uid)}/typing/${uid}`);
@@ -644,6 +666,33 @@ $('#chatlist').addEventListener('click', e => {
   openThread(ci.dataset.uid);
 });
 $('#filter').addEventListener('input', renderChatList);
+
+/* top slide-in notification for new messages (tap to open, swipe up to dismiss) */
+let notifT = null, notifUid = null, chatsLoaded = false;
+const hideNotif = () => { const n = $('#notif'); n.classList.remove('show'); n.style.transform = ''; clearTimeout(notifT); };
+async function notifyMsg(uid, c){
+  await loadUser(uid);
+  const txt = isE2E(c.text) ? await decText(uid, c.text) : (c.text || 'New message');
+  if (!me || uid === activeUid) return;
+  notifUid = uid;
+  $('#notif-av').style.backgroundImage = `url('${cssUrl(uAvatar(uid))}')`;
+  $('#notif-name').textContent = uName(uid);
+  $('#notif-text').textContent = txt;
+  const n = $('#notif'); n.style.transform = ''; n.classList.add('show');
+  clearTimeout(notifT); notifT = setTimeout(hideNotif, 4500);
+}
+(() => {
+  const n = $('#notif'); let y0 = null, dy = 0;
+  n.addEventListener('pointerdown', e => { y0 = e.clientY; dy = 0; clearTimeout(notifT); try { n.setPointerCapture(e.pointerId); } catch {} n.style.transition = 'none'; });
+  n.addEventListener('pointermove', e => { if (y0 === null) return; dy = Math.min(0, e.clientY - y0); n.style.transform = `translate(-50%,${dy}px)`; });
+  const end = () => {
+    if (y0 === null) return; y0 = null; n.style.transition = '';
+    if (dy < -30) hideNotif();
+    else if (Math.abs(dy) < 6) { const u = notifUid; hideNotif(); if (u) openThread(u); }
+    else { n.style.transform = ''; notifT = setTimeout(hideNotif, 3000); }
+  };
+  n.addEventListener('pointerup', end); n.addEventListener('pointercancel', end);
+})();
 $('#pills').addEventListener('click', e => {
   const b = e.target.closest('.pill'); if (!b) return;
   chatFilter = b.dataset.f;
@@ -863,7 +912,7 @@ input.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey &&
 $('#send').onclick = sendText;
 
 function lockedGuard(err){
-  if (err && err.message === 'LOCKED') { toast('Unlock encryption to send messages'); promptUnlock(); return true; }
+  if (err && err.message === 'LOCKED') { toast('Unlock encryption to send messages', { label: 'Unlock', fn: () => promptUnlock() }); return true; }
   return false;
 }
 async function pushMessage(peer, payload, previewEncrypted){

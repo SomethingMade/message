@@ -175,6 +175,14 @@ input,textarea{font:inherit;color:inherit}
 .vn-time{font-size:11px;opacity:.75;font-variant-numeric:tabular-nums}
 .vn-spd{display:none;font-size:11px;font-weight:700;padding:1px 8px;border-radius:50px;background:rgba(128,128,128,.25)}
 .vn.playing .vn-spd{display:inline-block}
+
+/* typing text in chat list */
+.ci .prev span.tp{color:#34C759;font-weight:600}
+
+/* no long-press menus / selection anywhere except text fields */
+html,body{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+img,video,a{-webkit-touch-callout:none;-webkit-user-drag:none}
+input,textarea{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
 </style>
 </head>
 <body>
@@ -453,6 +461,7 @@ let me = null;
 const users = {};          // uid -> profile
 const chats = {};          // uid -> user_chats meta
 const previews = {};       // uid -> decrypted preview text
+const typingMap = {}, typingWatch = {};   // uid -> is typing to me / listener unsubs
 let chatsUnsub = null;
 let activeUid = null, threadId = null, msgLimit = PAGE, rawMsgs = {};
 let threadUnsubs = [];
@@ -538,6 +547,7 @@ function teardown(){
   if (chatsUnsub) { chatsUnsub(); chatsUnsub = null; }
   closeThread(true);
   Object.keys(chats).forEach(k => delete chats[k]); Object.keys(previews).forEach(k => delete previews[k]);
+  Object.values(typingWatch).forEach(f => f()); Object.keys(typingWatch).forEach(k => delete typingWatch[k]); Object.keys(typingMap).forEach(k => delete typingMap[k]);
   kp = null; Object.keys(shared).forEach(k => delete shared[k]); decCache.clear();
 }
 
@@ -559,6 +569,12 @@ function startChatList(){
     Object.keys(chats).forEach(k => delete chats[k]);
     Object.entries(v).forEach(([uid, meta]) => { if (uid !== AI_UID && meta && typeof meta === 'object') chats[uid] = meta; });
     const uids = Object.keys(chats);
+    uids.forEach(uid => {   // live "typing…" per conversation
+      if (typingWatch[uid]) return;
+      const tr = ref(db, `dm_threads/${threadIdFor(me.uid, uid)}/typing/${uid}`);
+      const tcb = onValue(tr, s => { const v = !!s.val(); if (typingMap[uid] !== v) { typingMap[uid] = v; renderChatList(); } });
+      typingWatch[uid] = () => off(tr, 'value', tcb);
+    });
     Promise.all(uids.map(loadUser)).then(renderChatList);
     uids.forEach(async uid => {
       const t = chats[uid].text;
@@ -593,7 +609,7 @@ function renderChatList(){
     return `<div class="ci ${uid === activeUid ? 'active' : ''}" data-uid="${esc(uid)}">
       <div class="av" style="background-image:url('${cssUrl(uAvatar(uid))}')">${online ? '<span class="dot"></span>' : ''}</div>
       <div class="mid"><div class="top"><span class="name">${esc(uid === me.uid ? 'My Account' : uName(uid))}</span><span class="time">${fmtListTime(c.timestamp)}</span></div>
-      <div class="prev"><span>${own ? 'You: ' : ''}${esc(pv)}</span>${c.unreadCount > 0 ? `<div class="badge">${c.unreadCount > 99 ? '99+' : c.unreadCount}</div>` : ''}</div></div></div>`;
+      <div class="prev">${typingMap[uid] ? '<span class="tp">typing…</span>' : `<span>${own ? 'You: ' : ''}${esc(pv)}</span>`}${c.unreadCount > 0 ? `<div class="badge">${c.unreadCount > 99 ? '99+' : c.unreadCount}</div>` : ''}</div></div></div>`;
   }).join('');
 }
 $('#chatlist').addEventListener('click', e => { const ci = e.target.closest('.ci'); if (ci) openThread(ci.dataset.uid); });
@@ -1092,6 +1108,11 @@ if (window.visualViewport) {
   window.visualViewport.addEventListener('resize', fit); window.visualViewport.addEventListener('scroll', fit);
   input.addEventListener('focus', () => setTimeout(() => { const b = $('#msgs'); b.scrollTop = b.scrollHeight; }, 300));
 }
+/* block long-press menus and text selection everywhere except inside text fields (so paste still works) */
+const inField = t => { const el = t && t.nodeType === 3 ? t.parentElement : t; return !!(el && el.closest && el.closest('input,textarea')); };
+document.addEventListener('contextmenu', e => { if (!inField(e.target)) e.preventDefault(); });
+document.addEventListener('selectstart', e => { if (!inField(e.target)) e.preventDefault(); });
+document.addEventListener('dragstart', e => { if (!inField(e.target)) e.preventDefault(); });
 window.addEventListener('beforeunload', () => { if (threadId && me) set(ref(db, `dm_threads/${threadId}/typing/${me.uid}`), false); });
 </script>
 </body>

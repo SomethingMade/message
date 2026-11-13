@@ -176,6 +176,26 @@ input,textarea{font:inherit;color:inherit}
 .vn-spd{display:none;font-size:11px;font-weight:700;padding:1px 8px;border-radius:50px;background:rgba(128,128,128,.25)}
 .vn.playing .vn-spd{display:inline-block}
 
+/* iMessage-style typing bubble + message pop-in */
+.typing{align-self:flex-start;position:relative;background:var(--in-bg);padding:13px 16px;border-radius:20px;display:flex;gap:5px;align-items:center;margin:4px 0 2px 6px;transform-origin:left bottom;animation:tpop .3s cubic-bezier(.2,1.3,.4,1);box-shadow:0 1px .5px rgba(0,0,0,.13)}
+.typing.still{animation:none}
+.typing::before,.typing::after{content:'';position:absolute;border-radius:50%;background:var(--in-bg)}
+.typing::before{width:12px;height:12px;left:-3px;bottom:0}
+.typing::after{width:6px;height:6px;left:-8px;bottom:-4px}
+.typing i{width:8px;height:8px;background:#9A9AA0;animation:tdot 1.3s infinite}
+@keyframes tdot{0%,60%,100%{transform:translateY(0);opacity:.45}30%{transform:translateY(-4px);opacity:1}}
+@keyframes tpop{from{transform:scale(.2);opacity:0}to{transform:scale(1);opacity:1}}
+.b.pop{animation:bpop .3s cubic-bezier(.2,1.25,.4,1)}
+.b.in.pop{transform-origin:left bottom}
+.b.out.pop{transform-origin:right bottom}
+@keyframes bpop{from{transform:scale(.4);opacity:0}to{transform:scale(1);opacity:1}}
+
+/* category pills */
+#pills{display:flex;gap:8px;padding:0 14px 10px;overflow-x:auto;scrollbar-width:none}
+#pills::-webkit-scrollbar{display:none}
+.pill{flex-shrink:0;padding:7px 16px;border-radius:50px;background:var(--input);color:var(--text);font-size:13px;font-weight:600;white-space:nowrap;transition:background .15s,color .15s}
+.pill.on{background:var(--primary);color:var(--inverse)}
+
 /* typing text in chat list */
 .av{cursor:pointer}
 .ci .prev span.tp{color:#34C759;font-weight:600}
@@ -231,6 +251,7 @@ input,textarea{-webkit-user-select:text;user-select:text;-webkit-touch-callout:d
     </div>
     <div id="banner" class="hidden"><span id="banner-text" style="flex:1"></span><button id="banner-btn">Unlock</button></div>
     <div class="searchwrap"><input id="filter" placeholder="Search chats" autocomplete="off"></div>
+    <div id="pills"><button class="pill on" data-f="all">All</button><button class="pill" data-f="unread">Unread</button><button class="pill" data-f="online">Online</button></div>
     <div id="chatlist"><div class="spin"></div></div>
   </aside>
 
@@ -467,7 +488,7 @@ let chatsUnsub = null;
 let activeUid = null, threadId = null, msgLimit = PAGE, rawMsgs = {};
 let threadUnsubs = [];
 let otherLastRead = 0, otherTyping = false, iBlocked = false, theyBlocked = false, disappearing = 0;
-let replyTo = null, renderTok = 0, firstLoad = true, msgUnsub = null;
+let replyTo = null, renderTok = 0, firstLoad = true, msgUnsub = null, renderedKeys = new Set();
 
 /* =============== AUTH UI =============== */
 const authErr = m => $('#auth-err').textContent = m || '';
@@ -594,15 +615,19 @@ function fmtListTime(ts){
   if (d.toDateString() === y.toDateString()) return 'Yesterday';
   return d.toLocaleDateString([], { day: 'numeric', month: 'short' });
 }
+let chatFilter = 'all';
 function renderChatList(){
   const q = $('#filter').value.trim().toLowerCase();
   const list = Object.entries(chats).filter(([uid]) => !q || uName(uid).toLowerCase().includes(q) || (users[uid]?.username || '').toLowerCase().includes(q))
+    .filter(([uid, c]) => chatFilter === 'all' || (chatFilter === 'unread' ? c.unreadCount > 0 : users[uid]?.status === 'online'))
     .sort((a, b) => (b[1].timestamp || 0) - (a[1].timestamp || 0));
+  const unreadChats = Object.values(chats).filter(c => c.unreadCount > 0).length;
+  $('#pills [data-f=unread]').textContent = unreadChats ? 'Unread ' + unreadChats : 'Unread';
   let unread = 0;
   Object.values(chats).forEach(c => unread += c.unreadCount > 0 ? c.unreadCount : 0);
   document.title = (unread ? `(${unread}) ` : '') + 'Haba Messenger';
   const el = $('#chatlist');
-  if (!list.length) { el.innerHTML = `<div class="empty">${q ? 'No chats match.' : 'No conversations yet.<br>Tap the pencil to start one.'}</div>`; return; }
+  if (!list.length) { el.innerHTML = `<div class="empty">${q || chatFilter !== 'all' ? 'No chats match.' : 'No conversations yet.<br>Tap the pencil to start one.'}</div>`; return; }
   el.innerHTML = list.map(([uid, c]) => {
     const own = c.senderUid === me.uid;
     const online = users[uid]?.status === 'online';
@@ -619,6 +644,12 @@ $('#chatlist').addEventListener('click', e => {
   openThread(ci.dataset.uid);
 });
 $('#filter').addEventListener('input', renderChatList);
+$('#pills').addEventListener('click', e => {
+  const b = e.target.closest('.pill'); if (!b) return;
+  chatFilter = b.dataset.f;
+  document.querySelectorAll('#pills .pill').forEach(x => x.classList.toggle('on', x === b));
+  renderChatList();
+});
 
 /* =============== THREAD =============== */
 let chatHist = false;
@@ -637,7 +668,7 @@ function closeThread(silent){
 async function openThread(uid){
   if (!me) return;
   if (activeUid) closeThread(true);
-  activeUid = uid; threadId = threadIdFor(me.uid, uid); msgLimit = PAGE; rawMsgs = {}; firstLoad = true;
+  activeUid = uid; threadId = threadIdFor(me.uid, uid); msgLimit = PAGE; rawMsgs = {}; firstLoad = true; renderedKeys = new Set();
   otherLastRead = 0; otherTyping = false; iBlocked = false; theyBlocked = false; disappearing = 0; replyTo = null;
   $('#placeholder').classList.add('hidden'); $('#thread').classList.remove('hidden'); $('#app').classList.add('chat-open');
   if (!chatHist) { history.pushState({ hmChat: 1 }, ''); chatHist = true; }   // device back closes the chat, not the app
@@ -688,11 +719,11 @@ function paintBlocked(){
   if (iBlocked || theyBlocked) { bl.textContent = iBlocked ? 'You blocked this contact. Unblock to send messages.' : 'You can’t send messages to this contact.'; bl.classList.remove('hidden'); comp.classList.add('hidden'); }
   else { bl.classList.add('hidden'); comp.classList.remove('hidden'); }
 }
-function paintTyping(){
+function paintTyping(still){
   paintHeader();
   const box = $('#msgs'); let t = $('#typing-ind');
   const near = box.scrollHeight - box.scrollTop - box.clientHeight < 150;
-  if (otherTyping && !t) { t = document.createElement('div'); t.id = 'typing-ind'; t.className = 'typing'; t.innerHTML = '<i></i><i></i><i></i>'; box.appendChild(t); if (near) box.scrollTop = box.scrollHeight; }
+  if (otherTyping && !t) { t = document.createElement('div'); t.id = 'typing-ind'; t.className = 'typing' + (still ? ' still' : ''); t.innerHTML = '<i></i><i></i><i></i>'; box.appendChild(t); if (near) box.scrollTop = box.scrollHeight; }
   else if (!otherTyping && t) t.remove();
 }
 function paintTicks(){
@@ -727,6 +758,7 @@ async function renderMessages(keepScroll){
   if (Object.keys(rawMsgs).length >= msgLimit) html += '<button id="more">Load older messages</button>';
   if (!msgs.length) html += `<div class="sys">No messages yet — say hi 👋</div>`;
   for (const m of msgs) {
+    const isNew = !firstLoad && !keepScroll && !renderedKeys.has(m.key) && now - m.createdAt < 10000;
     const dk = new Date(m.createdAt).toDateString();
     if (dk !== last) { html += `<div class="day">${esc(dayLabel(m.createdAt))}</div>`; last = dk; }
     if (m.systemText) { html += `<div class="sys">${esc(m.systemText)}</div>`; continue; }
@@ -747,10 +779,11 @@ async function renderMessages(keepScroll){
     }
     if (m._t) inner += `<div class="t">${linkify(esc(m._t))}</div>`;
     const ticks = out ? `<span class="tick ${otherLastRead >= m.createdAt ? 'seen' : ''}" data-ts="${m.createdAt}">${otherLastRead >= m.createdAt ? '✓✓' : '✓'}</span>` : '';
-    html += `<div class="b ${out ? 'out' : 'in'}" data-key="${m.key}">${inner}<div class="meta">${m.editedAt ? 'edited · ' : ''}${fmtTime(m.createdAt)} ${ticks}</div></div>`;
+    html += `<div class="b ${out ? 'out' : 'in'}${isNew ? ' pop' : ''}" data-key="${m.key}">${inner}<div class="meta">${m.editedAt ? 'edited · ' : ''}${fmtTime(m.createdAt)} ${ticks}</div></div>`;
   }
   box.innerHTML = html;
-  paintTyping();
+  msgs.forEach(m => renderedKeys.add(m.key));
+  paintTyping(true);
   if (near) box.scrollTop = box.scrollHeight; else if (keepScroll) box.scrollTop = box.scrollHeight - prevH + prevTop;
   firstLoad = false;
   vnPaint();

@@ -616,6 +616,9 @@ $('#chatlist').addEventListener('click', e => { const ci = e.target.closest('.ci
 $('#filter').addEventListener('input', renderChatList);
 
 /* =============== THREAD =============== */
+let chatHist = false;
+function exitChat(){ if (chatHist) history.back(); else closeThread(); }   // popstate below does the real close
+window.addEventListener('popstate', () => { if (!chatHist) return; chatHist = false; if (activeUid) closeThread(); });
 function closeThread(silent){
   if (rec) stopRec(false);
   vnStop();
@@ -632,6 +635,7 @@ async function openThread(uid){
   activeUid = uid; threadId = threadIdFor(me.uid, uid); msgLimit = PAGE; rawMsgs = {}; firstLoad = true;
   otherLastRead = 0; otherTyping = false; iBlocked = false; theyBlocked = false; disappearing = 0; replyTo = null;
   $('#placeholder').classList.add('hidden'); $('#thread').classList.remove('hidden'); $('#app').classList.add('chat-open');
+  if (!chatHist) { history.pushState({ hmChat: 1 }, ''); chatHist = true; }   // device back closes the chat, not the app
   $('#msgs').innerHTML = '<div class="spin"></div>'; $('#input').value = ''; autoGrow(); $('#replybar').classList.add('hidden');
   await loadUser(uid);
   if (activeUid !== uid) return;
@@ -1050,10 +1054,10 @@ $('#btn-thread-menu').onclick = e => {
   showMenu(r.right - 180, r.bottom + 4, [
     ['Refresh chat', () => { renderMessages(); }],
     [iBlocked ? 'Unblock' : 'Block', () => set(ref(db, `blocks/${me.uid}/${activeUid}`), iBlocked ? null : true)],
-    ['Close chat', () => closeThread()]
+    ['Close chat', exitChat]
   ]);
 };
-$('#btn-back').onclick = () => closeThread();
+$('#btn-back').onclick = exitChat;
 
 /* new chat */
 let searchT = null;

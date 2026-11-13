@@ -59,7 +59,15 @@ form.bar{display:flex;align-items:flex-end;gap:8px;padding:8px 8px;padding-botto
 .btn.link{background:none;color:var(--acc)}
 .err{color:#ea0038;font-size:13px;min-height:16px}
 .mute{color:var(--mute);padding:28px;text-align:center}
-</style>
+.sel{background:var(--alt);border-radius:10px;padding:13px 14px;width:100%;font:inherit;color:var(--tx);border:0}
+.otp{letter-spacing:.5em;text-align:center;font-size:26px}
+.hint{color:var(--mute);font-size:13px}
+.form{display:flex;flex-direction:column;gap:14px;padding:22px 20px;overflow:auto}
+.form label{font-size:13px;color:var(--acc);margin-bottom:-8px;text-align:left}
+.btn:disabled{opacity:.5}
+.big{width:96px;height:96px;font-size:40px;margin:8px auto}
+.btn.out{background:none;color:#ea0038}
+
 </head>
 <body>
 <div id="app">
@@ -67,19 +75,38 @@ form.bar{display:flex;align-items:flex-end;gap:8px;padding:8px 8px;padding-botto
   <div class="view" id="v-auth">
     <div class="login">
       <div class="logo">h</div>
-      <h2 style="font-weight:500">Welcome to Haba Lite</h2>
-      <p class="mute" style="padding:0">Sign in with your Haba account</p>
-      <div class="in"><input id="em" type="email" placeholder="Email" autocomplete="email"></div>
-      <div class="in"><input id="pw" type="password" placeholder="Password" autocomplete="current-password"></div>
+      <h2 style="font-weight:500">Enter your phone number</h2>
+      <div id="s-phone" style="display:flex;flex-direction:column;gap:14px">
+        <p class="hint">Haba Lite will send a text message with a 6-digit code to verify your number.</p>
+        <select class="sel" id="cc"></select>
+        <div class="in"><input id="ph" type="tel" inputmode="tel" placeholder="Phone number" autocomplete="tel-national"></div>
+        <button class="btn" id="send-otp">Next</button>
+      </div>
+      <div id="s-otp" style="display:none;flex-direction:column;gap:14px">
+        <p class="hint" id="otp-to"></p>
+        <div class="in"><input id="otp" class="otp" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="······"></div>
+        <button class="btn link" id="resend" disabled>Resend code</button>
+        <button class="btn link" id="wrong">Wrong number?</button>
+      </div>
       <div class="err" id="auth-err"></div>
-      <button class="btn" id="login">Sign in</button>
-      <button class="btn link" id="reset">Forgot password?</button>
+      <div id="rc"></div>
+    </div>
+  </div>
+
+  <div class="view" id="v-setup">
+    <header><h1>Profile info</h1></header>
+    <div class="form">
+      <div class="av big" id="su-av"></div>
+      <label>Your name</label><div class="in" style="background:var(--alt);border-radius:10px;padding:13px 14px"><input id="su-name" maxlength="40" placeholder="Name"></div>
+      <label>About</label><div class="in" style="background:var(--alt);border-radius:10px;padding:13px 14px"><input id="su-about" maxlength="80" placeholder="Hey there! I am using Haba."></div>
+      <div class="err" id="su-err"></div>
+      <button class="btn" id="su-save">Continue</button>
     </div>
   </div>
 
   <div class="view" id="v-list">
     <header><h1>Haba Lite</h1>
-      <button class="ic" id="out" title="Sign out"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/></svg></button>
+      <button class="ic" id="me-btn" title="Profile"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></button>
     </header>
     <div class="list" id="chats"></div>
     <button class="fab" id="new" title="New chat"><svg viewBox="0 0 24 24"><path d="M21 11.5a8.4 8.4 0 0 1-8.5 8.3 8.7 8.7 0 0 1-3.7-.8L3 20.5l1.6-4.9A8.1 8.1 0 0 1 4 11.5 8.4 8.4 0 0 1 12.5 3.2 8.4 8.4 0 0 1 21 11.5z"/><path d="M12 8v7M8.5 11.5h7"/></svg></button>
@@ -88,16 +115,16 @@ form.bar{display:flex;align-items:flex-end;gap:8px;padding:8px 8px;padding-botto
   <div class="view" id="v-find">
     <header>
       <button class="ic" id="find-back"><svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></button>
-      <div class="searchbar"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><input id="q" placeholder="Search username, press Enter" autocapitalize="none"></div>
+      <div class="searchbar"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg><input id="q" type="tel" inputmode="tel" placeholder="Phone number, then Enter"></div>
     </header>
-    <div class="list" id="found"><div class="mute">Type an exact username and press Enter</div></div>
+    <div class="list" id="found"></div>
   </div>
 
   <div class="view" id="v-chat">
     <header>
       <button class="ic" id="back"><svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></button>
       <div class="av" id="c-av"></div>
-      <h1 id="c-name"></h1>
+      <h1><span id="c-name"></span><span class="sub" id="c-sub"></span></h1>
     </header>
     <div class="msgs" id="msgs"></div>
     <form class="bar" id="send">
@@ -106,12 +133,25 @@ form.bar{display:flex;align-items:flex-end;gap:8px;padding:8px 8px;padding-botto
     </form>
   </div>
 
+  <div class="view" id="v-me">
+    <header><button class="ic" id="me-back"><svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></button><h1>Profile</h1></header>
+    <div class="form">
+      <div class="av big" id="me-av"></div>
+      <label>Name</label><div class="in" style="background:var(--alt);border-radius:10px;padding:13px 14px"><input id="me-name" maxlength="40"></div>
+      <label>About</label><div class="in" style="background:var(--alt);border-radius:10px;padding:13px 14px"><input id="me-about" maxlength="80"></div>
+      <label>Phone</label><div class="hint" id="me-phone" style="text-align:left"></div>
+      <div class="err" id="me-err"></div>
+      <button class="btn" id="me-save">Save</button>
+      <button class="btn out" id="out">Sign out</button>
+    </div>
+  </div>
+
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, sendPasswordResetEmail, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-import { getDatabase, ref, onValue, off, get, push, update, increment, query, limitToLast } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+import { getAuth, onAuthStateChanged, RecaptchaVerifier, signInWithPhoneNumber, updateProfile, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+import { getDatabase, ref, onValue, off, get, set, push, update, remove, increment, query, limitToLast, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
 const app = initializeApp({
   apiKey: "AIzaSyBQSPwpVbGrdCuOoyitAeWQHIeipj2MgIY",
@@ -124,8 +164,8 @@ const app = initializeApp({
 });
 const auth = getAuth(app), db = getDatabase(app);
 const $ = id => document.getElementById(id);
-const E2E = '\u27e6e2e1\u27e7';              // Haba's encrypted-message prefix
-const threadIdFor = (a, b) => [a, b].sort().join('_'); // same rule as Haba
+const E2E = '\u27e6e2e1\u27e7';
+const threadIdFor = (a, b) => [a, b].sort().join('_');
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmt = t => t ? new Date(t).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : '';
 const sameDay = (a, b) => new Date(a).toDateString() === new Date(b).toDateString();
@@ -133,48 +173,121 @@ const dayLabel = t => sameDay(t, Date.now()) ? 'Today' : sameDay(t, Date.now() -
 const listTime = t => !t ? '' : sameDay(t, Date.now()) ? fmt(t) : sameDay(t, Date.now() - 864e5) ? 'Yesterday' : new Date(t).toLocaleDateString([], {day:'2-digit', month:'2-digit', year:'2-digit'});
 const TICKS = seen => `<svg class="tk${seen ? ' seen' : ''}" viewBox="0 0 16 11"><path d="M1 6l3 3 6-7M6 8l1 1 6-7"/></svg>`;
 const preview = t => !t ? '' : String(t).startsWith(E2E) ? '🔒 Encrypted message' : t;
+const clean = e => (e && e.message || 'Something went wrong').replace('Firebase: ', '');
 
-let me = null, peer = null, unsubs = [], profiles = {};
+let me = null, peer = null, unsubs = [], profiles = {}, myCC = '+27';
 const show = id => document.querySelectorAll('.view').forEach(v => v.classList.toggle('on', v.id === id));
 const clearSubs = () => { unsubs.forEach(u => u()); unsubs = []; };
+const sub = (r, cb) => { onValue(r, cb, () => {}); unsubs.push(() => off(r, 'value', cb)); };
 
 async function profile(uid) {
   if (profiles[uid]) return profiles[uid];
-  try { const s = await get(ref(db, `users/${uid}`)); profiles[uid] = s.val() || {}; } catch { profiles[uid] = {}; }
+  try { profiles[uid] = (await get(ref(db, `users/${uid}`))).val() || {}; } catch { profiles[uid] = {}; }
   return profiles[uid];
 }
 const avatar = (p, el) => {
-  const url = p.photoURL || p.avatar || p.profilePic || '';
+  const url = p.photoURL && !String(p.photoURL).startsWith('data:image/svg') ? p.photoURL : '';
   el.style.backgroundImage = url ? `url('${url}')` : '';
   el.textContent = url ? '' : (p.name || '?')[0].toUpperCase();
 };
 
-/* ---------- auth ---------- */
-$('login').onclick = async () => {
-  $('auth-err').textContent = '';
-  try { await signInWithEmailAndPassword(auth, $('em').value.trim(), $('pw').value); }
-  catch (e) { $('auth-err').textContent = e.message.replace('Firebase: ', ''); }
+/* ================= PHONE LOGIN ================= */
+const CODES = [['+27','🇿🇦 South Africa'],['+263','🇿🇼 Zimbabwe'],['+264','🇳🇦 Namibia'],['+267','🇧🇼 Botswana'],['+258','🇲🇿 Mozambique'],['+260','🇿🇲 Zambia'],['+266','🇱🇸 Lesotho'],['+268','🇸🇿 Eswatini'],['+254','🇰🇪 Kenya'],['+255','🇹🇿 Tanzania'],['+256','🇺🇬 Uganda'],['+234','🇳🇬 Nigeria'],['+233','🇬🇭 Ghana'],['+44','🇬🇧 United Kingdom'],['+1','🇺🇸 US / Canada'],['+91','🇮🇳 India']];
+$('cc').innerHTML = CODES.map(([c, n]) => `<option value="${c}">${n} (${c})</option>`).join('');
+try { const s = localStorage.getItem('cc'); if (s) $('cc').value = s; } catch {}
+
+// "082 123 4567" -> +27821234567 ; "+27 82…" and "0027 82…" are kept as international
+const toE164 = (raw, cc) => {
+  const p = String(raw).trim().replace(/[^\d+]/g, '');
+  if (p.startsWith('+')) return p;
+  if (p.startsWith('00')) return '+' + p.slice(2);
+  return cc + p.replace(/^0+/, '');
 };
-$('reset').onclick = async () => {
-  const em = $('em').value.trim();
-  if (!em) { $('auth-err').textContent = 'Enter your email first'; return; }
-  try { await sendPasswordResetEmail(auth, em); $('auth-err').textContent = 'Reset link sent'; }
-  catch (e) { $('auth-err').textContent = e.message.replace('Firebase: ', ''); }
+const authErr = m => { $('auth-err').textContent = m || ''; };
+const step = n => { $('s-phone').style.display = n === 'phone' ? 'flex' : 'none'; $('s-otp').style.display = n === 'otp' ? 'flex' : 'none'; authErr(); };
+
+let confirmation = null, rc = null, tick = null;
+const resetRc = () => { try { rc && rc.clear(); } catch {} rc = null; const f = document.createElement('div'); f.id = 'rc'; $('rc').replaceWith(f); };
+function countdown() {
+  clearInterval(tick); let n = 30; $('resend').disabled = true;
+  const t = () => { $('resend').textContent = n > 0 ? `Resend code in ${n}s` : 'Resend code'; if (n-- <= 0) { clearInterval(tick); $('resend').disabled = false; } };
+  t(); tick = setInterval(t, 1000);
+}
+async function sendOtp(num) {
+  authErr(); $('send-otp').disabled = true;
+  try {
+    rc = rc || new RecaptchaVerifier(auth, 'rc', { size: 'invisible' });
+    confirmation = await signInWithPhoneNumber(auth, num, rc);
+    $('otp-to').textContent = `Code sent to ${num}`;
+    step('otp'); $('otp').value = ''; $('otp').focus(); countdown();
+  } catch (e) { authErr(clean(e)); resetRc(); }
+  finally { $('send-otp').disabled = false; }
+}
+$('send-otp').onclick = () => {
+  const num = toE164($('ph').value, $('cc').value);
+  if (num.replace(/\D/g, '').length < 8) return authErr('Enter a valid phone number');
+  try { localStorage.setItem('cc', $('cc').value); } catch {}
+  sendOtp(num);
+};
+$('ph').addEventListener('keydown', e => { if (e.key === 'Enter') $('send-otp').click(); });
+$('resend').onclick = () => sendOtp(toE164($('ph').value, $('cc').value));
+$('wrong').onclick = () => { clearInterval(tick); step('phone'); };
+$('otp').oninput = async () => {
+  const v = $('otp').value = $('otp').value.replace(/\D/g, '').slice(0, 6);
+  if (v.length !== 6 || !confirmation) return;
+  authErr();
+  try { await confirmation.confirm(v); }
+  catch (e) { authErr(e.code === 'auth/invalid-verification-code' ? 'Wrong code, try again' : clean(e)); $('otp').value = ''; }
+};
+
+/* ================= SESSION + PROFILE ================= */
+onAuthStateChanged(auth, async u => {
+  me = u; clearSubs(); profiles = {};
+  if (!u) { show('v-auth'); step('phone'); return; }
+  myCC = CODES.map(c => c[0]).filter(c => (u.phoneNumber || '').startsWith(c)).sort((a, b) => b.length - a.length)[0] || '+27';
+  const p = await profile(u.uid);
+  if (!p.name) { $('su-name').value = u.displayName || ''; avatar({ name: u.displayName || '?' }, $('su-av')); return show('v-setup'); }
+  if (u.phoneNumber && p.phoneNumber !== u.phoneNumber) update(ref(db, `users/${u.uid}`), { phoneNumber: u.phoneNumber }).catch(() => {});
+  touchSeen(); show('v-list'); loadChats();
+});
+const touchSeen = () => { if (me) update(ref(db, `users/${me.uid}`), { lastSeen: Date.now() }).catch(() => {}); };
+document.addEventListener('visibilitychange', () => { if (!document.hidden) touchSeen(); });
+
+$('su-save').onclick = async () => {
+  const name = $('su-name').value.trim();
+  if (!name) return $('su-err').textContent = 'Please enter your name';
+  try {
+    // displayName matters: the full Haba app copies it back into users/{uid}/name on login.
+    await updateProfile(me, { displayName: name });
+    const data = { name, about: $('su-about').value.trim() || 'Hey there! I am using Haba.', phoneNumber: me.phoneNumber || '', createdAt: Date.now() };
+    await update(ref(db, `users/${me.uid}`), data);
+    profiles[me.uid] = data; touchSeen(); show('v-list'); loadChats();
+  } catch (e) { $('su-err').textContent = clean(e); }
+};
+$('me-btn').onclick = async () => {
+  const p = await profile(me.uid);
+  $('me-name').value = p.name || ''; $('me-about').value = p.about || ''; $('me-phone').textContent = me.phoneNumber || '';
+  $('me-err').textContent = ''; avatar(p, $('me-av')); show('v-me');
+};
+$('me-back').onclick = () => show('v-list');
+$('me-save').onclick = async () => {
+  const name = $('me-name').value.trim();
+  if (!name) return $('me-err').textContent = 'Name can\'t be empty';
+  try {
+    await updateProfile(me, { displayName: name });
+    const data = { name, about: $('me-about').value.trim() };
+    await update(ref(db, `users/${me.uid}`), data);
+    profiles[me.uid] = { ...profiles[me.uid], ...data }; show('v-list');
+  } catch (e) { $('me-err').textContent = clean(e); }
 };
 $('out').onclick = () => signOut(auth);
-onAuthStateChanged(auth, u => {
-  me = u; clearSubs();
-  if (!u) return show('v-auth');
-  show('v-list'); loadChats();
-});
 
-/* ---------- chat list: user_chats/{me}/{otherUid} ---------- */
+/* ================= CHAT LIST ================= */
 function loadChats() {
   const r = ref(db, `user_chats/${me.uid}`);
-  const cb = async snap => {
-    const data = snap.val() || {};
-    const items = Object.entries(data).filter(([, c]) => !c.archived).sort((a, b) => (b[1].timestamp || 0) - (a[1].timestamp || 0));
-    if (!items.length) { $('chats').innerHTML = '<div class="mute">No chats yet. Tap New to start one.</div>'; return; }
+  sub(r, async snap => {
+    const items = Object.entries(snap.val() || {}).filter(([, c]) => !c.archived).sort((a, b) => (b[1].timestamp || 0) - (a[1].timestamp || 0));
+    if (!items.length) { $('chats').innerHTML = '<div class="mute">No chats yet.<br>Tap the green button to message someone by phone number.</div>'; return; }
     const ps = await Promise.all(items.map(([uid]) => profile(uid)));
     $('chats').innerHTML = '';
     items.forEach(([uid, c], i) => {
@@ -185,45 +298,85 @@ function loadChats() {
       row.onclick = () => openChat(uid);
       $('chats').appendChild(row);
     });
-  };
-  onValue(r, cb); unsubs.push(() => off(r, 'value', cb));
+  });
 }
 
-/* ---------- find a person by exact username ---------- */
-$('new').onclick = () => { show('v-find'); $('q').value = ''; $('q').focus(); };
+/* ================= FIND PEOPLE BY PHONE NUMBER ================= */
+const rowFor = (uid, p) => {
+  const row = document.createElement('div'); row.className = 'row';
+  row.innerHTML = `<div class="av"></div><div class="meta"><div class="mid"><b>${esc(p.name || 'Contact')}</b><span>${esc(p.about || p.phoneNumber || '')}</span></div></div>`;
+  avatar(p, row.querySelector('.av')); row.onclick = () => openChat(uid); return row;
+};
+const invite = () => {
+  const d = { title: 'Haba', text: 'Message me on Haba', url: location.origin + location.pathname };
+  navigator.share ? navigator.share(d).catch(() => {}) : navigator.clipboard && navigator.clipboard.writeText(d.url);
+};
+function openFind() {
+  show('v-find'); $('q').value = '';
+  $('found').innerHTML = '<div class="mute">Type a phone number and press Enter</div>';
+  if ('contacts' in navigator && 'ContactsManager' in window) {
+    const b = document.createElement('button'); b.className = 'btn'; b.style.cssText = 'margin:14px 16px;width:calc(100% - 32px)';
+    b.textContent = 'Find people from my contacts'; b.onclick = pickContacts; $('found').prepend(b);
+  }
+}
+$('new').onclick = openFind;
 $('find-back').onclick = () => show('v-list');
 $('q').addEventListener('keydown', async e => {
   if (e.key !== 'Enter') return;
-  const name = $('q').value.trim().replace(/^@/, '').toLowerCase();
-  if (!name) return;
+  const num = toE164($('q').value, myCC);
+  if (num.replace(/\D/g, '').length < 8) return;
   $('found').innerHTML = '<div class="mute">Searching…</div>';
   try {
-    const s = await get(ref(db, `usernames/${name}`));
-    let uid = s.val();
-    if (uid && typeof uid === 'object') uid = uid.uid;
-    if (!uid) { $('found').innerHTML = '<div class="mute">No user with that username</div>'; return; }
-    if (uid === me.uid) { $('found').innerHTML = '<div class="mute">That\'s you</div>'; return; }
-    const p = await profile(uid);
+    const v = (await get(query(ref(db, 'users'), orderByChild('phoneNumber'), equalTo(num)))).val() || {};
+    const ids = Object.keys(v).filter(u => u !== me.uid);
     $('found').innerHTML = '';
-    const row = document.createElement('div'); row.className = 'row';
-    row.innerHTML = `<div class="av"></div><div class="meta"><div class="mid"><b>${esc(p.name || name)}</b><span>@${esc(name)}</span></div></div>`;
-    avatar(p, row.querySelector('.av'));
-    row.onclick = () => openChat(uid);
-    $('found').appendChild(row);
-  } catch { $('found').innerHTML = '<div class="mute">Search failed</div>'; }
+    if (!ids.length) {
+      const d = document.createElement('div'); d.className = 'mute';
+      d.innerHTML = `${esc(num)} isn't on Haba yet.<br><br><button class="btn" id="inv">Invite</button>`;
+      $('found').appendChild(d); $('inv').onclick = invite; return;
+    }
+    ids.forEach(u => { profiles[u] = v[u]; $('found').appendChild(rowFor(u, v[u])); });
+  } catch (err) { $('found').innerHTML = `<div class="mute">Search failed: ${esc(clean(err))}</div>`; }
 });
+// Android Chrome only: matches device contacts against Haba users by the last 9 digits.
+async function pickContacts() {
+  try {
+    const picked = await navigator.contacts.select(['name', 'tel'], { multiple: true });
+    if (!picked.length) return;
+    $('found').innerHTML = '<div class="mute">Checking contacts…</div>';
+    const all = (await get(ref(db, 'users'))).val() || {};
+    const byKey = {};
+    Object.entries(all).forEach(([u, p]) => { const k = String(p.phoneNumber || '').replace(/\D/g, '').slice(-9); if (k.length === 9 && u !== me.uid) byKey[k] = u; });
+    const seen = new Set(); let miss = 0; $('found').innerHTML = '';
+    picked.forEach(c => (c.tel || []).forEach(t => {
+      const u = byKey[t.replace(/\D/g, '').slice(-9)];
+      if (u && !seen.has(u)) { seen.add(u); profiles[u] = all[u]; $('found').appendChild(rowFor(u, all[u])); } else if (!u) miss++;
+    }));
+    const n = document.createElement('div'); n.className = 'mute';
+    n.textContent = seen.size ? `${miss} other numbers aren't on Haba` : 'None of those contacts are on Haba yet';
+    $('found').appendChild(n);
+  } catch (e) { /* picker cancelled */ }
+}
 
-/* ---------- conversation: dm_threads/{a_b}/messages ---------- */
+/* ================= CONVERSATION ================= */
+const seenText = t => !t ? '' : sameDay(t, Date.now()) ? `last seen today at ${fmt(t)}` : sameDay(t, Date.now() - 864e5) ? `last seen yesterday at ${fmt(t)}` : `last seen ${new Date(t).toLocaleDateString()}`;
+let typingTimer = null, iAmTyping = false;
+const setTyping = on => {
+  if (!peer || iAmTyping === on) return; iAmTyping = on;
+  const r = ref(db, `dm_threads/${threadIdFor(me.uid, peer)}/typing/${me.uid}`);
+  (on ? set(r, true) : remove(r)).catch(() => {});
+};
+
 async function openChat(uid) {
   clearSubs(); peer = uid;
-  const p = await profile(uid);
+  const p = await profile(uid), tid = threadIdFor(me.uid, uid);
   $('c-name').textContent = p.name || p.username || 'Contact';
-  avatar(p, $('c-av'));
-  $('msgs').innerHTML = '';
-  show('v-chat');
-  const tid = threadIdFor(me.uid, uid);
+  $('c-sub').textContent = ''; avatar(p, $('c-av'));
+  $('msgs').innerHTML = ''; show('v-chat');
   update(ref(db, `user_chats/${me.uid}/${uid}`), { unreadCount: 0 }).catch(() => {});
-  let list = [], lastRead = 0;
+
+  let list = [], lastRead = 0, typing = false, lastSeen = 0;
+  const head = () => { $('c-sub').textContent = typing ? 'typing…' : seenText(lastSeen); };
   const draw = () => {
     const box = $('msgs'), near = box.scrollHeight - box.scrollTop - box.clientHeight < 150 || !box.children.length;
     box.innerHTML = '<div class="lock">Messages are stored in Haba. Encrypted messages can only be read in the full app.</div>';
@@ -246,36 +399,36 @@ async function openChat(uid) {
     }
     if (near) box.scrollTop = box.scrollHeight;
   };
-  const r = query(ref(db, `dm_threads/${tid}/messages`), limitToLast(200));
-  const cb = snap => {
+  sub(query(ref(db, `dm_threads/${tid}/messages`), limitToLast(200)), snap => {
     list = Object.values(snap.val() || {}).sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
-    draw();
-    update(ref(db, `user_chats/${me.uid}/${uid}`), { unreadCount: 0 }).catch(() => {});
-  };
-  onValue(r, cb); unsubs.push(() => off(r, 'value', cb));
-  const rr = ref(db, `dm_threads/${tid}/readReceipts/${uid}`);
-  const rcb = snap => { lastRead = snap.val() || 0; draw(); };
-  onValue(rr, rcb, () => {}); unsubs.push(() => off(rr, 'value', rcb));
+    draw(); update(ref(db, `user_chats/${me.uid}/${uid}`), { unreadCount: 0 }).catch(() => {});
+  });
+  sub(ref(db, `dm_threads/${tid}/readReceipts/${uid}`), s => { lastRead = s.val() || 0; draw(); });
+  sub(ref(db, `dm_threads/${tid}/typing/${uid}`), s => { const v = s.val(); typing = !!v && !(typeof v === 'number' && Date.now() - v > 10000); head(); });
+  sub(ref(db, `users/${uid}/lastSeen`), s => { lastSeen = typeof s.val() === 'number' ? s.val() : 0; head(); });
 }
-$('back').onclick = () => { clearSubs(); peer = null; show('v-list'); loadChats(); };
+const leaveChat = () => { clearTimeout(typingTimer); setTyping(false); clearSubs(); peer = null; show('v-list'); loadChats(); };
+$('back').onclick = leaveChat;
+$('txt').addEventListener('input', () => { setTyping(true); clearTimeout(typingTimer); typingTimer = setTimeout(() => setTyping(false), 3000); });
 
 $('send').onsubmit = async e => {
   e.preventDefault();
   const text = $('txt').value.trim();
   if (!text || !peer) return;
+  clearTimeout(typingTimer); setTyping(false);
   $('txt').value = '';
-  const tid = threadIdFor(me.uid, peer), now = Date.now();
-  const key = push(ref(db, `dm_threads/${tid}/messages`)).key;
-  // Same multi-path write Haba uses, so both apps' chat lists stay in sync.
-  const u = {};
-  u[`dm_threads/${tid}/messages/${key}`] = { senderUid: me.uid, createdAt: now, text };
-  u[`user_chats/${me.uid}/${peer}`] = { text, timestamp: now, unreadCount: 0, senderUid: me.uid };
-  u[`user_chats/${peer}/${me.uid}/text`] = text;
-  u[`user_chats/${peer}/${me.uid}/timestamp`] = now;
-  u[`user_chats/${peer}/${me.uid}/unreadCount`] = increment(1);
-  u[`user_chats/${peer}/${me.uid}/senderUid`] = me.uid;
-  try { await update(ref(db), u); }
-  catch { $('txt').value = text; alert("Couldn't send. Check your connection or permissions."); }
+  try {
+    if ((await get(ref(db, `blocks/${peer}/${me.uid}`))).val() === true) { $('txt').value = text; return alert("You can't message this contact."); }
+    const tid = threadIdFor(me.uid, peer), now = Date.now();
+    const key = push(ref(db, `dm_threads/${tid}/messages`)).key, u = {};
+    u[`dm_threads/${tid}/messages/${key}`] = { senderUid: me.uid, createdAt: now, text };
+    u[`user_chats/${me.uid}/${peer}`] = { text, timestamp: now, unreadCount: 0, senderUid: me.uid };
+    u[`user_chats/${peer}/${me.uid}/text`] = text;
+    u[`user_chats/${peer}/${me.uid}/timestamp`] = now;
+    u[`user_chats/${peer}/${me.uid}/unreadCount`] = increment(1);
+    u[`user_chats/${peer}/${me.uid}/senderUid`] = me.uid;
+    await update(ref(db), u);
+  } catch { $('txt').value = text; alert("Couldn't send. Check your connection."); }
 };
 </script>
 </body>

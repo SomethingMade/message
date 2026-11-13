@@ -177,6 +177,7 @@ input,textarea{font:inherit;color:inherit}
 .vn.playing .vn-spd{display:inline-block}
 
 /* typing text in chat list */
+.av{cursor:pointer}
 .ci .prev span.tp{color:#34C759;font-weight:600}
 
 /* no long-press menus / selection anywhere except text fields */
@@ -612,7 +613,11 @@ function renderChatList(){
       <div class="prev">${typingMap[uid] ? '<span class="tp">typing…</span>' : `<span>${own ? 'You: ' : ''}${esc(pv)}</span>`}${c.unreadCount > 0 ? `<div class="badge">${c.unreadCount > 99 ? '99+' : c.unreadCount}</div>` : ''}</div></div></div>`;
   }).join('');
 }
-$('#chatlist').addEventListener('click', e => { const ci = e.target.closest('.ci'); if (ci) openThread(ci.dataset.uid); });
+$('#chatlist').addEventListener('click', e => {
+  const ci = e.target.closest('.ci'); if (!ci) return;
+  if (e.target.closest('.av')) return showProfile(ci.dataset.uid);   // avatar → profile sheet
+  openThread(ci.dataset.uid);
+});
 $('#filter').addEventListener('input', renderChatList);
 
 /* =============== THREAD =============== */
@@ -1058,6 +1063,26 @@ $('#btn-thread-menu').onclick = e => {
   ]);
 };
 $('#btn-back').onclick = exitChat;
+$('#th-av').onclick = () => { if (activeUid) showProfile(activeUid); };
+
+/* profile bottom sheet */
+async function showProfile(uid){
+  await loadUser(uid);
+  const u = users[uid] || {};
+  const online = u.status === 'online';
+  const st = online ? 'online' : (u.lastSeen ? 'last seen ' + fmtListTime(u.lastSeen) : '');
+  const ov = modal(`<div style="text-align:center">
+    <div class="av" style="width:104px;height:104px;margin:4px auto 12px;background-image:url('${cssUrl(uAvatar(uid))}')"></div>
+    <h3 style="margin:0">${esc(uid === me.uid ? 'My Account' : uName(uid))}</h3>
+    ${u.username ? `<div style="color:var(--muted);margin-top:2px">@${esc(u.username)}</div>` : ''}
+    ${st ? `<div style="font-size:13px;margin-top:4px;color:${online ? '#34C759' : 'var(--muted)'}">${esc(st)}</div>` : ''}
+    ${u.bio ? `<p style="margin:14px 0 0;line-height:1.4;white-space:pre-wrap">${esc(u.bio)}</p>` : ''}
+  </div>
+  <button class="btn" id="pf-msg" style="margin-top:18px">Message</button>
+  <button class="btn ghost" id="pf-close" style="margin-top:8px">Close</button>`);
+  ov.querySelector('#pf-msg').onclick = () => { closeModal(); if (activeUid !== uid) openThread(uid); };
+  ov.querySelector('#pf-close').onclick = closeModal;
+}
 
 /* new chat */
 let searchT = null;

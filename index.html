@@ -3,120 +3,117 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Haba agent access</title>
-<meta name="robots" content="noindex,nofollow">
+<title>Haba Lite</title>
 <style>
-:root{--bg:#F6F7F8;--panel:#fff;--line:#E2E5E8;--ink:#14181B;--muted:#667078;--go:#0F7B4F;--go-bg:#E3F4EC;--off:#8A949B;--off-bg:#ECEEF0;--bad:#B3261E;--bad-bg:#FBE9E7;--btn:#14181B;--btn-ink:#fff;--sans:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif}
-@media(prefers-color-scheme:dark){:root{--bg:#101315;--panel:#181C1F;--line:#2A3034;--ink:#EEF1F3;--muted:#99A3AA;--go:#4CC38A;--go-bg:#12301F;--off:#8A949B;--off-bg:#23282C;--bad:#FF8A80;--bad-bg:#3A1B19;--btn:#EEF1F3;--btn-ink:#101315}}
-*{box-sizing:border-box}
-html,body{margin:0;min-height:100%}
-body{background:var(--bg);color:var(--ink);font:15px/1.5 var(--sans);padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
-.hidden{display:none!important}
-.wrap{max-width:860px;margin:0 auto;padding:32px 20px 60px}
-h1{font-size:26px;margin:0 0 4px;letter-spacing:-.02em}
-h2{font-size:17px;margin:0 0 14px}
-p.sub{color:var(--muted);margin:0 0 24px}
-.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:20px;margin-bottom:20px}
-.field{display:flex;flex-direction:column;gap:5px;margin-bottom:14px}
-.field label{font-size:13px;font-weight:600;color:var(--muted)}
-input,select{font:inherit;color:inherit;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px 12px;width:100%}
-input:focus,select:focus,button:focus-visible{outline:2px solid var(--ink);outline-offset:1px}
-.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-button{font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:8px;padding:9px 14px;font-weight:600}
-button.primary{background:var(--btn);color:var(--btn-ink);border-color:var(--btn)}
-button.sm{padding:5px 10px;font-size:13px}
-button.danger{color:var(--bad)}
-button:disabled{opacity:.5;cursor:not-allowed}
-.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;margin-bottom:16px}
-.seg button{border:0;border-radius:0;background:transparent;color:var(--muted)}
-.seg button.on{background:var(--btn);color:var(--btn-ink)}
-.msg{min-height:20px;font-size:13.5px;margin:2px 0 10px}
-.msg.bad{color:var(--bad)}.msg.ok{color:var(--go)}
-.top{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}
-.agent{display:flex;gap:14px;align-items:center;padding:14px 0;border-top:1px solid var(--line);flex-wrap:wrap}
-.agent:first-child{border-top:0}
-.agent .who{flex:1;min-width:200px}
-.agent .who b{display:block}
-.agent .who span{color:var(--muted);font-size:12.5px;word-break:break-all}
-.pill{font-size:12.5px;font-weight:700;padding:2px 10px;border-radius:999px}
-.pill.on{background:var(--go-bg);color:var(--go)}.pill.off{background:var(--off-bg);color:var(--off)}
-.acts{display:flex;gap:6px;flex-wrap:wrap}
-.empty{color:var(--muted);text-align:center;padding:24px}
-.login{max-width:380px;margin:12vh auto 0}
-#toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--btn);color:var(--btn-ink);padding:10px 16px;border-radius:8px;font-weight:600;z-index:9}
-@media(max-width:560px){.row2{grid-template-columns:1fr}}
+:root{--hdr:#008069;--hdrtx:#fff;--bg:#fff;--tx:#111b21;--mute:#667781;--line:#e9edef;--chatbg:#efeae2;--in:#fff;--out:#d9fdd3;--intx:#111b21;--acc:#25d366;--inp:#fff;--alt:#f0f2f5;--tick:#53bdeb}
+@media(prefers-color-scheme:dark){:root{--hdr:#202c33;--hdrtx:#e9edef;--bg:#111b21;--tx:#e9edef;--mute:#8696a0;--line:#222d34;--chatbg:#0b141a;--in:#202c33;--out:#005c4b;--intx:#e9edef;--acc:#00a884;--inp:#2a3942;--alt:#202c33}}
+*{box-sizing:border-box;margin:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{font:15px/1.35 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--tx);display:flex;justify-content:center}
+#app{width:100%;max-width:720px;height:100%;display:flex;flex-direction:column;position:relative;background:var(--bg)}
+.view{display:none;flex:1;flex-direction:column;min-height:0}.view.on{display:flex}
+header{display:flex;align-items:center;gap:12px;padding:10px 12px;padding-top:calc(10px + env(safe-area-inset-top,0px));background:var(--hdr);color:var(--hdrtx);min-height:58px}
+header h1{font-size:20px;font-weight:600;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+header .sub{font-size:12px;opacity:.75;font-weight:400;display:block}
+.ic{background:none;border:0;color:inherit;width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none;padding:0}
+.ic:active{background:rgba(255,255,255,.15)}
+.ic svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+input{font:inherit;color:var(--tx);border:0;outline:0;width:100%;background:transparent}
+.av{width:49px;height:49px;border-radius:50%;background:#dfe5e7 center/cover;flex:none;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:19px;color:#fff;background-color:#8696a0}
+header .av{width:40px;height:40px;font-size:16px}
+.list{flex:1;overflow:auto}
+.row{display:flex;gap:14px;align-items:center;padding:0 16px;cursor:pointer}
+.row:active{background:var(--alt)}
+.row .meta{flex:1;min-width:0;padding:12px 0;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:8px}
+.row .mid{flex:1;min-width:0}.row .mid b{display:block;font-weight:500;font-size:16.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .mid span{color:var(--mute);display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:14px}
+.row .side{text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:4px}
+.time{color:var(--mute);font-size:12px}.time.un{color:var(--acc)}
+.badge{background:var(--acc);color:#fff;border-radius:11px;min-width:20px;height:20px;padding:0 6px;text-align:center;font-size:12px;font-weight:600;line-height:20px}
+.fab{position:absolute;right:18px;bottom:calc(20px + env(safe-area-inset-bottom,0px));width:56px;height:56px;border-radius:16px;border:0;background:var(--acc);color:#fff;box-shadow:0 3px 8px rgba(0,0,0,.3);cursor:pointer;display:flex;align-items:center;justify-content:center}
+.fab svg{width:26px;height:26px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.searchbar{display:flex;align-items:center;gap:10px;flex:1;background:var(--alt);border-radius:22px;padding:0 14px;height:40px;color:var(--mute)}
+#v-find header{background:var(--bg);color:var(--tx);border-bottom:1px solid var(--line)}
+#v-find .searchbar input{color:var(--tx)}
+.msgs{flex:1;overflow:auto;padding:10px 8%;display:flex;flex-direction:column;gap:2px;background-color:var(--chatbg);
+ background-image:radial-gradient(rgba(128,128,128,.10) 1.2px,transparent 1.3px),radial-gradient(rgba(128,128,128,.07) 1.2px,transparent 1.3px);background-size:26px 26px;background-position:0 0,13px 13px}
+@media(max-width:520px){.msgs{padding:10px 10px}}
+.b{max-width:80%;padding:6px 8px 6px 9px;border-radius:8px;background:var(--in);color:var(--intx);box-shadow:0 1px .5px rgba(11,20,26,.13);word-wrap:break-word;overflow-wrap:anywhere;white-space:pre-wrap;position:relative;align-self:flex-start;margin-top:2px}
+.b.me{align-self:flex-end;background:var(--out)}
+.b.first{border-top-left-radius:0;margin-top:6px}.b.me.first{border-top-left-radius:8px;border-top-right-radius:0}
+.b .t{float:right;margin:7px 0 -3px 10px;font-size:11px;color:var(--mute);display:inline-flex;align-items:center;gap:3px;white-space:nowrap}
+.tk{width:16px;height:11px;fill:none;stroke:var(--mute);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.tk.seen{stroke:var(--tick)}
+.day,.sys{align-self:center;background:var(--in);color:var(--mute);font-size:12.5px;padding:5px 11px;border-radius:8px;box-shadow:0 1px .5px rgba(11,20,26,.13);margin:8px 0;text-transform:uppercase;letter-spacing:.2px}
+.sys{text-transform:none}
+.lock{align-self:center;background:#fff3c4;color:#54656f;font-size:12px;padding:6px 12px;border-radius:8px;text-align:center;margin:6px 0 8px;max-width:90%}
+@media(prefers-color-scheme:dark){.lock{background:#182229;color:#ffd279}}
+.b i{opacity:.75}
+form.bar{display:flex;align-items:flex-end;gap:8px;padding:8px 8px;padding-bottom:calc(8px + env(safe-area-inset-bottom,0px));background:var(--chatbg)}
+.pill{flex:1;background:var(--inp);border-radius:24px;padding:11px 16px;display:flex;box-shadow:0 1px .5px rgba(11,20,26,.13)}
+.send{width:48px;height:48px;border-radius:50%;border:0;background:var(--acc);display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none}
+.send svg{width:22px;height:22px;fill:#fff}
+.login{margin:auto;width:min(360px,90%);display:flex;flex-direction:column;gap:14px;text-align:center}
+.logo{width:84px;height:84px;border-radius:50%;background:var(--acc);margin:0 auto;display:flex;align-items:center;justify-content:center;color:#fff;font-size:44px;font-weight:700}
+.login .in{background:var(--alt);border-radius:10px;padding:13px 14px;text-align:left}
+.btn{border:0;border-radius:24px;padding:13px;background:var(--acc);color:#fff;font:inherit;font-weight:600;cursor:pointer}
+.btn.link{background:none;color:var(--acc)}
+.err{color:#ea0038;font-size:13px;min-height:16px}
+.mute{color:var(--mute);padding:28px;text-align:center}
 </style>
 </head>
 <body>
+<div id="app">
 
-<div class="wrap login hidden" id="s-login">
-  <h1>Haba agent access</h1>
-  <p class="sub">Admins only. Sign in to manage who can use Haba Support.</p>
-  <div class="card">
-    <div class="field"><label for="l-email">Email</label><input id="l-email" type="email" autocomplete="username"></div>
-    <div class="field"><label for="l-pass">Password</label><input id="l-pass" type="password" autocomplete="current-password"></div>
-    <div class="msg bad" id="l-msg"></div>
-    <button class="primary" id="l-go" style="width:100%">Sign in</button>
-  </div>
-</div>
-
-<div class="wrap login hidden" id="s-denied">
-  <h1>Request access</h1>
-  <p class="sub" id="d-sub"></p>
-  <div class="card" id="d-form">
-    <div class="field"><label for="d-name">Your name</label><input id="d-name" autocomplete="name"></div>
-    <div class="msg" id="d-msg"></div>
-    <button class="primary" id="d-req">Request access</button>
-  </div>
-  <button id="d-out">Sign out</button>
-</div>
-
-<div class="wrap hidden" id="s-app">
-  <div class="top">
-    <div><h1>Agent access</h1><p class="sub">Signed in as <b id="me-name"></b>. Agents can sign in to Haba Support while they’re active.</p></div>
-    <button id="out">Sign out</button>
-  </div>
-
-  <div class="card">
-    <h2>Add an agent</h2>
-    <div class="seg"><button id="m-new" class="on">Create a login</button><button id="m-uid">I have a user ID</button></div>
-    <div class="row2">
-      <div class="field"><label for="a-name">Display name</label><input id="a-name" placeholder="Betty"></div>
-      <div class="field"><label for="a-role">Role</label><select id="a-role"><option value="agent">Agent</option><option value="admin">Admin</option></select></div>
+  <div class="view" id="v-auth">
+    <div class="login">
+      <div class="logo">h</div>
+      <h2 style="font-weight:500">Welcome to Haba Lite</h2>
+      <p class="mute" style="padding:0">Sign in with your Haba account</p>
+      <div class="in"><input id="em" type="email" placeholder="Email" autocomplete="email"></div>
+      <div class="in"><input id="pw" type="password" placeholder="Password" autocomplete="current-password"></div>
+      <div class="err" id="auth-err"></div>
+      <button class="btn" id="login">Sign in</button>
+      <button class="btn link" id="reset">Forgot password?</button>
     </div>
-    <div id="f-new">
-      <div class="row2">
-        <div class="field"><label for="a-email">Email</label><input id="a-email" type="email" placeholder="betty@habaapp.co.za"></div>
-        <div class="field"><label for="a-pass">Temporary password</label><input id="a-pass" type="text" autocomplete="off" placeholder="At least 8 characters"></div>
-      </div>
-    </div>
-    <div id="f-uid" class="hidden">
-      <div class="field"><label for="a-uid">User ID</label><input id="a-uid" autocomplete="off" placeholder="8jDxwTR1FwecNdP8Dpy2wkg3nma2"></div>
-      <div class="field"><label for="a-uemail">Email (optional, enables password reset)</label><input id="a-uemail" type="email"></div>
-    </div>
-    <div class="msg" id="a-msg"></div>
-    <button class="primary" id="a-go">Give access</button>
   </div>
 
-  <div class="card hidden" id="req-card">
-    <h2>Access requests</h2>
-    <div id="reqs"></div>
+  <div class="view" id="v-list">
+    <header><h1>Haba Lite</h1>
+      <button class="ic" id="out" title="Sign out"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/></svg></button>
+    </header>
+    <div class="list" id="chats"></div>
+    <button class="fab" id="new" title="New chat"><svg viewBox="0 0 24 24"><path d="M21 11.5a8.4 8.4 0 0 1-8.5 8.3 8.7 8.7 0 0 1-3.7-.8L3 20.5l1.6-4.9A8.1 8.1 0 0 1 4 11.5 8.4 8.4 0 0 1 12.5 3.2 8.4 8.4 0 0 1 21 11.5z"/><path d="M12 8v7M8.5 11.5h7"/></svg></button>
   </div>
 
-  <div class="card">
-    <h2>Team <span id="count" style="color:var(--muted);font-weight:400"></span></h2>
-    <div id="list"><div class="empty">Loading…</div></div>
+  <div class="view" id="v-find">
+    <header>
+      <button class="ic" id="find-back"><svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></button>
+      <div class="searchbar"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><input id="q" placeholder="Search username, press Enter" autocapitalize="none"></div>
+    </header>
+    <div class="list" id="found"><div class="mute">Type an exact username and press Enter</div></div>
   </div>
+
+  <div class="view" id="v-chat">
+    <header>
+      <button class="ic" id="back"><svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></button>
+      <div class="av" id="c-av"></div>
+      <h1 id="c-name"></h1>
+    </header>
+    <div class="msgs" id="msgs"></div>
+    <form class="bar" id="send">
+      <div class="pill"><input id="txt" placeholder="Message" autocomplete="off"></div>
+      <button class="send" title="Send"><svg viewBox="0 0 24 24"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg></button>
+    </form>
+  </div>
+
 </div>
-
-<div id="toast" class="hidden"></div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut, createUserWithEmailAndPassword, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-import { getDatabase, ref, onValue, get, set, update, remove, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, sendPasswordResetEmail, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+import { getDatabase, ref, onValue, off, get, push, update, increment, query, limitToLast } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
-const cfg = {
+const app = initializeApp({
   apiKey: "AIzaSyBQSPwpVbGrdCuOoyitAeWQHIeipj2MgIY",
   authDomain: "newstart-64c43.firebaseapp.com",
   databaseURL: "https://newstart-64c43-default-rtdb.firebaseio.com",
@@ -124,162 +121,162 @@ const cfg = {
   storageBucket: "newstart-64c43.firebasestorage.app",
   messagingSenderId: "941619830061",
   appId: "1:941619830061:web:de9e0f791eb8f6eacf87a4"
-};
-const app = initializeApp(cfg);
+});
 const auth = getAuth(app), db = getDatabase(app);
-// Second app instance: creating a login here must not sign the admin out.
-const app2 = initializeApp(cfg, "creator");
-const auth2 = getAuth(app2);
-
-const $ = s => document.querySelector(s);
+const $ = id => document.getElementById(id);
+const E2E = '\u27e6e2e1\u27e7';              // Haba's encrypted-message prefix
+const threadIdFor = (a, b) => [a, b].sort().join('_'); // same rule as Haba
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-let me = null, agents = {}, reqs = {}, unsub = null, mode = 'new', reqUser = null, reqA = null;
+const fmt = t => t ? new Date(t).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : '';
+const sameDay = (a, b) => new Date(a).toDateString() === new Date(b).toDateString();
+const dayLabel = t => sameDay(t, Date.now()) ? 'Today' : sameDay(t, Date.now() - 864e5) ? 'Yesterday' : new Date(t).toLocaleDateString([], {day:'numeric', month:'long', year:'numeric'});
+const listTime = t => !t ? '' : sameDay(t, Date.now()) ? fmt(t) : sameDay(t, Date.now() - 864e5) ? 'Yesterday' : new Date(t).toLocaleDateString([], {day:'2-digit', month:'2-digit', year:'2-digit'});
+const TICKS = seen => `<svg class="tk${seen ? ' seen' : ''}" viewBox="0 0 16 11"><path d="M1 6l3 3 6-7M6 8l1 1 6-7"/></svg>`;
+const preview = t => !t ? '' : String(t).startsWith(E2E) ? '🔒 Encrypted message' : t;
 
-function show(id){ ['s-login','s-denied','s-app'].forEach(x => $('#'+x).classList.toggle('hidden', x !== id)); }
-function toast(t){ const e = $('#toast'); e.textContent = t; e.classList.remove('hidden'); clearTimeout(toast.t); toast.t = setTimeout(() => e.classList.add('hidden'), 2800); }
-function say(t, cls=''){ const m = $('#a-msg'); m.textContent = t; m.className = 'msg ' + cls; }
-function errText(e){
-  const c = String(e.code || e.message || e);
-  if (/email-already-in-use/.test(c)) return 'That email already has a login. Use “I have a user ID” with their existing ID instead.';
-  if (/weak-password/.test(c)) return 'Password is too weak. Use at least 8 characters.';
-  if (/invalid-email/.test(c)) return 'That email address isn’t valid.';
-  if (/permission_denied/i.test(c)) return 'Permission denied. Check that your database rules let admins write to support_agents.';
-  return c.replace(/^Firebase:\s*/, '');
+let me = null, peer = null, unsubs = [], profiles = {};
+const show = id => document.querySelectorAll('.view').forEach(v => v.classList.toggle('on', v.id === id));
+const clearSubs = () => { unsubs.forEach(u => u()); unsubs = []; };
+
+async function profile(uid) {
+  if (profiles[uid]) return profiles[uid];
+  try { const s = await get(ref(db, `users/${uid}`)); profiles[uid] = s.val() || {}; } catch { profiles[uid] = {}; }
+  return profiles[uid];
 }
-
-onAuthStateChanged(auth, async user => {
-  if (unsub) { unsub(); unsub = null; }
-  me = null;
-  if (!user) { show('s-login'); return; }
-  try {
-    me = { uid: user.uid, name: user.displayName || user.email || 'You' };
-    $('#me-name').textContent = me.name;
-    show('s-app');
-    const u1 = onValue(ref(db, 'support_agents'), s => { agents = s.val() || {}; draw(); }, e => { $('#list').innerHTML = `<div class="empty">${esc(errText(e))}</div>`; });
-    const u2 = onValue(ref(db, 'support_access_requests'), s => { reqs = s.val() || {}; drawReqs(); }, () => {});
-    unsub = () => { u1(); u2(); };
-  } catch (e) { await showRequest(user, null); }
-});
-
-// Any signed-in user lands here and can ask for access. An admin has to approve.
-async function showRequest(user, a){
-  reqUser = user; reqA = a; show('s-denied');
-  $('#d-name').value = $('#d-name').value || user.displayName || '';
-  const isAgent = !!(a && a.active === true);
-  let pending = false;
-  try { pending = !!(await get(ref(db, 'support_access_requests/' + user.uid))).val(); } catch (_) {}
-  $('#d-sub').textContent = isAgent
-    ? 'You already have agent access to Haba Support. This page is for admins, so you can ask for admin access below.'
-    : pending ? 'Your request is with the admins. You’ll get in as soon as someone approves it.'
-    : `Signed in as ${user.email || user.uid}. Send a request and an admin will review it.`;
-  $('#d-form').classList.toggle('hidden', pending);
-  $('#d-req').textContent = isAgent ? 'Request admin access' : 'Request access';
-}
-$('#d-req').onclick = async () => {
-  const m = $('#d-msg'), name = $('#d-name').value.trim();
-  if (!name) { m.textContent = 'Enter your name.'; m.className = 'msg bad'; return; }
-  try {
-    await set(ref(db, 'support_access_requests/' + reqUser.uid), { name, email: reqUser.email || '', role: reqA && reqA.active === true ? 'admin' : 'agent', status: 'pending', createdAt: serverTimestamp() });
-    m.textContent = '';
-    await showRequest(reqUser, reqA);
-  } catch (e) { m.textContent = errText(e); m.className = 'msg bad'; }
+const avatar = (p, el) => {
+  const url = p.photoURL || p.avatar || p.profilePic || '';
+  el.style.backgroundImage = url ? `url('${url}')` : '';
+  el.textContent = url ? '' : (p.name || '?')[0].toUpperCase();
 };
 
-function drawReqs(){
-  const rows = Object.entries(reqs);
-  $('#req-card').classList.toggle('hidden', !rows.length);
-  $('#reqs').innerHTML = rows.map(([uid, r]) => `<div class="agent">
-    <div class="who"><b>${esc(r.name || uid)}</b><span>${esc(r.email || uid)} · wants ${esc(r.role || 'agent')}</span></div>
-    <div class="acts"><button class="sm primary" data-q="approve" data-u="${esc(uid)}">Approve</button><button class="sm danger" data-q="decline" data-u="${esc(uid)}">Decline</button></div>
-  </div>`).join('');
-}
-$('#reqs').addEventListener('click', async e => {
-  const b = e.target.closest('button'); if (!b) return;
-  const uid = b.dataset.u, r = reqs[uid]; if (!r) return;
-  try {
-    if (b.dataset.q === 'approve') {
-      const rec = { name: r.name, role: r.role === 'admin' ? 'admin' : 'agent', active: true, addedBy: me.name, createdAt: serverTimestamp() };
-      if (r.email) rec.email = r.email;
-      await update(ref(db), { ['support_agents/' + uid]: rec, ['support_access_requests/' + uid]: null });
-      toast(`${r.name} approved`);
-    } else { await remove(ref(db, 'support_access_requests/' + uid)); toast('Request declined'); }
-  } catch (err) { toast(errText(err)); }
+/* ---------- auth ---------- */
+$('login').onclick = async () => {
+  $('auth-err').textContent = '';
+  try { await signInWithEmailAndPassword(auth, $('em').value.trim(), $('pw').value); }
+  catch (e) { $('auth-err').textContent = e.message.replace('Firebase: ', ''); }
+};
+$('reset').onclick = async () => {
+  const em = $('em').value.trim();
+  if (!em) { $('auth-err').textContent = 'Enter your email first'; return; }
+  try { await sendPasswordResetEmail(auth, em); $('auth-err').textContent = 'Reset link sent'; }
+  catch (e) { $('auth-err').textContent = e.message.replace('Firebase: ', ''); }
+};
+$('out').onclick = () => signOut(auth);
+onAuthStateChanged(auth, u => {
+  me = u; clearSubs();
+  if (!u) return show('v-auth');
+  show('v-list'); loadChats();
 });
 
-$('#l-go').onclick = async () => {
-  $('#l-msg').textContent = '';
-  try { await signInWithEmailAndPassword(auth, $('#l-email').value.trim(), $('#l-pass').value); }
-  catch (e) { $('#l-msg').textContent = /credential|password|user-not-found/i.test(e.code + e.message) ? 'Email or password is incorrect.' : errText(e); }
-};
-$('#l-pass').addEventListener('keydown', e => { if (e.key === 'Enter') $('#l-go').click(); });
-$('#out').onclick = $('#d-out').onclick = () => signOut(auth);
-
-function setMode(m){
-  mode = m;
-  $('#m-new').classList.toggle('on', m === 'new'); $('#m-uid').classList.toggle('on', m === 'uid');
-  $('#f-new').classList.toggle('hidden', m !== 'new'); $('#f-uid').classList.toggle('hidden', m !== 'uid');
-  say('');
+/* ---------- chat list: user_chats/{me}/{otherUid} ---------- */
+function loadChats() {
+  const r = ref(db, `user_chats/${me.uid}`);
+  const cb = async snap => {
+    const data = snap.val() || {};
+    const items = Object.entries(data).filter(([, c]) => !c.archived).sort((a, b) => (b[1].timestamp || 0) - (a[1].timestamp || 0));
+    if (!items.length) { $('chats').innerHTML = '<div class="mute">No chats yet. Tap New to start one.</div>'; return; }
+    const ps = await Promise.all(items.map(([uid]) => profile(uid)));
+    $('chats').innerHTML = '';
+    items.forEach(([uid, c], i) => {
+      const p = ps[i], row = document.createElement('div');
+      row.className = 'row';
+      row.innerHTML = `<div class="av"></div><div class="meta"><div class="mid"><b>${esc(p.name || p.username || 'Contact')}</b><span>${c.senderUid === me.uid ? '✓ ' : ''}${esc(preview(c.text))}</span></div><div class="side"><div class="time${c.unreadCount ? ' un' : ''}">${listTime(c.timestamp)}</div>${c.unreadCount ? `<span class="badge">${c.unreadCount}</span>` : ''}</div></div>`;
+      avatar(p, row.querySelector('.av'));
+      row.onclick = () => openChat(uid);
+      $('chats').appendChild(row);
+    });
+  };
+  onValue(r, cb); unsubs.push(() => off(r, 'value', cb));
 }
-$('#m-new').onclick = () => setMode('new');
-$('#m-uid').onclick = () => setMode('uid');
 
-$('#a-go').onclick = async () => {
-  const name = $('#a-name').value.trim(), role = $('#a-role').value;
-  if (!name) return say('Enter a display name.', 'bad');
-  const btn = $('#a-go'); btn.disabled = true; say('Working…');
+/* ---------- find a person by exact username ---------- */
+$('new').onclick = () => { show('v-find'); $('q').value = ''; $('q').focus(); };
+$('find-back').onclick = () => show('v-list');
+$('q').addEventListener('keydown', async e => {
+  if (e.key !== 'Enter') return;
+  const name = $('q').value.trim().replace(/^@/, '').toLowerCase();
+  if (!name) return;
+  $('found').innerHTML = '<div class="mute">Searching…</div>';
   try {
-    let uid, email;
-    if (mode === 'new') {
-      email = $('#a-email').value.trim(); const pass = $('#a-pass').value;
-      if (!email) throw { message: 'Enter an email address.' };
-      if (pass.length < 8) throw { code: 'weak-password' };
-      const cred = await createUserWithEmailAndPassword(auth2, email, pass);
-      uid = cred.user.uid;
-      await signOut(auth2);
-    } else {
-      uid = $('#a-uid').value.trim(); email = $('#a-uemail').value.trim();
-      if (!uid) throw { message: 'Enter the user ID.' };
+    const s = await get(ref(db, `usernames/${name}`));
+    let uid = s.val();
+    if (uid && typeof uid === 'object') uid = uid.uid;
+    if (!uid) { $('found').innerHTML = '<div class="mute">No user with that username</div>'; return; }
+    if (uid === me.uid) { $('found').innerHTML = '<div class="mute">That\'s you</div>'; return; }
+    const p = await profile(uid);
+    $('found').innerHTML = '';
+    const row = document.createElement('div'); row.className = 'row';
+    row.innerHTML = `<div class="av"></div><div class="meta"><div class="mid"><b>${esc(p.name || name)}</b><span>@${esc(name)}</span></div></div>`;
+    avatar(p, row.querySelector('.av'));
+    row.onclick = () => openChat(uid);
+    $('found').appendChild(row);
+  } catch { $('found').innerHTML = '<div class="mute">Search failed</div>'; }
+});
+
+/* ---------- conversation: dm_threads/{a_b}/messages ---------- */
+async function openChat(uid) {
+  clearSubs(); peer = uid;
+  const p = await profile(uid);
+  $('c-name').textContent = p.name || p.username || 'Contact';
+  avatar(p, $('c-av'));
+  $('msgs').innerHTML = '';
+  show('v-chat');
+  const tid = threadIdFor(me.uid, uid);
+  update(ref(db, `user_chats/${me.uid}/${uid}`), { unreadCount: 0 }).catch(() => {});
+  let list = [], lastRead = 0;
+  const draw = () => {
+    const box = $('msgs'), near = box.scrollHeight - box.scrollTop - box.clientHeight < 150 || !box.children.length;
+    box.innerHTML = '<div class="lock">Messages are stored in Haba. Encrypted messages can only be read in the full app.</div>';
+    let prev = null, lastDay = null;
+    for (const m of list) {
+      if (m.expiresAt && m.expiresAt < Date.now()) continue;
+      const t = m.createdAt || 0;
+      if (!lastDay || !sameDay(t, lastDay)) { const dd = document.createElement('div'); dd.className = 'day'; dd.textContent = dayLabel(t); box.appendChild(dd); lastDay = t; prev = null; }
+      const d = document.createElement('div');
+      if (m.systemText) { d.className = 'sys'; d.textContent = m.systemText; prev = null; box.appendChild(d); continue; }
+      const mine = m.senderUid === me.uid;
+      d.className = 'b' + (mine ? ' me' : '') + (prev !== m.senderUid ? ' first' : '');
+      prev = m.senderUid;
+      let body;
+      if (typeof m.text === 'string' && m.text.startsWith(E2E)) body = '<i>🔒 Encrypted. Open in the full Haba app to read.</i>';
+      else if (m.text) body = esc(m.text);
+      else body = `<i>[${esc(m.mediaType || 'attachment')}] Open in Haba</i>`;
+      d.innerHTML = `${body}<span class="t">${fmt(t)}${mine ? TICKS(lastRead >= t) : ''}</span>`;
+      box.appendChild(d);
     }
-    const rec = { name, role, active: true, addedBy: me.name, createdAt: serverTimestamp() };
-    if (email) rec.email = email;
-    await set(ref(db, 'support_agents/' + uid), rec);
-    say(mode === 'new' ? `${name} can now sign in with ${email}. Share the temporary password with them directly.` : `${name} now has access.`, 'ok');
-    ['a-name','a-email','a-pass','a-uid','a-uemail'].forEach(i => $('#'+i).value = '');
-  } catch (e) { say(errText(e), 'bad'); }
-  finally { btn.disabled = false; }
-};
-
-function draw(){
-  const rows = Object.entries(agents).sort((a, b) => String(a[1].name).localeCompare(String(b[1].name)));
-  $('#count').textContent = rows.length ? `(${rows.filter(r => r[1].active).length} active)` : '';
-  if (!rows.length) { $('#list').innerHTML = '<div class="empty">No agents yet. Add the first one above.</div>'; return; }
-  $('#list').innerHTML = rows.map(([uid, a]) => {
-    const self = uid === me.uid;
-    return `<div class="agent">
-      <div class="who"><b>${esc(a.name || uid)}${self ? ' (you)' : ''}</b><span>${esc(a.email || uid)}</span></div>
-      <span class="pill ${a.active ? 'on' : 'off'}">${a.active ? 'Active' : 'Disabled'}</span>
-      <span style="text-transform:capitalize;color:var(--muted);min-width:46px">${esc(a.role || 'agent')}</span>
-      <div class="acts">${self ? '' : `
-        <button class="sm" data-a="toggle" data-u="${esc(uid)}">${a.active ? 'Disable' : 'Enable'}</button>
-        <button class="sm" data-a="role" data-u="${esc(uid)}">Make ${a.role === 'admin' ? 'agent' : 'admin'}</button>
-        ${a.email ? `<button class="sm" data-a="reset" data-u="${esc(uid)}">Reset password</button>` : ''}
-        <button class="sm danger" data-a="remove" data-u="${esc(uid)}">Remove</button>`}</div>
-    </div>`;
-  }).join('');
+    if (near) box.scrollTop = box.scrollHeight;
+  };
+  const r = query(ref(db, `dm_threads/${tid}/messages`), limitToLast(200));
+  const cb = snap => {
+    list = Object.values(snap.val() || {}).sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+    draw();
+    update(ref(db, `user_chats/${me.uid}/${uid}`), { unreadCount: 0 }).catch(() => {});
+  };
+  onValue(r, cb); unsubs.push(() => off(r, 'value', cb));
+  const rr = ref(db, `dm_threads/${tid}/readReceipts/${uid}`);
+  const rcb = snap => { lastRead = snap.val() || 0; draw(); };
+  onValue(rr, rcb, () => {}); unsubs.push(() => off(rr, 'value', rcb));
 }
+$('back').onclick = () => { clearSubs(); peer = null; show('v-list'); loadChats(); };
 
-$('#list').addEventListener('click', async e => {
-  const b = e.target.closest('button'); if (!b) return;
-  const uid = b.dataset.u, a = agents[uid]; if (!a || uid === me.uid) return;
-  try {
-    if (b.dataset.a === 'toggle') { await update(ref(db, 'support_agents/' + uid), { active: !a.active }); toast(a.active ? `${a.name} disabled` : `${a.name} enabled`); }
-    if (b.dataset.a === 'role') { await update(ref(db, 'support_agents/' + uid), { role: a.role === 'admin' ? 'agent' : 'admin' }); toast('Role updated'); }
-    if (b.dataset.a === 'reset') { await sendPasswordResetEmail(auth, a.email); toast('Reset email sent to ' + a.email); }
-    if (b.dataset.a === 'remove' && confirm(`Remove ${a.name}? They lose access immediately. Their login stays in Firebase Authentication until you delete it there.`)) {
-      await remove(ref(db, 'support_agents/' + uid)); toast(`${a.name} removed`);
-    }
-  } catch (err) { toast(errText(err)); }
-});
+$('send').onsubmit = async e => {
+  e.preventDefault();
+  const text = $('txt').value.trim();
+  if (!text || !peer) return;
+  $('txt').value = '';
+  const tid = threadIdFor(me.uid, peer), now = Date.now();
+  const key = push(ref(db, `dm_threads/${tid}/messages`)).key;
+  // Same multi-path write Haba uses, so both apps' chat lists stay in sync.
+  const u = {};
+  u[`dm_threads/${tid}/messages/${key}`] = { senderUid: me.uid, createdAt: now, text };
+  u[`user_chats/${me.uid}/${peer}`] = { text, timestamp: now, unreadCount: 0, senderUid: me.uid };
+  u[`user_chats/${peer}/${me.uid}/text`] = text;
+  u[`user_chats/${peer}/${me.uid}/timestamp`] = now;
+  u[`user_chats/${peer}/${me.uid}/unreadCount`] = increment(1);
+  u[`user_chats/${peer}/${me.uid}/senderUid`] = me.uid;
+  try { await update(ref(db), u); }
+  catch { $('txt').value = text; alert("Couldn't send. Check your connection or permissions."); }
+};
 </script>
 </body>
 </html>

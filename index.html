@@ -337,6 +337,10 @@ input,textarea{-webkit-user-select:text;user-select:text;-webkit-touch-callout:d
 .pgpost small{display:block;color:var(--muted);margin-bottom:4px}
 .pgcta{background:var(--input);border-radius:14px;margin:0 14px 8px;padding:12px 14px}
 select.field{appearance:none}
+/* dark mode: true black everywhere, including bars and bottom nav */
+:root[data-theme="dark"] #side,:root[data-theme="dark"] .bar,:root[data-theme="dark"] #composer,:root[data-theme="dark"] #replybar,:root[data-theme="dark"] #blocked,:root[data-theme="dark"] #bnav{background:#000}
+:root[data-theme="dark"] #bnav .nb,:root[data-theme="dark"] #bnav .nd,:root[data-theme="dark"] .dot{border-color:#000}
+:root[data-theme="dark"] html,:root[data-theme="dark"] body{background:#000}
 /* ---- bottom navigation ---- */
 :root{--nav-h:calc(68px + var(--sab))}
 #bnav{position:fixed;left:0;right:0;bottom:0;z-index:80;display:flex;background:var(--surface);border-top:1px solid var(--border);padding:8px 6px calc(8px + var(--sab))}

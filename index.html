@@ -284,6 +284,24 @@ input,textarea{-webkit-user-select:text;user-select:text;-webkit-touch-callout:d
 .blk .nm{flex:1;min-width:0}
 .blk small{display:block;color:var(--muted)}
 .blk button{background:var(--input);border-radius:50px;padding:7px 14px;font-weight:600}
+
+/* floating contacts button + contacts page */
+#side{position:relative}
+#fab{position:absolute;right:18px;bottom:calc(22px + var(--sab));width:58px;height:58px;border-radius:18px;background:var(--accent);color:#111;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 18px rgba(0,0,0,.3);z-index:5;transition:transform .12s}
+#fab:active{transform:scale(.93)}
+#fab svg{width:26px;height:26px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+#contacts{position:fixed;inset:0;z-index:75;background:var(--bg);display:flex;flex-direction:column}
+@media(min-width:761px){#contacts{right:auto;width:380px;border-right:1px solid var(--border)}}
+#ct-list{flex:1;overflow-y:auto;padding-bottom:calc(16px + var(--sab))}
+.crow{display:flex;gap:14px;align-items:center;padding:10px 18px;cursor:pointer}
+.crow:hover{background:var(--alt)}
+.crow.blocked{opacity:.5}
+.crow .mid{flex:1;min-width:0}
+.crow .mid b{display:block;font-weight:600;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.crow .mid span{display:block;color:var(--muted);font-size:14px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.crow .cic{width:48px;height:48px;border-radius:50%;background:var(--accent);color:#111;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.crow .cic svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.csec{padding:16px 18px 6px;color:var(--muted);font-size:14px;font-weight:600}
 </style>
 </head>
 <body>
@@ -333,6 +351,7 @@ input,textarea{-webkit-user-select:text;user-select:text;-webkit-touch-callout:d
     <div class="searchwrap"><input id="filter" placeholder="Search chats" autocomplete="off"></div>
     <div id="pills"><button class="pill on" data-f="all">All</button><button class="pill" data-f="unread">Unread</button><button class="pill" data-f="online">Online</button></div>
     <div id="chatlist"><div class="spin"></div></div>
+    <button id="fab" title="Contacts"><svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg></button>
   </aside>
 
   <section id="main">
@@ -372,6 +391,7 @@ input,textarea{-webkit-user-select:text;user-select:text;-webkit-touch-callout:d
 </div>
 
 <div id="rx-root"></div>
+<div id="contacts" class="hidden"><div class="bar"><button class="icon" id="ct-back" title="Back"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button><div class="grow"><div style="font-weight:700;font-size:17px">Select contact</div><div id="ct-count" style="font-size:12px;color:var(--muted)"></div></div><button class="icon" id="ct-searchbtn" title="Search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg></button></div><div class="searchwrap hidden" id="ct-sw"><input id="ct-q" placeholder="Search contacts" autocomplete="off"></div><div id="ct-list"></div></div>
 <div id="settings" class="hidden"></div>
 <div id="viewer" class="hidden"><div class="vbar"><button class="icon" id="v-close" title="Close"><svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button><div class="vmeta"><b id="v-name"></b><span id="v-time"></span></div><a class="icon" id="v-dl" title="Save"><svg viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg></a></div><div id="v-stage"></div></div>
 <div id="menu" class="hidden"></div>
@@ -660,7 +680,7 @@ function teardown(){
   closeThread(true);
   Object.keys(chats).forEach(k => delete chats[k]); Object.keys(previews).forEach(k => delete previews[k]);
   Object.values(typingWatch).forEach(f => f()); Object.keys(typingWatch).forEach(k => delete typingWatch[k]); Object.keys(typingMap).forEach(k => delete typingMap[k]);
-  chatsLoaded = false; hideNotif(); hideSettings();
+  chatsLoaded = false; hideNotif(); hideSettings(); hideContacts();
   kp = null; Object.keys(shared).forEach(k => delete shared[k]); decCache.clear();
 }
 
@@ -819,6 +839,7 @@ window.addEventListener('popstate', () => {
   if (skipPop) { skipPop = false; return; }
   if (viewerHist) { viewerHist = false; hideViewer(); return; }   // device back closes the viewer first
   if (settingsHist) { settingsHist = false; hideSettings(); return; }
+  if (contactsHist) { contactsHist = false; hideContacts(); return; }
   if (!chatHist) return; chatHist = false; if (activeUid) closeThread();
 });
 function closeThread(silent){
@@ -1470,6 +1491,108 @@ $('#btn-thread-menu').onclick = e => {
 };
 $('#btn-back').onclick = exitChat;
 $('#th-av').onclick = () => { if (activeUid) showProfile(activeUid); };
+
+/* contacts page + floating button */
+let contactsHist = false, contactIds = [], blockedIds = new Set(), ctLpT = null, ctLpFired = false, ctLpX = 0, ctLpY = 0, acT = null;
+const CT_USERPLUS = '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/>';
+function hideContacts(){ $('#contacts').classList.add('hidden'); }
+function closeContacts(){ hideContacts(); if (contactsHist) { contactsHist = false; skipPop = true; history.back(); } }
+function goChat(uid){
+  if (contactsHist) { contactsHist = false; hideContacts(); if (!chatHist) { history.replaceState({ hmChat: 1 }, ''); chatHist = true; } }
+  openThread(uid);
+}
+async function openContacts(){
+  $('#contacts').classList.remove('hidden'); $('#ct-q').value = ''; $('#ct-sw').classList.add('hidden');
+  if (!contactsHist) { history.pushState({ hmContacts: 1 }, ''); contactsHist = true; }
+  $('#ct-list').innerHTML = '<div class="spin"></div>';
+  try {
+    const [cs, bs] = await Promise.all([get(ref(db, `contacts/${me.uid}`)), get(ref(db, `blocks/${me.uid}`))]);
+    contactIds = []; cs.forEach(c => { if (c.val() && c.key !== me.uid && c.key !== AI_UID) contactIds.push(c.key); });
+    blockedIds = new Set(); bs.forEach(c => { if (c.val() === true) blockedIds.add(c.key); });
+  } catch { $('#ct-list').innerHTML = '<div class="empty">Couldn’t load contacts.</div>'; return; }
+  await Promise.all(contactIds.map(loadUser));
+  renderContacts();
+}
+function renderContacts(){
+  const root = $('#contacts'); if (root.classList.contains('hidden') || !me) return;
+  const q = $('#ct-q').value.trim().toLowerCase();
+  $('#ct-count').textContent = contactIds.length + (contactIds.length === 1 ? ' contact' : ' contacts');
+  const nm = uid => uName(uid).toLowerCase();
+  const list = contactIds.filter(uid => !q || nm(uid).includes(q) || (users[uid]?.username || '').toLowerCase().includes(q)).sort((a, b) => nm(a).localeCompare(nm(b)));
+  const sub = uid => blockedIds.has(uid) ? 'Blocked. Tap to unblock' : (users[uid]?.bio ? String(users[uid].bio).split('\n')[0] : (users[uid]?.username ? '@' + users[uid].username : ''));
+  const row = (uid, name, s2) => `<div class="crow${blockedIds.has(uid) ? ' blocked' : ''}" data-uid="${esc(uid)}"><div class="av" style="background-image:url('${cssUrl(uAvatar(uid))}')"></div><div class="mid"><b>${esc(name)}</b>${s2 ? `<span>${esc(s2)}</span>` : ''}</div></div>`;
+  let html = q ? '' : `<div class="crow" data-act="newc"><div class="cic"><svg viewBox="0 0 24 24">${CT_USERPLUS}</svg></div><div class="mid"><b>New contact</b><span>Find a friend by username</span></div></div>`;
+  html += '<div class="csec">Contacts on Haba</div>';
+  if (!q || 'my account you message yourself'.includes(q)) html += row(me.uid, ((users[me.uid]?.username ? '@' + users[me.uid].username : users[me.uid]?.name || 'My Account')) + ' (You)', 'Message yourself');
+  html += list.length ? list.map(uid => row(uid, uName(uid), sub(uid))).join('') : (q ? '<div class="empty">No contacts match.</div>' : '<div class="empty">No contacts yet.<br>Tap New contact to add friends.</div>');
+  $('#ct-list').innerHTML = html;
+}
+async function unblockContact(uid){
+  try { await set(ref(db, `blocks/${me.uid}/${uid}`), null); blockedIds.delete(uid); renderContacts(); toast('Unblocked'); } catch { toast('Couldn’t unblock'); }
+}
+$('#fab').onclick = openContacts;
+$('#ct-back').onclick = closeContacts;
+$('#ct-searchbtn').onclick = () => { const w = $('#ct-sw'); w.classList.toggle('hidden'); if (w.classList.contains('hidden')) { $('#ct-q').value = ''; renderContacts(); } else $('#ct-q').focus(); };
+$('#ct-q').addEventListener('input', renderContacts);
+$('#ct-list').addEventListener('click', e => {
+  if (ctLpFired) { ctLpFired = false; return; }
+  const r = e.target.closest('.crow'); if (!r) return;
+  if (r.dataset.act === 'newc') return addContactModal();
+  const uid = r.dataset.uid;
+  if (uid !== me.uid && blockedIds.has(uid)) return unblockContact(uid);
+  goChat(uid);
+});
+(() => {
+  const box = $('#ct-list');
+  box.addEventListener('pointerdown', e => {
+    const r = e.target.closest('.crow'); if (!r || !r.dataset.uid || r.dataset.uid === me.uid) return;
+    ctLpFired = false; ctLpX = e.clientX; ctLpY = e.clientY; clearTimeout(ctLpT);
+    ctLpT = setTimeout(() => { ctLpFired = true; navigator.vibrate && navigator.vibrate(15); contactSheet(r.dataset.uid); }, 450);
+  });
+  box.addEventListener('pointermove', e => { if (Math.abs(e.clientX - ctLpX) > 8 || Math.abs(e.clientY - ctLpY) > 8) clearTimeout(ctLpT); });
+  ['pointerup', 'pointercancel', 'pointerleave'].forEach(t => box.addEventListener(t, () => clearTimeout(ctLpT)));
+})();
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('#contacts').classList.contains('hidden') && $('#settings').classList.contains('hidden') && !$('#modal-root').firstElementChild) closeContacts(); });
+
+async function contactSheet(uid){
+  await loadUser(uid);
+  const bl = blockedIds.has(uid);
+  const ov = modal(`<div style="display:flex;gap:12px;align-items:center;margin-bottom:8px"><div class="av sm" style="background-image:url('${cssUrl(uAvatar(uid))}')"></div><b>${esc(uName(uid))}</b></div>
+    <button class="sh" id="cc-msg">Message</button><button class="sh" id="cc-block">${bl ? 'Unblock' : 'Block'}</button><button class="sh danger" id="cc-rm">Remove contact</button>`);
+  ov.querySelector('#cc-msg').onclick = () => { closeModal(); if (bl) toast('Unblock to send messages'); else goChat(uid); };
+  ov.querySelector('#cc-block').onclick = () => { closeModal(); set(ref(db, `blocks/${me.uid}/${uid}`), bl ? null : true).then(() => { bl ? blockedIds.delete(uid) : blockedIds.add(uid); renderContacts(); toast(bl ? 'Unblocked' : 'Blocked'); }).catch(() => toast('Couldn’t update')); };
+  ov.querySelector('#cc-rm').onclick = () => { closeModal(); set(ref(db, `contacts/${me.uid}/${uid}`), null).then(() => { contactIds = contactIds.filter(x => x !== uid); renderContacts(); toast('Contact removed'); }).catch(() => toast('Couldn’t remove contact')); };
+}
+function addContactModal(){
+  const ov = modal('<h3>New contact</h3><input class="field" id="ac-s" placeholder="Search by username" autocomplete="off" autocapitalize="none"><div id="ac-r"><div class="empty" style="padding:20px">Type at least 2 letters of a username</div></div>');
+  const inp = ov.querySelector('#ac-s'); inp.focus();
+  inp.addEventListener('input', () => { clearTimeout(acT); acT = setTimeout(() => acSearch(inp.value), 250); });
+}
+async function acSearch(raw){
+  const q = raw.trim().toLowerCase().replace(/^@/, ''), out = $('#ac-r'); if (!out) return;
+  if (q.length < 2 || !/^[a-z0-9_.]+$/.test(q)) { out.innerHTML = '<div class="empty" style="padding:20px">Type at least 2 letters of a username</div>'; return; }
+  out.innerHTML = '<div class="spin"></div>';
+  try {
+    const sn = await get(query(ref(db, 'usernames'), orderByKey(), startAt(q), endAt(q + '\uf8ff'), limitToFirst(10)));
+    const uids = []; sn.forEach(c => { if (typeof c.val() === 'string' && c.val() !== me.uid) uids.push(c.val()); });
+    await Promise.all(uids.map(loadUser));
+    const box = $('#ac-r'); if (!box) return;
+    if (!uids.length) { box.innerHTML = '<div class="empty" style="padding:20px">No one found</div>'; return; }
+    box.innerHTML = uids.map(uid => `<div class="blk" data-uid="${esc(uid)}"><div class="av sm" style="background-image:url('${cssUrl(uAvatar(uid))}')"></div><div class="nm" style="cursor:pointer"><b>${esc(uName(uid))}</b><small>@${esc(users[uid]?.username || '')}</small></div><button>${contactIds.includes(uid) ? 'Added ✓' : 'Add'}</button></div>`).join('');
+    box.querySelectorAll('.blk').forEach(el => {
+      const uid = el.dataset.uid, btn = el.querySelector('button');
+      el.querySelector('.nm').onclick = () => { closeModal(); goChat(uid); };
+      btn.onclick = async () => {
+        const has = contactIds.includes(uid);
+        try {
+          await set(ref(db, `contacts/${me.uid}/${uid}`), has ? null : true);
+          contactIds = has ? contactIds.filter(x => x !== uid) : [...contactIds, uid];
+          btn.textContent = has ? 'Add' : 'Added ✓'; renderContacts(); toast(has ? 'Contact removed' : 'Added to contacts');
+        } catch { toast('Couldn’t update contacts'); }
+      };
+    });
+  } catch { $('#ac-r') && ($('#ac-r').innerHTML = '<div class="empty" style="padding:20px">Search failed</div>'); }
+}
 
 /* profile bottom sheet */
 async function showProfile(uid){

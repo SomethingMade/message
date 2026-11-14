@@ -312,6 +312,31 @@ input,textarea{-webkit-user-select:text;user-select:text;-webkit-touch-callout:d
 .crow .cic{width:48px;height:48px;border-radius:50%;background:var(--accent);color:#111;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .crow .cic svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .csec{padding:16px 18px 6px;color:var(--muted);font-size:14px;font-weight:600}
+
+/* pages */
+#pages{position:fixed;inset:0;z-index:72;background:var(--bg);display:flex;flex-direction:column}
+@media(min-width:761px){#pages{right:auto;width:380px;border-right:1px solid var(--border)}}
+#pg-body{flex:1;overflow-y:auto;padding-bottom:calc(var(--nav-h) + 16px)}
+#pg-tabs{display:flex;gap:8px;padding:10px 14px}
+.pgav{border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;flex-shrink:0;background-size:cover;background-position:center}
+.pgrow{display:flex;gap:12px;align-items:center;padding:10px 16px;cursor:pointer}
+.pgrow:hover{background:var(--alt)}
+.pgrow .mid{flex:1;min-width:0}
+.pgrow .mid b{display:block;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pgrow .mid span{display:block;color:var(--muted);font-size:13px;margin-top:2px}
+.pgbtn{padding:7px 16px;border-radius:50px;background:var(--primary);color:var(--inverse);font-weight:600;font-size:13px;flex-shrink:0}
+.pgbtn.on,.pgbtn.ghost{background:var(--input);color:var(--text)}
+.pgcover{height:120px;background-size:cover;background-position:center}
+.pghead{padding:0 16px 12px;margin-top:-30px}
+.pghead .pgav{border:3px solid var(--bg)}
+.pghead h2{margin:8px 0 2px;font-size:20px}
+.pghead p{margin:6px 0;color:var(--muted);font-size:14px;white-space:pre-wrap}
+.pgacts{display:flex;gap:8px;margin-top:10px}
+.pgacts .pgbtn{flex:1;padding:10px}
+.pgpost{padding:12px 16px;border-top:1px solid var(--border);white-space:pre-wrap;word-break:break-word}
+.pgpost small{display:block;color:var(--muted);margin-bottom:4px}
+.pgcta{background:var(--input);border-radius:14px;margin:0 14px 8px;padding:12px 14px}
+select.field{appearance:none}
 /* ---- bottom navigation ---- */
 :root{--nav-h:calc(68px + var(--sab))}
 #bnav{position:fixed;left:0;right:0;bottom:0;z-index:80;display:flex;background:var(--surface);border-top:1px solid var(--border);padding:8px 6px calc(8px + var(--sab))}
@@ -394,6 +419,15 @@ input,textarea{-webkit-user-select:text;user-select:text;-webkit-touch-callout:d
 #smd-strip .th img,#smd-strip .th video{width:100%;height:100%;object-fit:cover;pointer-events:none}
 #smd-strip .th b{position:absolute;top:0;right:0;width:20px;height:20px;border-radius:0 0 0 8px;background:rgba(0,0,0,.65);display:flex;align-items:center;justify-content:center;font-size:14px;line-height:1}
 #smd-strip .th.add{display:flex;align-items:center;justify-content:center;font-size:26px;color:#fff;border:2px dashed rgba(255,255,255,.4);background:transparent}
+#upbar{position:fixed;top:0;left:0;right:0;height:3px;z-index:150;pointer-events:none;opacity:0;transition:opacity .2s}
+#upbar.on{opacity:1}
+#upbar i{display:block;height:100%;width:0;background:var(--accent);transition:width .25s;border-radius:0 2px 2px 0}
+.upjob .uth{width:46px;height:46px;border-radius:10px;overflow:hidden;background:var(--input);flex-shrink:0;margin:0 6px 0 6px}
+.upjob .uth img,.upjob .uth video{width:100%;height:100%;object-fit:cover;pointer-events:none}
+.upjob .pb{height:4px;border-radius:2px;background:var(--input);margin-top:7px;overflow:hidden}
+.upjob .pb i{display:block;height:100%;background:var(--accent);transition:width .25s}
+.upjob.err .mid b{color:var(--danger)}
+.upjob .uadd{font-size:20px}
 </style>
 </head>
 <body>
@@ -483,11 +517,12 @@ input,textarea{-webkit-user-select:text;user-select:text;-webkit-touch-callout:d
   <nav id="bnav">
     <button data-tab="chats" class="on"><span class="pl"><svg viewBox="0 0 24 24"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 8.6 8.6 0 0 1-3.6-.8L3 21l1.9-5.4A8.4 8.4 0 1 1 21 11.5Z"/></svg><span class="nb hidden" id="nb-chats"></span></span>Chats</button>
     <button data-tab="updates"><span class="pl"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" stroke-dasharray="3.2 3"/><circle cx="12" cy="12" r="3.6"/></svg><span class="nd hidden" id="nd-upd"></span></span>Updates</button>
-    <button data-tab="contacts"><span class="pl"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>Contacts</button>
+    <button data-tab="pages"><span class="pl"><svg viewBox="0 0 24 24"><path d="M4 22V4"/><path d="M4 4h13l-2 4 2 4H4"/></svg></span>Pages</button>
     <button data-tab="settings"><span class="pl"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></span>You</button>
   </nav>
 </div>
 
+<div id="upbar"><i></i></div>
 <div id="updates" class="hidden">
   <div class="bar"><div class="grow" style="font-weight:800;font-size:20px">Updates</div></div>
   <div id="up-list"></div>
@@ -526,6 +561,7 @@ input,textarea{-webkit-user-select:text;user-select:text;-webkit-touch-callout:d
   <div class="capw"><input id="smd-cap" maxlength="200" placeholder="Add a caption…" autocomplete="off" enterkeyhint="done"></div>
 </div>
 <div id="rx-root"></div>
+<div id="pages" class="hidden"><div class="bar"><button class="icon hidden" id="pg-back" title="Back"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button><div class="grow" id="pg-title" style="font-weight:800;font-size:20px">Pages</div><button class="icon" id="pg-new" title="Create Page"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button></div><div id="pg-tabs"><button class="pill on" data-t="discover">Discover</button><button class="pill" data-t="mine">Your Pages</button></div><div id="pg-body"></div></div>
 <div id="contacts" class="hidden"><div class="bar"><button class="icon" id="ct-back" title="Back"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button><div class="grow"><div style="font-weight:700;font-size:17px">Select contact</div><div id="ct-count" style="font-size:12px;color:var(--muted)"></div></div><button class="icon" id="ct-searchbtn" title="Search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg></button></div><div class="searchwrap hidden" id="ct-sw"><input id="ct-q" placeholder="Search contacts" autocomplete="off"></div><div id="ct-list"></div></div>
 <div id="settings" class="hidden"></div>
 <div id="viewer" class="hidden"><div class="vbar"><button class="icon" id="v-close" title="Close"><svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button><div class="vmeta"><b id="v-name"></b><span id="v-time"></span></div><a class="icon" id="v-dl" title="Save"><svg viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg></a></div><div id="v-stage"></div></div>
@@ -538,7 +574,7 @@ input,textarea{-webkit-user-select:text;user-select:text;-webkit-touch-callout:d
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut, RecaptchaVerifier, signInWithPhoneNumber, signInWithEmailAndPassword, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 import { getDatabase, ref, onValue, get, push, set, update, off, query, orderByChild, orderByKey, limitToLast, limitToFirst, startAt, endAt, increment, onDisconnect, serverTimestamp, remove, orderByValue } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
-import { getStorage, ref as sRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-storage.js";
+import { getStorage, ref as sRef, uploadBytes, uploadBytesResumable, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-storage.js";
 
 /* Same Firebase project as the main Haba app, so accounts, chats and contacts are shared. */
 const app = initializeApp({
@@ -844,7 +880,7 @@ function teardown(){
   closeThread(true);
   Object.keys(chats).forEach(k => delete chats[k]); Object.keys(previews).forEach(k => delete previews[k]);
   Object.values(typingWatch).forEach(f => f()); Object.keys(typingWatch).forEach(k => delete typingWatch[k]); Object.keys(typingMap).forEach(k => delete typingMap[k]);
-  chatsLoaded = false; hideNotif(); hideSettings(); hideContacts(); hideStory(); hideUpdates(); stopStories();
+  chatsLoaded = false; hideNotif(); hideSettings(); hideContacts(); hidePages(); hideStory(); hideUpdates(); stopStories(); cancelAllUploads();
   kp = null; Object.keys(shared).forEach(k => delete shared[k]); decCache.clear();
   HDB.clear(); Object.keys(users).forEach(k => delete users[k]); userFresh.clear(); avObj.clear(); avTry.clear();
 }
@@ -1113,6 +1149,7 @@ window.addEventListener('popstate', () => {
   if (updatesHist) { updatesHist = false; hideUpdates(); return; }
   if (settingsHist) { settingsHist = false; hideSettings(); return; }
   if (contactsHist) { contactsHist = false; hideContacts(); return; }
+  if (pagesHist) { pagesHist = false; hidePages(); return; }
   if (!chatHist) return; chatHist = false; if (activeUid) closeThread();
 });
 function closeThread(silent){
@@ -1781,6 +1818,7 @@ const CT_USERPLUS = '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circl
 function hideContacts(){ $('#contacts').classList.add('hidden'); }
 function closeContacts(){ hideContacts(); if (contactsHist) { contactsHist = false; skipPop = true; history.back(); } }
 function goChat(uid){
+  if (pagesHist) { pagesHist = false; hidePages(); if (!chatHist) { history.replaceState({ hmChat: 1 }, ''); chatHist = true; } }
   if (contactsHist) { contactsHist = false; hideContacts(); if (!chatHist) { history.replaceState({ hmChat: 1 }, ''); chatHist = true; } }
   openThread(uid);
 }
@@ -1895,7 +1933,8 @@ function renderUpdates(){
   const own = mine.length
     ? `<div class="crow urow" data-uid="${esc(me.uid)}"><div class="ring">${ringSvg(mine.map(() => false))}<div class="av" style="background-image:url('${cssUrl(uAvatar(me.uid))}')"></div></div><div class="mid"><b>My status</b><span>${updAgo(mine[mine.length - 1].createdAt)} · ${mine.length} update${mine.length === 1 ? '' : 's'}</span></div><button class="uadd" data-act="add" title="Add status">+</button></div>`
     : `<div class="crow urow" data-act="add"><div class="ring"><div class="av" style="background-image:url('${cssUrl(uAvatar(me.uid))}')"></div><span class="plus">+</span></div><div class="mid"><b>My status</b><span>Tap to add status update</span></div></div>`;
-  $('#up-list').innerHTML = own
+  const jobRow = j => `<div class="crow upjob ${j.state === 'error' ? 'err' : ''}" data-job="${j.id}"><div class="uth">${j.isVid ? `<video src="${j.url}#t=0.1" muted preload="metadata"></video>` : `<img src="${j.url}" alt="">`}</div><div class="mid"><b>${j.state === 'error' ? 'Couldn’t upload' : j.state === 'queued' ? 'Waiting to upload…' : 'Uploading… ' + Math.round(j.pct * 100) + '%'}</b><span>${j.caption ? esc(j.caption) : (j.isVid ? 'Video status' : 'Photo status')}</span>${j.state === 'uploading' ? `<div class="pb"><i style="width:${Math.round(j.pct * 100)}%"></i></div>` : ''}</div>${j.state === 'error' ? '<button class="uadd" data-retry="1" title="Retry">↻</button>' : ''}<button class="uadd" data-cancel="1" title="Remove">×</button></div>`;
+  $('#up-list').innerHTML = upq.map(jobRow).join('') + own
     + (fresh.length ? '<div class="csec">Recent updates</div>' + fresh.map(row).join('') : '')
     + (seen.length ? '<div class="csec">Viewed updates</div>' + seen.map(row).join('') : '')
     + (!fresh.length && !seen.length ? '<div class="empty" style="padding:28px 24px">No updates from others right now.<br>Statuses disappear after 24 hours.</div>' : '');
@@ -1910,6 +1949,13 @@ async function openUpdates(){
 function hideUpdates(){ $('#updates').classList.add('hidden'); }
 function closeUpdates(){ hideUpdates(); if (updatesHist) { updatesHist = false; skipPop = true; history.back(); } }
 $('#up-list').addEventListener('click', e => {
+  const jb = e.target.closest('[data-job]');
+  if (jb) {
+    const j = upq.find(x => String(x.id) === jb.dataset.job); if (!j) return;
+    if (e.target.closest('[data-retry]')) { j.state = 'queued'; j.pct = 0; renderUpBar(); runUploads(); }
+    else if (e.target.closest('[data-cancel]')) cancelJob(j);
+    return;
+  }
   const r = e.target.closest('.urow'); if (!r) return;
   if (e.target.closest('[data-act=add]') || r.dataset.act === 'add') return addStatusSheet();
   openStoryFor(r.dataset.uid);
@@ -1944,11 +1990,11 @@ function paintStx(){
 $('#stx-sw').addEventListener('click', e => { const i = e.target.closest('i'); if (i) { stxBg = i.dataset.bg; paintStx(); } });
 $('#stx-fonts').addEventListener('click', e => { const b = e.target.closest('button'); if (b) { stxFont = b.dataset.font; paintStx(); $('#stx-input').focus(); } });
 $('#stx-close').onclick = () => $('#stx').classList.add('hidden');
-$('#stx-post').onclick = async () => {
+$('#stx-post').onclick = () => {
   const text = $('#stx-input').value.trim(); if (!text) return toast('Write something first');
-  const b = $('#stx-post'); b.disabled = true;
-  try { await postStory({ type: 'text', text, bgColor: stxBg, ...(stxFont !== 'sans' ? { font: stxFont } : {}) }); $('#stx').classList.add('hidden'); toast('Status posted'); }
-  catch { toast('Couldn’t post your status'); } finally { b.disabled = false; }
+  const payload = { type: 'text', text, bgColor: stxBg, ...(stxFont !== 'sans' ? { font: stxFont } : {}) };
+  $('#stx').classList.add('hidden'); toast('Posting your status…');
+  postStory(payload).then(() => { toast('Status posted'); }, () => toast('Couldn’t post your status'));   // keeps going while you use the app
 };
 
 /* media composer: every photo/video gets its own caption */
@@ -1979,23 +2025,63 @@ $('#smd-strip').addEventListener('click', e => {
 function closeMediaComposer(){ $('#smd').classList.add('hidden'); $('#smd-prev').innerHTML = ''; $('#smd-strip').innerHTML = ''; smd.forEach(x => URL.revokeObjectURL(x.url)); smd = []; smdI = 0; }
 $('#smd-close').onclick = closeMediaComposer;
 const videoLen = file => new Promise(res => { const v = document.createElement('video'), u = URL.createObjectURL(file); v.preload = 'metadata'; v.onloadedmetadata = () => { URL.revokeObjectURL(u); res(isFinite(v.duration) ? Math.round(v.duration) : null); }; v.onerror = () => { URL.revokeObjectURL(u); res(null); }; v.src = u; });
-$('#smd-post').onclick = async () => {
-  const items = smd.slice(), btn = $('#smd-post'); if (!items.length) return;
-  btn.disabled = true; let ok = 0;
+/* background upload queue — closing the composer never waits for the upload */
+const upq = []; let upBusy = false, upId = 0, upBarRaf = 0;
+const jobActive = j => j.state === 'queued' || j.state === 'uploading';
+function enqueueUploads(items){
+  items.forEach(it => upq.push({ id: ++upId, file: it.file, caption: it.caption, isVid: it.file.type.startsWith('video/'), url: URL.createObjectURL(it.file), state: 'queued', pct: 0, task: null }));
+  renderUpBar(); renderUpdatesSoon(); runUploads();
+}
+function renderUpBar(){
+  cancelAnimationFrame(upBarRaf); upBarRaf = requestAnimationFrame(() => {
+    const on = upq.some(jobActive), bar = $('#upbar');
+    bar.classList.toggle('on', on);
+    const sum = upq.reduce((a, j) => a + (j.state === 'done' ? 1 : j.state === 'uploading' ? j.pct : 0), 0);
+    bar.firstElementChild.style.width = (upq.length ? sum / upq.length * 100 : 0) + '%';
+    renderUpdatesSoon();
+  });
+}
+async function uploadJob(job){
+  const f = job.file, blob = job.isVid ? f : await prepImage(f);
+  const safe = (blob.name || f.name || (job.isVid ? 'video' : 'photo')).replace(/[^a-zA-Z0-9.\-_]/g, '_');
+  const r = sRef(storage, `stories/${me.uid}/${Date.now()}_${job.id}_${safe}`);
+  await new Promise((res, rej) => {
+    const t = uploadBytesResumable(r, blob, { contentType: blob.type || f.type }); job.task = t;
+    t.on('state_changed', s => { job.pct = s.totalBytes ? s.bytesTransferred / s.totalBytes : 0; renderUpBar(); }, rej, res);
+  });
+  job.task = null;
+  const url = await getDownloadURL(r), dur = job.isVid ? await videoLen(f) : null;
+  await postStory({ type: job.isVid ? 'video' : 'image', mediaURL: url, ...(dur ? { duration: dur } : {}), ...(job.caption ? { caption: job.caption } : {}) });
+}
+async function runUploads(){
+  if (upBusy) return; upBusy = true; let ok = 0, failed = 0;
   try {
-    for (let i = 0; i < items.length; i++) {
-      btn.textContent = items.length > 1 ? `Posting ${i + 1}/${items.length}` : 'Posting…';
-      const f = items[i].file, caption = items[i].caption.trim(), isVid = f.type.startsWith('video/');
-      if (isVid && f.size > 60e6) { toast('Videos must be under 60 MB'); continue; }
-      const blob = isVid ? f : await prepImage(f), safe = (blob.name || f.name || (isVid ? 'video' : 'photo')).replace(/[^a-zA-Z0-9.\-_]/g, '_');
-      const snap = await uploadBytes(sRef(storage, `stories/${me.uid}/${Date.now()}_${i}_${safe}`), blob, { contentType: blob.type || f.type });
-      const url = await getDownloadURL(snap.ref), dur = isVid ? await videoLen(f) : null;
-      await postStory({ type: isVid ? 'video' : 'image', mediaURL: url, ...(dur ? { duration: dur } : {}), ...(caption ? { caption } : {}) }); ok++;
+    for (;;) {
+      const job = upq.find(j => j.state === 'queued'); if (!job) break;
+      job.state = 'uploading'; job.pct = 0; renderUpBar();
+      try { await uploadJob(job); if (job.state !== 'canceled') { job.state = 'done'; ok++; } }
+      catch (e) { job.task = null; if (job.state !== 'canceled') { job.state = 'error'; failed++; console.error(e); } }
+      renderUpBar();
     }
-    if (ok) toast(ok > 1 ? 'Statuses posted' : 'Status posted');
-    closeMediaComposer();
-  } catch (err) { console.error(err); toast('Couldn’t upload your status'); }
-  finally { btn.disabled = false; btn.textContent = 'Post'; }
+  } finally { upBusy = false; }
+  for (let i = upq.length - 1; i >= 0; i--) if (upq[i].state === 'done' || upq[i].state === 'canceled') { URL.revokeObjectURL(upq[i].url); upq.splice(i, 1); }
+  if (ok) toast(ok > 1 ? 'Statuses posted' : 'Status posted');
+  if (failed) toast('Couldn’t upload ' + (failed > 1 ? failed + ' statuses' : 'a status') + '. Open Updates to retry.');
+  renderUpBar();
+}
+function cancelJob(j){
+  if (j.state === 'uploading' && j.task) { j.state = 'canceled'; try { j.task.cancel(); } catch {} return renderUpBar(); }
+  const i = upq.indexOf(j); if (i >= 0) { URL.revokeObjectURL(j.url); upq.splice(i, 1); }
+  renderUpBar();
+}
+function cancelAllUploads(){ upq.slice().forEach(cancelJob); }
+window.addEventListener('beforeunload', e => { if (upq.some(jobActive)) { e.preventDefault(); e.returnValue = ''; } });
+$('#smd-post').onclick = () => {
+  const ok = smd.filter(x => !(x.file.type.startsWith('video/') && x.file.size > 60e6));
+  if (ok.length < smd.length) toast('Videos must be under 60 MB');
+  if (!ok.length) return;
+  enqueueUploads(ok.map(x => ({ file: x.file, caption: x.caption.trim() })));
+  closeMediaComposer(); toast('Posting in the background…');
 };
 
 /* ----- viewer ----- */
@@ -2132,9 +2218,114 @@ $('#sv-more').onclick = e => {
   mo.observe(m, { attributes: true, attributeFilter: ['class'] });
 };
 
+/* =============== PAGES (same data model as Haba: pages, pagePosts, pageFollowers, userFollowedPages, userPages) =============== */
+let pagesHist = false, pgTab = 'discover', pgCur = null, pgAll = {}, pgFollow = new Set(), pgMine = new Set(), pgPosts = null;
+const PG_CATS = ['Business','Brand','Creator','Community','Local business','Education','Entertainment','Food & drink','News & media','Non-profit','Sports','Tech','Other'];
+function hidePages(){ $('#pages').classList.add('hidden'); }
+function closePages(){ hidePages(); if (pagesHist) { pagesHist = false; skipPop = true; history.back(); } }
+function pgAv(p, sz){
+  const u = /^https:\/\//i.test(p.avatarURL || '') ? p.avatarURL : '', n = p.name || '?';
+  let h = 0; for (const c of n) h = (h * 31 + c.charCodeAt(0)) >>> 0; h %= 360;
+  const bg = u ? `background-image:url('${encodeURI(u).replace(/'/g, '%27')}')` : `background:linear-gradient(135deg,hsl(${h},62%,46%),hsl(${(h + 40) % 360},66%,34%))`;
+  const ini = u ? '' : esc(n.trim().split(/\s+/).slice(0, 2).map(w => w[0]).join('').toUpperCase());
+  return `<div class="pgav" style="width:${sz}px;height:${sz}px;font-size:${Math.round(sz * .38)}px;${bg}">${ini}</div>`;
+}
+const pgFc = n => { n = +n || 0; return n + (n === 1 ? ' follower' : ' followers'); };
+async function openPages(){
+  $('#pages').classList.remove('hidden');
+  if (!pagesHist) { history.pushState({ hmPages: 1 }, ''); pagesHist = true; }
+  pgCur = null; renderPages(true);
+}
+async function pgLoad(){
+  try {
+    const [all, mine, fol] = await Promise.all([
+      get(query(ref(db, 'pages'), orderByChild('createdAt'), limitToLast(100))),
+      get(ref(db, `userPages/${me.uid}`)), get(ref(db, `userFollowedPages/${me.uid}`))]);
+    pgAll = {}; all.forEach(c => { pgAll[c.key] = { id: c.key, ...c.val() }; });
+    pgMine = new Set(Object.keys(mine.val() || {})); pgFollow = new Set(Object.keys(fol.val() || {}));
+    for (const id of [...pgMine, ...pgFollow]) if (!pgAll[id]) { const s = await get(ref(db, `pages/${id}`)); if (s.exists()) pgAll[id] = { id, ...s.val() }; }
+    return true;
+  } catch { return false; }
+}
+async function renderPages(load){
+  const body = $('#pg-body'), cur = pgCur && pgAll[pgCur];
+  $('#pg-back').classList.toggle('hidden', !pgCur); $('#pg-tabs').classList.toggle('hidden', !!pgCur); $('#pg-new').classList.toggle('hidden', !!pgCur);
+  $('#pg-title').textContent = cur ? (cur.name || 'Page') : 'Pages';
+  if (load) { body.innerHTML = '<div class="spin"></div>'; if (!await pgLoad()) { body.innerHTML = '<div class="empty">Couldn’t load Pages.</div>'; return; } }
+  if (!$('#pages') || $('#pages').classList.contains('hidden')) return;
+  if (pgCur) return renderPageView();
+  document.querySelectorAll('#pg-tabs .pill').forEach(b => b.classList.toggle('on', b.dataset.t === pgTab));
+  const row = (p, mine) => `<div class="pgrow" data-pid="${esc(p.id)}">${pgAv(p, 48)}<div class="mid"><b>${esc(p.name)}</b><span>${esc(p.category || 'Page')} · ${pgFc(p.followerCount)}</span></div>${mine ? '<button class="pgbtn ghost" data-open>Manage</button>' : `<button class="pgbtn${pgFollow.has(p.id) ? ' on' : ''}" data-fol>${pgFollow.has(p.id) ? 'Following' : 'Follow'}</button>`}</div>`;
+  const all = Object.values(pgAll);
+  if (pgTab === 'discover') {
+    const l = all.filter(p => !pgMine.has(p.id)).sort((a, b) => (b.followerCount || 0) - (a.followerCount || 0) || (b.createdAt || 0) - (a.createdAt || 0));
+    body.innerHTML = l.length ? l.map(p => row(p)).join('') : '<div class="empty">No Pages to discover yet.<br>Tap + to create the first one.</div>';
+  } else {
+    const m = all.filter(p => pgMine.has(p.id)), f = all.filter(p => pgFollow.has(p.id) && !pgMine.has(p.id));
+    let h = '<div class="pgrow" data-act="create"><div class="pgav" style="width:48px;height:48px;background:var(--accent);color:#111"><svg viewBox="0 0 24 24" width="22" height="22" style="stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round"><path d="M12 5v14M5 12h14"/></svg></div><div class="mid"><b>Create a Page</b><span>For your business, brand or community</span></div></div>';
+    if (m.length) h += '<div class="csec">Pages you manage</div>' + m.map(p => row(p, true)).join('');
+    if (f.length) h += '<div class="csec">Pages you follow</div>' + f.map(p => row(p)).join('');
+    if (!m.length && !f.length) h += '<div class="empty">No Pages yet.<br>Pages you create or follow show up here.</div>';
+    body.innerHTML = h;
+  }
+}
+async function renderPageView(){
+  const p = pgAll[pgCur], body = $('#pg-body'), own = p.ownerUid === me.uid, cover = /^https:\/\//i.test(p.coverURL || '') ? `background-image:url('${encodeURI(p.coverURL).replace(/'/g, '%27')}')` : 'background:var(--input)';
+  const site = /^https?:\/\//i.test(p.website || '') ? `<p><a href="${esc(p.website)}" target="_blank" rel="noopener noreferrer nofollow">${esc(p.website.replace(/^https?:\/\//i, ''))}</a></p>` : '';
+  body.innerHTML = `<div class="pgcover" style="${cover}"></div><div class="pghead">${pgAv(p, 72)}<h2>${esc(p.name)}</h2><span style="color:var(--muted);font-size:14px">${esc(p.category || 'Page')} · ${pgFc(p.followerCount)} · ${p.postCount || 0} posts</span>${p.about ? `<p>${esc(p.about)}</p>` : ''}${site}${p.location ? `<p>📍 ${esc(p.location)}</p>` : ''}<div class="pgacts">${own ? '<button class="pgbtn" data-act="post">New post</button>' : `<button class="pgbtn${pgFollow.has(p.id) ? ' on' : ''}" data-fol>${pgFollow.has(p.id) ? 'Following' : 'Follow'}</button><button class="pgbtn ghost" data-act="msg">Message</button>`}</div></div><div id="pg-posts"><div class="spin"></div></div>`;
+  const id = pgCur;
+  try {
+    const s = await get(query(ref(db, `pagePosts/${id}`), limitToLast(50))), l = []; s.forEach(c => { l.push({ id: c.key, ...c.val() }); });
+    if (pgCur !== id) return; l.reverse();
+    $('#pg-posts').innerHTML = l.length ? l.map(x => `<div class="pgpost"><small>${x.createdAt ? new Date(x.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : ''}</small>${esc(x.text)}${/^https:\/\//i.test(x.mediaURL || '') && x.mediaType !== 'video' ? `<img src="${esc(x.mediaURL)}" style="width:100%;border-radius:12px;margin-top:8px" loading="lazy">` : ''}</div>`).join('') : '<div class="empty">No posts yet.</div>';
+  } catch { if (pgCur === id) $('#pg-posts').innerHTML = '<div class="empty">Couldn’t load posts.</div>'; }
+}
+async function pgToggleFollow(id){
+  const p = pgAll[id]; if (!p || p.ownerUid === me.uid) return;
+  const was = pgFollow.has(id);
+  was ? pgFollow.delete(id) : pgFollow.add(id); p.followerCount = Math.max(0, (p.followerCount || 0) + (was ? -1 : 1)); renderPages();
+  try { await update(ref(db), { [`pageFollowers/${id}/${me.uid}`]: was ? null : true, [`userFollowedPages/${me.uid}/${id}`]: was ? null : true, [`pages/${id}/followerCount`]: increment(was ? -1 : 1) }); }
+  catch { was ? pgFollow.add(id) : pgFollow.delete(id); p.followerCount = Math.max(0, (p.followerCount || 0) + (was ? 1 : -1)); renderPages(); toast('Couldn’t update follow'); }
+}
+function pgCreate(){
+  const ov = modal(`<h3>Create a Page</h3><input class="field" id="pc-name" placeholder="Page name" maxlength="60"><select class="field" id="pc-cat">${PG_CATS.map(c => `<option>${esc(c)}</option>`).join('')}</select><input class="field" id="pc-about" placeholder="About (optional)" maxlength="300"><button class="btn" id="pc-go">Create</button>`);
+  ov.querySelector('#pc-go').onclick = async () => {
+    const name = ov.querySelector('#pc-name').value.trim(); if (name.length < 2) return toast('Give your Page a name');
+    const data = { name, category: ov.querySelector('#pc-cat').value, about: ov.querySelector('#pc-about').value.trim(), website: '', location: '', avatarURL: '', coverURL: '' };
+    const b = ov.querySelector('#pc-go'); b.disabled = true;
+    try {
+      const id = push(ref(db, 'pages')).key;
+      await update(ref(db), { [`pages/${id}`]: { ownerUid: me.uid, createdAt: serverTimestamp(), followerCount: 0, postCount: 0, ...data }, [`userPages/${me.uid}/${id}`]: true });
+      pgAll[id] = { id, ownerUid: me.uid, createdAt: Date.now(), followerCount: 0, postCount: 0, ...data }; pgMine.add(id); closeModal(); toast('Page created'); pgCur = id; renderPages();
+    } catch { b.disabled = false; toast('Couldn’t create Page'); }
+  };
+}
+function pgPost(){
+  const id = pgCur, ov = modal(`<h3>New post</h3><textarea class="field" id="pp-text" rows="4" maxlength="500" placeholder="What’s new?" style="border-radius:18px;resize:none"></textarea><button class="btn" id="pp-go">Post</button>`);
+  ov.querySelector('#pp-go').onclick = async () => {
+    const text = ov.querySelector('#pp-text').value.trim(); if (!text) return;
+    ov.querySelector('#pp-go').disabled = true;
+    try {
+      const k = push(ref(db, `pagePosts/${id}`)).key;
+      await update(ref(db), { [`pagePosts/${id}/${k}`]: { text, mediaURL: '', mediaType: '', authorUid: me.uid, createdAt: serverTimestamp() }, [`pages/${id}/postCount`]: increment(1) });
+      pgAll[id].postCount = (pgAll[id].postCount || 0) + 1; closeModal(); toast('Posted'); if (pgCur === id) renderPageView();
+    } catch { ov.querySelector('#pp-go').disabled = false; toast('Couldn’t post'); }
+  };
+}
+$('#pg-back').onclick = () => { pgCur = null; renderPages(); };
+$('#pg-new').onclick = pgCreate;
+$('#pg-tabs').onclick = e => { const b = e.target.closest('.pill'); if (b) { pgTab = b.dataset.t; renderPages(); } };
+$('#pg-body').addEventListener('click', e => {
+  if (e.target.closest('[data-fol]')) { const r = e.target.closest('[data-pid]'); return pgToggleFollow(r ? r.dataset.pid : pgCur); }
+  const a = e.target.closest('[data-act]');
+  if (a) { if (a.dataset.act === 'create') return pgCreate(); if (a.dataset.act === 'post') return pgPost(); if (a.dataset.act === 'msg') { const o = pgAll[pgCur].ownerUid; if (o) goChat(o); return; } }
+  const r = e.target.closest('.pgrow[data-pid]'); if (r) { pgCur = r.dataset.pid; $('#pg-body').scrollTop = 0; renderPages(); }
+});
+
 /* =============== BOTTOM NAV =============== */
 const SCREENS = {
   updates: { el: '#updates', scroll: '#up-list', state: 'hmUpdates', open: () => openUpdates(), hide: () => hideUpdates(), close: () => closeUpdates(), get hist(){ return updatesHist; }, set hist(v){ updatesHist = v; } },
+  pages: { el: '#pages', scroll: '#pg-body', state: 'hmPages', open: () => openPages(), hide: () => hidePages(), close: () => closePages(), get hist(){ return pagesHist; }, set hist(v){ pagesHist = v; } },
   contacts: { el: '#contacts', scroll: '#ct-list', state: 'hmContacts', open: () => openContacts(), hide: () => hideContacts(), close: () => closeContacts(), get hist(){ return contactsHist; }, set hist(v){ contactsHist = v; } },
   settings: { el: '#settings', scroll: '#settings', state: 'hmSettings', open: () => openSettings(), hide: () => hideSettings(), close: () => closeSettings(), get hist(){ return settingsHist; }, set hist(v){ settingsHist = v; } }
 };
@@ -2150,7 +2341,7 @@ function navTo(tab){
   a.hide(); a.hist = false; history.replaceState({ [b.state]: 1 }, ''); b.hist = true; b.open();
 }
 document.querySelectorAll('#bnav button').forEach(b => b.onclick = () => navTo(b.dataset.tab));
-['#contacts', '#settings', '#updates'].forEach(sel => new MutationObserver(syncNav).observe($(sel), { attributes: true, attributeFilter: ['class'] }));
+['#contacts', '#settings', '#updates', '#pages'].forEach(sel => new MutationObserver(syncNav).observe($(sel), { attributes: true, attributeFilter: ['class'] }));
 syncNav();
 
 $('#ct-back').onclick = closeContacts;

@@ -381,13 +381,13 @@ input,textarea{-webkit-user-select:text;user-select:text;-webkit-touch-callout:d
 #smd .cnt{position:absolute;top:10px;right:12px;background:rgba(0,0,0,.55);border-radius:12px;padding:3px 10px;font-size:13px;font-weight:600}
 #stx textarea{flex:1;min-height:0;background:transparent;border:0;outline:0;color:#fff;text-align:center;font-size:28px;line-height:1.25;font-weight:700;resize:none;padding:20px 28px;user-select:text;-webkit-user-select:text}
 #stx textarea::placeholder{color:rgba(255,255,255,.6)}
-#stx .fonts,#stx .sw{flex:0 0 auto;display:flex;flex-wrap:nowrap;align-items:center;gap:10px;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:6px 14px;scroll-snap-type:x proximity}
-#stx .fonts::-webkit-scrollbar,#stx .sw::-webkit-scrollbar,#smd-strip::-webkit-scrollbar{display:none}
+#stx .fonts,#stx .stxc{flex:0 0 auto;display:flex;flex-wrap:nowrap;align-items:center;gap:10px;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:6px 14px;scroll-snap-type:x proximity}
+#stx .fonts::-webkit-scrollbar,#stx .stxc::-webkit-scrollbar,#smd-strip::-webkit-scrollbar{display:none}
 #stx .fonts button{flex:0 0 auto;padding:8px 16px;border-radius:20px;background:rgba(255,255,255,.18);color:#fff;font-size:16px;border:2px solid transparent;white-space:nowrap}
 #stx .fonts button.on{border-color:#fff;background:rgba(255,255,255,.3)}
-#stx .sw{padding:6px 14px calc(16px + var(--sab));min-height:calc(58px + var(--sab))}
-#stx .sw i{flex:0 0 auto;width:38px;height:38px;border-radius:50%;border:3px solid rgba(255,255,255,.45);cursor:pointer;scroll-snap-align:center;box-sizing:border-box}
-#stx .sw i.on{border-color:#fff;box-shadow:0 0 0 2px rgba(0,0,0,.3)}
+#stx .stxc{padding:6px 14px calc(16px + var(--sab));min-height:calc(58px + var(--sab))}
+#stx .stxc i{flex:0 0 auto;width:38px;height:38px;border-radius:50%;border:3px solid rgba(255,255,255,.45);cursor:pointer;scroll-snap-align:center;box-sizing:border-box}
+#stx .stxc i.on{border-color:#fff;box-shadow:0 0 0 2px rgba(0,0,0,.3)}
 #smd-strip{display:flex;gap:8px;overflow-x:auto;padding:8px 14px;align-items:center}
 #smd-strip .th{position:relative;flex:0 0 auto;width:54px;height:54px;border-radius:10px;overflow:hidden;border:2px solid transparent;background:#222;cursor:pointer}
 #smd-strip .th.on{border-color:var(--accent)}
@@ -517,7 +517,7 @@ input,textarea{-webkit-user-select:text;user-select:text;-webkit-touch-callout:d
   <div class="top"><button class="svb" id="stx-close" title="Close"><svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button><div class="grow"></div><button class="postb" id="stx-post">Post</button></div>
   <textarea id="stx-input" maxlength="400" placeholder="Type a status"></textarea>
   <div class="fonts" id="stx-fonts"></div>
-  <div class="sw" id="stx-sw"></div>
+  <div class="stxc" id="stx-sw"></div>
 </div>
 <div id="smd" class="hidden">
   <div class="top"><button class="svb" id="smd-close" title="Close"><svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button><div class="grow"></div><button class="postb" id="smd-post">Post</button></div>
@@ -1604,7 +1604,7 @@ function showMenu(x, y, items){
   m.style.top = Math.max(8, Math.min(y, innerHeight - h - 8)) + 'px';
 }
 const hideMenu = () => $('#menu').classList.add('hidden');
-document.addEventListener('click', e => { if (!e.target.closest('#menu') && !e.target.closest('.b') && !e.target.closest('#btn-settings,#btn-thread-menu')) hideMenu(); });
+document.addEventListener('click', e => { if (!e.target.closest('#menu') && !e.target.closest('.b') && !e.target.closest('#btn-settings,#btn-thread-menu,#sv-more')) hideMenu(); });
 
 function modal(html){
   const root = $('#modal-root');

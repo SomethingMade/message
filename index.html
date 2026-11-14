@@ -85,7 +85,7 @@ input,textarea{font:inherit;color:inherit}
 .b{max-width:min(78%,520px);padding:7px 10px 5px;border-radius:16px;position:relative;word-wrap:break-word;overflow-wrap:anywhere;box-shadow:0 1px .5px rgba(0,0,0,.13);cursor:pointer}
 .b.in{align-self:flex-start;background:var(--in-bg);color:var(--in-text);border-bottom-left-radius:4px}
 .b.out{align-self:flex-end;background:var(--out-bg);color:var(--out-text);border-bottom-right-radius:4px}
-.b .t{white-space:pre-wrap;line-height:1.35}
+.b .t{white-space:pre-wrap;line-height:1.35;font-size:var(--msgsz,15px)}
 .b .t a{color:inherit;text-decoration:underline}
 .b .meta{display:flex;justify-content:flex-end;align-items:center;gap:4px;font-size:11px;margin-top:2px}
 .b.in .meta{color:var(--in-time)} .b.out .meta{color:var(--out-time)}
@@ -275,6 +275,15 @@ input,textarea{-webkit-user-select:text;user-select:text;-webkit-touch-callout:d
 .sw::after{content:'';position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:var(--muted);transition:transform .2s,background .2s}
 .sw.on{background:var(--primary)}
 .sw.on::after{transform:translateX(20px);background:var(--inverse)}
+
+#settings .htop .icon+.icon{margin-left:auto}
+#settings .camb{position:absolute;right:2px;bottom:4px;width:34px;height:34px;border-radius:50%;background:var(--primary);color:var(--inverse);display:flex;align-items:center;justify-content:center;border:3px solid var(--bg)}
+#settings .camb svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.ep-row{display:flex;gap:8px;margin-top:4px}
+.blk{display:flex;align-items:center;gap:12px;padding:9px 2px}
+.blk .nm{flex:1;min-width:0}
+.blk small{display:block;color:var(--muted)}
+.blk button{background:var(--input);border-radius:50px;padding:7px 14px;font-weight:600}
 </style>
 </head>
 <body>
@@ -642,7 +651,7 @@ function startPresence(){
     if (s.val() !== true || !me) return;
     const st = ref(db, `users/${me.uid}/status`), ls = ref(db, `users/${me.uid}/lastSeen`);
     onDisconnect(st).set('offline'); onDisconnect(ls).set(serverTimestamp());
-    set(st, 'online'); set(ls, serverTimestamp());
+    if (localStorage.getItem('hm-online') !== 'off') { set(st, 'online'); set(ls, serverTimestamp()); }
   });
   loadUser(me.uid);
 }
@@ -773,6 +782,7 @@ async function chatSheet(uid){
 let notifT = null, notifUid = null, chatsLoaded = false;
 const hideNotif = () => { const n = $('#notif'); n.classList.remove('show'); n.style.transform = ''; clearTimeout(notifT); };
 async function notifyMsg(uid, c){
+  if (localStorage.getItem('hm-notif') === 'off') return;
   await loadUser(uid);
   const txt = isE2E(c.text) ? await decText(uid, c.text) : (c.text || 'New message');
   if (!me || uid === activeUid) return;
@@ -1080,7 +1090,7 @@ input.addEventListener('input', () => {
   if (!typingOn) { typingOn = true; set(ref(db, `dm_threads/${threadId}/typing/${me.uid}`), true).catch(() => {}); }
   clearTimeout(typingT); typingT = setTimeout(() => { typingOn = false; if (threadId) set(ref(db, `dm_threads/${threadId}/typing/${me.uid}`), false).catch(() => {}); }, 2500);
 });
-input.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey && !/Mobi|Android/i.test(navigator.userAgent)) { e.preventDefault(); sendText(); } });
+input.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey && localStorage.getItem('hm-enter') !== 'off' && !/Mobi|Android/i.test(navigator.userAgent)) { e.preventDefault(); sendText(); } });
 $('#send').onclick = sendText;
 
 function lockedGuard(err){
@@ -1307,14 +1317,28 @@ $('#btn-settings').onclick = e => {
   showMenu(r.right - 180, r.bottom + 4, [['Settings', openSettings]]);
 };
 
-/* settings page (everything that used to be in the dotted menu) */
+/* settings page */
 let settingsHist = false;
 const SIC = {
   palette: '<circle cx="13.5" cy="6.5" r="1"/><circle cx="17.5" cy="10.5" r="1"/><circle cx="8.5" cy="7.5" r="1"/><circle cx="6.5" cy="12.5" r="1"/><path d="M12 2a10 10 0 1 0 0 20c1 0 1.7-.8 1.7-1.7 0-.5-.2-.9-.5-1.2-.3-.3-.5-.7-.5-1.2 0-.9.8-1.7 1.7-1.7H16a6 6 0 0 0 6-6c0-4.9-4.5-8.2-10-8.2Z"/>',
   shield: '<path d="M12 3 4 6v6c0 5 3.4 8.4 8 9 4.6-.6 8-4 8-9V6Z"/><path d="m9 12 2 2 4-4"/>',
   key: '<circle cx="8" cy="15" r="4"/><path d="m11 12 9-9M16 7l3 3"/>',
-  out: '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>'
+  out: '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>',
+  user: '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
+  bell: '<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.9 1.9 0 0 0 3.4 0"/>',
+  ban: '<circle cx="12" cy="12" r="9"/><path d="m5.6 5.6 12.8 12.8"/>',
+  text: '<path d="M4 7V5h16v2M9 19h6M12 5v14"/>',
+  kbd: '<rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M7 14h10"/>',
+  eye: '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/>',
+  info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5h.01"/>',
+  pencil: '<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/>',
+  camera: '<path d="M3 8a2 2 0 0 1 2-2h2l2-2h6l2 2h2a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/><circle cx="12" cy="13" r="4"/>'
 };
+const SIZES = { small: 13, medium: 15, large: 18 };
+const curSize = () => SIZES[localStorage.getItem('hm-size')] ? localStorage.getItem('hm-size') : 'medium';
+const applyTextSize = () => document.documentElement.style.setProperty('--msgsz', SIZES[curSize()] + 'px');
+applyTextSize();
+
 function openSettings(){
   $('#settings').classList.remove('hidden'); renderSettings();
   if (!settingsHist) { history.pushState({ hmSettings: 1 }, ''); settingsHist = true; }
@@ -1325,31 +1349,117 @@ function renderSettings(){
   const root = $('#settings'); if (root.classList.contains('hidden') || !me) return;
   const top = root.scrollTop;
   const u = users[me.uid] || {};
-  const dark = document.documentElement.dataset.theme === 'dark', rc = localStorage.getItem('hm-receipts') !== 'off';
+  const on = k => localStorage.getItem(k) !== 'off';
+  const dark = document.documentElement.dataset.theme === 'dark';
   const enc = keyState === 'ready' ? 'Unlocked · messages are end-to-end encrypted' : keyState === 'nobackup' ? 'No key backup found for this account' : 'Locked · tap to enter your backup PIN';
   const row = (act, ic, title, sub, sw, cls) => `<div class="srow ${cls || ''}" data-act="${act}"><svg viewBox="0 0 24 24">${SIC[ic]}</svg><div class="st"><b>${title}</b>${sub ? `<span>${esc(sub)}</span>` : ''}</div>${sw === undefined ? '' : `<div class="sw ${sw ? 'on' : ''}"></div>`}</div>`;
-  root.innerHTML = `<div class="hero"><div class="htop"><button class="icon" id="set-back" title="Back"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button></div></div>
+  root.innerHTML = `<div class="hero"><div class="htop"><button class="icon" id="set-back" title="Back"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button><button class="icon" data-edit title="Edit profile"><svg viewBox="0 0 24 24">${SIC.pencil}</svg></button></div></div>
   <div class="body"><div class="wrap">
-    <div class="avwrap">${u.bio ? `<div class="about">${esc(String(u.bio).split('\n')[0])}</div>` : ''}<div class="av" style="background-image:url('${cssUrl(uAvatar(me.uid))}')"></div></div>
-    <div class="sname"><span>${esc(u.name || u.username || me.displayName || 'My Account')}</span><i></i></div>
+    <div class="avwrap">${u.bio ? `<div class="about" data-edit>${esc(String(u.bio).split('\n')[0])}</div>` : ''}<div class="av" data-edit style="background-image:url('${cssUrl(uAvatar(me.uid))}')"></div><div class="camb" data-edit><svg viewBox="0 0 24 24">${SIC.camera}</svg></div></div>
+    <div class="sname" data-edit><span>${esc(u.name || u.username || me.displayName || 'My Account')}</span><i></i></div>
     <div class="suser">${u.username ? '@' + esc(u.username) : ''}</div>
+    ${row('', 'user', 'Account', me.email || me.phoneNumber || 'Signed in')}
+    ${row('receipts', 'shield', 'Privacy', 'Read receipts', on('hm-receipts'))}
+    ${row('online', 'eye', 'Online status', 'Let others see when you’re online', on('hm-online'))}
+    ${row('blocked', 'ban', 'Blocked accounts', 'People you’ve blocked')}
+    ${row('notif', 'bell', 'Notifications', 'Banner for new messages', on('hm-notif'))}
+    ${row('enter', 'kbd', 'Chats', 'Enter key sends message (desktop)', on('hm-enter'))}
+    ${row('size', 'text', 'Text size', curSize()[0].toUpperCase() + curSize().slice(1) + ' · tap to change')}
     ${row('theme', 'palette', 'Appearance', 'Dark mode', dark)}
-    ${row('receipts', 'shield', 'Privacy', 'Read receipts', rc)}
     ${row('enc', 'key', 'Encryption', enc)}
+    ${row('', 'info', 'About', 'Haba Messenger · end-to-end encrypted chat')}
     ${row('signout', 'out', 'Sign out', 'Log out of this device', undefined, 'danger')}
   </div></div>`;
   root.scrollTop = top;
 }
+const flip = k => { const v = localStorage.getItem(k) !== 'off'; localStorage.setItem(k, v ? 'off' : 'on'); return !v; };
 $('#settings').addEventListener('click', e => {
   if (e.target.closest('#set-back')) return closeSettings();
+  if (e.target.closest('[data-edit]')) return editProfile();
   const r = e.target.closest('.srow'); if (!r) return;
   const act = r.dataset.act;
   if (act === 'theme') { const dark = document.documentElement.dataset.theme === 'dark'; localStorage.setItem('hm-theme', dark ? 'light' : 'dark'); applyTheme(); renderSettings(); }
-  else if (act === 'receipts') { const rc = localStorage.getItem('hm-receipts') !== 'off'; localStorage.setItem('hm-receipts', rc ? 'off' : 'on'); toast(rc ? 'Read receipts off' : 'Read receipts on'); renderSettings(); }
+  else if (act === 'receipts') { toast(flip('hm-receipts') ? 'Read receipts on' : 'Read receipts off'); renderSettings(); }
+  else if (act === 'online') {
+    const vis = flip('hm-online');
+    set(ref(db, `users/${me.uid}/status`), vis ? 'online' : 'offline').catch(() => {}); set(ref(db, `users/${me.uid}/lastSeen`), serverTimestamp()).catch(() => {});
+    toast(vis ? 'Others can see when you’re online' : 'Your online status is hidden'); renderSettings();
+  }
+  else if (act === 'notif') { toast(flip('hm-notif') ? 'Notifications on' : 'Notifications off'); renderSettings(); }
+  else if (act === 'enter') { toast(flip('hm-enter') ? 'Enter sends messages' : 'Enter adds a new line'); renderSettings(); }
+  else if (act === 'size') { const o = Object.keys(SIZES); localStorage.setItem('hm-size', o[(o.indexOf(curSize()) + 1) % o.length]); applyTextSize(); renderSettings(); }
+  else if (act === 'blocked') blockedList();
   else if (act === 'enc') { keyState === 'ready' ? toast('Your messages are end-to-end encrypted') : promptUnlock(); }
   else if (act === 'signout') { closeSettings(); signOut(auth); }
 });
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('#settings').classList.contains('hidden') && $('#viewer').classList.contains('hidden') && !$('#modal-root').firstElementChild) closeSettings(); });
+
+async function blockedList(){
+  const ov = modal('<h3>Blocked accounts</h3><div id="bl-list"><div class="spin"></div></div><button class="btn ghost" id="bl-close" style="margin-top:10px">Close</button>');
+  ov.querySelector('#bl-close').onclick = closeModal;
+  let uids = [];
+  try { const s = await get(ref(db, `blocks/${me.uid}`)); s.forEach(c => { if (c.val() === true) uids.push(c.key); }); } catch { $('#bl-list') && ($('#bl-list').innerHTML = '<div class="empty" style="padding:20px">Couldn’t load</div>'); return; }
+  await Promise.all(uids.map(loadUser));
+  const box = $('#bl-list'); if (!box) return;
+  if (!uids.length) { box.innerHTML = '<div class="empty" style="padding:20px">You haven’t blocked anyone</div>'; return; }
+  box.innerHTML = uids.map(uid => `<div class="blk" data-uid="${esc(uid)}"><div class="av sm" style="background-image:url('${cssUrl(uAvatar(uid))}')"></div><div class="nm"><b>${esc(uName(uid))}</b>${users[uid]?.username ? `<small>@${esc(users[uid].username)}</small>` : ''}</div><button>Unblock</button></div>`).join('');
+  box.querySelectorAll('.blk').forEach(el => el.querySelector('button').onclick = async () => {
+    try { await set(ref(db, `blocks/${me.uid}/${el.dataset.uid}`), null); el.remove(); toast('Unblocked'); if (!box.children.length) box.innerHTML = '<div class="empty" style="padding:20px">You haven’t blocked anyone</div>'; }
+    catch { toast('Couldn’t unblock'); }
+  });
+}
+
+/* edit profile: photo, name, bio */
+function prepSquare(file, size = 512){
+  return new Promise((res, rej) => {
+    const img = new Image(), url = URL.createObjectURL(file);
+    img.onload = () => {
+      const m = Math.min(img.width, img.height), c = document.createElement('canvas'); c.width = c.height = size;
+      c.getContext('2d').drawImage(img, (img.width - m) / 2, (img.height - m) / 2, m, m, 0, 0, size, size);
+      c.toBlob(b => { URL.revokeObjectURL(url); b ? res(b) : rej(new Error('blob')); }, 'image/jpeg', .88);
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); rej(new Error('img')); };
+    img.src = url;
+  });
+}
+function editProfile(){
+  const u = users[me.uid] || {};
+  const ov = modal(`<h3>Edit profile</h3>
+    <div style="text-align:center;margin-bottom:12px"><div class="av" id="ep-av" style="width:104px;height:104px;margin:0 auto 10px;background-image:url('${cssUrl(uAvatar(me.uid))}')"></div><button class="btn ghost" id="ep-photo" style="width:auto;padding:9px 20px">Change photo</button><input type="file" id="ep-file" accept="image/*" class="hidden"></div>
+    <input class="field" id="ep-name" maxlength="40" placeholder="Name" autocomplete="off" value="${esc(u.name || '')}">
+    <textarea class="field" id="ep-bio" maxlength="140" rows="3" placeholder="Bio" style="border-radius:22px;resize:none">${esc(u.bio || '')}</textarea>
+    <div class="err" id="ep-err"></div>
+    <button class="btn" id="ep-save">Save</button><button class="btn ghost" id="ep-cancel" style="margin-top:8px">Cancel</button>`);
+  let pending = null;
+  const fileIn = ov.querySelector('#ep-file');
+  ov.querySelector('#ep-photo').onclick = () => fileIn.click();
+  ov.querySelector('#ep-av').onclick = () => fileIn.click();
+  fileIn.onchange = async () => {
+    const f = fileIn.files[0]; fileIn.value = ''; if (!f) return;
+    try { pending = await prepSquare(f); ov.querySelector('#ep-av').style.backgroundImage = `url('${URL.createObjectURL(pending)}')`; }
+    catch { ov.querySelector('#ep-err').textContent = 'That image couldn’t be read.'; }
+  };
+  ov.querySelector('#ep-cancel').onclick = closeModal;
+  ov.querySelector('#ep-save').onclick = async () => {
+    const name = ov.querySelector('#ep-name').value.trim(), bio = ov.querySelector('#ep-bio').value.trim(), err = ov.querySelector('#ep-err'), btn = ov.querySelector('#ep-save');
+    if (!name) { err.textContent = 'Name can’t be empty.'; return; }
+    btn.disabled = true; btn.textContent = 'Saving…'; err.textContent = '';
+    try {
+      const up = { name, bio: bio || null };
+      if (pending) {
+        const snap = await uploadBytes(sRef(storage, `profile_photos/${me.uid}/${Date.now()}.jpg`), pending, { contentType: 'image/jpeg' });
+        up.photoURL = await getDownloadURL(snap.ref);
+      }
+      await update(ref(db, `users/${me.uid}`), up);
+      users[me.uid] = { ...(users[me.uid] || {}), ...up };
+      if (!bio) delete users[me.uid].bio;
+      closeModal(); renderSettings(); renderChatList(); toast('Profile updated');
+    } catch (e) {
+      console.error(e); btn.disabled = false; btn.textContent = 'Save';
+      err.textContent = 'Couldn’t save. Check your database / storage rules allow editing your own profile.';
+    }
+  };
+}
 $('#btn-thread-menu').onclick = e => {
   const r = e.currentTarget.getBoundingClientRect();
   showMenu(r.right - 180, r.bottom + 4, [

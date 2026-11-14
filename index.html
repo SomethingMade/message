@@ -249,6 +249,32 @@ input,textarea{-webkit-user-select:text;user-select:text;-webkit-touch-callout:d
 #viewer .vmeta span{font-size:12px;opacity:.7}
 #v-stage{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;padding-bottom:var(--sab)}
 #v-stage img,#v-stage video{max-width:100%;max-height:100%;object-fit:contain;display:block}
+
+/* settings page */
+#modal-root .overlay{z-index:130}
+#settings{position:fixed;inset:0;z-index:70;background:var(--bg);overflow-y:auto;-webkit-overflow-scrolling:touch}
+#settings .hero{position:relative;height:190px;background:var(--alt);background-image:radial-gradient(circle at 20% 30%,var(--input) 0 28px,transparent 29px),radial-gradient(circle at 80% 20%,var(--input) 0 20px,transparent 21px),radial-gradient(circle at 65% 75%,var(--input) 0 34px,transparent 35px),radial-gradient(circle at 12% 80%,var(--input) 0 16px,transparent 17px)}
+#settings .htop{display:flex;align-items:center;padding:calc(10px + var(--sat)) 14px 0}
+#settings .body{position:relative;margin-top:-34px;background:var(--bg);border-radius:30px 30px 0 0;padding:0 0 calc(24px + var(--sab));min-height:calc(100% - 156px)}
+#settings .wrap{max-width:620px;margin:0 auto}
+#settings .avwrap{position:relative;width:112px;margin:-62px auto 0}
+#settings .avwrap .av{width:112px;height:112px;border:4px solid var(--bg)}
+#settings .about{position:absolute;left:50%;bottom:calc(100% + 2px);transform:translateX(-50%);max-width:240px;background:var(--surface);color:var(--text);border-radius:22px;padding:9px 18px;font-size:14px;box-shadow:0 2px 10px rgba(0,0,0,.14);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#settings .sname{display:flex;align-items:center;justify-content:center;gap:10px;margin:14px 20px 0;font-size:25px;font-weight:700}
+#settings .sname span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:calc(100% - 30px)}
+#settings .sname i{width:11px;height:11px;border-radius:50%;background:#34C759;flex-shrink:0}
+#settings .suser{text-align:center;color:var(--muted);margin:4px 0 26px}
+.srow{display:flex;align-items:center;gap:22px;padding:15px 26px;cursor:pointer}
+.srow:hover{background:var(--alt)}
+.srow>svg{width:25px;height:25px;stroke:var(--muted);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.srow .st{flex:1;min-width:0}
+.srow .st b{display:block;font-size:17px;font-weight:600}
+.srow .st span{display:block;color:var(--muted);font-size:14px;margin-top:3px}
+.srow.danger .st b,.srow.danger>svg{color:var(--danger);stroke:var(--danger)}
+.sw{width:46px;height:26px;border-radius:13px;background:var(--input);border:1px solid var(--border);position:relative;flex-shrink:0;transition:background .2s}
+.sw::after{content:'';position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:var(--muted);transition:transform .2s,background .2s}
+.sw.on{background:var(--primary)}
+.sw.on::after{transform:translateX(20px);background:var(--inverse)}
 </style>
 </head>
 <body>
@@ -337,6 +363,7 @@ input,textarea{-webkit-user-select:text;user-select:text;-webkit-touch-callout:d
 </div>
 
 <div id="rx-root"></div>
+<div id="settings" class="hidden"></div>
 <div id="viewer" class="hidden"><div class="vbar"><button class="icon" id="v-close" title="Close"><svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button><div class="vmeta"><b id="v-name"></b><span id="v-time"></span></div><a class="icon" id="v-dl" title="Save"><svg viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg></a></div><div id="v-stage"></div></div>
 <div id="menu" class="hidden"></div>
 <div id="notif"><div class="av sm" id="notif-av"></div><div class="nmid"><b id="notif-name"></b><span id="notif-text"></span></div></div>
@@ -624,7 +651,7 @@ function teardown(){
   closeThread(true);
   Object.keys(chats).forEach(k => delete chats[k]); Object.keys(previews).forEach(k => delete previews[k]);
   Object.values(typingWatch).forEach(f => f()); Object.keys(typingWatch).forEach(k => delete typingWatch[k]); Object.keys(typingMap).forEach(k => delete typingMap[k]);
-  chatsLoaded = false; hideNotif();
+  chatsLoaded = false; hideNotif(); hideSettings();
   kp = null; Object.keys(shared).forEach(k => delete shared[k]); decCache.clear();
 }
 
@@ -781,6 +808,7 @@ function exitChat(){ if (chatHist) history.back(); else closeThread(); }   // po
 window.addEventListener('popstate', () => {
   if (skipPop) { skipPop = false; return; }
   if (viewerHist) { viewerHist = false; hideViewer(); return; }   // device back closes the viewer first
+  if (settingsHist) { settingsHist = false; hideSettings(); return; }
   if (!chatHist) return; chatHist = false; if (activeUid) closeThread();
 });
 function closeThread(silent){
@@ -1276,14 +1304,52 @@ const closeModal = () => $('#modal-root').innerHTML = '';
 
 $('#btn-settings').onclick = e => {
   const r = e.currentTarget.getBoundingClientRect();
-  const dark = document.documentElement.dataset.theme === 'dark', rc = localStorage.getItem('hm-receipts') !== 'off';
-  showMenu(r.right - 180, r.bottom + 4, [
-    [dark ? 'Light mode' : 'Dark mode', () => { localStorage.setItem('hm-theme', dark ? 'light' : 'dark'); applyTheme(); }],
-    [rc ? 'Turn off read receipts' : 'Turn on read receipts', () => { localStorage.setItem('hm-receipts', rc ? 'off' : 'on'); toast(rc ? 'Read receipts off' : 'Read receipts on'); }],
-    [keyState === 'ready' ? '🔐 Encryption: unlocked' : '🔐 Unlock encryption', () => keyState === 'ready' ? toast('Your messages are end-to-end encrypted') : promptUnlock()],
-    ['Sign out', () => signOut(auth), true]
-  ]);
+  showMenu(r.right - 180, r.bottom + 4, [['Settings', openSettings]]);
 };
+
+/* settings page (everything that used to be in the dotted menu) */
+let settingsHist = false;
+const SIC = {
+  palette: '<circle cx="13.5" cy="6.5" r="1"/><circle cx="17.5" cy="10.5" r="1"/><circle cx="8.5" cy="7.5" r="1"/><circle cx="6.5" cy="12.5" r="1"/><path d="M12 2a10 10 0 1 0 0 20c1 0 1.7-.8 1.7-1.7 0-.5-.2-.9-.5-1.2-.3-.3-.5-.7-.5-1.2 0-.9.8-1.7 1.7-1.7H16a6 6 0 0 0 6-6c0-4.9-4.5-8.2-10-8.2Z"/>',
+  shield: '<path d="M12 3 4 6v6c0 5 3.4 8.4 8 9 4.6-.6 8-4 8-9V6Z"/><path d="m9 12 2 2 4-4"/>',
+  key: '<circle cx="8" cy="15" r="4"/><path d="m11 12 9-9M16 7l3 3"/>',
+  out: '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>'
+};
+function openSettings(){
+  $('#settings').classList.remove('hidden'); renderSettings();
+  if (!settingsHist) { history.pushState({ hmSettings: 1 }, ''); settingsHist = true; }
+}
+function hideSettings(){ $('#settings').classList.add('hidden'); }
+function closeSettings(){ hideSettings(); if (settingsHist) { settingsHist = false; skipPop = true; history.back(); } }
+function renderSettings(){
+  const root = $('#settings'); if (root.classList.contains('hidden') || !me) return;
+  const top = root.scrollTop;
+  const u = users[me.uid] || {};
+  const dark = document.documentElement.dataset.theme === 'dark', rc = localStorage.getItem('hm-receipts') !== 'off';
+  const enc = keyState === 'ready' ? 'Unlocked · messages are end-to-end encrypted' : keyState === 'nobackup' ? 'No key backup found for this account' : 'Locked · tap to enter your backup PIN';
+  const row = (act, ic, title, sub, sw, cls) => `<div class="srow ${cls || ''}" data-act="${act}"><svg viewBox="0 0 24 24">${SIC[ic]}</svg><div class="st"><b>${title}</b>${sub ? `<span>${esc(sub)}</span>` : ''}</div>${sw === undefined ? '' : `<div class="sw ${sw ? 'on' : ''}"></div>`}</div>`;
+  root.innerHTML = `<div class="hero"><div class="htop"><button class="icon" id="set-back" title="Back"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button></div></div>
+  <div class="body"><div class="wrap">
+    <div class="avwrap">${u.bio ? `<div class="about">${esc(String(u.bio).split('\n')[0])}</div>` : ''}<div class="av" style="background-image:url('${cssUrl(uAvatar(me.uid))}')"></div></div>
+    <div class="sname"><span>${esc(u.name || u.username || me.displayName || 'My Account')}</span><i></i></div>
+    <div class="suser">${u.username ? '@' + esc(u.username) : ''}</div>
+    ${row('theme', 'palette', 'Appearance', 'Dark mode', dark)}
+    ${row('receipts', 'shield', 'Privacy', 'Read receipts', rc)}
+    ${row('enc', 'key', 'Encryption', enc)}
+    ${row('signout', 'out', 'Sign out', 'Log out of this device', undefined, 'danger')}
+  </div></div>`;
+  root.scrollTop = top;
+}
+$('#settings').addEventListener('click', e => {
+  if (e.target.closest('#set-back')) return closeSettings();
+  const r = e.target.closest('.srow'); if (!r) return;
+  const act = r.dataset.act;
+  if (act === 'theme') { const dark = document.documentElement.dataset.theme === 'dark'; localStorage.setItem('hm-theme', dark ? 'light' : 'dark'); applyTheme(); renderSettings(); }
+  else if (act === 'receipts') { const rc = localStorage.getItem('hm-receipts') !== 'off'; localStorage.setItem('hm-receipts', rc ? 'off' : 'on'); toast(rc ? 'Read receipts off' : 'Read receipts on'); renderSettings(); }
+  else if (act === 'enc') { keyState === 'ready' ? toast('Your messages are end-to-end encrypted') : promptUnlock(); }
+  else if (act === 'signout') { closeSettings(); signOut(auth); }
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('#settings').classList.contains('hidden') && $('#viewer').classList.contains('hidden') && !$('#modal-root').firstElementChild) closeSettings(); });
 $('#btn-thread-menu').onclick = e => {
   const r = e.currentTarget.getBoundingClientRect();
   showMenu(r.right - 180, r.bottom + 4, [
@@ -1353,7 +1419,7 @@ function promptUnlock(auto){
     if (!pin.value) return;
     ov.querySelector('#pin-go').disabled = true; ov.querySelector('#pin-err').textContent = 'Checking… this takes a moment';
     const r = await restoreFromPin(pin.value);
-    if (r === 'ok') { closeModal(); renderBanner(); decCache.clear(); toast('Unlocked'); Object.keys(chats).forEach(async uid => { previews[uid] = await decText(uid, chats[uid].text); renderChatList(); }); if (activeUid) renderMessages(); }
+    if (r === 'ok') { closeModal(); renderBanner(); decCache.clear(); toast('Unlocked'); renderSettings(); Object.keys(chats).forEach(async uid => { previews[uid] = await decText(uid, chats[uid].text); renderChatList(); }); if (activeUid) renderMessages(); }
     else { ov.querySelector('#pin-go').disabled = false; ov.querySelector('#pin-err').textContent = r === 'mismatch' ? 'This backup doesn’t match your current key.' : r === 'nobackup' ? 'No backup found.' : 'Wrong PIN. Try again.'; }
   };
   ov.querySelector('#pin-go').onclick = go;

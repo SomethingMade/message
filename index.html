@@ -370,11 +370,6 @@ input,textarea{-webkit-user-select:text;user-select:text;-webkit-touch-callout:d
 #stx,#smd{position:fixed;inset:0;z-index:125;display:flex;flex-direction:column;color:#fff}
 #stx .top,#smd .top{display:flex;align-items:center;gap:10px;padding:calc(10px + var(--sat)) 12px 10px}
 #stx .top .grow,#smd .top .grow{flex:1}
-#stx textarea{flex:1;background:transparent;border:0;outline:0;color:#fff;text-align:center;font:700 28px/1.25 inherit;resize:none;padding:20px 28px;user-select:text;-webkit-user-select:text}
-#stx textarea::placeholder{color:rgba(255,255,255,.6)}
-#stx .sw{display:flex;gap:10px;justify-content:center;padding:12px 12px calc(16px + var(--sab));flex-wrap:wrap}
-#stx .sw i{width:30px;height:30px;border-radius:50%;border:2px solid rgba(255,255,255,.5);cursor:pointer}
-#stx .sw i.on{border-color:#fff;transform:scale(1.15)}
 .postb{background:var(--accent);color:#111;font-weight:800;border-radius:22px;padding:0 20px;height:40px}
 .postb:disabled{opacity:.5}
 #smd{background:#000}
@@ -384,6 +379,21 @@ input,textarea{-webkit-user-select:text;user-select:text;-webkit-touch-callout:d
 #smd .capw input{flex:1;background:rgba(255,255,255,.14);border:0;outline:0;color:#fff;border-radius:22px;padding:12px 16px;font-size:15px;user-select:text;-webkit-user-select:text}
 #smd .capw input::placeholder{color:rgba(255,255,255,.6)}
 #smd .cnt{position:absolute;top:10px;right:12px;background:rgba(0,0,0,.55);border-radius:12px;padding:3px 10px;font-size:13px;font-weight:600}
+#stx textarea{flex:1;min-height:0;background:transparent;border:0;outline:0;color:#fff;text-align:center;font-size:28px;line-height:1.25;font-weight:700;resize:none;padding:20px 28px;user-select:text;-webkit-user-select:text}
+#stx textarea::placeholder{color:rgba(255,255,255,.6)}
+#stx .fonts,#stx .sw{display:flex;flex-wrap:nowrap;gap:10px;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:6px 14px;scroll-snap-type:x proximity}
+#stx .fonts::-webkit-scrollbar,#stx .sw::-webkit-scrollbar,#smd-strip::-webkit-scrollbar{display:none}
+#stx .fonts button{flex:0 0 auto;padding:8px 16px;border-radius:20px;background:rgba(255,255,255,.18);color:#fff;font-size:16px;border:2px solid transparent;white-space:nowrap}
+#stx .fonts button.on{border-color:#fff;background:rgba(255,255,255,.3)}
+#stx .sw{padding-bottom:calc(16px + var(--sab));padding-top:8px}
+#stx .sw i{flex:0 0 auto;width:34px;height:34px;border-radius:50%;border:2px solid rgba(255,255,255,.55);cursor:pointer;scroll-snap-align:center;transition:transform .12s}
+#stx .sw i.on{border-color:#fff;transform:scale(1.18);box-shadow:0 0 0 2px rgba(0,0,0,.35)}
+#smd-strip{display:flex;gap:8px;overflow-x:auto;padding:8px 14px;align-items:center}
+#smd-strip .th{position:relative;flex:0 0 auto;width:54px;height:54px;border-radius:10px;overflow:hidden;border:2px solid transparent;background:#222;cursor:pointer}
+#smd-strip .th.on{border-color:var(--accent)}
+#smd-strip .th img,#smd-strip .th video{width:100%;height:100%;object-fit:cover;pointer-events:none}
+#smd-strip .th b{position:absolute;top:0;right:0;width:20px;height:20px;border-radius:0 0 0 8px;background:rgba(0,0,0,.65);display:flex;align-items:center;justify-content:center;font-size:14px;line-height:1}
+#smd-strip .th.add{display:flex;align-items:center;justify-content:center;font-size:26px;color:#fff;border:2px dashed rgba(255,255,255,.4);background:transparent}
 </style>
 </head>
 <body>
@@ -506,12 +516,14 @@ input,textarea{-webkit-user-select:text;user-select:text;-webkit-touch-callout:d
 <div id="stx" class="hidden">
   <div class="top"><button class="svb" id="stx-close" title="Close"><svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button><div class="grow"></div><button class="postb" id="stx-post">Post</button></div>
   <textarea id="stx-input" maxlength="400" placeholder="Type a status"></textarea>
+  <div class="fonts" id="stx-fonts"></div>
   <div class="sw" id="stx-sw"></div>
 </div>
 <div id="smd" class="hidden">
   <div class="top"><button class="svb" id="smd-close" title="Close"><svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button><div class="grow"></div><button class="postb" id="smd-post">Post</button></div>
   <div class="prev" id="smd-prev"></div>
-  <div class="capw"><input id="smd-cap" maxlength="200" placeholder="Add a caption…" autocomplete="off"></div>
+  <div id="smd-strip"></div>
+  <div class="capw"><input id="smd-cap" maxlength="200" placeholder="Add a caption…" autocomplete="off" enterkeyhint="done"></div>
 </div>
 <div id="rx-root"></div>
 <div id="contacts" class="hidden"><div class="bar"><button class="icon" id="ct-back" title="Back"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button><div class="grow"><div style="font-weight:700;font-size:17px">Select contact</div><div id="ct-count" style="font-size:12px;color:var(--muted)"></div></div><button class="icon" id="ct-searchbtn" title="Search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg></button></div><div class="searchwrap hidden" id="ct-sw"><input id="ct-q" placeholder="Search contacts" autocomplete="off"></div><div id="ct-list"></div></div>
@@ -1805,7 +1817,17 @@ async function unblockContact(uid){
 $('#fab').onclick = openContacts;
 /* =============== UPDATES (statuses — same stories/ data as Haba) =============== */
 const STORY_TTL = 24 * 3600e3;
-const TEXT_BGS = ['linear-gradient(135deg, #2E2E2E, #111111)', 'linear-gradient(135deg, #833AB4, #FD1D1D, #FCB045)', 'linear-gradient(135deg, #0A84FF, #5E9CFF)', 'linear-gradient(135deg, #FF6B6B, #FFD93D)', 'linear-gradient(135deg, #2C3E50, #4CA1AF)', 'linear-gradient(135deg, #232526, #414345)', '#000000'];
+const TEXT_BGS = ['linear-gradient(135deg, #2E2E2E, #111111)', 'linear-gradient(135deg, #833AB4, #FD1D1D, #FCB045)', 'linear-gradient(135deg, #0A84FF, #5E9CFF)', 'linear-gradient(135deg, #FF6B6B, #FFD93D)', 'linear-gradient(135deg, #2C3E50, #4CA1AF)', 'linear-gradient(135deg, #232526, #414345)', '#000000', 'linear-gradient(135deg, #11998E, #38EF7D)', 'linear-gradient(135deg, #8E2DE2, #4A00E0)', 'linear-gradient(135deg, #F7971E, #FFD200)', 'linear-gradient(135deg, #EB3349, #F45C43)', 'linear-gradient(135deg, #00C6FF, #0072FF)', 'linear-gradient(135deg, #FF9A9E, #FECFEF)', '#1B1B1F', '#FFB020'];
+const STORY_FONTS = {
+  sans: { n: 'Sans', f: '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif', w: 700, c: 'none' },
+  serif: { n: 'Serif', f: 'Georgia,"Times New Roman",Times,serif', w: 700, c: 'none' },
+  mono: { n: 'Mono', f: 'ui-monospace,SFMono-Regular,Menlo,Consolas,monospace', w: 600, c: 'none' },
+  script: { n: 'Script', f: '"Segoe Script","Brush Script MT","Snell Roundhand","Lucida Handwriting",cursive', w: 600, c: 'none' },
+  bold: { n: 'BOLD', f: 'Impact,"Arial Black","Haettenschweiler",sans-serif', w: 400, c: 'uppercase' },
+  round: { n: 'Rounded', f: '"Trebuchet MS","Avenir Next Rounded","Nunito",Verdana,sans-serif', w: 800, c: 'none' }
+};
+const storyFont = k => STORY_FONTS[k] || STORY_FONTS.sans;
+const applyFont = (el, k) => { const f = storyFont(k); el.style.fontFamily = f.f; el.style.fontWeight = f.w; el.style.textTransform = f.c; };
 const safeBg = v => (typeof v === 'string' && /^(#[0-9a-f]{3,8}|linear-gradient\([#0-9a-zA-Z(),.% -]+\))$/i.test(v)) ? v : TEXT_BGS[0];
 const stories = {}, storyWatch = {};
 let storyAuthors = {}, storiesUnsub = null, updatesHist = false, svHist = false, upRaf = 0;
@@ -1906,40 +1928,64 @@ async function postStory(payload){
   set(ref(db, `story_authors/${me.uid}`), Date.now()).catch(() => {});
   await set(nr, { ...payload, createdAt: Date.now() });
 }
-let stxBg = TEXT_BGS[0];
+let stxBg = TEXT_BGS[0], stxFont = 'sans';
 function openTextComposer(){
-  stxBg = TEXT_BGS[Math.floor(Math.random() * TEXT_BGS.length)];
+  stxBg = TEXT_BGS[Math.floor(Math.random() * 7)]; stxFont = 'sans';
   $('#stx-input').value = '';
+  $('#stx-fonts').innerHTML = Object.entries(STORY_FONTS).map(([k, f]) => `<button data-font="${k}" style="font-family:${f.f};font-weight:${f.w};text-transform:${f.c}">${f.n}</button>`).join('');
   $('#stx-sw').innerHTML = TEXT_BGS.map(b => `<i data-bg="${esc(b)}" style="background:${b}"></i>`).join('');
   paintStx(); $('#stx').classList.remove('hidden'); setTimeout(() => $('#stx-input').focus(), 80);
 }
-function paintStx(){ $('#stx').style.background = stxBg; $('#stx-sw').querySelectorAll('i').forEach(i => i.classList.toggle('on', i.dataset.bg === stxBg)); }
+function paintStx(){
+  $('#stx').style.background = stxBg; applyFont($('#stx-input'), stxFont);
+  $('#stx-sw').querySelectorAll('i').forEach(i => { const on = i.dataset.bg === stxBg; i.classList.toggle('on', on); if (on) i.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' }); });
+  $('#stx-fonts').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.font === stxFont));
+}
 $('#stx-sw').addEventListener('click', e => { const i = e.target.closest('i'); if (i) { stxBg = i.dataset.bg; paintStx(); } });
+$('#stx-fonts').addEventListener('click', e => { const b = e.target.closest('button'); if (b) { stxFont = b.dataset.font; paintStx(); $('#stx-input').focus(); } });
 $('#stx-close').onclick = () => $('#stx').classList.add('hidden');
 $('#stx-post').onclick = async () => {
   const text = $('#stx-input').value.trim(); if (!text) return toast('Write something first');
   const b = $('#stx-post'); b.disabled = true;
-  try { await postStory({ type: 'text', text, bgColor: stxBg }); $('#stx').classList.add('hidden'); toast('Status posted'); }
+  try { await postStory({ type: 'text', text, bgColor: stxBg, ...(stxFont !== 'sans' ? { font: stxFont } : {}) }); $('#stx').classList.add('hidden'); toast('Status posted'); }
   catch { toast('Couldn’t post your status'); } finally { b.disabled = false; }
 };
-let smdFiles = [], smdUrl = null;
+
+/* media composer: every photo/video gets its own caption */
+let smd = [], smdI = 0;
+const smdOpen = () => !$('#smd').classList.contains('hidden');
+function paintSmd(){
+  const it = smd[smdI]; if (!it) return;
+  const isV = x => x.file.type.startsWith('video/');
+  $('#smd-prev').innerHTML = (isV(it) ? `<video src="${it.url}" playsinline controls muted></video>` : `<img src="${it.url}" alt="">`) + (smd.length > 1 ? `<span class="cnt">${smdI + 1} / ${smd.length}</span>` : '');
+  $('#smd-cap').value = it.caption;
+  $('#smd-strip').innerHTML = smd.map((x, i) => `<div class="th ${i === smdI ? 'on' : ''}" data-i="${i}">${isV(x) ? `<video src="${x.url}#t=0.1" muted preload="metadata"></video>` : `<img src="${x.url}" alt="">`}${smd.length > 1 ? `<b data-rm="${i}">×</b>` : ''}</div>`).join('') + '<button class="th add" data-add="1" title="Add more">+</button>';
+}
 $('#up-file').addEventListener('change', e => {
-  smdFiles = [...e.target.files].filter(f => /^(image|video)\//.test(f.type)); e.target.value = '';
-  if (!smdFiles.length) return;
-  const f = smdFiles[0]; if (smdUrl) URL.revokeObjectURL(smdUrl); smdUrl = URL.createObjectURL(f);
-  $('#smd-prev').innerHTML = (f.type.startsWith('video/') ? `<video src="${smdUrl}" playsinline controls muted></video>` : `<img src="${smdUrl}" alt="">`) + (smdFiles.length > 1 ? `<span class="cnt">1 / ${smdFiles.length}</span>` : '');
-  $('#smd-cap').value = ''; $('#smd').classList.remove('hidden');
+  const add = [...e.target.files].filter(f => /^(image|video)\//.test(f.type)); e.target.value = '';
+  if (!add.length) return;
+  const wasOpen = smdOpen();
+  add.forEach(f => smd.push({ file: f, url: URL.createObjectURL(f), caption: '' }));
+  if (!wasOpen) { smdI = smd.length - add.length; $('#smd').classList.remove('hidden'); }
+  paintSmd();
 });
-function closeMediaComposer(){ $('#smd').classList.add('hidden'); $('#smd-prev').innerHTML = ''; if (smdUrl) { URL.revokeObjectURL(smdUrl); smdUrl = null; } smdFiles = []; }
+$('#smd-cap').addEventListener('input', e => { if (smd[smdI]) smd[smdI].caption = e.target.value; });
+$('#smd-strip').addEventListener('click', e => {
+  if (e.target.closest('[data-add]')) return $('#up-file').click();
+  const rm = e.target.closest('[data-rm]');
+  if (rm) { const i = +rm.dataset.rm; URL.revokeObjectURL(smd[i].url); smd.splice(i, 1); if (!smd.length) return closeMediaComposer(); smdI = Math.min(smdI > i ? smdI - 1 : smdI, smd.length - 1); return paintSmd(); }
+  const th = e.target.closest('.th'); if (th) { smdI = +th.dataset.i; paintSmd(); }
+});
+function closeMediaComposer(){ $('#smd').classList.add('hidden'); $('#smd-prev').innerHTML = ''; $('#smd-strip').innerHTML = ''; smd.forEach(x => URL.revokeObjectURL(x.url)); smd = []; smdI = 0; }
 $('#smd-close').onclick = closeMediaComposer;
 const videoLen = file => new Promise(res => { const v = document.createElement('video'), u = URL.createObjectURL(file); v.preload = 'metadata'; v.onloadedmetadata = () => { URL.revokeObjectURL(u); res(isFinite(v.duration) ? Math.round(v.duration) : null); }; v.onerror = () => { URL.revokeObjectURL(u); res(null); }; v.src = u; });
 $('#smd-post').onclick = async () => {
-  const caption = $('#smd-cap').value.trim(), files = smdFiles.slice(), btn = $('#smd-post'); if (!files.length) return;
+  const items = smd.slice(), btn = $('#smd-post'); if (!items.length) return;
   btn.disabled = true; let ok = 0;
   try {
-    for (let i = 0; i < files.length; i++) {
-      btn.textContent = files.length > 1 ? `Posting ${i + 1}/${files.length}` : 'Posting…';
-      const f = files[i], isVid = f.type.startsWith('video/');
+    for (let i = 0; i < items.length; i++) {
+      btn.textContent = items.length > 1 ? `Posting ${i + 1}/${items.length}` : 'Posting…';
+      const f = items[i].file, caption = items[i].caption.trim(), isVid = f.type.startsWith('video/');
       if (isVid && f.size > 60e6) { toast('Videos must be under 60 MB'); continue; }
       const blob = isVid ? f : await prepImage(f), safe = (blob.name || f.name || (isVid ? 'video' : 'photo')).replace(/[^a-zA-Z0-9.\-_]/g, '_');
       const snap = await uploadBytes(sRef(storage, `stories/${me.uid}/${Date.now()}_${i}_${safe}`), blob, { contentType: blob.type || f.type });
@@ -1987,7 +2033,7 @@ function showItem(){
   const done = () => { sv.loaded = true; stage.classList.remove('shim'); };
   const url = typeof s.mediaURL === 'string' && /^https:\/\//.test(s.mediaURL) ? s.mediaURL : '';
   if (s.type === 'text') {
-    const d = document.createElement('div'); d.className = 'svt'; d.style.background = safeBg(s.bgColor); d.textContent = s.text || ''; stage.appendChild(d); sv.loaded = true;
+    const d = document.createElement('div'); d.className = 'svt'; d.style.background = safeBg(s.bgColor); applyFont(d, s.font); d.textContent = s.text || ''; stage.appendChild(d); sv.loaded = true;
   } else if (s.type === 'video' && url) {
     stage.classList.add('shim');
     const v = document.createElement('video'); v.playsInline = true; v.autoplay = true; v.preload = 'auto';

@@ -71,6 +71,7 @@ input,textarea{font:inherit;color:inherit}
 .ci .time{font-size:12px;color:var(--muted);flex-shrink:0}
 .ci .prev{display:flex;gap:8px;align-items:center;margin-top:2px}
 .ci .prev span{color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1}
+.verified-badge{width:16px;height:16px;flex-shrink:0;vertical-align:middle;position:relative;top:-1px;margin-left:4px;display:inline-block}
 .badge{background:var(--primary);color:var(--inverse);border-radius:50px;font-size:12px;font-weight:700;min-width:20px;height:20px;padding:0 6px;display:flex;align-items:center;justify-content:center}
 .empty{padding:40px 24px;text-align:center;color:var(--muted)}
 #banner{background:#FFF4D6;color:#5a4300;padding:9px 14px;font-size:13px;display:flex;gap:10px;align-items:center}
@@ -684,6 +685,11 @@ function teardown(){
   kp = null; Object.keys(shared).forEach(k => delete shared[k]); decCache.clear();
 }
 
+/* =============== VERIFIED BADGE (same as Haba) =============== */
+const VERIFIED_BADGE_SVG = '<svg class="verified-badge" viewBox="0 0 22 22" width="16" height="16" aria-label="Verified"><path fill="#0A84FF" d="M20.396 11c-.018-.646-.215-1.275-.57-1.816-.354-.54-.852-.972-1.438-1.246.223-.607.27-1.264.14-1.897-.131-.634-.437-1.218-.882-1.687-.47-.445-1.053-.75-1.687-.882-.633-.13-1.29-.083-1.897.14-.273-.587-.704-1.086-1.245-1.44S11.647 1.62 11 1.604c-.646.017-1.273.213-1.813.568-.54.354-.972.853-1.246 1.44-.607-.223-1.264-.272-1.897-.14-.633.13-1.217.437-1.687.882-.444.47-.75 1.053-.882 1.687-.13.633-.083 1.29.14 1.897-.586.274-1.084.706-1.438 1.246-.354.54-.552 1.17-.57 1.816.018.646.216 1.276.57 1.816.354.54.852.972 1.438 1.246-.223.607-.27 1.264-.14 1.897.131.634.437 1.217.882 1.687.47.445 1.054.75 1.687.882.633.13 1.29.083 1.897-.14.274.586.706 1.084 1.246 1.438.54.354 1.17.552 1.813.57.646-.018 1.276-.216 1.816-.57.54-.354.972-.852 1.246-1.438.607.223 1.264.27 1.897.14.634-.131 1.217-.437 1.687-.882.445-.47.75-1.053.882-1.687.13-.633.083-1.29-.14-1.897.586-.274 1.084-.706 1.438-1.246.355-.54.552-1.17.57-1.816zM9.662 14.85l-3.429-3.428 1.293-1.293 2.136 2.136 4.6-4.6 1.293 1.293-5.893 5.892z"></path></svg>';
+const BUSINESS_BADGE_SVG = '<svg class="verified-badge business-badge" viewBox="0 0 22 22" width="16" height="16" aria-label="Business Account"><path fill="#D4A017" d="M20.396 11c-.018-.646-.215-1.275-.57-1.816-.354-.54-.852-.972-1.438-1.246.223-.607.27-1.264.14-1.897-.131-.634-.437-1.218-.882-1.687-.47-.445-1.053-.75-1.687-.882-.633-.13-1.29-.083-1.897.14-.273-.587-.704-1.086-1.245-1.44S11.647 1.62 11 1.604c-.646.017-1.273.213-1.813.568-.54.354-.972.853-1.246 1.44-.607-.223-1.264-.272-1.897-.14-.633.13-1.217.437-1.687.882-.444.47-.75 1.053-.882 1.687-.13.633-.083 1.29.14 1.897-.586.274-1.084.706-1.438 1.246-.354.54-.552 1.17-.57 1.816.018.646.216 1.276.57 1.816.354.54.852.972 1.438 1.246-.223.607-.27 1.264-.14 1.897.131.634.437 1.217.882 1.687.47.445 1.054.75 1.687.882.633.13 1.29.083 1.897-.14.274.586.706 1.084 1.246 1.438.54.354 1.17.552 1.813.57.646-.018 1.276-.216 1.816-.57.54-.354.972-.852 1.246-1.438.607.223 1.264.27 1.897.14.634-.131 1.217-.437 1.687-.882.445-.47.75-1.053.882-1.687.13-.633.083-1.29-.14-1.897.586-.274 1.084-.706 1.438-1.246.355-.54.552-1.17.57-1.816zM9.662 14.85l-3.429-3.428 1.293-1.293 2.136 2.136 4.6-4.6 1.293 1.293-5.893 5.892z"></path></svg>';
+const vbadge = uid => { const p = users[uid]; if (!p) return ''; if (p.isBusinessAccount) return BUSINESS_BADGE_SVG; if (p.paidVerifiedAt) return VERIFIED_BADGE_SVG; return ''; };
+
 /* =============== USERS =============== */
 const userLoading = {};
 function loadUser(uid){
@@ -749,7 +755,7 @@ function renderChatList(){
     const pv = previews[uid] ?? (isE2E(c.text) ? '…' : c.text || '');
     return `<div class="ci ${uid === activeUid ? 'active' : ''}" data-uid="${esc(uid)}">
       <div class="av" style="background-image:url('${cssUrl(uAvatar(uid))}')">${online ? '<span class="dot"></span>' : ''}</div>
-      <div class="mid"><div class="top"><span class="name">${esc(uid === me.uid ? 'My Account' : uName(uid))}</span><span class="time">${c.pinned ? '📌 ' : ''}${fmtListTime(c.timestamp)}</span></div>
+      <div class="mid"><div class="top"><span class="name">${esc(uid === me.uid ? 'My Account' : uName(uid))}${vbadge(uid)}</span><span class="time">${c.pinned ? '📌 ' : ''}${fmtListTime(c.timestamp)}</span></div>
       <div class="prev">${typingMap[uid] ? '<span class="tp">typing…</span>' : `<span>${own ? 'You: ' : ''}${esc(pv)}</span>`}${c.unreadCount > 0 ? `<div class="badge">${c.unreadCount > 99 ? '99+' : c.unreadCount}</div>` : ''}</div></div></div>`;
   }).join('');
 }
@@ -777,7 +783,7 @@ async function chatSheet(uid){
   await loadUser(uid);
   const c = chats[uid] || {};
   const bl = (await get(ref(db, `blocks/${me.uid}/${uid}`)).catch(() => null))?.val() === true;
-  const ov = modal(`<div style="display:flex;gap:12px;align-items:center;margin-bottom:8px"><div class="av sm" style="background-image:url('${cssUrl(uAvatar(uid))}')"></div><b>${esc(uName(uid))}</b></div>
+  const ov = modal(`<div style="display:flex;gap:12px;align-items:center;margin-bottom:8px"><div class="av sm" style="background-image:url('${cssUrl(uAvatar(uid))}')"></div><b>${esc(uName(uid))}${vbadge(uid)}</b></div>
     <button class="sh" id="cs-pin">${c.pinned ? 'Unpin from top' : '📌 Pin to top'}</button>
     <button class="sh" id="cs-block">${bl ? 'Unblock' : 'Block'}</button>
     <button class="sh danger" id="cs-del">Delete chat</button>`);
@@ -894,7 +900,7 @@ function markRead(){
 }
 function paintHeader(){
   const u = users[activeUid] || {};
-  $('#th-name').textContent = activeUid === me.uid ? 'My Account' : uName(activeUid);
+  $('#th-name').innerHTML = esc(activeUid === me.uid ? 'My Account' : uName(activeUid)) + vbadge(activeUid);
   $('#th-av').style.backgroundImage = `url('${cssUrl(uAvatar(activeUid))}')`;
   let st = '';
   if (u.status === 'online') st = 'online';
@@ -1067,7 +1073,7 @@ function openViewer(key){
   v.src = media.src;
   if (v.tagName === 'VIDEO') { v.controls = true; v.autoplay = true; v.playsInline = true; }
   stage.appendChild(v);
-  $('#v-name').textContent = m.senderUid === me.uid ? 'You' : uName(m.senderUid);
+  $('#v-name').innerHTML = esc(m.senderUid === me.uid ? 'You' : uName(m.senderUid)) + (m.senderUid === me.uid ? '' : vbadge(m.senderUid));
   $('#v-time').textContent = dayLabel(m.createdAt) + ', ' + fmtTime(m.createdAt);
   const dl = $('#v-dl'); dl.href = media.src; dl.download = m.fileName || (media.tagName === 'IMG' ? 'photo.jpg' : 'video');
   $('#viewer').classList.remove('hidden');
@@ -1377,7 +1383,7 @@ function renderSettings(){
   root.innerHTML = `<div class="hero"><div class="htop"><button class="icon" id="set-back" title="Back"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button><button class="icon" data-edit title="Edit profile"><svg viewBox="0 0 24 24">${SIC.pencil}</svg></button></div></div>
   <div class="body"><div class="wrap">
     <div class="avwrap">${u.bio ? `<div class="about" data-edit>${esc(String(u.bio).split('\n')[0])}</div>` : ''}<div class="av" data-edit style="background-image:url('${cssUrl(uAvatar(me.uid))}')"></div><div class="camb" data-edit><svg viewBox="0 0 24 24">${SIC.camera}</svg></div></div>
-    <div class="sname" data-edit><span>${esc(u.name || u.username || me.displayName || 'My Account')}</span><i></i></div>
+    <div class="sname" data-edit><span>${esc(u.name || u.username || me.displayName || 'My Account')}${vbadge(me.uid)}</span><i></i></div>
     <div class="suser">${u.username ? '@' + esc(u.username) : ''}</div>
     ${row('', 'user', 'Account', me.email || me.phoneNumber || 'Signed in')}
     ${row('receipts', 'shield', 'Privacy', 'Read receipts', on('hm-receipts'))}
@@ -1423,7 +1429,7 @@ async function blockedList(){
   await Promise.all(uids.map(loadUser));
   const box = $('#bl-list'); if (!box) return;
   if (!uids.length) { box.innerHTML = '<div class="empty" style="padding:20px">You haven’t blocked anyone</div>'; return; }
-  box.innerHTML = uids.map(uid => `<div class="blk" data-uid="${esc(uid)}"><div class="av sm" style="background-image:url('${cssUrl(uAvatar(uid))}')"></div><div class="nm"><b>${esc(uName(uid))}</b>${users[uid]?.username ? `<small>@${esc(users[uid].username)}</small>` : ''}</div><button>Unblock</button></div>`).join('');
+  box.innerHTML = uids.map(uid => `<div class="blk" data-uid="${esc(uid)}"><div class="av sm" style="background-image:url('${cssUrl(uAvatar(uid))}')"></div><div class="nm"><b>${esc(uName(uid))}${vbadge(uid)}</b>${users[uid]?.username ? `<small>@${esc(users[uid].username)}</small>` : ''}</div><button>Unblock</button></div>`).join('');
   box.querySelectorAll('.blk').forEach(el => el.querySelector('button').onclick = async () => {
     try { await set(ref(db, `blocks/${me.uid}/${el.dataset.uid}`), null); el.remove(); toast('Unblocked'); if (!box.children.length) box.innerHTML = '<div class="empty" style="padding:20px">You haven’t blocked anyone</div>'; }
     catch { toast('Couldn’t unblock'); }
@@ -1520,7 +1526,7 @@ function renderContacts(){
   const nm = uid => uName(uid).toLowerCase();
   const list = contactIds.filter(uid => !q || nm(uid).includes(q) || (users[uid]?.username || '').toLowerCase().includes(q)).sort((a, b) => nm(a).localeCompare(nm(b)));
   const sub = uid => blockedIds.has(uid) ? 'Blocked. Tap to unblock' : (users[uid]?.bio ? String(users[uid].bio).split('\n')[0] : (users[uid]?.username ? '@' + users[uid].username : ''));
-  const row = (uid, name, s2) => `<div class="crow${blockedIds.has(uid) ? ' blocked' : ''}" data-uid="${esc(uid)}"><div class="av" style="background-image:url('${cssUrl(uAvatar(uid))}')"></div><div class="mid"><b>${esc(name)}</b>${s2 ? `<span>${esc(s2)}</span>` : ''}</div></div>`;
+  const row = (uid, name, s2) => `<div class="crow${blockedIds.has(uid) ? ' blocked' : ''}" data-uid="${esc(uid)}"><div class="av" style="background-image:url('${cssUrl(uAvatar(uid))}')"></div><div class="mid"><b>${esc(name)}${vbadge(uid)}</b>${s2 ? `<span>${esc(s2)}</span>` : ''}</div></div>`;
   let html = q ? '' : `<div class="crow" data-act="newc"><div class="cic"><svg viewBox="0 0 24 24">${CT_USERPLUS}</svg></div><div class="mid"><b>New contact</b><span>Find a friend by username</span></div></div>`;
   html += '<div class="csec">Contacts on Haba</div>';
   if (!q || 'my account you message yourself'.includes(q)) html += row(me.uid, ((users[me.uid]?.username ? '@' + users[me.uid].username : users[me.uid]?.name || 'My Account')) + ' (You)', 'Message yourself');
@@ -1557,7 +1563,7 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('#conta
 async function contactSheet(uid){
   await loadUser(uid);
   const bl = blockedIds.has(uid);
-  const ov = modal(`<div style="display:flex;gap:12px;align-items:center;margin-bottom:8px"><div class="av sm" style="background-image:url('${cssUrl(uAvatar(uid))}')"></div><b>${esc(uName(uid))}</b></div>
+  const ov = modal(`<div style="display:flex;gap:12px;align-items:center;margin-bottom:8px"><div class="av sm" style="background-image:url('${cssUrl(uAvatar(uid))}')"></div><b>${esc(uName(uid))}${vbadge(uid)}</b></div>
     <button class="sh" id="cc-msg">Message</button><button class="sh" id="cc-block">${bl ? 'Unblock' : 'Block'}</button><button class="sh danger" id="cc-rm">Remove contact</button>`);
   ov.querySelector('#cc-msg').onclick = () => { closeModal(); if (bl) toast('Unblock to send messages'); else goChat(uid); };
   ov.querySelector('#cc-block').onclick = () => { closeModal(); set(ref(db, `blocks/${me.uid}/${uid}`), bl ? null : true).then(() => { bl ? blockedIds.delete(uid) : blockedIds.add(uid); renderContacts(); toast(bl ? 'Unblocked' : 'Blocked'); }).catch(() => toast('Couldn’t update')); };
@@ -1578,7 +1584,7 @@ async function acSearch(raw){
     await Promise.all(uids.map(loadUser));
     const box = $('#ac-r'); if (!box) return;
     if (!uids.length) { box.innerHTML = '<div class="empty" style="padding:20px">No one found</div>'; return; }
-    box.innerHTML = uids.map(uid => `<div class="blk" data-uid="${esc(uid)}"><div class="av sm" style="background-image:url('${cssUrl(uAvatar(uid))}')"></div><div class="nm" style="cursor:pointer"><b>${esc(uName(uid))}</b><small>@${esc(users[uid]?.username || '')}</small></div><button>${contactIds.includes(uid) ? 'Added ✓' : 'Add'}</button></div>`).join('');
+    box.innerHTML = uids.map(uid => `<div class="blk" data-uid="${esc(uid)}"><div class="av sm" style="background-image:url('${cssUrl(uAvatar(uid))}')"></div><div class="nm" style="cursor:pointer"><b>${esc(uName(uid))}${vbadge(uid)}</b><small>@${esc(users[uid]?.username || '')}</small></div><button>${contactIds.includes(uid) ? 'Added ✓' : 'Add'}</button></div>`).join('');
     box.querySelectorAll('.blk').forEach(el => {
       const uid = el.dataset.uid, btn = el.querySelector('button');
       el.querySelector('.nm').onclick = () => { closeModal(); goChat(uid); };
@@ -1602,7 +1608,7 @@ async function showProfile(uid){
   const st = online ? 'online' : (u.lastSeen ? 'last seen ' + fmtListTime(u.lastSeen) : '');
   const ov = modal(`<div style="text-align:center">
     <div class="av" style="width:104px;height:104px;margin:4px auto 12px;background-image:url('${cssUrl(uAvatar(uid))}')"></div>
-    <h3 style="margin:0">${esc(uid === me.uid ? 'My Account' : uName(uid))}</h3>
+    <h3 style="margin:0">${esc(uid === me.uid ? 'My Account' : uName(uid))}${vbadge(uid)}</h3>
     ${u.username ? `<div style="color:var(--muted);margin-top:2px">@${esc(u.username)}</div>` : ''}
     ${st ? `<div style="font-size:13px;margin-top:4px;color:${online ? '#34C759' : 'var(--muted)'}">${esc(st)}</div>` : ''}
     ${u.bio ? `<p style="margin:14px 0 0;line-height:1.4;white-space:pre-wrap">${esc(u.bio)}</p>` : ''}
@@ -1630,7 +1636,7 @@ async function doSearch(raw){
     await Promise.all(uids.map(loadUser));
     if (!$('#nr')) return;
     const list = uids.filter(u => u !== me.uid);
-    $('#nr').innerHTML = list.length ? list.map(uid => `<div class="res" data-uid="${esc(uid)}"><div class="av sm" style="background-image:url('${cssUrl(uAvatar(uid))}')"></div><div><b>${esc(uName(uid))}</b><small>@${esc(users[uid]?.username || '')}</small></div></div>`).join('') : '<div class="empty" style="padding:20px">No one found</div>';
+    $('#nr').innerHTML = list.length ? list.map(uid => `<div class="res" data-uid="${esc(uid)}"><div class="av sm" style="background-image:url('${cssUrl(uAvatar(uid))}')"></div><div><b>${esc(uName(uid))}${vbadge(uid)}</b><small>@${esc(users[uid]?.username || '')}</small></div></div>`).join('') : '<div class="empty" style="padding:20px">No one found</div>';
     $('#nr').querySelectorAll('.res').forEach(el => el.onclick = () => { closeModal(); openThread(el.dataset.uid); });
   } catch (e) { $('#nr') && ($('#nr').innerHTML = '<div class="empty" style="padding:20px">Search failed</div>'); }
 }

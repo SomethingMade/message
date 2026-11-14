@@ -1383,7 +1383,7 @@ function msgPopup(b){
 let viewerHist = false, skipPop = false;
 function openViewer(key){
   const el = $('#msgs').querySelector(`[data-open="${key}"]`), m = rawMsgs[key]; if (!el || !m) return;
-  const media = el.tagName === 'IMG' ? el : el.querySelector('video');
+  const media = el.tagName === 'IMG' ? el : el.querySelector('img, video');
   if (!media || !media.src) return toast('Still loading…');
   const stage = $('#v-stage'); stage.innerHTML = '';
   const v = document.createElement(media.tagName === 'IMG' ? 'img' : 'video');

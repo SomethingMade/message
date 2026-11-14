@@ -1647,6 +1647,7 @@ $('#th-av').onclick = () => { if (activeUid) showProfile(activeUid); };
 
 /* contacts page + floating button */
 let contactsHist = false, contactIds = [], blockedIds = new Set(), ctLpT = null, ctLpFired = false, ctLpX = 0, ctLpY = 0, acT = null;
+const CT_USERS = '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>';
 const CT_USERPLUS = '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/>';
 function hideContacts(){ $('#contacts').classList.add('hidden'); }
 function closeContacts(){ hideContacts(); if (contactsHist) { contactsHist = false; skipPop = true; history.back(); } }
@@ -1675,6 +1676,7 @@ function renderContacts(){
   const sub = uid => blockedIds.has(uid) ? 'Blocked. Tap to unblock' : (users[uid]?.bio ? String(users[uid].bio).split('\n')[0] : (users[uid]?.username ? '@' + users[uid].username : ''));
   const row = (uid, name, s2) => `<div class="crow${blockedIds.has(uid) ? ' blocked' : ''}" data-uid="${esc(uid)}"><div class="av" style="background-image:url('${cssUrl(uAvatar(uid))}')"></div><div class="mid"><b>${esc(name)}${vbadge(uid)}</b>${s2 ? `<span>${esc(s2)}</span>` : ''}</div></div>`;
   let html = q ? '' : `<div class="crow" data-act="newc"><div class="cic"><svg viewBox="0 0 24 24">${CT_USERPLUS}</svg></div><div class="mid"><b>New contact</b><span>Find a friend by username</span></div></div>`;
+  if (!q) html += `<div class="crow" data-act="sync"><div class="cic"><svg viewBox="0 0 24 24">${CT_USERS}</svg></div><div class="mid"><b>Sync phone contacts</b><span>Find people in your phonebook who are on Haba</span></div></div>`;
   html += '<div class="csec">Contacts on Haba</div>';
   if (!q || 'my account you message yourself'.includes(q)) html += row(me.uid, ((users[me.uid]?.username ? '@' + users[me.uid].username : users[me.uid]?.name || 'My Account')) + ' (You)', 'Message yourself');
   html += list.length ? list.map(uid => row(uid, uName(uid), sub(uid))).join('') : (q ? '<div class="empty">No contacts match.</div>' : '<div class="empty">No contacts yet.<br>Tap New contact to add friends.</div>');
@@ -1691,6 +1693,7 @@ $('#ct-list').addEventListener('click', e => {
   if (ctLpFired) { ctLpFired = false; return; }
   const r = e.target.closest('.crow'); if (!r) return;
   if (r.dataset.act === 'newc') return addContactModal();
+  if (r.dataset.act === 'sync') return syncPhoneContacts();
   const uid = r.dataset.uid;
   if (uid !== me.uid && blockedIds.has(uid)) return unblockContact(uid);
   goChat(uid);
@@ -1715,6 +1718,46 @@ async function contactSheet(uid){
   ov.querySelector('#cc-msg').onclick = () => { closeModal(); if (bl) toast('Unblock to send messages'); else goChat(uid); };
   ov.querySelector('#cc-block').onclick = () => { closeModal(); set(ref(db, `blocks/${me.uid}/${uid}`), bl ? null : true).then(() => { bl ? blockedIds.delete(uid) : blockedIds.add(uid); renderContacts(); toast(bl ? 'Unblocked' : 'Blocked'); }).catch(() => toast('Couldn’t update')); };
   ov.querySelector('#cc-rm').onclick = () => { closeModal(); set(ref(db, `contacts/${me.uid}/${uid}`), null).then(() => { contactIds = contactIds.filter(x => x !== uid); renderContacts(); toast('Contact removed'); }).catch(() => toast('Couldn’t remove contact')); };
+}
+/* =============== PHONEBOOK SYNC (Contact Picker API — same approach as Haba) =============== */
+const contactPickerOK = 'contacts' in navigator && 'ContactsManager' in window;
+const phoneKey = raw => String(raw || '').replace(/\D/g, '').slice(-10);   // last 10 digits so local and +27… formats match
+async function syncPhoneContacts(){
+  if (!contactPickerOK) return void modal('<h3>Not supported here</h3><p style="color:var(--muted);line-height:1.45;margin:0">Phonebook sync works in Chrome on Android. On other browsers, use <b>New contact</b> to find people by @username.</p>');
+  let picked;
+  try { picked = await navigator.contacts.select(['name', 'tel'], { multiple: true }); }
+  catch (e) { if (e && e.name !== 'AbortError') toast('Couldn’t access your contacts'); return; }
+  if (!picked || !picked.length) return;
+  const ov = modal('<h3>Contacts on Haba</h3><div id="sc-r"><div class="spin"></div></div>');
+  const out = () => ov.querySelector('#sc-r');
+  try {
+    // phone → uid map lives only in memory for this call; numbers are never cached
+    const snap = await get(ref(db, 'users')), map = {};
+    snap.forEach(c => { const v = c.val(), k = phoneKey(v && v.phoneNumber); if (k.length >= 7 && c.key !== me.uid && c.key !== AI_UID) map[k] = c.key; });
+    const found = new Map(); let others = 0;
+    picked.forEach(c => {
+      const cname = (c.name && c.name[0]) || 'Contact'; let uid = null;
+      for (const t of (c.tel || [])) { const k = phoneKey(t); if (k.length >= 7 && map[k]) { uid = map[k]; break; } }
+      if (uid) { if (!found.has(uid)) found.set(uid, cname); } else others++;
+    });
+    found.forEach((_, uid) => { if (!users[uid]) { users[uid] = snap.child(uid).val() || { name: 'Unknown user' }; userFresh.add(uid); cacheUser(uid); warmAvatar(users[uid].photoURL); } });
+    if (!contactIds.length) { try { const cs = await get(ref(db, `contacts/${me.uid}`)); cs.forEach(c => { if (c.val() && c.key !== me.uid) contactIds.push(c.key); }); } catch {} }
+    const box = out(); if (!box) return;
+    if (!found.size) { box.innerHTML = `<div class="empty" style="padding:20px">None of the ${picked.length} contact${picked.length === 1 ? '' : 's'} you picked are on Haba yet.</div>`; }
+    else {
+      box.innerHTML = [...found].map(([uid, cname]) => `<div class="blk" data-uid="${esc(uid)}"><div class="av sm" style="background-image:url('${cssUrl(uAvatar(uid))}')"></div><div class="nm" style="cursor:pointer"><b>${esc(uName(uid))}${vbadge(uid)}</b><small>${esc(cname)}</small></div><button>${contactIds.includes(uid) ? 'Chat' : 'Add'}</button></div>`).join('')
+        + (others ? `<div class="empty" style="padding:14px 0 0">${others} other${others === 1 ? '' : 's'} not on Haba yet</div>` : '');
+      box.querySelectorAll('.blk').forEach(el => {
+        const uid = el.dataset.uid, btn = el.querySelector('button');
+        el.querySelector('.nm').onclick = () => { closeModal(); goChat(uid); };
+        btn.onclick = async () => {
+          if (contactIds.includes(uid)) { closeModal(); return goChat(uid); }
+          try { await set(ref(db, `contacts/${me.uid}/${uid}`), true); contactIds = [...contactIds, uid]; btn.textContent = 'Chat'; renderContacts(); toast('Added to contacts'); }
+          catch { toast('Couldn’t update contacts'); }
+        };
+      });
+    }
+  } catch (e) { console.warn('phonebook sync', e); const box = out(); if (box) box.innerHTML = '<div class="empty" style="padding:20px">Couldn’t check your contacts. Try again.</div>'; }
 }
 function addContactModal(){
   const ov = modal('<h3>New contact</h3><input class="field" id="ac-s" placeholder="Search by username" autocomplete="off" autocapitalize="none"><div id="ac-r"><div class="empty" style="padding:20px">Type at least 2 letters of a username</div></div>');

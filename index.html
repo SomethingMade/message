@@ -71,6 +71,15 @@ input,textarea{font:inherit;color:inherit}
 .ci .time{font-size:12px;color:var(--muted);flex-shrink:0}
 .ci .prev{display:flex;gap:8px;align-items:center;margin-top:2px}
 .ci .prev span{color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1}
+.shim{position:relative}
+.shim::after{content:'';position:absolute;inset:0;border-radius:inherit;z-index:2;pointer-events:none;background:linear-gradient(100deg,rgba(128,128,128,.28) 30%,rgba(255,255,255,.45) 50%,rgba(128,128,128,.28) 70%) 100% 0/300% 100%;animation:shm 1.25s linear infinite}
+:root[data-theme="dark"] .shim::after{background:linear-gradient(100deg,rgba(90,90,95,.55) 30%,rgba(150,150,158,.55) 50%,rgba(90,90,95,.55) 70%) 100% 0/300% 100%}
+@keyframes shm{to{background-position:0 0}}
+.av .dot{z-index:3}
+.iw{display:block;position:relative;border-radius:10px;overflow:hidden;margin-bottom:4px;max-width:100%;cursor:zoom-in}
+.iw img{margin:0!important}
+.mwrap.shim{min-width:200px;min-height:140px}
+.mwrap.shim::after{border-radius:10px}
 .verified-badge{width:16px;height:16px;flex-shrink:0;vertical-align:middle;position:relative;top:-1px;margin-left:4px;display:inline-block}
 .badge{background:var(--primary);color:var(--inverse);border-radius:50px;font-size:12px;font-weight:700;min-width:20px;height:20px;padding:0 6px;display:flex;align-items:center;justify-content:center}
 .empty{padding:40px 24px;text-align:center;color:var(--muted)}
@@ -468,7 +477,14 @@ async function initKeys(){
   const uid = me.uid;
   kp = null; keyState = 'locked';
   const stored = await idbGet('keypair-' + uid).catch(() => null);
-  const pubSnap = await get(ref(db, `users/${uid}/e2ee/publicKey`));
+  let pubSnap;
+  try {
+    const pubP = get(ref(db, `users/${uid}/e2ee/publicKey`));
+    pubSnap = (stored && stored.privateKey) ? await Promise.race([pubP, new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 5000))]) : await pubP;
+  } catch (e) {
+    if (stored && stored.privateKey && stored.publicKey) { kp = stored; keyState = 'ready'; return; }   // offline: use the key already on this device
+    throw e;
+  }
   const published = pubSnap.exists() ? pubSnap.val() : null;
   if (stored && stored.privateKey && stored.publicKey) {
     const local = await crypto.subtle.exportKey('jwk', stored.publicKey);
@@ -511,11 +527,18 @@ async function restoreFromPin(pin){
 async function getPeerPub(peer, fresh){
   if (peer === AI_UID) return null;
   if (!fresh && peerPub[peer] !== undefined) return peerPub[peer];
-  const s = await get(ref(db, `users/${peer}/e2ee/publicKey`));
-  if (!s.exists()) { peerPub[peer] = null; peerJwk[peer] = null; return null; }
-  if (peerJwk[peer] && jwkId(peerJwk[peer]) !== jwkId(s.val())) delete shared[peer];
-  peerJwk[peer] = s.val();
-  peerPub[peer] = await crypto.subtle.importKey('jwk', s.val(), { name: 'ECDH', namedCurve: 'P-256' }, true, []);
+  let val = null;
+  if (!navigator.onLine) val = await HDB.get('p|' + peer);          // offline: public key cached earlier
+  if (!val) {
+    try {
+      const s = await get(ref(db, `users/${peer}/e2ee/publicKey`));
+      if (!s.exists()) { peerPub[peer] = null; peerJwk[peer] = null; return null; }
+      val = s.val(); HDB.set('p|' + peer, val);
+    } catch (e) { val = await HDB.get('p|' + peer); if (!val) throw e; }
+  }
+  if (peerJwk[peer] && jwkId(peerJwk[peer]) !== jwkId(val)) delete shared[peer];
+  peerJwk[peer] = val;
+  peerPub[peer] = await crypto.subtle.importKey('jwk', val, { name: 'ECDH', namedCurve: 'P-256' }, true, []);
   return peerPub[peer];
 }
 async function sharedKey(peer, fresh){
@@ -565,10 +588,19 @@ async function decText(peer, payload){
 }
 const mediaCache = {};
 function mediaSrc(m, peer){
-  if (!m.mediaEncrypted) return Promise.resolve(m.mediaURL);
+  if (!m.mediaEncrypted) {
+    if (m.mediaType !== 'image') return Promise.resolve(m.mediaURL);
+    if (mediaCache[m.mediaURL]) return mediaCache[m.mediaURL];
+    return mediaCache[m.mediaURL] = (async () => {
+      const hit = await HDB.bget('i|' + m.mediaURL); if (hit) return URL.createObjectURL(hit);
+      try { const r = await fetch(m.mediaURL); if (r.ok) { const b = await r.blob(); if (b.size < 8e6) HDB.bset('i|' + m.mediaURL, b); return URL.createObjectURL(b); } } catch {}
+      return m.mediaURL;
+    })();
+  }
   if (mediaCache[m.mediaURL]) return mediaCache[m.mediaURL];
   const p = (async () => {
-    const buf = await (await fetch(m.mediaURL)).arrayBuffer();
+    let buf = await HDB.bget('x|' + m.mediaURL);             // ciphertext only — decrypted in memory each time
+    if (!buf) { buf = await (await fetch(m.mediaURL)).arrayBuffer(); if (buf.byteLength < 30e6) HDB.bset('x|' + m.mediaURL, buf); }
     const iv = new Uint8Array(buf.slice(0, 12)), ct = buf.slice(12);
     for (const fresh of [false, true]) {
       const k = await sharedKey(peer, fresh); if (!k) continue;
@@ -660,8 +692,13 @@ onAuthStateChanged(auth, async user => {
   me = user;
   $('#auth').classList.add('hidden'); $('#app').classList.remove('hidden');
   $('#chatlist').innerHTML = '<div class="spin"></div>';
+  paintCached();                                   // chat list from the offline DB right away, before keys/network
   try { await initKeys(); } catch (e) { console.warn('key init', e); keyState = 'locked'; }
   renderBanner();
+  if (Object.keys(chats).length) {
+    decCache.clear(); renderChatList(); if (activeUid) renderMessages(true);
+    Object.keys(chats).forEach(async u => { const t = chats[u].text; const p = isE2E(t) ? await decText(u, t) : (t || ''); if (previews[u] !== p) { previews[u] = p; renderChatList(); } });
+  }
   startPresence();
   startChatList();
   if (keyState === 'locked') promptUnlock(true);
@@ -683,6 +720,7 @@ function teardown(){
   Object.values(typingWatch).forEach(f => f()); Object.keys(typingWatch).forEach(k => delete typingWatch[k]); Object.keys(typingMap).forEach(k => delete typingMap[k]);
   chatsLoaded = false; hideNotif(); hideSettings(); hideContacts();
   kp = null; Object.keys(shared).forEach(k => delete shared[k]); decCache.clear();
+  HDB.clear(); Object.keys(users).forEach(k => delete users[k]); userFresh.clear(); avObj.clear(); avTry.clear();
 }
 
 /* =============== VERIFIED BADGE (same as Haba) =============== */
@@ -690,21 +728,121 @@ const VERIFIED_BADGE_SVG = '<svg class="verified-badge" viewBox="0 0 22 22" widt
 const BUSINESS_BADGE_SVG = '<svg class="verified-badge business-badge" viewBox="0 0 22 22" width="16" height="16" aria-label="Business Account"><path fill="#D4A017" d="M20.396 11c-.018-.646-.215-1.275-.57-1.816-.354-.54-.852-.972-1.438-1.246.223-.607.27-1.264.14-1.897-.131-.634-.437-1.218-.882-1.687-.47-.445-1.053-.75-1.687-.882-.633-.13-1.29-.083-1.897.14-.273-.587-.704-1.086-1.245-1.44S11.647 1.62 11 1.604c-.646.017-1.273.213-1.813.568-.54.354-.972.853-1.246 1.44-.607-.223-1.264-.272-1.897-.14-.633.13-1.217.437-1.687.882-.444.47-.75 1.053-.882 1.687-.13.633-.083 1.29.14 1.897-.586.274-1.084.706-1.438 1.246-.354.54-.552 1.17-.57 1.816.018.646.216 1.276.57 1.816.354.54.852.972 1.438 1.246-.223.607-.27 1.264-.14 1.897.131.634.437 1.217.882 1.687.47.445 1.054.75 1.687.882.633.13 1.29.083 1.897-.14.274.586.706 1.084 1.246 1.438.54.354 1.17.552 1.813.57.646-.018 1.276-.216 1.816-.57.54-.354.972-.852 1.246-1.438.607.223 1.264.27 1.897.14.634-.131 1.217-.437 1.687-.882.445-.47.75-1.053.882-1.687.13-.633.083-1.29-.14-1.897.586-.274 1.084-.706 1.438-1.246.355-.54.552-1.17.57-1.816zM9.662 14.85l-3.429-3.428 1.293-1.293 2.136 2.136 4.6-4.6 1.293 1.293-5.893 5.892z"></path></svg>';
 const vbadge = uid => { const p = users[uid]; if (!p) return ''; if (p.isBusinessAccount) return BUSINESS_BADGE_SVG; if (p.paidVerifiedAt) return VERIFIED_BADGE_SVG; return ''; };
 
+/* =============== OFFLINE DB (IndexedDB) ===============
+   Cached so the app opens instantly and keeps working offline: profiles, chat list, recent messages per
+   chat (kept exactly as stored on the server — E2E ciphertext stays ciphertext), encrypted media as
+   ciphertext, and small images/avatars. Everything is wiped on sign-out. */
+const HDB = (() => {
+  let dbp = null;
+  const open = () => dbp || (dbp = new Promise((res, rej) => {
+    if (!window.indexedDB) return rej(new Error('no idb'));
+    const r = indexedDB.open('haba-messenger-cache', 1);
+    r.onupgradeneeded = () => { r.result.createObjectStore('kv'); r.result.createObjectStore('blobs'); };
+    r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
+  }));
+  const run = (store, mode, fn) => open().then(d => new Promise((res, rej) => {
+    const t = d.transaction(store, mode); const req = fn(t.objectStore(store));
+    t.oncomplete = () => res(req && 'result' in req ? req.result : undefined); t.onerror = t.onabort = () => rej(t.error);
+  })).catch(() => undefined);
+  let writes = 0;
+  const prune = async () => {
+    try {
+      const d = await open(), rows = [];
+      await new Promise(res => { const c = d.transaction('blobs').objectStore('blobs').openCursor(); c.onsuccess = () => { const cur = c.result; if (!cur) return res(); rows.push({ k: cur.key, t: cur.value.t || 0, n: cur.value.n || 0 }); cur.continue(); }; c.onerror = () => res(); });
+      let total = rows.reduce((a, r) => a + r.n, 0); const MAX = 220e6, KEEP = 160e6;
+      if (total <= MAX) return;
+      rows.sort((a, b) => a.t - b.t);
+      for (const r of rows) { if (total <= KEEP) break; await run('blobs', 'readwrite', s => s.delete(r.k)); total -= r.n; }
+    } catch {}
+  };
+  return {
+    get: k => run('kv', 'readonly', s => s.get(k)),
+    set: (k, v) => run('kv', 'readwrite', s => s.put(v, k)),
+    bget: async k => { const r = await run('blobs', 'readonly', s => s.get(k)); return r ? r.v : null; },
+    bset: (k, v) => { const n = v.size || v.byteLength || 0; if (++writes % 15 === 0) setTimeout(prune, 2000); return run('blobs', 'readwrite', s => s.put({ v, t: Date.now(), n }, k)); },
+    clear: async () => { await run('kv', 'readwrite', s => s.clear()); await run('blobs', 'readwrite', s => s.clear()); }
+  };
+})();
+
+/* profile fields worth keeping offline (no keys, no presence — status would be stale) */
+const slimUser = u => { const o = {}; ['name', 'username', 'bio', 'photoURL', 'lastSeen', 'isBusinessAccount', 'paidVerifiedAt'].forEach(k => { if (u && u[k] !== undefined) o[k] = u[k]; }); return o; };
+const cacheUser = uid => { if (users[uid] && users[uid].name !== 'Unknown user') HDB.set('u|' + uid, slimUser(users[uid])); };
+async function cachedUser(uid){
+  if (users[uid]) return;
+  const c = await HDB.get('u|' + uid);
+  if (c && !users[uid]) { users[uid] = c; warmAvatar(c.photoURL); }
+}
+const kickUI = (() => { let t = null; return () => { clearTimeout(t); t = setTimeout(() => { if (me) renderChatList(); if (activeUid) paintHeader(); }, 60); }; })();
+
+/* avatars: served from IndexedDB as blob URLs when cached (instant, works offline) */
+const avObj = new Map(), avTry = new Set();
+async function warmAvatar(url){
+  if (!url || /^(data|blob):/.test(url) || avObj.has(url) || avTry.has(url)) return;
+  avTry.add(url);
+  try {
+    const hit = await HDB.bget('a|' + url);
+    if (hit) { avObj.set(url, URL.createObjectURL(hit)); kickUI(); return; }
+    if (!navigator.onLine) return;
+    const r = await fetch(url); if (!r.ok) return;
+    const b = await r.blob(); if (b.size < 4e6 && /^image\//.test(b.type)) HDB.bset('a|' + url, b);   // used from next open
+  } catch {}
+}
+
+/* shimmer overlay on avatars while their image is still loading (never a flat placeholder) */
+const imgDone = new Set(), imgWait = new Map();
+function hydrateAv(root){
+  const els = []; if (root.matches && root.matches('.av')) els.push(root); if (root.querySelectorAll) root.querySelectorAll('.av').forEach(e => els.push(e));
+  els.forEach(el => {
+    const m = /url\((["']?)(.*?)\1\)/.exec(el.style.backgroundImage || ''); if (!m) return;
+    const u = m[2]; if (!u || /^(data|blob):/.test(u) || imgDone.has(u)) return;
+    el.classList.add('shim');
+    let p = imgWait.get(u);
+    if (!p) { p = new Promise(res => { const i = new Image(); i.onload = i.onerror = res; i.src = u; }).then(() => { imgDone.add(u); imgWait.delete(u); }); imgWait.set(u, p); }
+    p.then(() => el.classList.remove('shim'));
+  });
+}
+new MutationObserver(ms => ms.forEach(x => { if (x.type === 'attributes') hydrateAv(x.target); else x.addedNodes.forEach(n => n.nodeType === 1 && hydrateAv(n)); }))
+  .observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['style'] });
+
+function saveThread(tid, raw){
+  const ents = Object.entries(raw || {});
+  if (ents.length > 150) ents.sort((a, b) => (b[1].createdAt || 0) - (a[1].createdAt || 0));
+  HDB.set('m|' + tid, Object.fromEntries(ents.slice(0, 150)));
+}
+async function paintCached(){
+  const uid = me.uid, v = await HDB.get('c|' + uid);
+  if (!v || !me || me.uid !== uid || chatsLoaded) return;
+  Object.keys(chats).forEach(k => delete chats[k]);
+  Object.entries(v).forEach(([u, meta]) => { if (u !== AI_UID && meta && typeof meta === 'object') chats[u] = meta; });
+  await Promise.all(Object.keys(chats).concat(uid).map(cachedUser));
+  if (me && me.uid === uid && !chatsLoaded) renderChatList();
+}
+
 /* =============== USERS =============== */
-const userLoading = {};
+const userLoading = {}, userFresh = new Set();
 function loadUser(uid){
-  if (users[uid] || userLoading[uid]) return userLoading[uid] || Promise.resolve(users[uid]);
-  return userLoading[uid] = get(ref(db, `users/${uid}`)).then(s => { users[uid] = s.exists() ? s.val() : { name: 'Unknown user' }; delete userLoading[uid]; return users[uid]; })
-    .catch(() => { delete userLoading[uid]; users[uid] = { name: 'Unknown user' }; return users[uid]; });
+  if (userFresh.has(uid) && users[uid]) return Promise.resolve(users[uid]);
+  if (userLoading[uid]) return userLoading[uid];
+  const net = Promise.race([get(ref(db, `users/${uid}`)), new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 8000))]).then(s => {
+    const had = users[uid] ? JSON.stringify(slimUser(users[uid])) : null;
+    if (s.exists()) { users[uid] = s.val(); userFresh.add(uid); cacheUser(uid); warmAvatar(users[uid].photoURL); }
+    else users[uid] = { name: 'Unknown user' };
+    if (had && had !== JSON.stringify(slimUser(users[uid]))) kickUI();
+    return users[uid];
+  }).catch(() => { if (!users[uid]) users[uid] = { name: 'Unknown user' }; return users[uid]; }).finally(() => { delete userLoading[uid]; });
+  userLoading[uid] = net;
+  if (users[uid]) return Promise.resolve(users[uid]);                       // already on screen from memory/cache; refresh quietly
+  return cachedUser(uid).then(() => users[uid] ? users[uid] : net);          // cached profile = instant; otherwise wait for network
 }
 const uName = uid => uid === me?.uid ? 'You' : (users[uid]?.name || users[uid]?.username || 'Haba user');
-const uAvatar = uid => users[uid]?.photoURL || DEFAULT_AVATAR;
+const uAvatar = uid => { const u = users[uid]?.photoURL; return u ? (avObj.get(u) || u) : DEFAULT_AVATAR; };
 
 /* =============== CHAT LIST =============== */
 function startChatList(){
   const r = ref(db, `user_chats/${me.uid}`);
   const cb = onValue(r, snap => {
     const v = snap.val() || {};
+    HDB.set('c|' + me.uid, v);
     const old = {}; Object.entries(chats).forEach(([k, c]) => old[k] = c.timestamp || 0);
     Object.keys(chats).forEach(k => delete chats[k]);
     Object.entries(v).forEach(([uid, meta]) => { if (uid !== AI_UID && meta && typeof meta === 'object') chats[uid] = meta; });
@@ -866,20 +1004,23 @@ async function openThread(uid){
   $('#placeholder').classList.add('hidden'); $('#thread').classList.remove('hidden'); $('#app').classList.add('chat-open');
   if (!chatHist) { history.pushState({ hmChat: 1 }, ''); chatHist = true; }   // device back closes the chat, not the app
   $('#msgs').innerHTML = '<div class="spin"></div>'; $('#input').value = ''; autoGrow(); $('#replybar').classList.add('hidden');
+  const [cachedMsgs] = await Promise.all([HDB.get('m|' + threadId), cachedUser(uid)]);
+  if (activeUid !== uid) return;
+  if (cachedMsgs && !Object.keys(rawMsgs).length) { rawMsgs = cachedMsgs; paintHeader(); renderMessages(); }   // instant from the offline DB, live data replaces it
   await loadUser(uid);
   if (activeUid !== uid) return;
   paintHeader();
   getPeerPub(uid, true).catch(() => {});
 
   const watch = (path, fn) => { const r = ref(db, path); const cb = onValue(r, fn); threadUnsubs.push(() => off(r, 'value', cb)); };
-  watch(`users/${uid}`, s => { if (s.exists()) { users[uid] = s.val(); paintHeader(); } });
+  watch(`users/${uid}`, s => { if (s.exists()) { users[uid] = s.val(); userFresh.add(uid); cacheUser(uid); warmAvatar(users[uid].photoURL); paintHeader(); } });
   watch(`dm_threads/${threadId}/readReceipts/${uid}`, s => { otherLastRead = s.val() || 0; paintTicks(); });
   watch(`dm_threads/${threadId}/typing/${uid}`, s => { otherTyping = !!s.val(); paintTyping(); });
   watch(`dm_threads/${threadId}/settings/disappearingSeconds`, s => { disappearing = s.val() || 0; });
   watch(`blocks/${me.uid}/${uid}`, s => { iBlocked = s.val() === true; paintBlocked(); });
   watch(`blocks/${uid}/${me.uid}`, s => { theyBlocked = s.val() === true; paintBlocked(); });
   const mq = query(ref(db, `dm_threads/${threadId}/messages`), orderByChild('createdAt'), limitToLast(msgLimit));
-  const mcb = onValue(mq, s => { rawMsgs = s.val() || {}; renderMessages(); });
+  const mcb = onValue(mq, s => { rawMsgs = s.val() || {}; saveThread(threadId, rawMsgs); renderMessages(); });
   msgUnsub = () => off(mq, 'value', mcb);
   threadUnsubs.push(() => msgUnsub && msgUnsub());
   update(ref(db, `user_chats/${me.uid}/${uid}`), chats[uid]?.hidden ? { unreadCount: 0, hidden: null } : { unreadCount: 0 }).catch(() => {});
@@ -891,7 +1032,7 @@ function loadOlder(){
   msgLimit += PAGE;
   if (msgUnsub) msgUnsub();
   const q = query(ref(db, `dm_threads/${threadId}/messages`), orderByChild('createdAt'), limitToLast(msgLimit));
-  const cb = onValue(q, s => { rawMsgs = s.val() || {}; renderMessages(true); });
+  const cb = onValue(q, s => { rawMsgs = s.val() || {}; saveThread(threadId, rawMsgs); renderMessages(true); });
   msgUnsub = () => off(q, 'value', cb);
 }
 function markRead(){
@@ -965,8 +1106,8 @@ async function renderMessages(keepScroll){
     if (m.viewOnce) inner += `<div class="t">🔒 View-once ${esc(m.mediaType || 'media')} — open it in the Haba app</div>`;
     else if (m.mediaURL) {
       const mt = m.mediaType || '';
-      if (mt === 'image') inner += `<img data-mk="${m.key}" data-open="${m.key}" alt="photo">`;
-      else if (mt === 'video') inner += `<div class="mwrap" data-open="${m.key}"><video data-mk="${m.key}" playsinline muted preload="metadata"></video><span class="playbadge">▶</span></div>`;
+      if (mt === 'image') inner += `<span class="iw shim" data-open="${m.key}"><img data-mk="${m.key}" alt="photo"></span>`;
+      else if (mt === 'video') inner += `<div class="mwrap shim" data-open="${m.key}"><video data-mk="${m.key}" playsinline muted preload="metadata"></video><span class="playbadge">▶</span></div>`;
       else if (mt === 'audio') inner += vnHTML(m);
       else inner += `<div class="file" data-file="${m.key}">📄 <div><b>${esc(m.fileName || 'File')}</b><div style="font-size:12px;opacity:.7">${m.fileSize ? fmtSize(m.fileSize) + ' · ' : ''}tap to download</div></div></div>`;
     }
@@ -987,7 +1128,13 @@ async function renderMessages(keepScroll){
   box.querySelectorAll('[data-mk]').forEach(async el => {
     const m = rawMsgs[el.dataset.mk]; if (!m) return;
     try {
-      const src = await mediaSrc(m, uid); if (el.isConnected) { el.src = src; if (el.tagName === 'IMG') el.onload = () => { if (near) box.scrollTop = box.scrollHeight; }; }
+      const src = await mediaSrc(m, uid);
+      if (el.isConnected) {
+        const done = () => { const w = el.closest('.shim'); if (w) w.classList.remove('shim'); };
+        if (el.tagName === 'IMG') { el.onload = () => { done(); if (near) box.scrollTop = box.scrollHeight; }; el.onerror = done; if (el.complete && el.naturalWidth) done(); }
+        else { el.onloadeddata = done; el.onloadedmetadata = done; el.onerror = done; }
+        el.src = src;
+      }
     } catch { if (el.isConnected) { const s = document.createElement('div'); s.className = 't'; s.textContent = kp ? '🔒 Couldn’t decrypt media' : '🔒 Encrypted media — unlock to view'; (el.closest('[data-open]') || el).replaceWith(s); } }
   });
 

@@ -219,6 +219,36 @@ input,textarea{font:inherit;color:inherit}
 html,body{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
 img,video,a{-webkit-touch-callout:none;-webkit-user-drag:none}
 input,textarea{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
+
+/* message reactions + long-press popup */
+.b.hasrx{margin-bottom:14px}
+.rx{position:absolute;bottom:-13px;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:50px;padding:1px 7px;font-size:13px;line-height:1.5;box-shadow:0 1px 3px rgba(0,0,0,.18);white-space:nowrap}
+.b.out .rx{right:8px}.b.in .rx{left:8px}
+.rx.mine{border-color:var(--accent)}
+.rx-ov{position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.28)}
+.rx-bar{position:absolute;display:flex;flex-wrap:wrap;gap:2px;align-items:center;background:var(--surface);border-radius:30px;padding:6px 8px;box-shadow:0 8px 28px rgba(0,0,0,.3);max-width:calc(100% - 16px)}
+.rx-bar.grid{border-radius:22px;width:min(320px,calc(100% - 16px))}
+.rx-bar button{font-size:26px;line-height:1;width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:transform .12s}
+.rx-bar button:active{transform:scale(1.25)}
+.rx-bar button.sel{background:var(--input)}
+.rx-bar .plus{font-size:22px;color:var(--muted);background:var(--input)}
+.rx-menu{position:absolute;background:var(--surface);border-radius:14px;box-shadow:0 8px 28px rgba(0,0,0,.3);padding:6px;min-width:190px}
+.rx-menu button{display:block;width:100%;text-align:left;padding:11px 14px;border-radius:9px}
+.rx-menu button:hover{background:var(--input)}
+.rx-menu .danger{color:var(--danger)}
+/* media thumbnails + full-screen viewer */
+.b img[data-open],.mwrap{cursor:zoom-in}
+.mwrap{position:relative;display:block}
+.mwrap video{pointer-events:none}
+.playbadge{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:52px;height:52px;border-radius:50%;background:rgba(0,0,0,.55);color:#fff;display:flex;align-items:center;justify-content:center;font-size:20px;padding-left:3px;pointer-events:none}
+#viewer{position:fixed;inset:0;z-index:120;background:#000;color:#fff;display:flex;flex-direction:column}
+#viewer .vbar{display:flex;align-items:center;gap:10px;padding:calc(10px + var(--sat)) 12px 10px;background:linear-gradient(#000a,#0000)}
+#viewer .vbar .icon:hover{background:rgba(255,255,255,.15)}
+#viewer .vmeta{flex:1;min-width:0}
+#viewer .vmeta b,#viewer .vmeta span{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#viewer .vmeta span{font-size:12px;opacity:.7}
+#v-stage{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;padding-bottom:var(--sab)}
+#v-stage img,#v-stage video{max-width:100%;max-height:100%;object-fit:contain;display:block}
 </style>
 </head>
 <body>
@@ -306,6 +336,8 @@ input,textarea{-webkit-user-select:text;user-select:text;-webkit-touch-callout:d
   </section>
 </div>
 
+<div id="rx-root"></div>
+<div id="viewer" class="hidden"><div class="vbar"><button class="icon" id="v-close" title="Close"><svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button><div class="vmeta"><b id="v-name"></b><span id="v-time"></span></div><a class="icon" id="v-dl" title="Save"><svg viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg></a></div><div id="v-stage"></div></div>
 <div id="menu" class="hidden"></div>
 <div id="notif"><div class="av sm" id="notif-av"></div><div class="nmid"><b id="notif-name"></b><span id="notif-text"></span></div></div>
 <div id="toast"><span id="toast-t"></span><button id="toast-a" class="hidden"></button></div>
@@ -746,7 +778,11 @@ $('#pills').addEventListener('click', e => {
 /* =============== THREAD =============== */
 let chatHist = false;
 function exitChat(){ if (chatHist) history.back(); else closeThread(); }   // popstate below does the real close
-window.addEventListener('popstate', () => { if (!chatHist) return; chatHist = false; if (activeUid) closeThread(); });
+window.addEventListener('popstate', () => {
+  if (skipPop) { skipPop = false; return; }
+  if (viewerHist) { viewerHist = false; hideViewer(); return; }   // device back closes the viewer first
+  if (!chatHist) return; chatHist = false; if (activeUid) closeThread();
+});
 function closeThread(silent){
   if (rec) stopRec(false);
   vnStop();
@@ -864,14 +900,17 @@ async function renderMessages(keepScroll){
     if (m.viewOnce) inner += `<div class="t">🔒 View-once ${esc(m.mediaType || 'media')} — open it in the Haba app</div>`;
     else if (m.mediaURL) {
       const mt = m.mediaType || '';
-      if (mt === 'image') inner += `<img data-mk="${m.key}" alt="photo">`;
-      else if (mt === 'video') inner += `<video data-mk="${m.key}" controls playsinline preload="metadata"></video>`;
+      if (mt === 'image') inner += `<img data-mk="${m.key}" data-open="${m.key}" alt="photo">`;
+      else if (mt === 'video') inner += `<div class="mwrap" data-open="${m.key}"><video data-mk="${m.key}" playsinline muted preload="metadata"></video><span class="playbadge">▶</span></div>`;
       else if (mt === 'audio') inner += vnHTML(m);
       else inner += `<div class="file" data-file="${m.key}">📄 <div><b>${esc(m.fileName || 'File')}</b><div style="font-size:12px;opacity:.7">${m.fileSize ? fmtSize(m.fileSize) + ' · ' : ''}tap to download</div></div></div>`;
     }
     if (m._t) inner += `<div class="t">${linkify(esc(m._t))}</div>`;
     const ticks = out ? `<span class="tick ${otherLastRead >= m.createdAt ? 'seen' : ''}" data-ts="${m.createdAt}">${otherLastRead >= m.createdAt ? '✓✓' : '✓'}</span>` : '';
-    html += `<div class="b ${out ? 'out' : 'in'}${isNew ? ' pop' : ''}" data-key="${m.key}">${inner}<div class="meta">${m.editedAt ? 'edited · ' : ''}${fmtTime(m.createdAt)} ${ticks}</div></div>`;
+    const rxl = m.reactions && typeof m.reactions === 'object' ? Object.values(m.reactions).filter(x => typeof x === 'string' && x) : [];
+    let rxHTML = '';
+    if (rxl.length) { const cnt = {}; rxl.forEach(x => cnt[x] = (cnt[x] || 0) + 1); const top = Object.entries(cnt).sort((a, b) => b[1] - a[1]).slice(0, 3).map(x => x[0]).join(''); rxHTML = `<div class="rx${typeof m.reactions[me.uid] === 'string' ? ' mine' : ''}">${esc(top)}${rxl.length > 1 ? ' ' + rxl.length : ''}</div>`; }
+    html += `<div class="b ${out ? 'out' : 'in'}${isNew ? ' pop' : ''}${rxl.length ? ' hasrx' : ''}" data-key="${m.key}">${inner}<div class="meta">${m.editedAt ? 'edited · ' : ''}${fmtTime(m.createdAt)} ${ticks}</div>${rxHTML}</div>`;
   }
   box.innerHTML = html;
   msgs.forEach(m => renderedKeys.add(m.key));
@@ -884,7 +923,7 @@ async function renderMessages(keepScroll){
     const m = rawMsgs[el.dataset.mk]; if (!m) return;
     try {
       const src = await mediaSrc(m, uid); if (el.isConnected) { el.src = src; if (el.tagName === 'IMG') el.onload = () => { if (near) box.scrollTop = box.scrollHeight; }; }
-    } catch { if (el.isConnected) { const s = document.createElement('div'); s.className = 't'; s.textContent = kp ? '🔒 Couldn’t decrypt media' : '🔒 Encrypted media — unlock to view'; el.replaceWith(s); } }
+    } catch { if (el.isConnected) { const s = document.createElement('div'); s.className = 't'; s.textContent = kp ? '🔒 Couldn’t decrypt media' : '🔒 Encrypted media — unlock to view'; (el.closest('[data-open]') || el).replaceWith(s); } }
   });
 
   // anything new from them while the chat is open counts as read
@@ -893,8 +932,10 @@ async function renderMessages(keepScroll){
 }
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && activeUid) { markRead(); update(ref(db, `user_chats/${me.uid}/${activeUid}`), { unreadCount: 0 }).catch(() => {}); } });
 
-/* message tap → menu */
+/* message long-press → reactions + actions; tap media → full-screen viewer */
+let msgLpT = null, msgLpX = 0, msgLpY = 0, msgLpFired = false;
 $('#msgs').addEventListener('click', async e => {
+  if (msgLpFired) { msgLpFired = false; return; }
   if (e.target.id === 'more') return loadOlder();
   const vn = e.target.closest('.vn');
   if (vn) {
@@ -903,21 +944,81 @@ $('#msgs').addEventListener('click', async e => {
     if (w) { const r = w.getBoundingClientRect(); return vnToggle(vn.dataset.vn, Math.min(1, Math.max(0, (e.clientX - r.left) / r.width))); }
     if (e.target.closest('.vn-play')) return vnToggle(vn.dataset.vn);
   }
-  if (e.target.closest('a,audio,video')) return;
+  if (e.target.closest('a,audio')) return;
   const f = e.target.closest('[data-file]');
   if (f) return downloadFile(rawMsgs[f.dataset.file]);
-  const img = e.target.closest('img[data-mk]');
-  if (img && img.src) return window.open(img.src, '_blank');
-  const b = e.target.closest('.b'); if (!b) return;
-  const m = rawMsgs[b.dataset.key]; if (!m) return;
-  const items = [];
-  if (!m.deleted) {
-    items.push(['Reply', () => startReply(b.dataset.key)]);
-    if (b.querySelector('.t')) items.push(['Copy text', () => navigator.clipboard.writeText(b.querySelector('.t:last-of-type')?.textContent || '').then(() => toast('Copied'))]);
-    if (m.senderUid === me.uid) items.push(['Delete for everyone', () => deleteMsg(b.dataset.key), true]);
-  }
-  if (items.length) showMenu(e.clientX, e.clientY, items);
+  const mo = e.target.closest('[data-open]');
+  if (mo) return openViewer(mo.dataset.open);
 });
+(() => {
+  const box = $('#msgs');
+  box.addEventListener('pointerdown', e => {
+    const b = e.target.closest('.b'); if (!b || e.button > 0 || e.target.closest('.vn-wave,.vn-play,.vn-spd,a')) return;
+    msgLpFired = false; msgLpX = e.clientX; msgLpY = e.clientY; clearTimeout(msgLpT);
+    msgLpT = setTimeout(() => { msgLpFired = true; navigator.vibrate && navigator.vibrate(15); msgPopup(b); }, 420);
+  });
+  box.addEventListener('pointermove', e => { if (Math.abs(e.clientX - msgLpX) > 8 || Math.abs(e.clientY - msgLpY) > 8) clearTimeout(msgLpT); });
+  ['pointerup', 'pointercancel', 'pointerleave'].forEach(t => box.addEventListener(t, () => clearTimeout(msgLpT)));
+  box.addEventListener('contextmenu', e => { const b = e.target.closest('.b'); if (b) { e.preventDefault(); msgLpFired = false; msgPopup(b); } });
+})();
+
+const REACTS = ['👍', '❤️', '😂', '😮', '😢', '🙏'];
+const REACTS_MORE = ['👍','👎','❤️','🔥','😂','🤣','😍','😘','😮','😢','😭','😡','🙏','👏','🙌','🎉','💯','👌','🤝','😎','🤔','😅','😊','🥰','💔','✅','👀','💪'];
+function msgPopup(b){
+  const key = b.dataset.key, m = rawMsgs[key]; if (!m || m.deleted) return;
+  hideMenu();
+  const mine = typeof m.reactions?.[me.uid] === 'string' ? m.reactions[me.uid] : null;
+  const root = $('#rx-root');
+  root.innerHTML = '<div class="rx-ov"><div class="rx-bar"></div><div class="rx-menu"></div></div>';
+  const ov = root.firstElementChild, bar = ov.querySelector('.rx-bar'), menu = ov.querySelector('.rx-menu');
+  const close = () => { root.innerHTML = ''; };
+  const react = emo => { close(); set(ref(db, `dm_threads/${threadId}/messages/${key}/reactions/${me.uid}`), emo === mine ? null : emo).catch(() => toast('Couldn’t react')); };
+  const items = [['Reply', () => startReply(key)]];
+  if (b.querySelector('.t')) items.push(['Copy text', () => navigator.clipboard.writeText(b.querySelector('.t:last-of-type')?.textContent || '').then(() => toast('Copied'))]);
+  if (m.senderUid === me.uid) items.push(['Delete for everyone', () => deleteMsg(key), true]);
+  items.forEach(([label, fn, danger]) => { const x = document.createElement('button'); x.textContent = label; if (danger) x.className = 'danger'; x.onclick = () => { close(); fn(); }; menu.appendChild(x); });
+  const r = b.getBoundingClientRect(), out = b.classList.contains('out');
+  const place = () => {
+    const bw = bar.offsetWidth, bh = bar.offsetHeight, mw = menu.offsetWidth, mh = menu.offsetHeight;
+    const clampX = (x, w) => Math.max(8, Math.min(x, innerWidth - w - 8));
+    bar.style.left = clampX(out ? r.right - bw : r.left, bw) + 'px';
+    bar.style.top = Math.max(8, r.top - bh - 8) + 'px';
+    menu.style.left = clampX(out ? r.right - mw : r.left, mw) + 'px';
+    menu.style.top = Math.max(8, Math.min(r.bottom + 8, innerHeight - mh - 8)) + 'px';
+  };
+  const draw = more => {
+    bar.innerHTML = ''; bar.classList.toggle('grid', more);
+    (more ? REACTS_MORE : REACTS).forEach(emo => { const x = document.createElement('button'); x.textContent = emo; if (emo === mine) x.className = 'sel'; x.onclick = () => react(emo); bar.appendChild(x); });
+    if (!more) { const x = document.createElement('button'); x.className = 'plus'; x.textContent = '+'; x.onclick = () => { draw(true); place(); }; bar.appendChild(x); }
+    menu.style.display = more ? 'none' : '';
+    place();
+  };
+  draw(false);
+  ov.addEventListener('click', e => { if (e.target === ov) close(); });
+}
+
+/* full-screen media viewer */
+let viewerHist = false, skipPop = false;
+function openViewer(key){
+  const el = $('#msgs').querySelector(`[data-open="${key}"]`), m = rawMsgs[key]; if (!el || !m) return;
+  const media = el.tagName === 'IMG' ? el : el.querySelector('video');
+  if (!media || !media.src) return toast('Still loading…');
+  const stage = $('#v-stage'); stage.innerHTML = '';
+  const v = document.createElement(media.tagName === 'IMG' ? 'img' : 'video');
+  v.src = media.src;
+  if (v.tagName === 'VIDEO') { v.controls = true; v.autoplay = true; v.playsInline = true; }
+  stage.appendChild(v);
+  $('#v-name').textContent = m.senderUid === me.uid ? 'You' : uName(m.senderUid);
+  $('#v-time').textContent = dayLabel(m.createdAt) + ', ' + fmtTime(m.createdAt);
+  const dl = $('#v-dl'); dl.href = media.src; dl.download = m.fileName || (media.tagName === 'IMG' ? 'photo.jpg' : 'video');
+  $('#viewer').classList.remove('hidden');
+  if (!viewerHist) { history.pushState({ hmViewer: 1 }, ''); viewerHist = true; }
+}
+function hideViewer(){ const st = $('#v-stage'); st.querySelectorAll('video').forEach(v => v.pause()); st.innerHTML = ''; $('#viewer').classList.add('hidden'); }
+function closeViewer(){ hideViewer(); if (viewerHist) { viewerHist = false; skipPop = true; history.back(); } }
+$('#v-close').onclick = closeViewer;
+$('#v-stage').addEventListener('click', e => { if (e.target.id === 'v-stage') closeViewer(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { if (!$('#viewer').classList.contains('hidden')) closeViewer(); else $('#rx-root').innerHTML = ''; } });
 async function downloadFile(m){
   if (!m) return;
   try {

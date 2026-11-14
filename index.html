@@ -124,6 +124,10 @@ input,textarea{font:inherit;color:inherit}
 .res{display:flex;gap:12px;align-items:center;padding:9px 4px;cursor:pointer;border-radius:10px}
 .res:hover{background:var(--alt)}
 .res small{color:var(--muted);display:block}
+/* chat long-press sheet rows */
+.sh{display:block;width:100%;text-align:left;padding:15px 8px;font-size:16px;border-radius:10px}
+.sh:hover{background:var(--input)}
+.sh.danger{color:var(--danger)}
 /* bottom snackbar for alerts */
 #toast{position:fixed;left:50%;bottom:calc(76px + var(--sab));width:min(460px,calc(100% - 24px));transform:translate(-50%,24px);background:#2B2B2E;color:#fff;padding:12px 16px;border-radius:12px;font-size:14px;line-height:1.35;z-index:99;opacity:0;pointer-events:none;transition:opacity .22s,transform .28s cubic-bezier(.2,.9,.3,1.1);display:flex;align-items:center;gap:12px;box-shadow:0 6px 22px rgba(0,0,0,.35)}
 #toast.show{opacity:1;transform:translate(-50%,0);pointer-events:auto}
@@ -611,7 +615,7 @@ function startChatList(){
     Object.keys(chats).forEach(k => delete chats[k]);
     Object.entries(v).forEach(([uid, meta]) => { if (uid !== AI_UID && meta && typeof meta === 'object') chats[uid] = meta; });
     const uids = Object.keys(chats);
-    if (chatsLoaded) uids.forEach(uid => { const c = chats[uid]; if (c.senderUid !== me.uid && (c.timestamp || 0) > (old[uid] || 0) && uid !== activeUid) notifyMsg(uid, c); });
+    if (chatsLoaded) uids.forEach(uid => { const c = chats[uid]; if (!c.hidden && c.senderUid !== me.uid && (c.timestamp || 0) > (old[uid] || 0) && uid !== activeUid) notifyMsg(uid, c); });
     chatsLoaded = true;
     uids.forEach(uid => {   // live "typing…" per conversation
       if (typingWatch[uid]) return;
@@ -641,12 +645,13 @@ let chatFilter = 'all';
 function renderChatList(){
   const q = $('#filter').value.trim().toLowerCase();
   const list = Object.entries(chats).filter(([uid]) => !q || uName(uid).toLowerCase().includes(q) || (users[uid]?.username || '').toLowerCase().includes(q))
+    .filter(([uid, c]) => !c.hidden)
     .filter(([uid, c]) => chatFilter === 'all' || (chatFilter === 'unread' ? c.unreadCount > 0 : users[uid]?.status === 'online'))
-    .sort((a, b) => (b[1].timestamp || 0) - (a[1].timestamp || 0));
-  const unreadChats = Object.values(chats).filter(c => c.unreadCount > 0).length;
+    .sort((a, b) => (b[1].pinned ? 1 : 0) - (a[1].pinned ? 1 : 0) || (b[1].timestamp || 0) - (a[1].timestamp || 0));
+  const unreadChats = Object.values(chats).filter(c => c.unreadCount > 0 && !c.hidden).length;
   $('#pills [data-f=unread]').textContent = unreadChats ? 'Unread ' + unreadChats : 'Unread';
   let unread = 0;
-  Object.values(chats).forEach(c => unread += c.unreadCount > 0 ? c.unreadCount : 0);
+  Object.values(chats).forEach(c => unread += (c.unreadCount > 0 && !c.hidden) ? c.unreadCount : 0);
   document.title = (unread ? `(${unread}) ` : '') + 'Haba Messenger';
   const el = $('#chatlist');
   if (!list.length) { el.innerHTML = `<div class="empty">${q || chatFilter !== 'all' ? 'No chats match.' : 'No conversations yet.<br>Tap the pencil to start one.'}</div>`; return; }
@@ -656,16 +661,54 @@ function renderChatList(){
     const pv = previews[uid] ?? (isE2E(c.text) ? '…' : c.text || '');
     return `<div class="ci ${uid === activeUid ? 'active' : ''}" data-uid="${esc(uid)}">
       <div class="av" style="background-image:url('${cssUrl(uAvatar(uid))}')">${online ? '<span class="dot"></span>' : ''}</div>
-      <div class="mid"><div class="top"><span class="name">${esc(uid === me.uid ? 'My Account' : uName(uid))}</span><span class="time">${fmtListTime(c.timestamp)}</span></div>
+      <div class="mid"><div class="top"><span class="name">${esc(uid === me.uid ? 'My Account' : uName(uid))}</span><span class="time">${c.pinned ? '📌 ' : ''}${fmtListTime(c.timestamp)}</span></div>
       <div class="prev">${typingMap[uid] ? '<span class="tp">typing…</span>' : `<span>${own ? 'You: ' : ''}${esc(pv)}</span>`}${c.unreadCount > 0 ? `<div class="badge">${c.unreadCount > 99 ? '99+' : c.unreadCount}</div>` : ''}</div></div></div>`;
   }).join('');
 }
+let lpT = null, lpX = 0, lpY = 0, lpFired = false;
 $('#chatlist').addEventListener('click', e => {
+  if (lpFired) { lpFired = false; return; }   // the long-press already opened the sheet
   const ci = e.target.closest('.ci'); if (!ci) return;
   if (e.target.closest('.av')) return showProfile(ci.dataset.uid);   // avatar → profile sheet
   openThread(ci.dataset.uid);
 });
 $('#filter').addEventListener('input', renderChatList);
+
+/* long-press a chat → bottom sheet (pin / block / delete) */
+(() => {
+  const cl = $('#chatlist');
+  cl.addEventListener('pointerdown', e => {
+    const ci = e.target.closest('.ci'); if (!ci) return;
+    lpFired = false; lpX = e.clientX; lpY = e.clientY; clearTimeout(lpT);
+    lpT = setTimeout(() => { lpFired = true; navigator.vibrate && navigator.vibrate(15); chatSheet(ci.dataset.uid); }, 450);
+  });
+  cl.addEventListener('pointermove', e => { if (Math.abs(e.clientX - lpX) > 8 || Math.abs(e.clientY - lpY) > 8) clearTimeout(lpT); });
+  ['pointerup', 'pointercancel', 'pointerleave'].forEach(t => cl.addEventListener(t, () => clearTimeout(lpT)));
+})();
+async function chatSheet(uid){
+  await loadUser(uid);
+  const c = chats[uid] || {};
+  const bl = (await get(ref(db, `blocks/${me.uid}/${uid}`)).catch(() => null))?.val() === true;
+  const ov = modal(`<div style="display:flex;gap:12px;align-items:center;margin-bottom:8px"><div class="av sm" style="background-image:url('${cssUrl(uAvatar(uid))}')"></div><b>${esc(uName(uid))}</b></div>
+    <button class="sh" id="cs-pin">${c.pinned ? 'Unpin from top' : '📌 Pin to top'}</button>
+    <button class="sh" id="cs-block">${bl ? 'Unblock' : 'Block'}</button>
+    <button class="sh danger" id="cs-del">Delete chat</button>`);
+  const base = `user_chats/${me.uid}/${uid}`;
+  ov.querySelector('#cs-pin').onclick = () => { closeModal(); update(ref(db, base), { pinned: c.pinned ? null : Date.now() }).catch(() => toast('Couldn’t update')); };
+  ov.querySelector('#cs-block').onclick = () => { closeModal(); set(ref(db, `blocks/${me.uid}/${uid}`), bl ? null : true).then(() => toast(bl ? 'Unblocked' : 'Blocked')).catch(() => toast('Couldn’t update')); };
+  ov.querySelector('#cs-del').onclick = () => {
+    const o2 = modal(`<h3>Delete chat with ${esc(uName(uid))}?</h3><p style="color:var(--muted);margin:0 0 14px">It disappears from your side only and stays hidden even if they message you again. They keep their copy.</p><button class="btn" id="d-yes" style="background:var(--danger);color:#fff">Delete permanently</button><button class="btn ghost" id="d-no" style="margin-top:8px">Cancel</button>`);
+    o2.querySelector('#d-no').onclick = closeModal;
+    o2.querySelector('#d-yes').onclick = async () => {
+      closeModal();
+      try {
+        await update(ref(db), { [base + '/hidden']: true, [base + '/clearedAt']: Date.now(), [base + '/pinned']: null, [base + '/unreadCount']: 0, [base + '/text']: '' });
+        if (activeUid === uid) exitChat();
+        toast('Chat deleted');
+      } catch { toast('Couldn’t delete chat'); }
+    };
+  };
+}
 
 /* top slide-in notification for new messages (tap to open, swipe up to dismiss) */
 let notifT = null, notifUid = null, chatsLoaded = false;
@@ -738,7 +781,7 @@ async function openThread(uid){
   const mcb = onValue(mq, s => { rawMsgs = s.val() || {}; renderMessages(); });
   msgUnsub = () => off(mq, 'value', mcb);
   threadUnsubs.push(() => msgUnsub && msgUnsub());
-  update(ref(db, `user_chats/${me.uid}/${uid}`), { unreadCount: 0 }).catch(() => {});
+  update(ref(db, `user_chats/${me.uid}/${uid}`), chats[uid]?.hidden ? { unreadCount: 0, hidden: null } : { unreadCount: 0 }).catch(() => {});
   markRead();
   onDisconnect(ref(db, `dm_threads/${threadId}/typing/${me.uid}`)).set(false);
   renderChatList();
@@ -793,7 +836,7 @@ const fmtSize = n => n > 1048576 ? (n / 1048576).toFixed(1) + ' MB' : Math.max(1
 async function renderMessages(keepScroll){
   const tok = ++renderTok, uid = activeUid;
   const now = Date.now();
-  const msgs = Object.entries(rawMsgs).map(([key, v]) => ({ key, ...v })).filter(m => !m.expiresAt || m.expiresAt > now).sort((a, b) => a.createdAt - b.createdAt);
+  const msgs = Object.entries(rawMsgs).map(([key, v]) => ({ key, ...v })).filter(m => !m.expiresAt || m.expiresAt > now).filter(m => (m.createdAt || 0) > (chats[uid]?.clearedAt || 0)).sort((a, b) => a.createdAt - b.createdAt);
   await Promise.all(msgs.map(async m => {
     if (m.text && !m.deleted) m._t = await decText(uid, m.text);
     if (m.replyToMessage && m.replyToMessage.text) m._rt = await decText(uid, m.replyToMessage.text);
@@ -921,7 +964,11 @@ async function pushMessage(peer, payload, previewEncrypted){
   const ts = payload.createdAt;
   const u = {};
   u[`dm_threads/${tid}/messages/${key}`] = payload;
-  u[`user_chats/${me.uid}/${peer}`] = { text: previewEncrypted, timestamp: ts, unreadCount: 0, senderUid: me.uid };
+  // field-level writes so pinned / hidden / clearedAt on my own node are never wiped
+  u[`user_chats/${me.uid}/${peer}/text`] = previewEncrypted;
+  u[`user_chats/${me.uid}/${peer}/timestamp`] = ts;
+  u[`user_chats/${me.uid}/${peer}/unreadCount`] = 0;
+  u[`user_chats/${me.uid}/${peer}/senderUid`] = me.uid;
   u[`user_chats/${peer}/${me.uid}/text`] = previewEncrypted;
   u[`user_chats/${peer}/${me.uid}/timestamp`] = ts;
   u[`user_chats/${peer}/${me.uid}/unreadCount`] = increment(1);

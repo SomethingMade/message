@@ -329,6 +329,61 @@ input,textarea{-webkit-user-select:text;user-select:text;-webkit-touch-callout:d
 #ct-list{padding-bottom:calc(var(--nav-h) + 12px)}
 #settings .body{padding-bottom:calc(var(--nav-h) + 16px)}
 #toast{bottom:calc(var(--nav-h) + 12px)}
+/* ---- updates / statuses ---- */
+#updates{position:fixed;inset:0;z-index:72;background:var(--bg);display:flex;flex-direction:column}
+@media(min-width:761px){#updates{right:auto;width:380px;border-right:1px solid var(--border)}}
+#up-list{flex:1;overflow-y:auto;padding-bottom:calc(var(--nav-h) + 96px)}
+#up-fabs{position:absolute;right:18px;bottom:calc(var(--nav-h) + 16px);display:flex;flex-direction:column;align-items:center;gap:12px;z-index:5}
+#up-fabs button{display:flex;align-items:center;justify-content:center;box-shadow:0 6px 18px rgba(0,0,0,.3);transition:transform .12s}
+#up-fabs button:active{transform:scale(.93)}
+#up-fabs svg{stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+#up-text{width:46px;height:46px;border-radius:15px;background:var(--surface);color:var(--text)}
+#up-text svg{width:21px;height:21px}
+#up-cam{width:58px;height:58px;border-radius:18px;background:var(--accent);color:#111}
+#up-cam svg{width:26px;height:26px}
+.ring{position:relative;width:58px;height:58px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.ring svg{position:absolute;inset:0;width:100%;height:100%}
+.ring .av{width:46px;height:46px}
+.ring .plus{position:absolute;right:-1px;bottom:-1px;width:20px;height:20px;border-radius:50%;background:var(--accent);color:#111;border:2px solid var(--bg);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;line-height:1}
+.urow .uadd{width:38px;height:38px;border-radius:50%;background:var(--input);color:var(--text);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:22px;line-height:1}
+#bnav .nd{position:absolute;top:-1px;right:16px;width:9px;height:9px;border-radius:50%;background:var(--accent);border:2px solid var(--surface);box-sizing:content-box}
+#toast{z-index:140}
+#sv{position:fixed;inset:0;z-index:120;background:#000;color:#fff;touch-action:none}
+#sv-bars{position:absolute;top:calc(8px + var(--sat));left:10px;right:10px;display:flex;gap:4px;z-index:6}
+#sv-bars i{flex:1;height:3px;border-radius:2px;background:rgba(255,255,255,.35);overflow:hidden}
+#sv-bars b{display:block;height:100%;width:0;background:#fff}
+#sv-top{position:absolute;top:calc(20px + var(--sat));left:0;right:0;display:flex;align-items:center;gap:10px;padding:6px 10px;z-index:7;text-shadow:0 1px 4px rgba(0,0,0,.6)}
+#sv-top .svn{flex:1;min-width:0}
+#sv-top .svn b{display:block;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#sv-top .svn small{opacity:.85}
+.svb{background:rgba(0,0,0,.4);color:#fff;border-radius:50%;width:40px;height:40px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.svb svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+#sv-stage{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
+#sv-stage img,#sv-stage video{max-width:100%;max-height:100%;object-fit:contain}
+.svt{width:100%;height:100%;display:flex;align-items:center;justify-content:center;padding:28px;text-align:center;font-size:28px;font-weight:700;line-height:1.25;word-break:break-word;white-space:pre-wrap}
+#sv-hit{position:absolute;left:0;right:0;top:calc(70px + var(--sat));bottom:calc(110px + var(--sab));z-index:4}
+#sv-cap{position:absolute;left:0;right:0;bottom:calc(62px + var(--sab));text-align:center;padding:26px 20px 10px;background:linear-gradient(transparent,rgba(0,0,0,.65));z-index:5;font-size:15px;pointer-events:none;white-space:pre-wrap;word-break:break-word}
+#sv-bot{position:absolute;left:0;right:0;bottom:0;padding:10px 16px calc(12px + var(--sab));display:flex;justify-content:center;gap:14px;z-index:7}
+#sv-bot .pill2{background:rgba(0,0,0,.45);color:#fff;border-radius:22px;padding:0 16px;height:40px;display:flex;align-items:center;gap:8px;font-weight:600}
+#sv-bot .pill2 svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+#sv-like.on svg{fill:#FF453A;stroke:#FF453A}
+#stx,#smd{position:fixed;inset:0;z-index:125;display:flex;flex-direction:column;color:#fff}
+#stx .top,#smd .top{display:flex;align-items:center;gap:10px;padding:calc(10px + var(--sat)) 12px 10px}
+#stx .top .grow,#smd .top .grow{flex:1}
+#stx textarea{flex:1;background:transparent;border:0;outline:0;color:#fff;text-align:center;font:700 28px/1.25 inherit;resize:none;padding:20px 28px;user-select:text;-webkit-user-select:text}
+#stx textarea::placeholder{color:rgba(255,255,255,.6)}
+#stx .sw{display:flex;gap:10px;justify-content:center;padding:12px 12px calc(16px + var(--sab));flex-wrap:wrap}
+#stx .sw i{width:30px;height:30px;border-radius:50%;border:2px solid rgba(255,255,255,.5);cursor:pointer}
+#stx .sw i.on{border-color:#fff;transform:scale(1.15)}
+.postb{background:var(--accent);color:#111;font-weight:800;border-radius:22px;padding:0 20px;height:40px}
+.postb:disabled{opacity:.5}
+#smd{background:#000}
+#smd .prev{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;position:relative}
+#smd .prev img,#smd .prev video{max-width:100%;max-height:100%;object-fit:contain}
+#smd .capw{padding:10px 14px calc(14px + var(--sab));display:flex;gap:10px;align-items:center}
+#smd .capw input{flex:1;background:rgba(255,255,255,.14);border:0;outline:0;color:#fff;border-radius:22px;padding:12px 16px;font-size:15px;user-select:text;-webkit-user-select:text}
+#smd .capw input::placeholder{color:rgba(255,255,255,.6)}
+#smd .cnt{position:absolute;top:10px;right:12px;background:rgba(0,0,0,.55);border-radius:12px;padding:3px 10px;font-size:13px;font-weight:600}
 </style>
 </head>
 <body>
@@ -417,11 +472,47 @@ input,textarea{-webkit-user-select:text;user-select:text;-webkit-touch-callout:d
   </section>
   <nav id="bnav">
     <button data-tab="chats" class="on"><span class="pl"><svg viewBox="0 0 24 24"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 8.6 8.6 0 0 1-3.6-.8L3 21l1.9-5.4A8.4 8.4 0 1 1 21 11.5Z"/></svg><span class="nb hidden" id="nb-chats"></span></span>Chats</button>
+    <button data-tab="updates"><span class="pl"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" stroke-dasharray="3.2 3"/><circle cx="12" cy="12" r="3.6"/></svg><span class="nd hidden" id="nd-upd"></span></span>Updates</button>
     <button data-tab="contacts"><span class="pl"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>Contacts</button>
     <button data-tab="settings"><span class="pl"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></span>You</button>
   </nav>
 </div>
 
+<div id="updates" class="hidden">
+  <div class="bar"><div class="grow" style="font-weight:800;font-size:20px">Updates</div></div>
+  <div id="up-list"></div>
+  <div id="up-fabs">
+    <button id="up-text" title="Text status"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
+    <button id="up-cam" title="Photo or video"><svg viewBox="0 0 24 24"><path d="M3 8a2 2 0 0 1 2-2h2l2-2h6l2 2h2a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/><circle cx="12" cy="13" r="4"/></svg></button>
+  </div>
+  <input type="file" id="up-file" accept="image/*,video/*" multiple class="hidden">
+</div>
+<div id="sv" class="hidden">
+  <div id="sv-stage"></div>
+  <div id="sv-hit"></div>
+  <div id="sv-bars"></div>
+  <div id="sv-top">
+    <button class="svb" id="sv-close" title="Close"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
+    <div class="av sm" id="sv-av"></div>
+    <div class="svn"><b id="sv-name"></b><small id="sv-time"></small></div>
+    <button class="svb hidden" id="sv-del" title="Delete"><svg viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/></svg></button>
+  </div>
+  <div id="sv-cap" class="hidden"></div>
+  <div id="sv-bot">
+    <button class="pill2 hidden" id="sv-views"><svg viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg><span id="sv-vc">0</span></button>
+    <button class="svb hidden" id="sv-like" title="Like"><svg viewBox="0 0 24 24"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21l7.8-7.5 1-1.1a5.5 5.5 0 0 0 0-7.8Z"/></svg></button>
+  </div>
+</div>
+<div id="stx" class="hidden">
+  <div class="top"><button class="svb" id="stx-close" title="Close"><svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button><div class="grow"></div><button class="postb" id="stx-post">Post</button></div>
+  <textarea id="stx-input" maxlength="400" placeholder="Type a status"></textarea>
+  <div class="sw" id="stx-sw"></div>
+</div>
+<div id="smd" class="hidden">
+  <div class="top"><button class="svb" id="smd-close" title="Close"><svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button><div class="grow"></div><button class="postb" id="smd-post">Post</button></div>
+  <div class="prev" id="smd-prev"></div>
+  <div class="capw"><input id="smd-cap" maxlength="200" placeholder="Add a caption…" autocomplete="off"></div>
+</div>
 <div id="rx-root"></div>
 <div id="contacts" class="hidden"><div class="bar"><button class="icon" id="ct-back" title="Back"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button><div class="grow"><div style="font-weight:700;font-size:17px">Select contact</div><div id="ct-count" style="font-size:12px;color:var(--muted)"></div></div><button class="icon" id="ct-searchbtn" title="Search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg></button></div><div class="searchwrap hidden" id="ct-sw"><input id="ct-q" placeholder="Search contacts" autocomplete="off"></div><div id="ct-list"></div></div>
 <div id="settings" class="hidden"></div>
@@ -434,7 +525,7 @@ input,textarea{-webkit-user-select:text;user-select:text;-webkit-touch-callout:d
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut, RecaptchaVerifier, signInWithPhoneNumber, signInWithEmailAndPassword, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-import { getDatabase, ref, onValue, get, push, set, update, off, query, orderByChild, orderByKey, limitToLast, limitToFirst, startAt, endAt, increment, onDisconnect, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+import { getDatabase, ref, onValue, get, push, set, update, off, query, orderByChild, orderByKey, limitToLast, limitToFirst, startAt, endAt, increment, onDisconnect, serverTimestamp, remove, orderByValue } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 import { getStorage, ref as sRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-storage.js";
 
 /* Same Firebase project as the main Haba app, so accounts, chats and contacts are shared. */
@@ -723,6 +814,7 @@ onAuthStateChanged(auth, async user => {
   }
   startPresence();
   startChatList();
+  startStories();
   if (keyState === 'locked') promptUnlock(true);
 });
 
@@ -740,7 +832,7 @@ function teardown(){
   closeThread(true);
   Object.keys(chats).forEach(k => delete chats[k]); Object.keys(previews).forEach(k => delete previews[k]);
   Object.values(typingWatch).forEach(f => f()); Object.keys(typingWatch).forEach(k => delete typingWatch[k]); Object.keys(typingMap).forEach(k => delete typingMap[k]);
-  chatsLoaded = false; hideNotif(); hideSettings(); hideContacts();
+  chatsLoaded = false; hideNotif(); hideSettings(); hideContacts(); hideStory(); hideUpdates(); stopStories();
   kp = null; Object.keys(shared).forEach(k => delete shared[k]); decCache.clear();
   HDB.clear(); Object.keys(users).forEach(k => delete users[k]); userFresh.clear(); avObj.clear(); avTry.clear();
 }
@@ -1005,6 +1097,8 @@ function exitChat(){ if (chatHist) history.back(); else closeThread(); }   // po
 window.addEventListener('popstate', () => {
   if (skipPop) { skipPop = false; return; }
   if (viewerHist) { viewerHist = false; hideViewer(); return; }   // device back closes the viewer first
+  if (svHist) { svHist = false; hideStory(); return; }
+  if (updatesHist) { updatesHist = false; hideUpdates(); return; }
   if (settingsHist) { settingsHist = false; hideSettings(); return; }
   if (contactsHist) { contactsHist = false; hideContacts(); return; }
   if (!chatHist) return; chatHist = false; if (activeUid) closeThread();
@@ -1709,27 +1803,297 @@ async function unblockContact(uid){
   try { await set(ref(db, `blocks/${me.uid}/${uid}`), null); blockedIds.delete(uid); renderContacts(); toast('Unblocked'); } catch { toast('Couldn’t unblock'); }
 }
 $('#fab').onclick = openContacts;
-/* =============== BOTTOM NAV =============== */
-function syncNav(){
-  const s = !$('#settings').classList.contains('hidden'), c = !$('#contacts').classList.contains('hidden');
-  const t = s ? 'settings' : c ? 'contacts' : 'chats';
-  document.querySelectorAll('#bnav button').forEach(b => b.classList.toggle('on', b.dataset.tab === t));
+/* =============== UPDATES (statuses — same stories/ data as Haba) =============== */
+const STORY_TTL = 24 * 3600e3;
+const TEXT_BGS = ['linear-gradient(135deg, #2E2E2E, #111111)', 'linear-gradient(135deg, #833AB4, #FD1D1D, #FCB045)', 'linear-gradient(135deg, #0A84FF, #5E9CFF)', 'linear-gradient(135deg, #FF6B6B, #FFD93D)', 'linear-gradient(135deg, #2C3E50, #4CA1AF)', 'linear-gradient(135deg, #232526, #414345)', '#000000'];
+const safeBg = v => (typeof v === 'string' && /^(#[0-9a-f]{3,8}|linear-gradient\([#0-9a-zA-Z(),.% -]+\))$/i.test(v)) ? v : TEXT_BGS[0];
+const stories = {}, storyWatch = {};
+let storyAuthors = {}, storiesUnsub = null, updatesHist = false, svHist = false, upRaf = 0;
+const updSeenKey = () => 'hm-upd-seen:' + (me ? me.uid : '');
+const liveStories = uid => Object.entries(stories[uid] || {}).map(([key, s]) => ({ ...s, key })).filter(s => s && Date.now() - s.createdAt < STORY_TTL).sort((a, b) => a.createdAt - b.createdAt);
+const storySeen = s => !!(s.views && me && s.views[me.uid]);
+const updatesOpen = () => !$('#updates').classList.contains('hidden');
+function updAgo(ts){
+  const m = Math.floor((Date.now() - ts) / 60000);
+  if (m < 1) return 'Just now'; if (m < 60) return m + 'm ago';
+  return (new Date(ts).toDateString() === new Date().toDateString() ? 'Today' : 'Yesterday') + ', ' + fmtTime(ts);
 }
+function syncUpdDot(){
+  const seen = +localStorage.getItem(updSeenKey()) || 0;
+  const fresh = !updatesOpen() && Object.entries(storyAuthors).some(([u, t]) => u !== (me && me.uid) && t > seen && Date.now() - t < STORY_TTL);
+  $('#nd-upd').classList.toggle('hidden', !fresh);
+}
+function startStories(){
+  stopStories();
+  const q = query(ref(db, 'story_authors'), orderByValue(), startAt(Date.now() - STORY_TTL));
+  const cb = onValue(q, snap => {
+    storyAuthors = {}; snap.forEach(c => { storyAuthors[c.key] = c.val(); });
+    syncUpdDot(); if (updatesOpen()) ensureStoryWatchers();
+  }, () => {});
+  storiesUnsub = () => off(q, 'value', cb);
+}
+function stopStories(){
+  if (storiesUnsub) { storiesUnsub(); storiesUnsub = null; }
+  Object.values(storyWatch).forEach(f => f()); Object.keys(storyWatch).forEach(k => delete storyWatch[k]);
+  Object.keys(stories).forEach(k => delete stories[k]); storyAuthors = {};
+}
+function watchAuthor(uid){
+  if (!uid || storyWatch[uid]) return;
+  const r = ref(db, `stories/${uid}`);
+  const cb = onValue(r, s => {
+    const now = Date.now(), val = s.val() || {}, live = {};
+    Object.entries(val).forEach(([k, st]) => {
+      if (!st || typeof st !== 'object') return;
+      if (now - st.createdAt >= STORY_TTL) { if (me && uid === me.uid) remove(ref(db, `stories/${uid}/${k}`)).catch(() => {}); }
+      else live[k] = st;
+    });
+    if (Object.keys(live).length) stories[uid] = live; else delete stories[uid];
+    loadUser(uid).then(renderUpdatesSoon);
+    renderUpdatesSoon();
+  }, () => { delete storyWatch[uid]; });
+  storyWatch[uid] = () => off(r, 'value', cb);
+}
+function ensureStoryWatchers(){
+  watchAuthor(me.uid);
+  Object.keys(storyAuthors).sort((a, b) => storyAuthors[b] - storyAuthors[a]).slice(0, 60).forEach(watchAuthor);
+}
+const renderUpdatesSoon = () => { cancelAnimationFrame(upRaf); upRaf = requestAnimationFrame(renderUpdates); };
+function ringSvg(flags){
+  const n = Math.min(flags.length, 24), S = 58, r = 26, c = 2 * Math.PI * r, gap = n > 1 ? 4 : 0, seg = Math.max(3, c / n - gap);
+  return `<svg viewBox="0 0 ${S} ${S}">` + flags.slice(-n).map((seen, i) => `<circle cx="29" cy="29" r="${r}" fill="none" style="stroke:${seen ? '#8E8E93' : 'var(--accent)'}" stroke-width="3" stroke-linecap="${n > 1 ? 'round' : 'butt'}" stroke-dasharray="${n > 1 ? seg : c} ${n > 1 ? c - seg : 0}" stroke-dashoffset="${-(i * c / n)}" transform="rotate(-90 29 29)"/>`).join('') + '</svg>';
+}
+function renderUpdates(){
+  if (!me || !updatesOpen()) return;
+  const mine = liveStories(me.uid);
+  const known = u => (chats[u] || contactIds.includes(u)) ? 1 : 0;
+  const rows = Object.keys(stories).filter(u => u !== me.uid && u !== AI_UID).map(uid => { const it = liveStories(uid); return it.length ? { uid, it, last: it[it.length - 1].createdAt, seen: it.every(storySeen) } : null; }).filter(Boolean);
+  const order = (a, b) => known(b.uid) - known(a.uid) || b.last - a.last;
+  const fresh = rows.filter(r => !r.seen).sort(order), seen = rows.filter(r => r.seen).sort(order);
+  const row = r => `<div class="crow urow" data-uid="${esc(r.uid)}"><div class="ring">${ringSvg(r.it.map(storySeen))}<div class="av" style="background-image:url('${cssUrl(uAvatar(r.uid))}')"></div></div><div class="mid"><b>${esc(uName(r.uid))}${vbadge(r.uid)}</b><span>${updAgo(r.last)}</span></div></div>`;
+  const own = mine.length
+    ? `<div class="crow urow" data-uid="${esc(me.uid)}"><div class="ring">${ringSvg(mine.map(() => false))}<div class="av" style="background-image:url('${cssUrl(uAvatar(me.uid))}')"></div></div><div class="mid"><b>My status</b><span>${updAgo(mine[mine.length - 1].createdAt)} · ${mine.length} update${mine.length === 1 ? '' : 's'}</span></div><button class="uadd" data-act="add" title="Add status">+</button></div>`
+    : `<div class="crow urow" data-act="add"><div class="ring"><div class="av" style="background-image:url('${cssUrl(uAvatar(me.uid))}')"></div><span class="plus">+</span></div><div class="mid"><b>My status</b><span>Tap to add status update</span></div></div>`;
+  $('#up-list').innerHTML = own
+    + (fresh.length ? '<div class="csec">Recent updates</div>' + fresh.map(row).join('') : '')
+    + (seen.length ? '<div class="csec">Viewed updates</div>' + seen.map(row).join('') : '')
+    + (!fresh.length && !seen.length ? '<div class="empty" style="padding:28px 24px">No updates from others right now.<br>Statuses disappear after 24 hours.</div>' : '');
+}
+async function openUpdates(){
+  $('#updates').classList.remove('hidden');
+  if (!updatesHist) { history.pushState({ hmUpdates: 1 }, ''); updatesHist = true; }
+  localStorage.setItem(updSeenKey(), Date.now()); syncUpdDot();
+  if (!contactIds.length) { try { const cs = await get(ref(db, `contacts/${me.uid}`)); cs.forEach(c => { if (c.val() && c.key !== me.uid && c.key !== AI_UID) contactIds.push(c.key); }); } catch {} }
+  ensureStoryWatchers(); renderUpdates();
+}
+function hideUpdates(){ $('#updates').classList.add('hidden'); }
+function closeUpdates(){ hideUpdates(); if (updatesHist) { updatesHist = false; skipPop = true; history.back(); } }
+$('#up-list').addEventListener('click', e => {
+  const r = e.target.closest('.urow'); if (!r) return;
+  if (e.target.closest('[data-act=add]') || r.dataset.act === 'add') return addStatusSheet();
+  openStoryFor(r.dataset.uid);
+});
+function addStatusSheet(){
+  const ov = modal(`<h3>Add status</h3><button class="btn" id="as-text">Text status</button><button class="btn ghost" id="as-media" style="margin-top:8px">Photo or video</button>`);
+  ov.querySelector('#as-text').onclick = () => { closeModal(); openTextComposer(); };
+  ov.querySelector('#as-media').onclick = () => { closeModal(); $('#up-file').click(); };
+}
+$('#up-text').onclick = openTextComposer;
+$('#up-cam').onclick = () => $('#up-file').click();
+
+/* ----- posting ----- */
+async function postStory(payload){
+  const nr = push(ref(db, `stories/${me.uid}`));
+  set(ref(db, `story_authors/${me.uid}`), Date.now()).catch(() => {});
+  await set(nr, { ...payload, createdAt: Date.now() });
+}
+let stxBg = TEXT_BGS[0];
+function openTextComposer(){
+  stxBg = TEXT_BGS[Math.floor(Math.random() * TEXT_BGS.length)];
+  $('#stx-input').value = '';
+  $('#stx-sw').innerHTML = TEXT_BGS.map(b => `<i data-bg="${esc(b)}" style="background:${b}"></i>`).join('');
+  paintStx(); $('#stx').classList.remove('hidden'); setTimeout(() => $('#stx-input').focus(), 80);
+}
+function paintStx(){ $('#stx').style.background = stxBg; $('#stx-sw').querySelectorAll('i').forEach(i => i.classList.toggle('on', i.dataset.bg === stxBg)); }
+$('#stx-sw').addEventListener('click', e => { const i = e.target.closest('i'); if (i) { stxBg = i.dataset.bg; paintStx(); } });
+$('#stx-close').onclick = () => $('#stx').classList.add('hidden');
+$('#stx-post').onclick = async () => {
+  const text = $('#stx-input').value.trim(); if (!text) return toast('Write something first');
+  const b = $('#stx-post'); b.disabled = true;
+  try { await postStory({ type: 'text', text, bgColor: stxBg }); $('#stx').classList.add('hidden'); toast('Status posted'); }
+  catch { toast('Couldn’t post your status'); } finally { b.disabled = false; }
+};
+let smdFiles = [], smdUrl = null;
+$('#up-file').addEventListener('change', e => {
+  smdFiles = [...e.target.files].filter(f => /^(image|video)\//.test(f.type)); e.target.value = '';
+  if (!smdFiles.length) return;
+  const f = smdFiles[0]; if (smdUrl) URL.revokeObjectURL(smdUrl); smdUrl = URL.createObjectURL(f);
+  $('#smd-prev').innerHTML = (f.type.startsWith('video/') ? `<video src="${smdUrl}" playsinline controls muted></video>` : `<img src="${smdUrl}" alt="">`) + (smdFiles.length > 1 ? `<span class="cnt">1 / ${smdFiles.length}</span>` : '');
+  $('#smd-cap').value = ''; $('#smd').classList.remove('hidden');
+});
+function closeMediaComposer(){ $('#smd').classList.add('hidden'); $('#smd-prev').innerHTML = ''; if (smdUrl) { URL.revokeObjectURL(smdUrl); smdUrl = null; } smdFiles = []; }
+$('#smd-close').onclick = closeMediaComposer;
+const videoLen = file => new Promise(res => { const v = document.createElement('video'), u = URL.createObjectURL(file); v.preload = 'metadata'; v.onloadedmetadata = () => { URL.revokeObjectURL(u); res(isFinite(v.duration) ? Math.round(v.duration) : null); }; v.onerror = () => { URL.revokeObjectURL(u); res(null); }; v.src = u; });
+$('#smd-post').onclick = async () => {
+  const caption = $('#smd-cap').value.trim(), files = smdFiles.slice(), btn = $('#smd-post'); if (!files.length) return;
+  btn.disabled = true; let ok = 0;
+  try {
+    for (let i = 0; i < files.length; i++) {
+      btn.textContent = files.length > 1 ? `Posting ${i + 1}/${files.length}` : 'Posting…';
+      const f = files[i], isVid = f.type.startsWith('video/');
+      if (isVid && f.size > 60e6) { toast('Videos must be under 60 MB'); continue; }
+      const blob = isVid ? f : await prepImage(f), safe = (blob.name || f.name || (isVid ? 'video' : 'photo')).replace(/[^a-zA-Z0-9.\-_]/g, '_');
+      const snap = await uploadBytes(sRef(storage, `stories/${me.uid}/${Date.now()}_${i}_${safe}`), blob, { contentType: blob.type || f.type });
+      const url = await getDownloadURL(snap.ref), dur = isVid ? await videoLen(f) : null;
+      await postStory({ type: isVid ? 'video' : 'image', mediaURL: url, ...(dur ? { duration: dur } : {}), ...(caption ? { caption } : {}) }); ok++;
+    }
+    if (ok) toast(ok > 1 ? 'Statuses posted' : 'Status posted');
+    closeMediaComposer();
+  } catch (err) { console.error(err); toast('Couldn’t upload your status'); }
+  finally { btn.disabled = false; btn.textContent = 'Post'; }
+};
+
+/* ----- viewer ----- */
+const sv = { list: [], ai: 0, uid: null, items: [], i: 0, elapsed: 0, dur: 5000, last: null, paused: false, loaded: false, raf: 0, video: null };
+function openStoryFor(uid){
+  const others = Object.keys(stories).filter(u => u !== me.uid && liveStories(u).length);
+  const known = u => (chats[u] || contactIds.includes(u)) ? 1 : 0, lastOf = u => { const a = liveStories(u); return a[a.length - 1].createdAt; };
+  const fresh = others.filter(u => !liveStories(u).every(storySeen)).sort((a, b) => known(b) - known(a) || lastOf(b) - lastOf(a));
+  const seen = others.filter(u => liveStories(u).every(storySeen)).sort((a, b) => known(b) - known(a) || lastOf(b) - lastOf(a));
+  sv.list = uid === me.uid ? [me.uid] : [...fresh, ...seen];
+  const ai = sv.list.indexOf(uid); if (ai < 0) return;
+  $('#sv').classList.remove('hidden');
+  if (!svHist) { history.pushState({ hmStory: 1 }, ''); svHist = true; }
+  loadAuthor(ai, true);
+}
+function loadAuthor(ai, firstUnseen){
+  const uid = sv.list[ai], items = liveStories(uid);
+  if (!items.length) return ai + 1 < sv.list.length ? loadAuthor(ai + 1, true) : closeStory();
+  sv.ai = ai; sv.uid = uid; sv.items = items;
+  const fu = items.findIndex(s => !storySeen(s)); sv.i = (firstUnseen && uid !== me.uid && fu >= 0) ? fu : 0;
+  $('#sv-av').style.backgroundImage = `url('${cssUrl(uAvatar(uid))}')`;
+  $('#sv-name').innerHTML = esc(uid === me.uid ? 'My status' : uName(uid)) + (uid === me.uid ? '' : vbadge(uid));
+  $('#sv-del').classList.toggle('hidden', uid !== me.uid);
+  showItem();
+}
+function showItem(){
+  cancelAnimationFrame(sv.raf); if (sv.video) { sv.video.pause(); sv.video = null; }
+  const s = sv.items[sv.i]; if (!s) return nextAuthor();
+  sv.elapsed = 0; sv.last = null; sv.loaded = false; sv.dur = 5000; sv.paused = false;
+  $('#sv-bars').innerHTML = sv.items.map((_, j) => `<i><b style="width:${j < sv.i ? 100 : 0}%"></b></i>`).join('');
+  $('#sv-time').textContent = updAgo(s.createdAt);
+  const cap = [s.sharedFrom && s.sharedFrom.name ? `Shared from ${s.sharedFrom.name}` : '', s.caption || ''].filter(Boolean).join('\n');
+  $('#sv-cap').textContent = cap; $('#sv-cap').classList.toggle('hidden', !cap);
+  const stage = $('#sv-stage'); stage.innerHTML = ''; stage.style.background = '#000'; stage.classList.remove('shim');
+  const done = () => { sv.loaded = true; stage.classList.remove('shim'); };
+  const url = typeof s.mediaURL === 'string' && /^https:\/\//.test(s.mediaURL) ? s.mediaURL : '';
+  if (s.type === 'text') {
+    const d = document.createElement('div'); d.className = 'svt'; d.style.background = safeBg(s.bgColor); d.textContent = s.text || ''; stage.appendChild(d); sv.loaded = true;
+  } else if (s.type === 'video' && url) {
+    stage.classList.add('shim');
+    const v = document.createElement('video'); v.playsInline = true; v.autoplay = true; v.preload = 'auto';
+    v.onloadeddata = () => { done(); sv.dur = Math.min((v.duration || 15), 60) * 1000; v.play().catch(() => { v.muted = true; v.play().catch(() => {}); }); };
+    v.onerror = () => { done(); sv.dur = 2500; stage.textContent = 'Couldn’t load this status'; };
+    v.src = url; stage.appendChild(v); sv.video = v;
+  } else if (url) {
+    stage.classList.add('shim');
+    const im = new Image(); im.alt = ''; im.onload = done; im.onerror = () => { done(); sv.dur = 2500; im.remove(); stage.textContent = 'Couldn’t load this status'; };
+    im.src = url; stage.appendChild(im);
+  } else { sv.loaded = true; sv.dur = 2000; stage.textContent = 'Unavailable'; }
+  const mineNow = sv.uid === me.uid;
+  $('#sv-views').classList.toggle('hidden', !mineNow); $('#sv-like').classList.toggle('hidden', mineNow);
+  paintStoryMeta(s);
+  if (!mineNow && !storySeen(s)) markViewed(sv.uid, s);
+  const nx = sv.items[sv.i + 1]; if (nx && nx.type !== 'text' && nx.type !== 'video' && /^https:\/\//.test(nx.mediaURL || '')) { const p = new Image(); p.src = nx.mediaURL; }
+  sv.raf = requestAnimationFrame(svLoop);
+}
+function paintStoryMeta(s){
+  if (sv.uid === me.uid) $('#sv-vc').textContent = Object.keys(s.views || {}).length;
+  else $('#sv-like').classList.toggle('on', !!(s.likes && s.likes[me.uid]));
+}
+function markViewed(uid, s){
+  const mine = users[me.uid] || {}, payload = { name: mine.name || me.displayName || 'User', photoURL: mine.photoURL || me.photoURL || '', viewedAt: Date.now() };
+  s.views = { ...(s.views || {}), [me.uid]: payload };
+  if (stories[uid] && stories[uid][s.key]) stories[uid][s.key].views = s.views;
+  set(ref(db, `stories/${uid}/${s.key}/views/${me.uid}`), payload).catch(() => {});
+}
+function svLoop(ts){
+  if ($('#sv').classList.contains('hidden')) return;
+  if (sv.last == null) sv.last = ts;
+  if (sv.loaded && !sv.paused) { if (sv.video && sv.video.duration) sv.elapsed = sv.video.currentTime * 1000; else sv.elapsed += ts - sv.last; }
+  sv.last = ts;
+  const p = sv.loaded ? Math.min(1, sv.elapsed / sv.dur) : 0, bar = $('#sv-bars').children[sv.i];
+  if (bar) bar.firstChild.style.width = (p * 100) + '%';
+  if (p >= 1) return nextItem();
+  sv.raf = requestAnimationFrame(svLoop);
+}
+function setSvPaused(b){ sv.paused = b; if (sv.video) { if (b) sv.video.pause(); else sv.video.play().catch(() => {}); } }
+function nextItem(){ if (sv.i < sv.items.length - 1) { sv.i++; showItem(); } else nextAuthor(); }
+function prevItem(){
+  if (sv.elapsed > 1500 || (sv.i === 0 && sv.ai === 0)) return showItem();
+  if (sv.i > 0) { sv.i--; return showItem(); }
+  const items = liveStories(sv.list[sv.ai - 1]); loadAuthor(sv.ai - 1); sv.i = Math.max(0, items.length - 1); showItem();
+}
+function nextAuthor(){ if (sv.ai + 1 < sv.list.length) loadAuthor(sv.ai + 1, true); else closeStory(); }
+function hideStory(){ cancelAnimationFrame(sv.raf); if (sv.video) { sv.video.pause(); sv.video = null; } $('#sv-stage').innerHTML = ''; $('#sv').classList.add('hidden'); renderUpdatesSoon(); }
+function closeStory(){ hideStory(); if (svHist) { svHist = false; skipPop = true; history.back(); } }
+$('#sv-close').onclick = closeStory;
+(() => {
+  const hit = $('#sv-hit'); let t0 = 0, x0 = 0, y0 = 0, held = false, tm = null;
+  hit.addEventListener('pointerdown', e => { t0 = Date.now(); x0 = e.clientX; y0 = e.clientY; held = false; tm = setTimeout(() => { held = true; setSvPaused(true); }, 220); hit.setPointerCapture(e.pointerId); });
+  hit.addEventListener('pointerup', e => {
+    clearTimeout(tm); setSvPaused(false);
+    if (e.clientY - y0 > 90) return closeStory();
+    if (held || Math.abs(e.clientX - x0) > 12) return;
+    (e.clientX < innerWidth * .33 ? prevItem : nextItem)();
+  });
+  hit.addEventListener('pointercancel', () => { clearTimeout(tm); setSvPaused(false); });
+})();
+$('#sv-like').onclick = () => {
+  const s = sv.items[sv.i]; if (!s) return; const on = !(s.likes && s.likes[me.uid]);
+  s.likes = { ...(s.likes || {}) }; if (on) s.likes[me.uid] = true; else delete s.likes[me.uid];
+  if (stories[sv.uid] && stories[sv.uid][s.key]) stories[sv.uid][s.key].likes = s.likes;
+  paintStoryMeta(s);
+  (on ? set(ref(db, `stories/${sv.uid}/${s.key}/likes/${me.uid}`), true) : remove(ref(db, `stories/${sv.uid}/${s.key}/likes/${me.uid}`))).catch(() => {});
+};
+$('#sv-views').onclick = () => {
+  const s = sv.items[sv.i]; if (!s) return; setSvPaused(true);
+  const vs = Object.entries(s.views || {}).sort((a, b) => (b[1].viewedAt || 0) - (a[1].viewedAt || 0)), likes = Object.keys(s.likes || {}).length;
+  const ov = modal(`<h3>Viewed by ${vs.length}${likes ? ` · ♥ ${likes}` : ''}</h3>` + (vs.length ? vs.map(([u, v]) => `<div class="blk"><div class="av sm" style="background-image:url('${cssUrl(v.photoURL || DEFAULT_AVATAR)}')"></div><div class="nm"><b>${esc(v.name || 'User')}</b><small>${updAgo(v.viewedAt || Date.now())}</small></div></div>`).join('') : '<div class="empty" style="padding:20px">No views yet</div>'));
+  const mo = new MutationObserver(() => { if (!document.body.contains(ov)) { mo.disconnect(); setSvPaused(false); } }); mo.observe($('#modal-root'), { childList: true });
+};
+$('#sv-del').onclick = () => {
+  const s = sv.items[sv.i]; if (!s) return; setSvPaused(true);
+  const ov = modal(`<h3>Delete this status?</h3><p style="color:var(--muted);margin:0 0 14px">It will be removed for everyone.</p><button class="btn" id="sd-yes" style="background:var(--danger);color:#fff">Delete</button><button class="btn ghost" id="sd-no" style="margin-top:8px">Cancel</button>`);
+  ov.querySelector('#sd-no').onclick = () => { closeModal(); setSvPaused(false); };
+  ov.addEventListener('click', e => { if (e.target === ov) setSvPaused(false); });
+  ov.querySelector('#sd-yes').onclick = async () => {
+    closeModal();
+    try { await remove(ref(db, `stories/${me.uid}/${s.key}`)); } catch { toast('Couldn’t delete'); return setSvPaused(false); }
+    if (stories[me.uid]) delete stories[me.uid][s.key];
+    sv.items = liveStories(me.uid); if (!sv.items.length) return closeStory();
+    sv.i = Math.min(sv.i, sv.items.length - 1); showItem(); renderUpdatesSoon();
+  };
+};
+
+/* =============== BOTTOM NAV =============== */
+const SCREENS = {
+  updates: { el: '#updates', scroll: '#up-list', state: 'hmUpdates', open: () => openUpdates(), hide: () => hideUpdates(), close: () => closeUpdates(), get hist(){ return updatesHist; }, set hist(v){ updatesHist = v; } },
+  contacts: { el: '#contacts', scroll: '#ct-list', state: 'hmContacts', open: () => openContacts(), hide: () => hideContacts(), close: () => closeContacts(), get hist(){ return contactsHist; }, set hist(v){ contactsHist = v; } },
+  settings: { el: '#settings', scroll: '#settings', state: 'hmSettings', open: () => openSettings(), hide: () => hideSettings(), close: () => closeSettings(), get hist(){ return settingsHist; }, set hist(v){ settingsHist = v; } }
+};
+const navCur = () => Object.keys(SCREENS).find(k => !$(SCREENS[k].el).classList.contains('hidden')) || 'chats';
+function syncNav(){ const t = navCur(); document.querySelectorAll('#bnav button').forEach(b => b.classList.toggle('on', b.dataset.tab === t)); }
 function setNavBadge(n){ const b = $('#nb-chats'); b.textContent = n > 99 ? '99+' : n; b.classList.toggle('hidden', !n); }
 function navTo(tab){
-  const c = !$('#contacts').classList.contains('hidden'), s = !$('#settings').classList.contains('hidden');
-  if (tab === 'chats') { if (c) closeContacts(); else if (s) closeSettings(); else $('#chatlist').scrollTo({ top: 0, behavior: 'smooth' }); return; }
-  if (tab === 'contacts') {
-    if (c) return $('#ct-list').scrollTo({ top: 0, behavior: 'smooth' });
-    if (s) { hideSettings(); settingsHist = false; history.replaceState({ hmContacts: 1 }, ''); contactsHist = true; }   // swap tabs without stacking history
-    return openContacts();
-  }
-  if (s) return $('#settings').scrollTo({ top: 0, behavior: 'smooth' });
-  if (c) { hideContacts(); contactsHist = false; history.replaceState({ hmSettings: 1 }, ''); settingsHist = true; }
-  openSettings();
+  const cur = navCur();
+  if (tab === cur) return $(tab === 'chats' ? '#chatlist' : SCREENS[tab].scroll).scrollTo({ top: 0, behavior: 'smooth' });
+  if (tab === 'chats') return SCREENS[cur].close();
+  if (cur === 'chats') return SCREENS[tab].open();
+  const a = SCREENS[cur], b = SCREENS[tab];                       // swap tabs without stacking history
+  a.hide(); a.hist = false; history.replaceState({ [b.state]: 1 }, ''); b.hist = true; b.open();
 }
 document.querySelectorAll('#bnav button').forEach(b => b.onclick = () => navTo(b.dataset.tab));
-['#contacts', '#settings'].forEach(sel => new MutationObserver(syncNav).observe($(sel), { attributes: true, attributeFilter: ['class'] }));
+['#contacts', '#settings', '#updates'].forEach(sel => new MutationObserver(syncNav).observe($(sel), { attributes: true, attributeFilter: ['class'] }));
 syncNav();
 
 $('#ct-back').onclick = closeContacts;

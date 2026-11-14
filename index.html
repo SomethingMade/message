@@ -123,7 +123,7 @@ input,textarea{font:inherit;color:inherit}
 #blocked{padding:16px;text-align:center;color:var(--muted);background:var(--surface);border-top:1px solid var(--border)}
 
 /* menus, modals, toast */
-#menu{position:fixed;z-index:50;background:var(--surface);border-radius:12px;box-shadow:0 8px 28px rgba(0,0,0,.25);padding:6px;min-width:170px}
+#menu{position:fixed;z-index:135;background:var(--surface);border-radius:12px;box-shadow:0 8px 28px rgba(0,0,0,.25);padding:6px;min-width:170px}
 #menu button{display:block;width:100%;text-align:left;padding:10px 12px;border-radius:8px}
 #menu button:hover{background:var(--input)}
 #menu .danger{color:var(--danger)}
@@ -381,13 +381,13 @@ input,textarea{-webkit-user-select:text;user-select:text;-webkit-touch-callout:d
 #smd .cnt{position:absolute;top:10px;right:12px;background:rgba(0,0,0,.55);border-radius:12px;padding:3px 10px;font-size:13px;font-weight:600}
 #stx textarea{flex:1;min-height:0;background:transparent;border:0;outline:0;color:#fff;text-align:center;font-size:28px;line-height:1.25;font-weight:700;resize:none;padding:20px 28px;user-select:text;-webkit-user-select:text}
 #stx textarea::placeholder{color:rgba(255,255,255,.6)}
-#stx .fonts,#stx .sw{display:flex;flex-wrap:nowrap;gap:10px;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:6px 14px;scroll-snap-type:x proximity}
+#stx .fonts,#stx .sw{flex:0 0 auto;display:flex;flex-wrap:nowrap;align-items:center;gap:10px;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:6px 14px;scroll-snap-type:x proximity}
 #stx .fonts::-webkit-scrollbar,#stx .sw::-webkit-scrollbar,#smd-strip::-webkit-scrollbar{display:none}
 #stx .fonts button{flex:0 0 auto;padding:8px 16px;border-radius:20px;background:rgba(255,255,255,.18);color:#fff;font-size:16px;border:2px solid transparent;white-space:nowrap}
 #stx .fonts button.on{border-color:#fff;background:rgba(255,255,255,.3)}
-#stx .sw{padding-bottom:calc(16px + var(--sab));padding-top:8px}
-#stx .sw i{flex:0 0 auto;width:34px;height:34px;border-radius:50%;border:2px solid rgba(255,255,255,.55);cursor:pointer;scroll-snap-align:center;transition:transform .12s}
-#stx .sw i.on{border-color:#fff;transform:scale(1.18);box-shadow:0 0 0 2px rgba(0,0,0,.35)}
+#stx .sw{padding:6px 14px calc(16px + var(--sab));min-height:calc(58px + var(--sab))}
+#stx .sw i{flex:0 0 auto;width:38px;height:38px;border-radius:50%;border:3px solid rgba(255,255,255,.45);cursor:pointer;scroll-snap-align:center;box-sizing:border-box}
+#stx .sw i.on{border-color:#fff;box-shadow:0 0 0 2px rgba(0,0,0,.3)}
 #smd-strip{display:flex;gap:8px;overflow-x:auto;padding:8px 14px;align-items:center}
 #smd-strip .th{position:relative;flex:0 0 auto;width:54px;height:54px;border-radius:10px;overflow:hidden;border:2px solid transparent;background:#222;cursor:pointer}
 #smd-strip .th.on{border-color:var(--accent)}
@@ -505,7 +505,7 @@ input,textarea{-webkit-user-select:text;user-select:text;-webkit-touch-callout:d
     <button class="svb" id="sv-close" title="Close"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
     <div class="av sm" id="sv-av"></div>
     <div class="svn"><b id="sv-name"></b><small id="sv-time"></small></div>
-    <button class="svb hidden" id="sv-del" title="Delete"><svg viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/></svg></button>
+    <button class="svb" id="sv-more" title="Options"><svg viewBox="0 0 24 24" style="fill:currentColor;stroke:none"><circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/></svg></button>
   </div>
   <div id="sv-cap" class="hidden"></div>
   <div id="sv-bot">
@@ -1934,11 +1934,11 @@ function openTextComposer(){
   $('#stx-input').value = '';
   $('#stx-fonts').innerHTML = Object.entries(STORY_FONTS).map(([k, f]) => `<button data-font="${k}" style="font-family:${f.f};font-weight:${f.w};text-transform:${f.c}">${f.n}</button>`).join('');
   $('#stx-sw').innerHTML = TEXT_BGS.map(b => `<i data-bg="${esc(b)}" style="background:${b}"></i>`).join('');
-  paintStx(); $('#stx').classList.remove('hidden'); setTimeout(() => $('#stx-input').focus(), 80);
+  paintStx(); $('#stx').classList.remove('hidden'); document.scrollingElement.scrollLeft = 0; setTimeout(() => $('#stx-input').focus(), 80);
 }
 function paintStx(){
   $('#stx').style.background = stxBg; applyFont($('#stx-input'), stxFont);
-  $('#stx-sw').querySelectorAll('i').forEach(i => { const on = i.dataset.bg === stxBg; i.classList.toggle('on', on); if (on) i.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' }); });
+  $('#stx-sw').querySelectorAll('i').forEach(i => { const on = i.dataset.bg === stxBg; i.classList.toggle('on', on); if (on) { const sw = $('#stx-sw'); sw.scrollTo({ left: i.offsetLeft - (sw.clientWidth - i.offsetWidth) / 2, behavior: 'smooth' }); } });
   $('#stx-fonts').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.font === stxFont));
 }
 $('#stx-sw').addEventListener('click', e => { const i = e.target.closest('i'); if (i) { stxBg = i.dataset.bg; paintStx(); } });
@@ -2018,7 +2018,6 @@ function loadAuthor(ai, firstUnseen){
   const fu = items.findIndex(s => !storySeen(s)); sv.i = (firstUnseen && uid !== me.uid && fu >= 0) ? fu : 0;
   $('#sv-av').style.backgroundImage = `url('${cssUrl(uAvatar(uid))}')`;
   $('#sv-name').innerHTML = esc(uid === me.uid ? 'My status' : uName(uid)) + (uid === me.uid ? '' : vbadge(uid));
-  $('#sv-del').classList.toggle('hidden', uid !== me.uid);
   showItem();
 }
 function showItem(){
@@ -2107,7 +2106,7 @@ $('#sv-views').onclick = () => {
   const ov = modal(`<h3>Viewed by ${vs.length}${likes ? ` · ♥ ${likes}` : ''}</h3>` + (vs.length ? vs.map(([u, v]) => `<div class="blk"><div class="av sm" style="background-image:url('${cssUrl(v.photoURL || DEFAULT_AVATAR)}')"></div><div class="nm"><b>${esc(v.name || 'User')}</b><small>${updAgo(v.viewedAt || Date.now())}</small></div></div>`).join('') : '<div class="empty" style="padding:20px">No views yet</div>'));
   const mo = new MutationObserver(() => { if (!document.body.contains(ov)) { mo.disconnect(); setSvPaused(false); } }); mo.observe($('#modal-root'), { childList: true });
 };
-$('#sv-del').onclick = () => {
+function deleteStatus(){
   const s = sv.items[sv.i]; if (!s) return; setSvPaused(true);
   const ov = modal(`<h3>Delete this status?</h3><p style="color:var(--muted);margin:0 0 14px">It will be removed for everyone.</p><button class="btn" id="sd-yes" style="background:var(--danger);color:#fff">Delete</button><button class="btn ghost" id="sd-no" style="margin-top:8px">Cancel</button>`);
   ov.querySelector('#sd-no').onclick = () => { closeModal(); setSvPaused(false); };
@@ -2119,6 +2118,18 @@ $('#sv-del').onclick = () => {
     sv.items = liveStories(me.uid); if (!sv.items.length) return closeStory();
     sv.i = Math.min(sv.i, sv.items.length - 1); showItem(); renderUpdatesSoon();
   };
+}
+$('#sv-more').onclick = e => {
+  const s = sv.items[sv.i]; if (!s) return;
+  const own = sv.uid === me.uid, r = e.currentTarget.getBoundingClientRect(), items = [];
+  if (own) items.push(['Viewed by ' + Object.keys(s.views || {}).length, () => $('#sv-views').click()]);
+  else items.push([(s.likes && s.likes[me.uid]) ? 'Unlike' : 'Like', () => $('#sv-like').click()]);
+  if (s.type === 'text' && s.text) items.push(['Copy text', () => { (navigator.clipboard ? navigator.clipboard.writeText(s.text) : Promise.reject()).then(() => toast('Copied'), () => toast('Couldn’t copy')); }]);
+  else if (/^https:\/\//.test(s.mediaURL || '')) items.push([s.type === 'video' ? 'Open video' : 'Open photo', () => window.open(s.mediaURL, '_blank', 'noopener')]);
+  if (own) items.push(['Delete status', deleteStatus, true]);
+  setSvPaused(true); showMenu(r.right - 190, r.bottom + 6, items);
+  const m = $('#menu'), mo = new MutationObserver(() => { if (m.classList.contains('hidden')) { mo.disconnect(); if (!$('#modal-root').children.length) setSvPaused(false); } });
+  mo.observe(m, { attributes: true, attributeFilter: ['class'] });
 };
 
 /* =============== BOTTOM NAV =============== */

@@ -98,6 +98,7 @@ input,textarea{font:inherit;color:inherit}
 /* thread */
 #placeholder{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--muted);gap:10px;text-align:center;padding:20px}
 #thread{flex:1;display:flex;flex-direction:column;min-height:0}
+#msgs .es{flex:1;min-height:0}
 #msgs{flex:1;overflow-y:auto;padding:14px 12px;display:flex;flex-direction:column;gap:3px}
 .day{align-self:center;background:var(--surface);color:var(--muted);font-size:12px;padding:4px 12px;border-radius:50px;margin:10px 0;box-shadow:0 1px 1px rgba(0,0,0,.06)}
 .b{max-width:min(78%,520px);padding:7px 10px 5px;border-radius:16px;position:relative;word-wrap:break-word;overflow-wrap:anywhere;box-shadow:0 1px .5px rgba(0,0,0,.13);cursor:pointer}
@@ -1515,7 +1516,7 @@ async function renderMessages(keepScroll){
   const near = firstLoad || (prevH - prevTop - box.clientHeight < 150);
   let html = '', last = null;
   if (Object.keys(rawMsgs).length >= msgLimit) html += '<button id="more">Load older messages</button>';
-  if (!msgs.length) html += `<div class="sys">No messages yet — say hi 👋</div>`;
+  if (!msgs.length) html += emptyState('hello', 'No messages yet', `Send the first message to ${uName(uid)}.`, iBlocked || theyBlocked ? '' : 'Say hi 👋', 'sayhi');
   for (const m of msgs) {
     const isNew = !firstLoad && !keepScroll && !renderedKeys.has(m.key) && now - m.createdAt < 10000;
     const dk = new Date(m.createdAt).toDateString();
@@ -2029,6 +2030,7 @@ function changePhone(){
 /* centered empty states: illustration + title + hint + optional action */
 const ES_ART = {
   chat: '<circle class="a" cx="75" cy="75" r="62" opacity=".22"/><path class="t s" d="M32 48a12 12 0 0 1 12-12h46a12 12 0 0 1 12 12v26a12 12 0 0 1-12 12H62l-16 14V86h-2a12 12 0 0 1-12-12Z"/><path class="a" stroke="var(--text)" stroke-width="2.4" stroke-linejoin="round" d="M60 76a10 10 0 0 1 10-10h40a10 10 0 0 1 10 10v20a10 10 0 0 1-10 10h-2v12l-14-12H70a10 10 0 0 1-10-10Z" transform="translate(4 6)"/><circle cx="76" cy="88" r="3" fill="var(--text)"/><circle cx="88" cy="88" r="3" fill="var(--text)"/><circle cx="100" cy="88" r="3" fill="var(--text)"/>',
+  hello: '<circle class="a" cx="75" cy="75" r="62" opacity=".22"/><path class="t s" d="M30 44a10 10 0 0 1 10-10h50a10 10 0 0 1 10 10v24a10 10 0 0 1-10 10H60L44 92V78h-4a10 10 0 0 1-10-10Z"/><circle cx="48" cy="56" r="3" fill="var(--text)"/><circle cx="60" cy="56" r="3" fill="var(--text)"/><circle cx="72" cy="56" r="3" fill="var(--text)"/><path class="a" stroke="var(--text)" stroke-width="2.4" stroke-linejoin="round" d="M64 86a10 10 0 0 1 10-10h40a10 10 0 0 1 10 10v20a10 10 0 0 1-10 10h-2v12l-14-12H74a10 10 0 0 1-10-10Z"/><path class="s" d="M78 96q5-6 10 0t10 0t10 0"/><path class="s" d="M118 34v10M113 39h10M30 108v8M26 112h8"/>',
   updates: '<circle class="a" cx="75" cy="75" r="62" opacity=".22"/><circle class="s" cx="75" cy="75" r="40" stroke-dasharray="7 8"/><circle class="t s" cx="75" cy="75" r="26"/><circle cx="75" cy="68" r="8" fill="var(--text)"/><path class="s" d="M60 92a16 16 0 0 1 30 0"/><circle class="a" cx="112" cy="108" r="14" stroke="var(--text)" stroke-width="2.4"/><path class="s" d="M112 102v12M106 108h12"/>',
   pages: '<circle class="a" cx="75" cy="75" r="62" opacity=".22"/><path class="t s" d="M50 34h38l16 16v62a4 4 0 0 1-4 4H50a4 4 0 0 1-4-4V38a4 4 0 0 1 4-4Z"/><path class="s" d="M88 34v16h16M58 72h34M58 86h34M58 100h22"/><circle class="a" cx="42" cy="112" r="13" stroke="var(--text)" stroke-width="2.4"/><path class="s" d="M42 106v12M36 112h12"/>',
   people: '<circle class="a" cx="75" cy="75" r="62" opacity=".22"/><circle class="t s" cx="75" cy="58" r="16"/><path class="t s" d="M44 112a31 31 0 0 1 62 0Z"/><circle class="t s" cx="40" cy="70" r="10"/><path class="s" d="M20 108a20 20 0 0 1 20-20"/><circle class="t s" cx="110" cy="70" r="10"/><path class="s" d="M130 108a20 20 0 0 0-20-20"/>',
@@ -2040,7 +2042,7 @@ function emptyState(kind, title, text, cta, act){
 }
 document.addEventListener('click', e => {
   const b = e.target.closest('[data-es]'); if (!b) return; const a = b.dataset.es;
-  if (a === 'newchat') $('#btn-new').click(); else if (a === 'status') openTextComposer(); else if (a === 'page') pgCreate(); else if (a === 'group') grCreate(); else if (a === 'contact') addContactModal(); else if (a === 'post') pgPost();
+  if (a === 'newchat') $('#btn-new').click(); else if (a === 'status') openTextComposer(); else if (a === 'page') pgCreate(); else if (a === 'group') grCreate(); else if (a === 'contact') addContactModal(); else if (a === 'post') pgPost(); else if (a === 'sayhi') { if (activeUid && !input.value.trim()) { input.value = '👋'; sendText(); } }
 });
 const flip = k => { const v = localStorage.getItem(k) !== 'off'; localStorage.setItem(k, v ? 'off' : 'on'); return !v; };
 $('#settings').addEventListener('click', e => {
@@ -2940,7 +2942,7 @@ function grDay(ts){
 function grPaint(forceBottom){
   const box = $('#gr-msgs'), sc = $('#gr-body'); if (!box) return;
   const near = sc.scrollHeight - sc.scrollTop - sc.clientHeight < 140;
-  if (!grMsgs.length) { box.innerHTML = '<div class="sys" style="margin-top:30px">No messages yet — say hi 👋</div>'; return; }
+  if (!grMsgs.length) { box.innerHTML = emptyState('hello', 'No messages yet', 'Be the first to say something to the group.'); return; }
   let h = '', day = '', prev = '';
   grMsgs.forEach(m => {
     const mine = m.authorUid === me.uid, ts = m.createdAt || Date.now(), dk = new Date(ts).toDateString();

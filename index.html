@@ -526,6 +526,10 @@ body.gr-chat #bnav{display:none}
 .grmem .rm{color:var(--danger);font-size:13px;font-weight:600;padding:6px 8px}
 .grfield{border-radius:18px;resize:none}
 :root[data-theme="dark"] #groups .bar,:root[data-theme="dark"] #gr-composer{background:#000}
+#netbar{position:fixed;left:0;right:0;top:0;z-index:99999;padding:calc(var(--sat) + 4px) 12px 5px;text-align:center;font-size:12px;font-weight:600;color:#fff;background:#2B2B2E;transform:translateY(-110%);transition:transform .25s;pointer-events:none}
+#netbar.show{transform:none}
+#netbar.ok{background:#1F9D55}
+.b.pending{opacity:.72}
 </style>
 </head>
 <body>
@@ -1008,6 +1012,7 @@ onAuthStateChanged(auth, async user => {
     Object.keys(chats).forEach(async u => { const t = chats[u].text; const p = isE2E(t) ? await decText(u, t) : (t || ''); if (previews[u] !== p) { previews[u] = p; renderChatList(); } });
   }
   startPresence();
+  obInit();
   startChatList();
   startStories();
   if (keyState === 'locked') promptUnlock(true);
@@ -1024,6 +1029,7 @@ function startPresence(){
   loadUser(me.uid);
 }
 function teardown(){
+  obQ = []; warmed = false; netUI();
   if (chatsUnsub) { chatsUnsub(); chatsUnsub = null; }
   closeThread(true);
   Object.keys(chats).forEach(k => delete chats[k]); Object.keys(previews).forEach(k => delete previews[k]);
@@ -1070,6 +1076,7 @@ const HDB = (() => {
     set: (k, v) => run('kv', 'readwrite', s => s.put(v, k)),
     bget: async k => { const r = await run('blobs', 'readonly', s => s.get(k)); return r ? r.v : null; },
     bset: (k, v) => { const n = v.size || v.byteLength || 0; if (++writes % 15 === 0) setTimeout(prune, 2000); return run('blobs', 'readwrite', s => s.put({ v, t: Date.now(), n }, k)); },
+    bdel: k => run('blobs', 'readwrite', s => s.delete(k)),
     clear: async () => { await run('kv', 'readwrite', s => s.clear()); await run('blobs', 'readwrite', s => s.clear()); }
   };
 })();
@@ -1114,10 +1121,112 @@ function hydrateAv(root){
 new MutationObserver(ms => ms.forEach(x => { if (x.type === 'attributes') hydrateAv(x.target); else x.addedNodes.forEach(n => n.nodeType === 1 && hydrateAv(n)); }))
   .observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['style'] });
 
+/* =============== CONNECTION BANNER · OFFLINE OUTBOX · MEDIA PREFETCH =============== */
+let rtOn = false, warmed = false;
+const netOK = () => navigator.onLine && rtOn;
+const newKey = tid => push(ref(db, `dm_threads/${tid}/messages`)).key;
+const nb = document.createElement('div'); nb.id = 'netbar'; document.body.appendChild(nb);
+let nbT = null, nbBad = false;
+function netUI(){
+  clearTimeout(nbT);
+  const n = obQ.length, show = (txt, ok) => { nbBad = !ok; nb.textContent = txt; nb.classList.toggle('ok', !!ok); nb.classList.add('show'); };
+  if (!me) { nb.classList.remove('show'); nbBad = false; return; }
+  const w = n ? ` · ${n} waiting to send` : '';
+  if (!navigator.onLine) return show('You’re offline' + (n ? w : ' · showing saved chats'));
+  if (!rtOn) { nbT = setTimeout(() => { if (!rtOn && me) show('Connecting…' + w); }, 3000); return; }
+  if (n) return show(`Sending ${n} queued message${n > 1 ? 's' : ''}…`, true);
+  if (nbBad) { show('Back online', true); nbBad = false; nbT = setTimeout(() => nb.classList.remove('show'), 1800); return; }
+  nb.classList.remove('show');
+}
+
+/* outbox: unsent messages persist in the offline DB (text and media stay encrypted) and send when back online */
+let obQ = [], obBusy = false, obT = null, obReady = Promise.resolve();
+const obSave = () => { if (me) HDB.set('ob|' + me.uid, obQ); };
+function obInit(){
+  const uid = me.uid;
+  obReady = HDB.get('ob|' + uid).then(v => { if (me && me.uid === uid) { obQ = Array.isArray(v) ? v : []; netUI(); if (activeUid) renderMessages(true); flushOutbox(); } });
+}
+async function obAdd(item){
+  await obReady; obQ.push(item); obSave(); netUI();
+  if (activeUid === item.peer) renderMessages(true);
+}
+async function obAddMedia(peer, tid, blob, name, payload, preview){
+  const id = newKey(tid); await HDB.bset('ob|b|' + id, blob);
+  await obAdd({ id, peer, tid, kind: 'media', name, payload, preview });
+  toast('You’re offline — it will send when you’re back');
+}
+async function flushOutbox(){
+  if (obBusy || !me || !obQ.length || !netOK()) return;
+  obBusy = true; clearTimeout(obT);
+  try {
+    while (obQ.length && netOK()) {
+      const it = obQ[0];
+      try {
+        const p = { ...it.payload };
+        if (it.kind === 'media') {
+          const blob = await HDB.bget('ob|b|' + it.id);
+          if (!blob) throw Object.assign(new Error('lost'), { fatal: true });
+          const snap = await uploadBytes(sRef(storage, `dm_media/${it.tid}/${p.createdAt}_${it.name}`), blob);
+          p.mediaURL = await getDownloadURL(snap.ref);
+        }
+        await pushMessage(it.peer, p, it.preview, it.id);
+        obQ.shift(); if (it.kind === 'media') HDB.bdel('ob|b|' + it.id);
+        obSave(); netUI(); if (activeUid === it.peer) renderMessages(true);
+      } catch (e) {
+        if ((e && e.fatal) || /permission|unauthorized|denied/i.test(String((e && (e.code || e.message)) || ''))) {
+          obQ.shift(); if (it.kind === 'media') HDB.bdel('ob|b|' + it.id);
+          obSave(); toast('A queued message couldn’t be sent'); if (activeUid === it.peer) renderMessages(true);
+        } else throw e;
+      }
+    }
+  } catch (e) { obT = setTimeout(flushOutbox, 15000); }
+  finally { obBusy = false; netUI(); }
+}
+onValue(ref(db, '.info/connected'), s => { rtOn = s.val() === true; netUI(); if (rtOn) flushOutbox(); });
+window.addEventListener('online', () => { netUI(); flushOutbox(); });
+window.addEventListener('offline', netUI);
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') flushOutbox(); });
+
+/* prefetch: chat images land in the offline DB as soon as a thread loads, not only when scrolled into view */
+const pfSeen = new Set(), pfQ = []; let pfActive = 0;
+function pfRun(){
+  while (pfActive < 3 && pfQ.length) { const fn = pfQ.shift(); pfActive++; fn().catch(() => {}).finally(() => { pfActive--; pfRun(); }); }
+}
+function prefetchMedia(raw){
+  if (!navigator.onLine || (navigator.connection && navigator.connection.saveData)) return;
+  Object.values(raw || {}).filter(m => m && m.mediaURL && m.mediaType === 'image' && !m.viewOnce && !m.deleted)
+    .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0)).slice(0, 30).forEach(m => {
+      if (pfSeen.has(m.mediaURL)) return; pfSeen.add(m.mediaURL);
+      const enc = !!m.mediaEncrypted, key = (enc ? 'x|' : 'i|') + m.mediaURL;
+      pfQ.push(async () => {
+        if (await HDB.bget(key)) return;
+        const r = await fetch(m.mediaURL); if (!r.ok) { pfSeen.delete(m.mediaURL); return; }
+        if (enc) { const b = await r.arrayBuffer(); if (b.byteLength < 30e6) HDB.bset(key, b); }
+        else { const b = await r.blob(); if (b.size < 8e6) HDB.bset(key, b); }
+      });
+    });
+  pfRun();
+}
+/* once per session, quietly cache the latest messages + images of the most recent chats */
+async function warmTopThreads(){
+  if (warmed || !me || !navigator.onLine || (navigator.connection && navigator.connection.saveData)) return;
+  warmed = true;
+  const top = Object.entries(chats).sort((a, b) => (b[1].timestamp || 0) - (a[1].timestamp || 0)).slice(0, 6).map(e => e[0]);
+  for (const u of top) {
+    if (u === activeUid || !me) continue;
+    try {
+      const tid = threadIdFor(me.uid, u), raw = (await get(query(ref(db, `dm_threads/${tid}/messages`), limitToLast(20)))).val();
+      if (!raw) continue;
+      if (!(await HDB.get('m|' + tid))) saveThread(tid, raw); else prefetchMedia(raw);   // never shrink an existing cache
+    } catch {}
+  }
+}
+
 function saveThread(tid, raw){
   const ents = Object.entries(raw || {});
   if (ents.length > 150) ents.sort((a, b) => (b[1].createdAt || 0) - (a[1].createdAt || 0));
   HDB.set('m|' + tid, Object.fromEntries(ents.slice(0, 150)));
+  prefetchMedia(raw);
 }
 async function paintCached(){
   const uid = me.uid, v = await HDB.get('c|' + uid);
@@ -1158,7 +1267,7 @@ function startChatList(){
     Object.entries(v).forEach(([uid, meta]) => { if (uid !== AI_UID && meta && typeof meta === 'object') chats[uid] = meta; });
     const uids = Object.keys(chats);
     if (chatsLoaded) uids.forEach(uid => { const c = chats[uid]; if (!c.hidden && c.senderUid !== me.uid && (c.timestamp || 0) > (old[uid] || 0) && uid !== activeUid) notifyMsg(uid, c); });
-    chatsLoaded = true;
+    chatsLoaded = true; setTimeout(warmTopThreads, 2500);
     uids.forEach(uid => {   // live "typing…" per conversation
       if (typingWatch[uid]) return;
       const tr = ref(db, `dm_threads/${threadIdFor(me.uid, uid)}/typing/${uid}`);
@@ -1394,7 +1503,7 @@ const fmtSize = n => n > 1048576 ? (n / 1048576).toFixed(1) + ' MB' : Math.max(1
 async function renderMessages(keepScroll){
   const tok = ++renderTok, uid = activeUid;
   const now = Date.now();
-  const msgs = Object.entries(rawMsgs).map(([key, v]) => ({ key, ...v })).filter(m => !m.expiresAt || m.expiresAt > now).filter(m => (m.createdAt || 0) > (chats[uid]?.clearedAt || 0)).sort((a, b) => a.createdAt - b.createdAt);
+  const msgs = Object.entries(rawMsgs).map(([key, v]) => ({ key, ...v })).filter(m => !m.expiresAt || m.expiresAt > now).filter(m => (m.createdAt || 0) > (chats[uid]?.clearedAt || 0)).concat(obQ.filter(q => q.peer === uid && !rawMsgs[q.id]).map(q => ({ key: q.id, ...q.payload, _pend: true, _pendMedia: q.kind === 'media' }))).sort((a, b) => a.createdAt - b.createdAt);
   await Promise.all(msgs.map(async m => {
     if (m.text && !m.deleted) m._t = await decText(uid, m.text);
     if (m.replyToMessage && m.replyToMessage.text) m._rt = await decText(uid, m.replyToMessage.text);
@@ -1419,7 +1528,8 @@ async function renderMessages(keepScroll){
       const rm = m.replyToMessage, rt = m._rt || (rm.mediaType ? '📎 ' + rm.mediaType : 'Message');
       inner += `<div class="quote"><b>${esc(uName(rm.senderUid))}</b>${esc(rt)}</div>`;
     }
-    if (m.viewOnce) inner += `<div class="t">🔒 View-once ${esc(m.mediaType || 'media')} — open it in the Haba app</div>`;
+    if (m._pendMedia) inner += `<div class="t">${m.mediaType === 'audio' ? '🎤 Voice message' : '📷 Photo'}</div>`;
+    else if (m.viewOnce) inner += `<div class="t">🔒 View-once ${esc(m.mediaType || 'media')} — open it in the Haba app</div>`;
     else if (m.mediaURL) {
       const mt = m.mediaType || '';
       if (mt === 'image') inner += `<span class="iw shim" data-open="${m.key}"><img data-mk="${m.key}" alt="photo"></span>`;
@@ -1428,11 +1538,11 @@ async function renderMessages(keepScroll){
       else inner += `<div class="file" data-file="${m.key}">📄 <div><b>${esc(m.fileName || 'File')}</b><div style="font-size:12px;opacity:.7">${m.fileSize ? fmtSize(m.fileSize) + ' · ' : ''}tap to download</div></div></div>`;
     }
     if (m._t) inner += `<div class="t">${linkify(esc(m._t))}</div>`;
-    const ticks = out ? `<span class="tick ${otherLastRead >= m.createdAt ? 'seen' : ''}" data-ts="${m.createdAt}">${otherLastRead >= m.createdAt ? '✓✓' : '✓'}</span>` : '';
+    const ticks = m._pend ? '<span class="tick">🕓</span>' : out ? `<span class="tick ${otherLastRead >= m.createdAt ? 'seen' : ''}" data-ts="${m.createdAt}">${otherLastRead >= m.createdAt ? '✓✓' : '✓'}</span>` : '';
     const rxl = m.reactions && typeof m.reactions === 'object' ? Object.values(m.reactions).filter(x => typeof x === 'string' && x) : [];
     let rxHTML = '';
     if (rxl.length) { const cnt = {}; rxl.forEach(x => cnt[x] = (cnt[x] || 0) + 1); const top = Object.entries(cnt).sort((a, b) => b[1] - a[1]).slice(0, 3).map(x => x[0]).join(''); rxHTML = `<div class="rx${typeof m.reactions[me.uid] === 'string' ? ' mine' : ''}">${esc(top)}${rxl.length > 1 ? ' ' + rxl.length : ''}</div>`; }
-    html += `<div class="b ${out ? 'out' : 'in'}${isNew ? ' pop' : ''}${rxl.length ? ' hasrx' : ''}" data-key="${m.key}">${inner}<div class="meta">${m.editedAt ? 'edited · ' : ''}${fmtTime(m.createdAt)} ${ticks}</div>${rxHTML}</div>`;
+    html += `<div class="b ${out ? 'out' : 'in'}${m._pend ? ' pending' : ''}${isNew ? ' pop' : ''}${rxl.length ? ' hasrx' : ''}" data-key="${m.key}">${inner}<div class="meta">${m.editedAt ? 'edited · ' : ''}${fmtTime(m.createdAt)} ${ticks}</div>${rxHTML}</div>`;
   }
   box.innerHTML = html;
   msgs.forEach(m => renderedKeys.add(m.key));
@@ -1587,9 +1697,9 @@ function lockedGuard(err, retry){
   if (err && err.message === 'LOCKED') { promptUnlock(false, retry); return true; }   // open the unlock sheet right away; the send resumes after unlocking
   return false;
 }
-async function pushMessage(peer, payload, previewEncrypted){
+async function pushMessage(peer, payload, previewEncrypted, fixedKey){
   const tid = threadIdFor(me.uid, peer);
-  const key = push(ref(db, `dm_threads/${tid}/messages`)).key;
+  const key = fixedKey || push(ref(db, `dm_threads/${tid}/messages`)).key;
   const ts = payload.createdAt;
   const u = {};
   u[`dm_threads/${tid}/messages/${key}`] = payload;
@@ -1619,6 +1729,7 @@ async function sendText(){
     const rp = await replyPayload(peer); if (rp) payload.replyToMessage = rp;
     input.value = ''; autoGrow(); $('#reply-x').click();
     clearTimeout(typingT); typingOn = false; set(ref(db, `dm_threads/${threadId}/typing/${me.uid}`), false).catch(() => {});
+    if (!netOK()) { await obAdd({ id: newKey(threadIdFor(me.uid, peer)), peer, tid: threadIdFor(me.uid, peer), kind: 'text', payload, preview: enc }); return; }
     await pushMessage(peer, payload, enc);
   } catch (e) { if (!lockedGuard(e, () => { if (activeUid === peer && input.value.trim()) sendText(); })) { toast('Message failed to send'); console.error(e); } }
 }
@@ -1635,6 +1746,13 @@ async function sendPhotoFile(file, peer, tid){
     const prepared = await prepImage(file);
     const { blob, encrypted } = await encFile(peer, prepared);
     const name = (file.name || 'photo.jpg').replace(/[^a-zA-Z0-9.\-_]/g, '_');
+    if (!netOK()) {
+      const pl = withExpiry({ senderUid: me.uid, createdAt: Date.now(), mediaType: 'image' });
+      if (encrypted) { pl.mediaEncrypted = true; pl.mediaMimeType = prepared.type || 'image/jpeg'; }
+      const rp0 = await replyPayload(peer); if (rp0) pl.replyToMessage = rp0;
+      $('#reply-x').click();
+      await obAddMedia(peer, tid, blob, name, pl, '📷 Photo'); return;
+    }
     const snap = await uploadBytes(sRef(storage, `dm_media/${tid}/${Date.now()}_${name}`), blob);
     const url = await getDownloadURL(snap.ref);
     if (encrypted) mediaCache[url] = Promise.resolve(URL.createObjectURL(prepared));
@@ -1708,6 +1826,12 @@ function stopRec(send){
     const type = r.mimeType || 'audio/webm', blob = new Blob(recChunks, { type });
     const sendVoice = async () => { try {
       const { blob: eb, encrypted } = await encFile(peer, blob);
+      if (!netOK()) {
+        const pl = withExpiry({ senderUid: me.uid, createdAt: Date.now(), mediaType: 'audio', duration: dur });
+        if (wave) pl.waveform = wave;
+        if (encrypted) { pl.mediaEncrypted = true; pl.mediaMimeType = type; }
+        await obAddMedia(peer, tid, eb, 'voice.bin', pl, '🎤 Voice message'); return;
+      }
       const snap = await uploadBytes(sRef(storage, `dm_media/${tid}/${Date.now()}_voice.bin`), eb);
       const url = await getDownloadURL(snap.ref);
       const payload = withExpiry({ senderUid: me.uid, createdAt: Date.now(), mediaType: 'audio', mediaURL: url, duration: dur });
@@ -3256,6 +3380,9 @@ document.addEventListener('contextmenu', e => { if (!inField(e.target)) e.preven
 document.addEventListener('selectstart', e => { if (!inField(e.target)) e.preventDefault(); });
 document.addEventListener('dragstart', e => { if (!inField(e.target)) e.preventDefault(); });
 window.addEventListener('beforeunload', () => { if (threadId && me) set(ref(db, `dm_threads/${threadId}/typing/${me.uid}`), false); });
+</script>
+<script>
+if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
 </script>
 </body>
 </html>

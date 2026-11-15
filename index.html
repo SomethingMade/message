@@ -1197,6 +1197,7 @@ let chatHist = false;
 function exitChat(){ if (chatHist) history.back(); else closeThread(); }   // popstate below does the real close
 window.addEventListener('popstate', () => {
   if (skipPop) { skipPop = false; return; }
+  if (layerTop()) { layerSent = false; layerTop().close(); setTimeout(layerSync, 0); return; }   // device back closes the top-most sheet / composer / menu / dialog first
   if (viewerHist) { viewerHist = false; hideViewer(); return; }   // device back closes the viewer first
   if (svHist) { svHist = false; hideStory(); return; }
   if (updatesHist) { updatesHist = false; hideUpdates(); return; }
@@ -2556,6 +2557,31 @@ $('#pg-body').addEventListener('click', e => {
   if (a) { if (a.dataset.act === 'create') return pgCreate(); if (a.dataset.act === 'post') return pgPost(); if (a.dataset.act === 'msg') { const o = pgAll[pgCur].ownerUid; if (o) goChat(o); return; } }
   const r = e.target.closest('.pgrow[data-pid]'); if (r) { pgCur = r.dataset.pid; $('#pg-body').scrollTop = 0; renderPages(); }
 });
+
+/* =============== DEVICE BACK BUTTON FOR SHEETS, DIALOGS, COMPOSERS, MENUS =============== */
+/* One sentinel history entry is kept while any transient layer is open; Back closes the top-most layer and the user stays on the tab/screen underneath. */
+let layerSent = false;
+const LAYERS = [   // highest first
+  { id: 'menu', open: () => !$('#menu').classList.contains('hidden'), close: () => hideMenu() },
+  { id: 'msheet', open: () => !$('#msheet').classList.contains('hidden'), close: () => closeMusicSheet() },
+  { id: 'modal', open: () => !!$('#modal-root').firstElementChild, close: () => closeModal() },
+  { id: 'rx', open: () => !$('#sv-rx').classList.contains('hidden'), close: () => { hideRx(); setSvPaused(false); } },
+  { id: 'smd', open: () => !$('#smd').classList.contains('hidden'), close: () => closeMediaComposer() },
+  { id: 'stx', open: () => !$('#stx').classList.contains('hidden'), close: () => $('#stx').classList.add('hidden') },
+  { id: 'pg', open: () => !$('#pages').classList.contains('hidden') && !$('#pg-back').classList.contains('hidden'), close: () => $('#pg-back').click() }
+];
+const layerTop = () => LAYERS.find(l => l.open());
+function layerSync(){
+  const any = !!layerTop();
+  if (any && !layerSent) { history.pushState({ hmLayer: 1 }, ''); layerSent = true; }
+  else if (!any && layerSent) { layerSent = false; skipPop = true; history.back(); }
+}
+(() => {
+  let t = null; const kick = () => { clearTimeout(t); t = setTimeout(layerSync, 0); };
+  const mo = new MutationObserver(kick), cfg = { attributes: true, attributeFilter: ['class'] };
+  ['#menu', '#msheet', '#sv-rx', '#smd', '#stx', '#pages', '#pg-back'].forEach(sel => mo.observe($(sel), cfg));
+  mo.observe($('#modal-root'), { childList: true });
+})();
 
 /* =============== BOTTOM NAV =============== */
 const SCREENS = {

@@ -2081,32 +2081,83 @@ function premiumSheet(){
     ${paid ? '<button id="prem-pay" style="background:var(--input);color:var(--text)">Close</button>' : `<button id="prem-pay">Pay R${PREMIUM.price} · ${esc(PREMIUM.note)}</button><div style="text-align:center;color:var(--muted);font-size:12px;margin-top:8px">Permanent badge · Secure payment by Yoco</div>`}`);
   ov.querySelector('#prem-pay').onclick = e => paid ? closeModal() : premiumPay(e.currentTarget);
 }
+/* Checkout opens in the system browser (a new tab/window) so the app stays put. The window is opened
+   synchronously on tap so popup blockers allow it, then pointed at the Yoco URL once the server returns it.
+   While the person pays, we watch for the webhook to grant paidVerifiedAt and activate Premium here. */
+let premWatchTimer = null;
+function premVis(){ if (document.visibilityState === 'visible') premiumCheck(); }
+function stopPremiumWatch(){ clearInterval(premWatchTimer); premWatchTimer = null; document.removeEventListener('visibilitychange', premVis); }
+async function premiumCheck(){
+  if (!me) return false;
+  try {
+    const s = await get(ref(db, `users/${me.uid}/paidVerifiedAt`));
+    if (s.exists()) {
+      stopPremiumWatch();
+      users[me.uid] = { ...(users[me.uid] || {}), paidVerifiedAt: s.val() };
+      closeModal(); toast('Welcome to Haba Premium'); renderSettings(); renderChatList();
+      return true;
+    }
+  } catch {}
+  return false;
+}
+function startPremiumWatch(){
+  stopPremiumWatch();
+  document.addEventListener('visibilitychange', premVis);   // check the moment they come back to the app
+  let n = 0;
+  premWatchTimer = setInterval(async () => { if (await premiumCheck() || ++n > 72) stopPremiumWatch(); }, 5000);   // ~6 min
+}
+const IS_ANDROID = /Android/i.test(navigator.userAgent);
+/* Hand a URL to the device's own browser (not an in-app view) where the platform lets a web page do that.
+   Android: an intent:// link goes to the default browser, even from a webview or installed PWA; if nothing can
+   handle it, the browser_fallback_url loads the page normally. Cordova shells: the _system target.
+   iOS has no web API for forcing Safari, so there it uses a new window (Safari itself, or the OS browser sheet). */
+function openExternal(url, win){
+  try {
+    if (window.cordova) { window.open(url, '_system'); try { win && win.close(); } catch {} return true; }
+    if (IS_ANDROID) {
+      const u = new URL(url);
+      location.href = 'intent://' + u.host + u.pathname + u.search + u.hash + '#Intent;scheme=' + u.protocol.replace(':', '') +
+        ';action=android.intent.action.VIEW;category=android.intent.category.BROWSABLE;S.browser_fallback_url=' + encodeURIComponent(url) + ';end';
+      return true;
+    }
+    if (win && !win.closed) { win.location.href = url; return true; }
+  } catch {}
+  return false;
+}
 async function premiumPay(btn){
   if (!navigator.onLine) return toast('You’re offline');
   const label = btn.textContent;
   btn.disabled = true; btn.textContent = 'Opening secure checkout…';
+  /* On iOS/desktop, open the window now (during the tap) so popup blockers allow it; Android uses an intent link instead. */
+  let win = null;
+  if (!IS_ANDROID && !window.cordova) { try { win = window.open('about:blank', '_blank'); if (win) win.opener = null; } catch {} }
   try {
     const res = await createVerifiedBadgeCheckoutCallable({});
     const url = res && res.data && res.data.url;
     if (typeof url !== 'string' || url.indexOf('https://') !== 0) throw new Error('No checkout URL returned');
-    location.href = url;
+    if (openExternal(url, win)) {
+      toast('Complete your payment in your browser, then come back here');
+      startPremiumWatch();
+      btn.textContent = 'Waiting for payment…';
+      setTimeout(() => { if (btn.isConnected) { btn.disabled = false; btn.textContent = label; } }, 5000);
+    } else {
+      location.href = url;   // couldn't open externally: fall back to this tab so payment still works
+    }
   } catch (err) {
     console.error('buy verified badge failed', err);
+    try { win && win.close(); } catch {}
     toast(err && err.code === 'functions/already-exists' ? 'You’re already verified.' : 'Couldn’t start the payment. Please try again.');
     btn.disabled = false; btn.textContent = label;
   }
 }
-/* After Yoco sends the person back. The webhook grants paidVerifiedAt, so wait for it to land. */
+/* After Yoco sends the person back (this runs in whichever tab/browser Yoco returns to). The webhook grants paidVerifiedAt, so wait for it to land. */
 async function premiumReturn(){
   if (!PREM_RETURN || !me) return;
   if (PREM_RETURN === 'cancelled') return toast('Payment cancelled');
   if (PREM_RETURN !== 'success') return toast('Payment didn’t go through');
   toast('Payment received. Activating Premium…');
   for (let i = 0; i < 16; i++) {
-    try {
-      const s = await get(ref(db, `users/${me.uid}/paidVerifiedAt`));
-      if (s.exists()) { users[me.uid] = { ...(users[me.uid] || {}), paidVerifiedAt: s.val() }; closeModal(); toast('Welcome to Haba Premium'); renderSettings(); renderChatList(); return; }
-    } catch {}
+    if (await premiumCheck()) return;
     await new Promise(r => setTimeout(r, 2500));
   }
   toast('Your badge will appear shortly');

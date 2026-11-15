@@ -660,7 +660,7 @@ body.gr-chat #bnav{display:none}
   <div id="sv-cap" class="hidden"></div>
   <div id="sv-rx" class="hidden"></div>
   <div id="sv-bot">
-    <button class="pill2" id="sv-cm"><svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L3 21l1.9-5.4A8 8 0 1 1 21 12Z"/></svg><span id="sv-cc">Comment</span></button>
+    <button class="pill2" id="sv-cm"><svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L3 21l1.9-5.4A8 8 0 1 1 21 12Z"/></svg><span id="sv-cc">Reply</span></button>
     <button class="pill2 hidden" id="sv-views"><svg viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg><span id="sv-vc">0</span></button>
     <button class="svb hidden" id="sv-like" title="Like"><svg viewBox="0 0 24 24"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21l7.8-7.5 1-1.1a5.5 5.5 0 0 0 0-7.8Z"/></svg></button>
   </div>
@@ -2856,7 +2856,7 @@ function showItem(){
     im.src = url; stage.appendChild(im);
   } else { sv.loaded = true; sv.dur = 2000; stage.textContent = 'Unavailable'; }
   const mineNow = sv.uid === me.uid; hideRx();
-  $('#sv-views').classList.toggle('hidden', !mineNow); $('#sv-like').classList.toggle('hidden', mineNow);
+  $('#sv-views').classList.toggle('hidden', !mineNow); $('#sv-like').classList.toggle('hidden', mineNow); $('#sv-cm').classList.toggle('hidden', mineNow);
   paintStoryMeta(s);
   const mu = cleanMusic(s.music); $('#sv-music').classList.toggle('hidden', !mu);
   if (mu) { $('#sv-music-t').textContent = mu.trackName + (mu.artistName ? ' · ' + mu.artistName : ''); svAudio = new Audio(mu.previewUrl); svAudio.loop = true; svAudio.volume = .9; if (sv.video) sv.video.muted = true; if (!sv.paused) svAudio.play().catch(() => {}); }
@@ -2873,7 +2873,7 @@ function paintStoryMeta(s){
   const mine = sv.uid === me.uid;
   if (mine) $('#sv-vc').textContent = Object.keys(s.views || {}).length;
   else { const r = myRx(s); $('#sv-like').innerHTML = r ? `<span>${r}</span>` : HEART_SVG; }
-  const n = cmCount(s); $('#sv-cc').textContent = n || (mine ? '0' : 'Comment');
+  $('#sv-cc').textContent = 'Reply';
 }
 function hideRx(){ $('#sv-rx').classList.add('hidden'); }
 function markViewed(uid, s){
@@ -2929,25 +2929,42 @@ $('#sv-rx').onclick = e => {
   update(ref(db), { [`${base}/reactions/${me.uid}`]: off ? null : em, [`${base}/likes/${me.uid}`]: !off && em === '❤️' ? true : null }).catch(() => toast('Couldn’t send reaction'));
 };
 $('#sv-hit').addEventListener('pointerdown', () => { if (!$('#sv-rx').classList.contains('hidden')) hideRx(); });
+/* Replying to a status sends a normal direct message to the person who posted it, quoting the status. Nothing is posted publicly. */
+async function sendStatusReply(peer, s, text){
+  const tid = threadIdFor(me.uid, peer), now = Date.now();
+  const quoteRaw = ((s.type === 'text' ? s.text : s.caption) || '').trim().slice(0, 120) || (s.type === 'video' ? '🎥 Video status' : s.type === 'text' ? 'Status' : '📷 Photo status');
+  const online = netOK();
+  if (online) {
+    const [b1, b2] = await Promise.all([get(ref(db, `blocks/${me.uid}/${peer}`)), get(ref(db, `blocks/${peer}/${me.uid}`))]);
+    if (b1.val() === true || b2.val() === true) throw new Error('BLOCKED');
+  }
+  const enc = await encText(peer, text), qenc = await encText(peer, quoteRaw);
+  const payload = { text: enc, senderUid: me.uid, createdAt: now, replyToMessage: { senderUid: peer, text: qenc } };
+  if (online) {
+    try { const d = (await get(ref(db, `dm_threads/${tid}/settings/disappearingSeconds`))).val() || 0; if (d > 0) payload.expiresAt = now + d * 1000; } catch {}
+    await pushMessage(peer, payload, enc);
+  } else {
+    await obAdd({ id: newKey(tid), peer, tid, kind: 'text', payload, preview: enc });   // queued; sends when back online
+  }
+  return online;
+}
 $('#sv-cm').onclick = () => {
-  const s = sv.items[sv.i]; if (!s) return; setSvPaused(true); hideRx();
-  const uid = sv.uid, key = s.key, base = `stories/${uid}/${key}/comments`;
-  const ov = modal(`<h3 id="cm-h">Comments</h3><div id="cm-list"><div class="spin"></div></div><div id="cm-row"><input class="field" id="cm-in" maxlength="300" placeholder="Add a comment…" autocomplete="off" enterkeyhint="send"><button class="pgbtn" id="cm-go">Send</button></div>`);
-  const list = ov.querySelector('#cm-list'); let items = [];
-  const draw = () => {
-    ov.querySelector('#cm-h').textContent = items.length ? `Comments (${items.length})` : 'Comments';
-    list.innerHTML = items.length ? items.map(c => `<div class="cmt" data-k="${esc(c.key)}"><div class="av sm" style="background-image:url('${cssUrl(uAvatar(c.uid))}')"></div><div class="b"><b>${esc(c.uid === me.uid ? 'You' : uName(c.uid))}</b><small>${updAgo(c.createdAt || Date.now())}</small><p>${esc(c.text)}</p></div>${c.uid === me.uid || uid === me.uid ? '<button class="x" data-del title="Delete">×</button>' : ''}</div>`).join('') : '<div class="empty">No comments yet.<br>Be the first to comment.</div>';
-    list.scrollTop = list.scrollHeight; s.comments = Object.fromEntries(items.map(c => [c.key, c])); if (stories[uid] && stories[uid][key]) stories[uid][key].comments = s.comments; if (sv.items[sv.i] === s) paintStoryMeta(s);
+  const s = sv.items[sv.i]; if (!s || sv.uid === me.uid) return; setSvPaused(true); hideRx();
+  const peer = sv.uid, nm = uName(peer);
+  const ov = modal(`<h3>Reply to ${esc(nm)}</h3><p style="color:var(--muted);margin:0 0 12px;font-size:13.5px">Your reply goes straight to ${esc(nm)}’s messages. It isn’t shown publicly.</p><div id="cm-row"><input class="field" id="cm-in" maxlength="500" placeholder="Reply to status…" autocomplete="off" enterkeyhint="send"><button class="pgbtn" id="cm-go">Send</button></div>`);
+  const inp = ov.querySelector('#cm-in'), go = ov.querySelector('#cm-go'); inp.focus();
+  const done = online => { closeModal(); toast(online ? 'Reply sent to ' + nm : 'Reply queued. It will send when you’re back online'); };
+  const send = async () => {
+    const text = inp.value.trim(); if (!text || go.disabled) return;
+    go.disabled = true;
+    try { done(await sendStatusReply(peer, s, text)); }
+    catch (e) {
+      if (e && e.message === 'BLOCKED') { go.disabled = false; return toast('You can’t send messages to this contact'); }
+      if (lockedGuard(e, () => sendStatusReply(peer, s, text).then(done, () => toast('Couldn’t send reply')))) return;
+      console.error(e); go.disabled = false; toast('Couldn’t send reply');
+    }
   };
-  get(ref(db, base)).then(sn => { const v = sn.val() || {}; items = Object.entries(v).map(([k, c]) => ({ key: k, ...c })).filter(c => typeof c.text === 'string').sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0)); draw(); }, () => { list.innerHTML = '<div class="empty">Couldn’t load comments.</div>'; });
-  const send = () => {
-    const inp = ov.querySelector('#cm-in'), text = inp.value.trim(); if (!text) return;
-    const nr = push(ref(db, base)), c = { key: nr.key, uid: me.uid, text, createdAt: Date.now() }; inp.value = '';
-    items.push(c); draw();
-    set(nr, { uid: me.uid, text, createdAt: Date.now() }).catch(() => { items = items.filter(x => x.key !== c.key); draw(); toast('Couldn’t post comment'); });
-  };
-  ov.querySelector('#cm-go').onclick = send; ov.querySelector('#cm-in').addEventListener('keydown', e => { if (e.key === 'Enter') send(); });
-  list.onclick = e => { const x = e.target.closest('[data-del]'); if (!x) return; const k = x.closest('.cmt').dataset.k; items = items.filter(c => c.key !== k); draw(); remove(ref(db, `${base}/${k}`)).catch(() => toast('Couldn’t delete')); };
+  go.onclick = send; inp.addEventListener('keydown', e => { if (e.key === 'Enter') send(); });
   const mo = new MutationObserver(() => { if (!document.body.contains(ov)) { mo.disconnect(); setSvPaused(false); } }); mo.observe($('#modal-root'), { childList: true });
 };
 $('#sv-views').onclick = () => {
@@ -2974,7 +2991,7 @@ $('#sv-more').onclick = e => {
   const own = sv.uid === me.uid, r = e.currentTarget.getBoundingClientRect(), items = [];
   if (own) items.push(['Viewed by ' + Object.keys(s.views || {}).length, () => $('#sv-views').click()]);
   else items.push([myRx(s) ? 'Change reaction' : 'React', () => $('#sv-like').click()]);
-  items.push(['Comments' + (cmCount(s) ? ' (' + cmCount(s) + ')' : ''), () => $('#sv-cm').click()]);
+  if (!own) items.push(['Reply', () => $('#sv-cm').click()]);
   if (s.type === 'text' && s.text) items.push(['Copy text', () => { (navigator.clipboard ? navigator.clipboard.writeText(s.text) : Promise.reject()).then(() => toast('Copied'), () => toast('Couldn’t copy')); }]);
   else if (/^https:\/\//.test(s.mediaURL || '')) items.push([s.type === 'video' ? 'Open video' : 'Open photo', () => window.open(s.mediaURL, '_blank', 'noopener')]);
   if (own) items.push(['Delete status', deleteStatus, true]);

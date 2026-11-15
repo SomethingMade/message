@@ -462,6 +462,17 @@ select.field{appearance:none}
 #stx .stxc{padding:6px 14px calc(16px + var(--sab));min-height:calc(58px + var(--sab))}
 #stx .stxc i{flex:0 0 auto;width:38px;height:38px;border-radius:50%;border:3px solid rgba(255,255,255,.45);cursor:pointer;scroll-snap-align:center;box-sizing:border-box}
 #stx .stxc i.on{border-color:#fff;box-shadow:0 0 0 2px rgba(0,0,0,.3)}
+#smd-trim{display:none;padding:8px 20px 4px;user-select:none;-webkit-user-select:none}
+#smd-trim.on{display:block}
+#smd-trim .tt{display:flex;justify-content:space-between;font-size:13px;font-weight:600;margin-bottom:8px;color:rgba(255,255,255,.9)}
+#smd-trim .tt b{color:var(--accent)}
+#smd-trim .trk{position:relative;height:42px;border-radius:8px;background:rgba(255,255,255,.16);touch-action:none}
+#smd-trim .sel{position:absolute;top:0;bottom:0;border-top:3px solid var(--accent);border-bottom:3px solid var(--accent);background:rgba(255,255,255,.18);cursor:grab;touch-action:none}
+#smd-trim .h{position:absolute;top:-3px;bottom:-3px;width:18px;background:var(--accent);display:flex;align-items:center;justify-content:center;cursor:ew-resize;touch-action:none}
+#smd-trim .h::after{content:'';width:3px;height:16px;border-radius:2px;background:rgba(0,0,0,.55)}
+#smd-trim .h.l{left:-2px;border-radius:8px 0 0 8px}
+#smd-trim .h.r{right:-2px;border-radius:0 8px 8px 0}
+#smd-trim .hint{font-size:11.5px;color:rgba(255,255,255,.6);margin-top:6px}
 #smd-strip{display:flex;gap:8px;overflow-x:auto;padding:8px 14px;align-items:center}
 #smd-strip .th{position:relative;flex:0 0 auto;width:54px;height:54px;border-radius:10px;overflow:hidden;border:2px solid transparent;background:#222;cursor:pointer}
 #smd-strip .th.on{border-color:var(--accent)}
@@ -609,6 +620,7 @@ select.field{appearance:none}
 <div id="smd" class="hidden">
   <div class="top"><button class="svb" id="smd-close" title="Close"><svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button><div class="grow"></div><button class="musb" id="smd-mus" title="Add music"><svg viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg><span>Music</span></button><button class="postb" id="smd-post">Post</button></div>
   <div class="prev" id="smd-prev"></div>
+  <div id="smd-trim"><div class="tt"><span class="tl"></span><span class="tr"></span></div><div class="trk"><div class="sel"><i class="h l"></i><i class="h r"></i></div></div><div class="hint">Drag the handles to trim. Status videos can be up to 60 seconds.</div></div>
   <div id="smd-strip"></div>
   <div class="capw"><input id="smd-cap" maxlength="200" placeholder="Add a caption…" autocomplete="off" enterkeyhint="done"></div>
 </div>
@@ -623,6 +635,21 @@ select.field{appearance:none}
 <div id="toast"><span id="toast-t"></span><button id="toast-a" class="hidden"></button></div>
 <div id="modal-root"></div>
 
+<script>
+/* ONE SOUND AT A TIME: whatever starts making sound (voice note, chat video, status video, status music, song preview) pauses everything else that is audible. */
+(() => {
+  const live = new Set();                       // every media element that has started playing (incl. detached new Audio())
+  const audible = el => !!el && !el.muted && el.volume > 0;
+  const stopOthers = me => live.forEach(o => {
+    if (o !== me && !o.paused && !o.ended && audible(o)) { try { o.pause(); } catch (e) {} }
+    if (o.paused || o.ended) live.delete(o);
+  });
+  const claim = el => { if (!el || !audible(el)) return; live.add(el); stopOthers(el); };
+  const _play = HTMLMediaElement.prototype.play;
+  HTMLMediaElement.prototype.play = function (...a) { claim(this); return _play.apply(this, a); };
+  ['play', 'playing', 'volumechange'].forEach(ev => document.addEventListener(ev, e => { const t = e.target; if (t && t.tagName && /^(AUDIO|VIDEO)$/.test(t.tagName) && !t.paused) claim(t); }, true));
+})();
+</script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut, RecaptchaVerifier, PhoneAuthProvider, updatePhoneNumber, signInWithPhoneNumber, signInWithEmailAndPassword, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
@@ -1647,7 +1674,7 @@ micBtn.addEventListener('pointerup', holdUp); micBtn.addEventListener('pointerca
 $('#rec-cancel').onclick = () => { stopRec(false); toast('Voice message deleted'); };
 
 /* voice bubble player (one global Audio, so re-renders never interrupt playback) */
-let vnAudio = null, vnKey = null, vnRate = 1;
+let vnAudio = null, vnKey = null, vnRate = 1, vnTok = 0;
 function vnWave(m){
   if (Array.isArray(m.waveform) && m.waveform.length) return m.waveform;
   let h = 7; for (const c of m.key) h = (h * 31 + c.charCodeAt(0)) | 0;       // stable placeholder for notes without a waveform
@@ -1666,7 +1693,7 @@ function vnPaint(){
     el.querySelector('.vn-spd').textContent = vnRate + '×';
   });
 }
-function vnStop(){ if (vnAudio) vnAudio.pause(); vnAudio = null; vnKey = null; }
+function vnStop(){ vnTok++; if (vnAudio) vnAudio.pause(); vnAudio = null; vnKey = null; }
 async function vnToggle(key, frac){
   const m = rawMsgs[key]; if (!m) return;
   if (vnKey === key && vnAudio) {
@@ -1674,9 +1701,9 @@ async function vnToggle(key, frac){
     else if (vnAudio.paused) vnAudio.play().catch(() => {}); else vnAudio.pause();
     return vnPaint();
   }
-  vnStop(); vnKey = key;
+  vnStop(); vnKey = key; const tok = vnTok;
   try {
-    const src = await mediaSrc(m, activeUid); if (vnKey !== key) return;
+    const src = await mediaSrc(m, activeUid); if (vnKey !== key || tok !== vnTok) return;
     const a = vnAudio = new Audio(src); a.playbackRate = vnRate;
     a.ontimeupdate = a.onplay = a.onpause = vnPaint;
     a.onended = () => { vnStop(); vnPaint(); };
@@ -2113,7 +2140,7 @@ async function mSuggested(){
   }
   try { return mSug = await mFetchSearch('top hits'); } catch { return []; }
 }
-function mPlay(btn, t){ const same = mPrevBtn === btn; stopMPrev(); if (same) return; mPrev = new Audio(t.previewUrl); mPrev.play().catch(() => {}); mPrev.onended = stopMPrev; btn.innerHTML = MUS_PAUSE; mPrevBtn = btn; }
+function mPlay(btn, t){ const same = mPrevBtn === btn; stopMPrev(); if (same) return; const pa = mPrev = new Audio(t.previewUrl); pa.onended = stopMPrev; pa.onpause = () => { if (mPrev === pa) stopMPrev(); }; pa.play().catch(() => {}); btn.innerHTML = MUS_PAUSE; mPrevBtn = btn; }
 const STAR_SVG = '<svg viewBox="0 0 24 24"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/></svg>', GO_SVG = '<svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
 function mItem(t, i, card, stars){
   const d = document.createElement('div'); d.className = card ? 'mcard' : 'mrow'; d.dataset.i = i;
@@ -2199,13 +2226,58 @@ function paintSmd(){
   const isV = x => x.file.type.startsWith('video/');
   $('#smd-prev').innerHTML = (isV(it) ? `<video src="${it.url}" playsinline controls muted></video>` : `<img src="${it.url}" alt="">`) + (smd.length > 1 ? `<span class="cnt">${smdI + 1} / ${smd.length}</span>` : '');
   $('#smd-cap').value = it.caption;
+  const pv = $('#smd-prev video');
+  if (pv) {   // preview only plays the chosen part, looping
+    const back = () => { if (it.end != null) { pv.currentTime = it.start || 0; if (!pv.paused || pv.ended) pv.play().catch(() => {}); } };
+    pv.addEventListener('loadedmetadata', () => { if (it.start) pv.currentTime = it.start; });
+    pv.addEventListener('timeupdate', () => { if (it.end != null && pv.currentTime >= it.end) back(); });
+    pv.addEventListener('ended', back);
+    pv.addEventListener('play', () => { if (it.end != null && (pv.currentTime < it.start - .1 || pv.currentTime >= it.end)) pv.currentTime = it.start; });
+  }
+  paintTrim();
   $('#smd-strip').innerHTML = smd.map((x, i) => `<div class="th ${i === smdI ? 'on' : ''}" data-i="${i}">${isV(x) ? `<video src="${x.url}#t=0.1" muted preload="metadata"></video>` : `<img src="${x.url}" alt="">`}${smd.length > 1 ? `<b data-rm="${i}">×</b>` : ''}</div>`).join('') + '<button class="th add" data-add="1" title="Add more">+</button>';
 }
+/* ----- trim (status videos are capped at 60 s; the chosen part is stored as trimStart/trimEnd and only that part plays) ----- */
+const MAXV = 60, MINV = 1, fmtT = t => Math.floor(Math.max(0, t) / 60) + ':' + String(Math.floor(Math.max(0, t)) % 60).padStart(2, '0');
+const videoMeta = file => new Promise(res => { const v = document.createElement('video'), u = URL.createObjectURL(file); v.preload = 'metadata'; const done = d => { URL.revokeObjectURL(u); res(isFinite(d) && d > 0 ? d : 0); }; v.onloadedmetadata = () => done(v.duration); v.onerror = () => done(0); v.src = u; });
+function paintTrim(){
+  const it = smd[smdI], el = $('#smd-trim');
+  const on = !!it && it.file.type.startsWith('video/') && it.dur > 2;
+  el.classList.toggle('on', on); if (!on) return;
+  const sel = el.querySelector('.sel'), a = it.start / it.dur * 100, b = it.end / it.dur * 100;
+  sel.style.left = a + '%'; sel.style.width = (b - a) + '%';
+  el.querySelector('.tl').textContent = fmtT(it.start) + ' – ' + fmtT(it.end);
+  el.querySelector('.tr').innerHTML = '<b>' + Math.round(it.end - it.start) + 's</b>' + (it.dur > MAXV ? ' of ' + fmtT(it.dur) : '');
+}
+(() => {
+  const trk = $('#smd-trim .trk'); let dr = null;
+  const clamp = (x, lo, hi) => Math.min(Math.max(x, lo), Math.max(lo, hi));
+  trk.addEventListener('pointerdown', e => {
+    const it = smd[smdI]; if (!it || !(it.dur > 2)) return;
+    const h = e.target.closest('.h'), mode = h ? (h.classList.contains('l') ? 'l' : 'r') : e.target.closest('.sel') ? 'm' : null; if (!mode) return;
+    dr = { mode, x: e.clientX, w: trk.getBoundingClientRect().width || 1, s: it.start, e: it.end, it };
+    try { trk.setPointerCapture(e.pointerId); } catch {} e.preventDefault();
+  });
+  trk.addEventListener('pointermove', e => {
+    if (!dr) return; const it = dr.it, d = (e.clientX - dr.x) / dr.w * it.dur;
+    if (dr.mode === 'l') it.start = clamp(dr.s + d, Math.max(0, it.end - MAXV), it.end - MINV);
+    else if (dr.mode === 'r') it.end = clamp(dr.e + d, it.start + MINV, Math.min(it.dur, it.start + MAXV));
+    else { const len = dr.e - dr.s, ns = clamp(dr.s + d, 0, it.dur - len); it.start = ns; it.end = ns + len; }
+    paintTrim();
+    const pv = $('#smd-prev video'); if (pv && smd[smdI] === it) { try { pv.currentTime = dr.mode === 'r' ? Math.max(it.start, it.end - .1) : it.start; } catch {} }
+  });
+  const end = () => { dr = null; };
+  trk.addEventListener('pointerup', end); trk.addEventListener('pointercancel', end);
+})();
 $('#up-file').addEventListener('change', e => {
   const add = [...e.target.files].filter(f => /^(image|video)\//.test(f.type)); e.target.value = '';
   if (!add.length) return;
   const wasOpen = smdOpen();
-  add.forEach(f => smd.push({ file: f, url: URL.createObjectURL(f), caption: '' }));
+  add.forEach(f => {
+    const it = { file: f, url: URL.createObjectURL(f), caption: '' };
+    if (f.type.startsWith('video/')) it.ready = videoMeta(f).then(d => { if (d > 0) { it.dur = d; it.start = 0; it.end = Math.min(d, MAXV); } if (smd[smdI] === it) paintTrim(); });
+    smd.push(it);
+  });
   if (!wasOpen) { smdI = smd.length - add.length; stMusic = null; paintMusBtns(); $('#smd').classList.remove('hidden'); }
   paintSmd();
 });
@@ -2223,7 +2295,7 @@ const videoLen = file => new Promise(res => { const v = document.createElement('
 const upq = []; let upBusy = false, upId = 0, upBarRaf = 0;
 const jobActive = j => j.state === 'queued' || j.state === 'uploading';
 function enqueueUploads(items){
-  items.forEach(it => upq.push({ id: ++upId, file: it.file, caption: it.caption, music: it.music || null, isVid: it.file.type.startsWith('video/'), url: URL.createObjectURL(it.file), state: 'queued', pct: 0, task: null }));
+  items.forEach(it => upq.push({ id: ++upId, file: it.file, caption: it.caption, music: it.music || null, isVid: it.file.type.startsWith('video/'), trim: it.trim || null, url: URL.createObjectURL(it.file), state: 'queued', pct: 0, task: null }));
   renderUpBar(); renderUpdatesSoon(); runUploads();
 }
 function renderUpBar(){
@@ -2244,8 +2316,8 @@ async function uploadJob(job){
     t.on('state_changed', s => { job.pct = s.totalBytes ? s.bytesTransferred / s.totalBytes : 0; renderUpBar(); }, rej, res);
   });
   job.task = null;
-  const url = await getDownloadURL(r), dur = job.isVid ? await videoLen(f) : null;
-  await postStory({ type: job.isVid ? 'video' : 'image', mediaURL: url, ...(dur ? { duration: dur } : {}), ...(job.caption ? { caption: job.caption } : {}), ...(job.music ? { music: job.music } : {}) });
+  const url = await getDownloadURL(r), tr = job.isVid && job.trim ? job.trim : null, cut = tr && (tr.start > .05 || tr.end < tr.dur - .05), dur = job.isVid ? (tr ? Math.round(tr.end - tr.start) : await videoLen(f)) : null;
+  await postStory({ type: job.isVid ? 'video' : 'image', mediaURL: url, ...(dur ? { duration: dur } : {}), ...(cut ? { trimStart: +tr.start.toFixed(2), trimEnd: +tr.end.toFixed(2) } : {}), ...(job.caption ? { caption: job.caption } : {}), ...(job.music ? { music: job.music } : {}) });
 }
 async function runUploads(){
   if (upBusy) return; upBusy = true; let ok = 0, failed = 0;
@@ -2270,18 +2342,23 @@ function cancelJob(j){
 }
 function cancelAllUploads(){ upq.slice().forEach(cancelJob); }
 window.addEventListener('beforeunload', e => { if (upq.some(jobActive)) { e.preventDefault(); e.returnValue = ''; } });
-$('#smd-post').onclick = () => {
-  const ok = smd.filter(x => !(x.file.type.startsWith('video/') && x.file.size > 60e6));
-  if (ok.length < smd.length) toast('Videos must be under 60 MB');
+$('#smd-post').onclick = async () => {
+  const btn = $('#smd-post'); if (btn.disabled) return; btn.disabled = true;
+  const items = smd.slice();
+  try { await Promise.all(items.map(x => x.ready)); } catch {}
+  btn.disabled = false; if (!smdOpen()) return;
+  const ok = items.filter(x => !(x.file.type.startsWith('video/') && x.file.size > 60e6));
+  if (ok.length < items.length) toast('Videos must be under 60 MB');
   if (!ok.length) return;
-  enqueueUploads(ok.map(x => ({ file: x.file, caption: x.caption.trim(), music: stMusic })));
+  enqueueUploads(ok.map(x => ({ file: x.file, caption: x.caption.trim(), music: stMusic, trim: x.dur > 0 ? { start: x.start, end: x.end, dur: x.dur } : null })));
   closeMediaComposer(); toast('Posting in the background…');
 };
 
 /* ----- viewer ----- */
 let svAudio = null;
+function svDropVideo(){ const o = sv.video; if (!o) return; sv.video = null; o.onloadeddata = o.onerror = null; try { o.pause(); o.removeAttribute('src'); o.load(); } catch {} }
 function svStopMusic(){ if (svAudio) { svAudio.pause(); svAudio = null; } }
-const sv = { list: [], ai: 0, uid: null, items: [], i: 0, elapsed: 0, dur: 5000, last: null, paused: false, loaded: false, raf: 0, video: null };
+const sv = { list: [], ai: 0, uid: null, items: [], i: 0, elapsed: 0, dur: 5000, last: null, paused: false, loaded: false, raf: 0, video: null, vs: 0 };
 function openStoryFor(uid){
   const others = Object.keys(stories).filter(u => u !== me.uid && liveStories(u).length);
   const known = u => (chats[u] || contactIds.includes(u)) ? 1 : 0, lastOf = u => { const a = liveStories(u); return a[a.length - 1].createdAt; };
@@ -2289,6 +2366,7 @@ function openStoryFor(uid){
   const seen = others.filter(u => liveStories(u).every(storySeen)).sort((a, b) => known(b) - known(a) || lastOf(b) - lastOf(a));
   sv.list = uid === me.uid ? [me.uid] : [...fresh, ...seen];
   const ai = sv.list.indexOf(uid); if (ai < 0) return;
+  vnStop(); try { vnPaint(); } catch {}
   $('#sv').classList.remove('hidden');
   if (!svHist) { history.pushState({ hmStory: 1 }, ''); svHist = true; }
   loadAuthor(ai, true);
@@ -2303,9 +2381,9 @@ function loadAuthor(ai, firstUnseen){
   showItem();
 }
 function showItem(){
-  cancelAnimationFrame(sv.raf); if (sv.video) { sv.video.pause(); sv.video = null; } svStopMusic();
+  cancelAnimationFrame(sv.raf); svDropVideo(); svStopMusic();
   const s = sv.items[sv.i]; if (!s) return nextAuthor();
-  sv.elapsed = 0; sv.last = null; sv.loaded = false; sv.dur = 5000; sv.paused = false;
+  sv.elapsed = 0; sv.last = null; sv.loaded = false; sv.dur = 5000; sv.paused = false; sv.vs = 0;
   $('#sv-bars').innerHTML = sv.items.map((_, j) => `<i><b style="width:${j < sv.i ? 100 : 0}%"></b></i>`).join('');
   $('#sv-time').textContent = updAgo(s.createdAt);
   const cap = [s.sharedFrom && s.sharedFrom.name ? `Shared from ${s.sharedFrom.name}` : '', s.caption || ''].filter(Boolean).join('\n');
@@ -2318,8 +2396,12 @@ function showItem(){
   } else if (s.type === 'video' && url) {
     stage.classList.add('shim');
     const v = document.createElement('video'); v.playsInline = true; v.autoplay = true; v.preload = 'auto';
-    v.onloadeddata = () => { done(); sv.dur = Math.min((v.duration || 15), 60) * 1000; v.play().catch(() => { v.muted = true; v.play().catch(() => {}); }); };
-    v.onerror = () => { done(); sv.dur = 2500; stage.textContent = 'Couldn’t load this status'; };
+    v.onloadeddata = () => { if (sv.video !== v) return; done();
+      const d = v.duration || 15; let a = 0, b = Math.min(d, 60); const ts = Number(s.trimStart), te = Number(s.trimEnd);
+      if (isFinite(ts) && isFinite(te) && ts >= 0 && te - ts >= .5) { a = Math.min(ts, d); b = Math.min(te, d, a + 60); if (b - a < .5) { a = 0; b = Math.min(d, 60); } }
+      sv.vs = a; sv.dur = (b - a) * 1000; if (a > .05) v.currentTime = a;
+      v.play().catch(() => { v.muted = true; v.play().catch(() => {}); }); };
+    v.onerror = () => { if (sv.video !== v) return; done(); sv.dur = 2500; stage.textContent = 'Couldn’t load this status'; };
     v.src = url; stage.appendChild(v); sv.video = v;
   } else if (url) {
     stage.classList.add('shim');
@@ -2356,7 +2438,7 @@ function markViewed(uid, s){
 function svLoop(ts){
   if ($('#sv').classList.contains('hidden')) return;
   if (sv.last == null) sv.last = ts;
-  if (sv.loaded && !sv.paused) { if (sv.video && sv.video.duration) sv.elapsed = sv.video.currentTime * 1000; else sv.elapsed += ts - sv.last; }
+  if (sv.loaded && !sv.paused) { if (sv.video && sv.video.duration) sv.elapsed = Math.max(0, sv.video.currentTime - sv.vs) * 1000; else sv.elapsed += ts - sv.last; }
   sv.last = ts;
   const p = sv.loaded ? Math.min(1, sv.elapsed / sv.dur) : 0, bar = $('#sv-bars').children[sv.i];
   if (bar) bar.firstChild.style.width = (p * 100) + '%';
@@ -2371,7 +2453,7 @@ function prevItem(){
   const items = liveStories(sv.list[sv.ai - 1]); loadAuthor(sv.ai - 1); sv.i = Math.max(0, items.length - 1); showItem();
 }
 function nextAuthor(){ if (sv.ai + 1 < sv.list.length) loadAuthor(sv.ai + 1, true); else closeStory(); }
-function hideStory(){ cancelAnimationFrame(sv.raf); if (sv.video) { sv.video.pause(); sv.video = null; } svStopMusic(); $('#sv-stage').innerHTML = ''; $('#sv').classList.add('hidden'); renderUpdatesSoon(); }
+function hideStory(){ cancelAnimationFrame(sv.raf); svDropVideo(); svStopMusic(); $('#sv-stage').innerHTML = ''; $('#sv').classList.add('hidden'); renderUpdatesSoon(); }
 function closeStory(){ hideStory(); if (svHist) { svHist = false; skipPop = true; history.back(); } }
 $('#sv-close').onclick = closeStory;
 (() => {

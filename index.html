@@ -182,6 +182,7 @@ input,textarea{font:inherit;color:inherit}
 #rec-hint{flex:1;text-align:center;color:var(--muted);font-size:14px;white-space:nowrap;overflow:hidden;will-change:transform,opacity}
 #rec-cancel{display:none;color:var(--danger)}
 #composer.locked #rec-cancel{display:flex}
+#composer.ai #btn-attach,#composer.ai #btn-mic{display:none!important}
 #btn-mic{touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;transition:transform .15s,background .15s}
 #btn-mic .ic-send{display:none}
 #btn-mic.rec{background:var(--danger);color:#fff;transform:scale(1.35);z-index:2}
@@ -723,13 +724,19 @@ const app = initializeApp({
 });
 const auth = getAuth(app), db = getDatabase(app), storage = getStorage(app);
 /* Haba Premium (blue badge) is bought through the same Yoco checkout as the main Haba app. The server picks the price and grants the badge. */
-const createVerifiedBadgeCheckoutCallable = httpsCallable(getFunctions(app), 'createVerifiedBadgeCheckout');
+const fnClient = getFunctions(app);
+const createVerifiedBadgeCheckoutCallable = httpsCallable(fnClient, 'createVerifiedBadgeCheckout');
+/* Haba AI: same habaAIChat Cloud Function the Haba app uses (the xAI key stays server-side). */
+const habaAIChatCallable = httpsCallable(fnClient, 'habaAIChat');
 /* Back from Yoco: ?verified=success|cancelled|failed. Capture it now, then clean the address bar. */
 const PREM_RETURN = new URLSearchParams(location.search).get('verified');
 if (PREM_RETURN) { try { history.replaceState(null, '', location.pathname + location.hash); } catch {} }
 
 const $ = s => document.querySelector(s);
 const AI_UID = "goza-ai-assistant";
+const AI_NAME = "Haba AI";
+const AI_SEED = "Tap to start chatting";
+const AI_AVATAR = "data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 96 96%22%3E%3Ccircle cx=%2248%22 cy=%2248%22 r=%2248%22 fill=%22%23000%22/%3E%3Ccircle cx=%2248%22 cy=%2248%22 r=%2223%22 fill=%22none%22 stroke=%22%23fff%22 stroke-width=%224%22/%3E%3C/svg%3E";
 const PAGE = 30;
 const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 96 96%22%3E%3Ccircle cx=%2248%22 cy=%2248%22 r=%2248%22 fill=%22%23000%22/%3E%3Ccircle cx=%2248%22 cy=%2238%22 r=%2218%22 fill=%22%23FFF%22 fill-opacity=%220.85%22/%3E%3Cpath d=%22M48 60c-19 0-30 10.5-30 22v2a48 48 0 0 0 60 0v-2c0-11.5-11-22-30-22z%22 fill=%22%23FFF%22 fill-opacity=%220.85%22/%3E%3C/svg%3E";
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -1029,12 +1036,19 @@ onAuthStateChanged(auth, async user => {
   }
   startPresence();
   obInit(); premiumReturn();
-  startChatList();
+  startChatList(); seedAI();
   startStories();
   if (keyState === 'locked') promptUnlock(true);
   else if (keyState === 'ready' && freshKey) { freshKey = false; promptCreatePin(); }   // brand-new account: offer a backup PIN right away
 });
 
+/* First login: put Haba AI in the chat list (same as the Haba app). Check-then-set, so a deleted entry isn't forced back. */
+async function seedAI(){
+  try {
+    const r = ref(db, `user_chats/${me.uid}/${AI_UID}`);
+    if (!(await get(r)).exists()) await update(r, { text: AI_SEED, timestamp: Date.now(), unreadCount: 0 });
+  } catch (e) { console.warn('seed Haba AI', e); }
+}
 function startPresence(){
   onValue(ref(db, '.info/connected'), s => {
     if (s.val() !== true || !me) return;
@@ -1058,7 +1072,7 @@ function teardown(){
 /* =============== VERIFIED BADGE (same as Haba) =============== */
 const VERIFIED_BADGE_SVG = '<svg class="verified-badge" viewBox="0 0 22 22" width="16" height="16" aria-label="Verified"><path fill="#0A84FF" d="M20.396 11c-.018-.646-.215-1.275-.57-1.816-.354-.54-.852-.972-1.438-1.246.223-.607.27-1.264.14-1.897-.131-.634-.437-1.218-.882-1.687-.47-.445-1.053-.75-1.687-.882-.633-.13-1.29-.083-1.897.14-.273-.587-.704-1.086-1.245-1.44S11.647 1.62 11 1.604c-.646.017-1.273.213-1.813.568-.54.354-.972.853-1.246 1.44-.607-.223-1.264-.272-1.897-.14-.633.13-1.217.437-1.687.882-.444.47-.75 1.053-.882 1.687-.13.633-.083 1.29.14 1.897-.586.274-1.084.706-1.438 1.246-.354.54-.552 1.17-.57 1.816.018.646.216 1.276.57 1.816.354.54.852.972 1.438 1.246-.223.607-.27 1.264-.14 1.897.131.634.437 1.217.882 1.687.47.445 1.054.75 1.687.882.633.13 1.29.083 1.897-.14.274.586.706 1.084 1.246 1.438.54.354 1.17.552 1.813.57.646-.018 1.276-.216 1.816-.57.54-.354.972-.852 1.246-1.438.607.223 1.264.27 1.897.14.634-.131 1.217-.437 1.687-.882.445-.47.75-1.053.882-1.687.13-.633.083-1.29-.14-1.897.586-.274 1.084-.706 1.438-1.246.355-.54.552-1.17.57-1.816zM9.662 14.85l-3.429-3.428 1.293-1.293 2.136 2.136 4.6-4.6 1.293 1.293-5.893 5.892z"></path></svg>';
 const BUSINESS_BADGE_SVG = '<svg class="verified-badge business-badge" viewBox="0 0 22 22" width="16" height="16" aria-label="Business Account"><path fill="#D4A017" d="M20.396 11c-.018-.646-.215-1.275-.57-1.816-.354-.54-.852-.972-1.438-1.246.223-.607.27-1.264.14-1.897-.131-.634-.437-1.218-.882-1.687-.47-.445-1.053-.75-1.687-.882-.633-.13-1.29-.083-1.897.14-.273-.587-.704-1.086-1.245-1.44S11.647 1.62 11 1.604c-.646.017-1.273.213-1.813.568-.54.354-.972.853-1.246 1.44-.607-.223-1.264-.272-1.897-.14-.633.13-1.217.437-1.687.882-.444.47-.75 1.053-.882 1.687-.13.633-.083 1.29.14 1.897-.586.274-1.084.706-1.438 1.246-.354.54-.552 1.17-.57 1.816.018.646.216 1.276.57 1.816.354.54.852.972 1.438 1.246-.223.607-.27 1.264-.14 1.897.131.634.437 1.217.882 1.687.47.445 1.054.75 1.687.882.633.13 1.29.083 1.897-.14.274.586.706 1.084 1.246 1.438.54.354 1.17.552 1.813.57.646-.018 1.276-.216 1.816-.57.54-.354.972-.852 1.246-1.438.607.223 1.264.27 1.897.14.634-.131 1.217-.437 1.687-.882.445-.47.75-1.053.882-1.687.13-.633.083-1.29-.14-1.897.586-.274 1.084-.706 1.438-1.246.355-.54.552-1.17.57-1.816zM9.662 14.85l-3.429-3.428 1.293-1.293 2.136 2.136 4.6-4.6 1.293 1.293-5.893 5.892z"></path></svg>';
-const vbadge = uid => { const p = users[uid]; if (!p) return ''; if (p.isBusinessAccount) return BUSINESS_BADGE_SVG; if (p.paidVerifiedAt) return VERIFIED_BADGE_SVG; return ''; };
+const vbadge = uid => { if (uid === AI_UID) return VERIFIED_BADGE_SVG; const p = users[uid]; if (!p) return ''; if (p.isBusinessAccount) return BUSINESS_BADGE_SVG; if (p.paidVerifiedAt) return VERIFIED_BADGE_SVG; return ''; };
 
 /* =============== OFFLINE DB (IndexedDB) ===============
    Cached so the app opens instantly and keeps working offline: profiles, chat list, recent messages per
@@ -1248,7 +1262,7 @@ async function paintCached(){
   const uid = me.uid, v = await HDB.get('c|' + uid);
   if (!v || !me || me.uid !== uid || chatsLoaded) return;
   Object.keys(chats).forEach(k => delete chats[k]);
-  Object.entries(v).forEach(([u, meta]) => { if (u !== AI_UID && meta && typeof meta === 'object') chats[u] = meta; });
+  Object.entries(v).forEach(([u, meta]) => { if (meta && typeof meta === 'object') chats[u] = meta; });
   await Promise.all(Object.keys(chats).concat(uid).map(cachedUser));
   if (me && me.uid === uid && !chatsLoaded) renderChatList();
 }
@@ -1256,6 +1270,7 @@ async function paintCached(){
 /* =============== USERS =============== */
 const userLoading = {}, userFresh = new Set();
 function loadUser(uid){
+  if (uid === AI_UID) { if (!users[uid]) users[uid] = { name: AI_NAME }; return Promise.resolve(users[uid]); }
   if (userFresh.has(uid) && users[uid]) return Promise.resolve(users[uid]);
   if (userLoading[uid]) return userLoading[uid];
   const net = Promise.race([get(ref(db, `users/${uid}`)), new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 8000))]).then(s => {
@@ -1269,8 +1284,8 @@ function loadUser(uid){
   if (users[uid]) return Promise.resolve(users[uid]);                       // already on screen from memory/cache; refresh quietly
   return cachedUser(uid).then(() => users[uid] ? users[uid] : net);          // cached profile = instant; otherwise wait for network
 }
-const uName = uid => uid === me?.uid ? 'You' : (users[uid]?.name || users[uid]?.username || 'Haba user');
-const uAvatar = uid => { const u = users[uid]?.photoURL; return u ? (avObj.get(u) || u) : DEFAULT_AVATAR; };
+const uName = uid => uid === AI_UID ? AI_NAME : uid === me?.uid ? 'You' : (users[uid]?.name || users[uid]?.username || 'Haba user');
+const uAvatar = uid => { if (uid === AI_UID) return AI_AVATAR; const u = users[uid]?.photoURL; return u ? (avObj.get(u) || u) : DEFAULT_AVATAR; };
 
 /* =============== CHAT LIST =============== */
 function startChatList(){
@@ -1280,9 +1295,9 @@ function startChatList(){
     HDB.set('c|' + me.uid, v);
     const old = {}; Object.entries(chats).forEach(([k, c]) => old[k] = c.timestamp || 0);
     Object.keys(chats).forEach(k => delete chats[k]);
-    Object.entries(v).forEach(([uid, meta]) => { if (uid !== AI_UID && meta && typeof meta === 'object') chats[uid] = meta; });
+    Object.entries(v).forEach(([uid, meta]) => { if (meta && typeof meta === 'object') chats[uid] = meta; });
     const uids = Object.keys(chats);
-    if (chatsLoaded) uids.forEach(uid => { const c = chats[uid]; if (!c.hidden && c.senderUid !== me.uid && (c.timestamp || 0) > (old[uid] || 0) && uid !== activeUid) notifyMsg(uid, c); });
+    if (chatsLoaded) uids.forEach(uid => { const c = chats[uid]; if (!c.hidden && c.senderUid !== me.uid && (c.timestamp || 0) > (old[uid] || 0) && c.text !== AI_SEED && uid !== activeUid) notifyMsg(uid, c); });
     chatsLoaded = true; setTimeout(warmTopThreads, 2500);
     uids.forEach(uid => {   // live "typing…" per conversation
       if (typingWatch[uid]) return;
@@ -1387,11 +1402,11 @@ async function chatSheet(uid){
   const bl = (await get(ref(db, `blocks/${me.uid}/${uid}`)).catch(() => null))?.val() === true;
   const ov = modal(`<div style="display:flex;gap:12px;align-items:center;margin-bottom:8px"><div class="av sm" style="background-image:url('${cssUrl(uAvatar(uid))}')"></div><b>${esc(uName(uid))}${vbadge(uid)}</b></div>
     <button class="sh" id="cs-pin">${c.pinned ? 'Unpin from top' : '📌 Pin to top'}</button>
-    <button class="sh" id="cs-block">${bl ? 'Unblock' : 'Block'}</button>
+    ${uid === AI_UID ? '' : `<button class="sh" id="cs-block">${bl ? 'Unblock' : 'Block'}</button>`}
     <button class="sh danger" id="cs-del">Delete chat</button>`);
   const base = `user_chats/${me.uid}/${uid}`;
   ov.querySelector('#cs-pin').onclick = () => { closeModal(); update(ref(db, base), { pinned: c.pinned ? null : Date.now() }).catch(() => toast('Couldn’t update')); };
-  ov.querySelector('#cs-block').onclick = () => { closeModal(); set(ref(db, `blocks/${me.uid}/${uid}`), bl ? null : true).then(() => toast(bl ? 'Unblocked' : 'Blocked')).catch(() => toast('Couldn’t update')); };
+  const csb = ov.querySelector('#cs-block'); if (csb) csb.onclick = () => { closeModal(); set(ref(db, `blocks/${me.uid}/${uid}`), bl ? null : true).then(() => toast(bl ? 'Unblocked' : 'Blocked')).catch(() => toast('Couldn’t update')); };
   ov.querySelector('#cs-del').onclick = () => {
     const o2 = modal(`<h3>Delete chat with ${esc(uName(uid))}?</h3><p style="color:var(--muted);margin:0 0 14px">It disappears from your side only and stays hidden even if they message you again. They keep their copy.</p><button class="btn" id="d-yes" style="background:var(--danger);color:#fff">Delete permanently</button><button class="btn ghost" id="d-no" style="margin-top:8px">Cancel</button>`);
     o2.querySelector('#d-no').onclick = closeModal;
@@ -1486,7 +1501,7 @@ function closeThread(silent){
   vnStop();
   threadUnsubs.forEach(f => f()); threadUnsubs = [];
   if (threadId && me && !silent) set(ref(db, `dm_threads/${threadId}/typing/${me.uid}`), false).catch(() => {});
-  activeUid = null; threadId = null; rawMsgs = {}; replyTo = null;
+  activeUid = null; threadId = null; rawMsgs = {}; replyTo = null; $('#composer').classList.remove('ai');
   $('#thread').classList.add('hidden'); $('#placeholder').classList.remove('hidden');
   $('#app').classList.remove('chat-open');
   renderChatList();
@@ -1508,7 +1523,8 @@ async function openThread(uid){
   getPeerPub(uid, true).catch(() => {});
 
   const watch = (path, fn) => { const r = ref(db, path); const cb = onValue(r, fn); threadUnsubs.push(() => off(r, 'value', cb)); };
-  watch(`users/${uid}`, s => { if (s.exists()) { users[uid] = s.val(); userFresh.add(uid); cacheUser(uid); warmAvatar(users[uid].photoURL); paintHeader(); } });
+  $('#composer').classList.toggle('ai', uid === AI_UID);
+  if (uid !== AI_UID) watch(`users/${uid}`, s => { if (s.exists()) { users[uid] = s.val(); userFresh.add(uid); cacheUser(uid); warmAvatar(users[uid].photoURL); paintHeader(); } });
   watch(`dm_threads/${threadId}/readReceipts/${uid}`, s => { otherLastRead = s.val() || 0; paintTicks(); });
   watch(`dm_threads/${threadId}/typing/${uid}`, s => { otherTyping = !!s.val(); paintTyping(); });
   watch(`dm_threads/${threadId}/settings/disappearingSeconds`, s => { disappearing = s.val() || 0; });
@@ -1531,6 +1547,7 @@ function loadOlder(){
   msgUnsub = () => off(q, 'value', cb);
 }
 function markRead(){
+  if (activeUid === AI_UID) return;
   if (!threadId || localStorage.getItem('hm-receipts') === 'off') return;
   set(ref(db, `dm_threads/${threadId}/readReceipts/${me.uid}`), Date.now()).catch(() => {});
 }
@@ -1539,7 +1556,8 @@ function paintHeader(){
   $('#th-name').innerHTML = esc(activeUid === me.uid ? 'My Account' : uName(activeUid)) + vbadge(activeUid);
   $('#th-av').style.backgroundImage = `url('${cssUrl(uAvatar(activeUid))}')`;
   let st = '';
-  if (u.status === 'online') st = 'online';
+  if (activeUid === AI_UID) st = 'Always here to help';
+  else if (u.status === 'online') st = 'online';
   else if (u.lastSeen) st = 'last seen ' + fmtListTime(u.lastSeen);
   $('#th-status').textContent = otherTyping ? 'typing…' : st;
 }
@@ -1585,6 +1603,7 @@ async function renderMessages(keepScroll){
   const near = firstLoad || (prevH - prevTop - box.clientHeight < 150);
   let html = '', last = null;
   if (Object.keys(rawMsgs).length >= msgLimit) html += '<button id="more">Load older messages</button>';
+  if (uid === AI_UID) html += `<div class="sys">${AI_NAME} replies come from Haba’s AI service. These chats aren’t end-to-end encrypted.</div>`;
   if (!msgs.length) html += emptyState('hello', 'No messages yet', `Send the first message to ${uName(uid)}.`, iBlocked || theyBlocked ? '' : 'Say hi 👋', 'sayhi');
   for (const m of msgs) {
     const isNew = !firstLoad && !keepScroll && !renderedKeys.has(m.key) && now - m.createdAt < 10000;
@@ -1791,8 +1810,44 @@ async function replyPayload(peer){
   const r = { key: replyTo.key, senderUid: replyTo.senderUid, text: replyTo.text, mediaType: replyTo.mediaType };
   return r;
 }
+let aiBusy = false;
+/* Haba AI: messages go into the normal dm_thread, then habaAIChat answers and the reply is written back (same flow as the Haba app). */
+async function sendToAI(text){
+  if (aiBusy) return toast(`${AI_NAME} is still replying…`);
+  if (!netOK()) return toast('You’re offline');
+  const uid = me.uid, tid = threadIdFor(uid, AI_UID), base = `user_chats/${uid}/${AI_UID}`;
+  input.value = ''; autoGrow(); $('#reply-x').click();
+  clearTimeout(typingT); typingOn = false;
+  aiBusy = true;
+  const now = Date.now(), key = push(ref(db, `dm_threads/${tid}/messages`)).key;
+  try {
+    await update(ref(db), {
+      [`dm_threads/${tid}/messages/${key}`]: { text, senderUid: uid, createdAt: now },
+      [base + '/text']: text, [base + '/timestamp']: now, [base + '/unreadCount']: 0, [base + '/senderUid']: uid, [base + '/hidden']: null
+    });
+  } catch (e) { aiBusy = false; return toast('Message failed to send'); }
+  set(ref(db, `dm_threads/${tid}/typing/${AI_UID}`), true).catch(() => {});
+  try {
+    const cleared = chats[AI_UID]?.clearedAt || 0;
+    const hs = await get(query(ref(db, `dm_threads/${tid}/messages`), orderByChild('createdAt'), limitToLast(30)));
+    const conv = Object.values(hs.val() || {}).filter(m => (m.createdAt || 0) > cleared).sort((a, b) => a.createdAt - b.createdAt)
+      .map(m => ({ role: m.senderUid === AI_UID ? 'assistant' : 'user', content: (typeof m.text === 'string' ? m.text : '').trim() })).filter(m => m.content);
+    if (!conv.length || conv[conv.length - 1].role !== 'user') conv.push({ role: 'user', content: text });
+    const res = await habaAIChatCallable({ messages: conv });
+    const reply = res.data && res.data.text;
+    if (!reply) throw new Error('Empty response');
+    const t2 = Date.now(), k2 = push(ref(db, `dm_threads/${tid}/messages`)).key;
+    await update(ref(db), {
+      [`dm_threads/${tid}/messages/${k2}`]: { text: reply, senderUid: AI_UID, createdAt: t2 },
+      [base + '/text']: reply, [base + '/timestamp']: t2, [base + '/senderUid']: AI_UID,
+      [base + '/unreadCount']: activeUid === AI_UID ? 0 : increment(1)
+    });
+  } catch (e) { console.error('habaAIChat failed', e); toast(`Couldn’t reach ${AI_NAME} right now (${e.code || e.message || 'error'}). Try again.`); }
+  finally { aiBusy = false; set(ref(db, `dm_threads/${tid}/typing/${AI_UID}`), false).catch(() => {}); }
+}
 async function sendText(){
   const text = input.value.trim(); if (!text || !activeUid || iBlocked || theyBlocked) return;
+  if (activeUid === AI_UID) return sendToAI(text);
   const peer = activeUid;
   try {
     const enc = await encText(peer, text);
@@ -2273,12 +2328,12 @@ $('#btn-thread-menu').onclick = e => {
   const r = e.currentTarget.getBoundingClientRect();
   showMenu(r.right - 180, r.bottom + 4, [
     ['Refresh chat', () => { renderMessages(); }],
-    [iBlocked ? 'Unblock' : 'Block', () => set(ref(db, `blocks/${me.uid}/${activeUid}`), iBlocked ? null : true)],
+    ...(activeUid === AI_UID ? [] : [[iBlocked ? 'Unblock' : 'Block', () => set(ref(db, `blocks/${me.uid}/${activeUid}`), iBlocked ? null : true)]]),
     ['Close chat', exitChat]
   ]);
 };
 $('#btn-back').onclick = exitChat;
-$('#th-av').onclick = () => { if (activeUid) showProfile(activeUid); };
+$('#th-av').onclick = () => { if (activeUid && activeUid !== AI_UID) showProfile(activeUid); };
 
 /* contacts page + floating button */
 let contactsHist = false, contactIds = [], blockedIds = new Set(), ctLpT = null, ctLpFired = false, ctLpX = 0, ctLpY = 0, acT = null;

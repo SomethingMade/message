@@ -2839,7 +2839,7 @@ function showItem(){
   const done = () => { sv.loaded = true; stage.classList.remove('shim'); };
   const url = typeof s.mediaURL === 'string' && /^https:\/\//.test(s.mediaURL) ? s.mediaURL : '';
   if (s.type === 'text') {
-    const d = document.createElement('div'); d.className = 'svt'; d.style.background = safeBg(s.bgColor); applyFont(d, s.font); d.textContent = s.text || ''; stage.appendChild(d); sv.loaded = true;
+    const d = document.createElement('div'); d.className = 'svt'; d.style.background = safeBg(s.bgColor); applyFont(d, s.font); d.textContent = s.text || ''; stage.appendChild(d); sv.loaded = true; sv.dur = 30000;   // text statuses also stay up for 30 seconds
   } else if (s.type === 'video' && url) {
     stage.classList.add('shim');
     const v = document.createElement('video'); v.playsInline = true; v.autoplay = true; v.preload = 'auto';
@@ -2922,12 +2922,24 @@ $('#sv-like').onclick = () => {
 };
 $('#sv-rx').onclick = e => {
   const b = e.target.closest('button'); if (!b) return; const s = sv.items[sv.i]; if (!s) return;
-  const em = b.dataset.e, off = myRx(s) === em, base = `stories/${sv.uid}/${s.key}`;
-  s.reactions = { ...(s.reactions || {}) }; s.likes = { ...(s.likes || {}) };
-  if (off) { delete s.reactions[me.uid]; delete s.likes[me.uid]; } else { s.reactions[me.uid] = em; if (em === '❤️') s.likes[me.uid] = true; else delete s.likes[me.uid]; }
-  if (stories[sv.uid] && stories[sv.uid][s.key]) { stories[sv.uid][s.key].reactions = s.reactions; stories[sv.uid][s.key].likes = s.likes; }
-  paintStoryMeta(s); hideRx(); setSvPaused(false);
-  update(ref(db), { [`${base}/reactions/${me.uid}`]: off ? null : em, [`${base}/likes/${me.uid}`]: !off && em === '❤️' ? true : null }).catch(() => toast('Couldn’t send reaction'));
+  const em = b.dataset.e, uid = sv.uid, key = s.key;
+  hideRx(); setSvPaused(false);
+  if (em !== '❤️') {
+    /* A status only has a likes/{uid} slot that viewers can write (same as the Haba app), so any other emoji goes to the poster as a direct message. */
+    const fail = err => { if (err && err.message === 'BLOCKED') toast('You can’t send messages to this contact'); else if (!lockedGuard(err, () => send())) { console.error(err); toast('Couldn’t send reaction'); } };
+    const send = () => sendStatusReply(uid, s, em).then(online => toast(online ? 'Reaction sent to ' + uName(uid) : 'Reaction queued. It will send when you’re back online'), fail);
+    send(); return;
+  }
+  const liked = !!(s.likes && s.likes[me.uid]);
+  const apply = on => {
+    s.likes = { ...(s.likes || {}) }; s.reactions = { ...(s.reactions || {}) };
+    if (on) s.likes[me.uid] = true; else { delete s.likes[me.uid]; delete s.reactions[me.uid]; }
+    if (stories[uid] && stories[uid][key]) { stories[uid][key].likes = s.likes; stories[uid][key].reactions = s.reactions; }
+    if (sv.items[sv.i] === s) paintStoryMeta(s);
+  };
+  apply(!liked);
+  const r = ref(db, `stories/${uid}/${key}/likes/${me.uid}`);
+  (liked ? remove(r) : set(r, true)).catch(() => { apply(liked); toast('Couldn’t send reaction'); });
 };
 $('#sv-hit').addEventListener('pointerdown', () => { if (!$('#sv-rx').classList.contains('hidden')) hideRx(); });
 /* Replying to a status sends a normal direct message to the person who posted it, quoting the status. Nothing is posted publicly. */

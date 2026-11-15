@@ -290,6 +290,16 @@ input,textarea{-webkit-user-select:text;user-select:text;-webkit-touch-callout:d
 .srow .st b{display:block;font-size:17px;font-weight:600}
 .srow .st span{display:block;color:var(--muted);font-size:14px;margin-top:3px}
 .srow.danger .st b,.srow.danger>svg{color:var(--danger);stroke:var(--danger)}
+.srow.prem{margin:12px 16px 8px;padding:14px 16px;gap:14px;border-radius:18px;background:linear-gradient(135deg,rgba(10,132,255,.16),rgba(10,132,255,.05));border:1px solid rgba(10,132,255,.38)}
+.srow.prem .pbadge{flex-shrink:0;display:flex}
+.srow.prem .pbadge .verified-badge{width:38px;height:38px;margin:0;top:0}
+.srow.prem .pbtn{background:#0A84FF;color:#fff;border-radius:50px;padding:8px 16px;font-weight:700;font-size:13px;flex-shrink:0}
+.srow.prem .pon{display:inline-block;background:#0A84FF;color:#fff;border-radius:50px;padding:1px 9px;font-size:11px;font-weight:700;margin-left:8px;vertical-align:middle}
+.pperk{display:flex;gap:12px;align-items:flex-start;padding:10px 0}
+.pperk svg{width:22px;height:22px;stroke:#0A84FF;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;margin-top:1px}
+.pperk b{display:block;font-size:15px}.pperk span{display:block;color:var(--muted);font-size:13px;margin-top:2px}
+#prem-pay{width:100%;padding:14px;border-radius:50px;background:#0A84FF;color:#fff;font-weight:700;font-size:16px;margin-top:10px}
+#prem-pay:disabled{opacity:.6}
 .sw{width:46px;height:26px;border-radius:13px;background:var(--input);border:1px solid var(--border);position:relative;flex-shrink:0;transition:background .2s}
 .sw::after{content:'';position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:var(--muted);transition:transform .2s,background .2s}
 .sw.on{background:var(--primary)}
@@ -698,6 +708,7 @@ body.gr-chat #bnav{display:none}
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut, RecaptchaVerifier, PhoneAuthProvider, updatePhoneNumber, signInWithPhoneNumber, signInWithEmailAndPassword, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 import { getDatabase, ref, onValue, get, push, set, update, off, query, orderByChild, orderByKey, limitToLast, limitToFirst, startAt, endAt, increment, onDisconnect, serverTimestamp, remove, orderByValue } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-functions.js";
 import { getStorage, ref as sRef, uploadBytes, uploadBytesResumable, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-storage.js";
 
 /* Same Firebase project as the main Haba app, so accounts, chats and contacts are shared. */
@@ -711,6 +722,11 @@ const app = initializeApp({
   appId: "1:941619830061:web:de9e0f791eb8f6eacf87a4"
 });
 const auth = getAuth(app), db = getDatabase(app), storage = getStorage(app);
+/* Haba Premium (blue badge) is bought through the same Yoco checkout as the main Haba app. The server picks the price and grants the badge. */
+const createVerifiedBadgeCheckoutCallable = httpsCallable(getFunctions(app), 'createVerifiedBadgeCheckout');
+/* Back from Yoco: ?verified=success|cancelled|failed. Capture it now, then clean the address bar. */
+const PREM_RETURN = new URLSearchParams(location.search).get('verified');
+if (PREM_RETURN) { try { history.replaceState(null, '', location.pathname + location.hash); } catch {} }
 
 const $ = s => document.querySelector(s);
 const AI_UID = "goza-ai-assistant";
@@ -1012,7 +1028,7 @@ onAuthStateChanged(auth, async user => {
     Object.keys(chats).forEach(async u => { const t = chats[u].text; const p = isE2E(t) ? await decText(u, t) : (t || ''); if (previews[u] !== p) { previews[u] = p; renderChatList(); } });
   }
   startPresence();
-  obInit();
+  obInit(); premiumReturn();
   startChatList();
   startStories();
   if (keyState === 'locked') promptUnlock(true);
@@ -1989,6 +2005,58 @@ $('#btn-settings').onclick = e => {
   showMenu(r.right - 180, r.bottom + 4, [['Settings', openSettings]]);
 };
 
+/* Haba Premium = the blue verified badge (paidVerifiedAt). Bought via Yoco (same checkout as the Haba app). */
+const PREMIUM = { price: '4.99', note: 'once-off payment' };  // display only; the server sets the real price
+const premSince = u => new Date(u.paidVerifiedAt).toLocaleDateString([], { day: 'numeric', month: 'short', year: 'numeric' });
+function premCard(u){
+  if (u.paidVerifiedAt) return `<div class="srow prem on" data-act="premium"><div class="pbadge">${VERIFIED_BADGE_SVG}</div><div class="st"><b>Haba Premium<span class="pon">ACTIVE</span></b><span>Your account is on Premium · Verified since ${esc(premSince(u))}</span></div></div>`;
+  if (u.isBusinessAccount) return `<div class="srow prem" data-act=""><div class="pbadge">${BUSINESS_BADGE_SVG}</div><div class="st"><b>Business account</b><span>Verified with the gold business badge</span></div></div>`;
+  return `<div class="srow prem" data-act="premium"><div class="pbadge">${VERIFIED_BADGE_SVG}</div><div class="st"><b>Get Haba Premium</b><span>Blue verified badge · R${PREMIUM.price}</span></div><button class="pbtn" tabindex="-1">Upgrade</button></div>`;
+}
+function premiumSheet(){
+  const u = users[me.uid] || {}, paid = !!u.paidVerifiedAt;
+  const tick = '<svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>';
+  const perk = (t, d) => `<div class="pperk">${tick}<div><b>${t}</b><span>${d}</span></div></div>`;
+  const ov = modal(`<div style="text-align:center;padding:4px 0 6px"><div style="display:inline-flex" class="pbadge-lg">${VERIFIED_BADGE_SVG.replace('width="16" height="16"', 'width="64" height="64"')}</div>
+    <h3 style="margin:10px 0 4px">${paid ? 'You’re on Premium' : 'Haba Premium'}</h3>
+    <div style="color:var(--muted);font-size:14px">${paid ? 'Verified since ' + esc(premSince(u)) : 'Get the blue verified badge on your account'}</div></div>
+    ${perk('Blue verified badge', 'Shown next to your name in chats, groups and updates')}
+    ${perk('Feed ranking boost', 'Your posts rank higher on the Haba Feed')}
+    ${perk('One account, everywhere', 'Works across Haba Messenger and the Haba app')}
+    ${paid ? '<button id="prem-pay" style="background:var(--input);color:var(--text)">Close</button>' : `<button id="prem-pay">Pay R${PREMIUM.price} · ${esc(PREMIUM.note)}</button><div style="text-align:center;color:var(--muted);font-size:12px;margin-top:8px">Permanent badge · Secure payment by Yoco</div>`}`);
+  ov.querySelector('#prem-pay').onclick = e => paid ? closeModal() : premiumPay(e.currentTarget);
+}
+async function premiumPay(btn){
+  if (!navigator.onLine) return toast('You’re offline');
+  const label = btn.textContent;
+  btn.disabled = true; btn.textContent = 'Opening secure checkout…';
+  try {
+    const res = await createVerifiedBadgeCheckoutCallable({});
+    const url = res && res.data && res.data.url;
+    if (typeof url !== 'string' || url.indexOf('https://') !== 0) throw new Error('No checkout URL returned');
+    location.href = url;
+  } catch (err) {
+    console.error('buy verified badge failed', err);
+    toast(err && err.code === 'functions/already-exists' ? 'You’re already verified.' : 'Couldn’t start the payment. Please try again.');
+    btn.disabled = false; btn.textContent = label;
+  }
+}
+/* After Yoco sends the person back. The webhook grants paidVerifiedAt, so wait for it to land. */
+async function premiumReturn(){
+  if (!PREM_RETURN || !me) return;
+  if (PREM_RETURN === 'cancelled') return toast('Payment cancelled');
+  if (PREM_RETURN !== 'success') return toast('Payment didn’t go through');
+  toast('Payment received. Activating Premium…');
+  for (let i = 0; i < 16; i++) {
+    try {
+      const s = await get(ref(db, `users/${me.uid}/paidVerifiedAt`));
+      if (s.exists()) { users[me.uid] = { ...(users[me.uid] || {}), paidVerifiedAt: s.val() }; closeModal(); toast('Welcome to Haba Premium'); renderSettings(); renderChatList(); return; }
+    } catch {}
+    await new Promise(r => setTimeout(r, 2500));
+  }
+  toast('Your badge will appear shortly');
+}
+
 /* settings page */
 let settingsHist = false;
 const SIC = {
@@ -2032,6 +2100,7 @@ function renderSettings(){
     <div class="avwrap">${u.bio ? `<div class="about" data-edit>${esc(String(u.bio).split('\n')[0])}</div>` : ''}<div class="av" data-edit style="background-image:url('${cssUrl(uAvatar(me.uid))}')"></div><div class="camb" data-edit><svg viewBox="0 0 24 24">${SIC.camera}</svg></div></div>
     <div class="sname" data-edit><span>${esc(u.name || u.username || me.displayName || 'My Account')}${vbadge(me.uid)}</span><i></i></div>
     <div class="suser">${u.username ? '@' + esc(u.username) : ''}</div>
+    ${premCard(u)}
     ${row('', 'user', 'Account', me.email || 'Signed in with phone')}
     ${row('phone', 'phone', 'Phone number', (me.phoneNumber || u.phoneNumber) ? (me.phoneNumber || u.phoneNumber) + ' · tap to change' : 'Not linked · tap to add')}
     ${row('receipts', 'shield', 'Privacy', 'Read receipts', on('hm-receipts'))}
@@ -2115,6 +2184,7 @@ $('#settings').addEventListener('click', e => {
     toast(vis ? 'Others can see when you’re online' : 'Your online status is hidden'); renderSettings();
   }
   else if (act === 'phone') changePhone();
+  else if (act === 'premium') premiumSheet();
   else if (act === 'notif') { toast(flip('hm-notif') ? 'Notifications on' : 'Notifications off'); renderSettings(); }
   else if (act === 'nsound') { const v = flip('hm-sound'); toast(v ? 'Message sound on' : 'Message sound off'); if (v) { lastPing = 0; const c = audioCtx(); if (c) c.resume().catch(() => {}); setTimeout(() => msgPing(true), 80); } renderSettings(); }
   else if (act === 'nvib') { const v = flip('hm-vib'); toast(v ? 'Vibration on' : 'Vibration off'); if (v && navigator.vibrate) navigator.vibrate([70, 50, 70]); renderSettings(); }

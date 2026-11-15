@@ -2852,6 +2852,7 @@ function showItem(){
     v.src = url; stage.appendChild(v); sv.video = v;
   } else if (url) {
     stage.classList.add('shim');
+    sv.dur = 30000;   // photo statuses stay up for 30 seconds (tap to skip)
     const im = new Image(); im.alt = ''; im.onload = done; im.onerror = () => { done(); sv.dur = 2500; im.remove(); stage.textContent = 'Couldn’t load this status'; };
     im.src = url; stage.appendChild(im);
   } else { sv.loaded = true; sv.dur = 2000; stage.textContent = 'Unavailable'; }

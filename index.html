@@ -83,6 +83,14 @@ input,textarea{font:inherit;color:inherit}
 .verified-badge{width:16px;height:16px;flex-shrink:0;vertical-align:middle;position:relative;top:-1px;margin-left:4px;display:inline-block}
 .badge{background:var(--primary);color:var(--inverse);border-radius:50px;font-size:12px;font-weight:700;min-width:20px;height:20px;padding:0 6px;display:flex;align-items:center;justify-content:center}
 .empty{padding:40px 24px;text-align:center;color:var(--muted)}
+.es{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:32px 30px;min-height:min(58vh,460px);color:var(--text)}
+.es .art{width:150px;height:150px;margin-bottom:18px;animation:esf 4s ease-in-out infinite}
+.es h3{margin:0 0 6px;font-size:20px;font-weight:800}.es p{margin:0 0 18px;color:var(--muted);font-size:15px;line-height:1.45;max-width:280px}
+.es .pgbtn{padding:12px 26px;font-size:15px}
+.es .art .a{fill:var(--accent)}.es .art .s{stroke:var(--text);fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}.es .art .t{fill:var(--input)}
+@keyframes esf{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+@media(prefers-reduced-motion:reduce){.es .art{animation:none}}
+
 #banner{background:#FFF4D6;color:#5a4300;padding:9px 14px;font-size:13px;display:flex;gap:10px;align-items:center}
 #banner button{background:#111;color:#fff;border-radius:50px;padding:6px 12px;font-weight:600;font-size:12px;flex-shrink:0}
 :root[data-theme="dark"] #banner{background:#3a2f0b;color:#ffe9a8}
@@ -1094,7 +1102,7 @@ function renderChatList(){
   document.title = (unread ? `(${unread}) ` : '') + 'Haba Messenger';
   setNavBadge(unreadChats);
   const el = $('#chatlist');
-  if (!list.length) { el.innerHTML = `<div class="empty">${q || chatFilter !== 'all' ? 'No chats match.' : 'No conversations yet.<br>Tap the pencil to start one.'}</div>`; return; }
+  if (!list.length) { el.innerHTML = q || chatFilter !== 'all' ? emptyState('search', 'No chats found', 'Try a different search or filter.') : emptyState('chat', 'No conversations yet', 'Start a chat with a friend. Your messages are end-to-end encrypted.', 'Start a chat', 'newchat'); return; }
   el.innerHTML = list.map(([uid, c]) => {
     const own = c.senderUid === me.uid;
     const online = users[uid]?.status === 'online';
@@ -1792,6 +1800,22 @@ function changePhone(){
     } catch (e) { err(nice2(e)); q('#cp-ok').disabled = false; }
   };
 }
+/* centered empty states: illustration + title + hint + optional action */
+const ES_ART = {
+  chat: '<circle class="a" cx="75" cy="75" r="62" opacity=".22"/><path class="t s" d="M32 48a12 12 0 0 1 12-12h46a12 12 0 0 1 12 12v26a12 12 0 0 1-12 12H62l-16 14V86h-2a12 12 0 0 1-12-12Z"/><path class="a" stroke="var(--text)" stroke-width="2.4" stroke-linejoin="round" d="M60 76a10 10 0 0 1 10-10h40a10 10 0 0 1 10 10v20a10 10 0 0 1-10 10h-2v12l-14-12H70a10 10 0 0 1-10-10Z" transform="translate(4 6)"/><circle cx="76" cy="88" r="3" fill="var(--text)"/><circle cx="88" cy="88" r="3" fill="var(--text)"/><circle cx="100" cy="88" r="3" fill="var(--text)"/>',
+  updates: '<circle class="a" cx="75" cy="75" r="62" opacity=".22"/><circle class="s" cx="75" cy="75" r="40" stroke-dasharray="7 8"/><circle class="t s" cx="75" cy="75" r="26"/><circle cx="75" cy="68" r="8" fill="var(--text)"/><path class="s" d="M60 92a16 16 0 0 1 30 0"/><circle class="a" cx="112" cy="108" r="14" stroke="var(--text)" stroke-width="2.4"/><path class="s" d="M112 102v12M106 108h12"/>',
+  pages: '<circle class="a" cx="75" cy="75" r="62" opacity=".22"/><path class="t s" d="M50 34h38l16 16v62a4 4 0 0 1-4 4H50a4 4 0 0 1-4-4V38a4 4 0 0 1 4-4Z"/><path class="s" d="M88 34v16h16M58 72h34M58 86h34M58 100h22"/><circle class="a" cx="42" cy="112" r="13" stroke="var(--text)" stroke-width="2.4"/><path class="s" d="M42 106v12M36 112h12"/>',
+  people: '<circle class="a" cx="75" cy="75" r="62" opacity=".22"/><circle class="t s" cx="75" cy="58" r="16"/><path class="t s" d="M44 112a31 31 0 0 1 62 0Z"/><circle class="t s" cx="40" cy="70" r="10"/><path class="s" d="M20 108a20 20 0 0 1 20-20"/><circle class="t s" cx="110" cy="70" r="10"/><path class="s" d="M130 108a20 20 0 0 0-20-20"/>',
+  post: '<circle class="a" cx="75" cy="75" r="62" opacity=".22"/><rect class="t s" x="36" y="40" width="78" height="70" rx="10"/><path class="s" d="M48 58h54M48 72h54M48 86h32"/><circle class="a" cx="104" cy="102" r="12" stroke="var(--text)" stroke-width="2.4"/>',
+  search: '<circle class="a" cx="75" cy="75" r="62" opacity=".22"/><circle class="t s" cx="68" cy="68" r="26"/><path class="s" d="M88 88l22 22"/><path class="s" d="M58 68h20"/>'
+};
+function emptyState(kind, title, text, cta, act){
+  return `<div class="es"><svg class="art" viewBox="0 0 150 150" aria-hidden="true">${ES_ART[kind]}</svg><h3>${esc(title)}</h3><p>${esc(text)}</p>${cta ? `<button class="pgbtn" data-es="${act}">${esc(cta)}</button>` : ''}</div>`;
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-es]'); if (!b) return; const a = b.dataset.es;
+  if (a === 'newchat') $('#btn-new').click(); else if (a === 'status') openTextComposer(); else if (a === 'page') pgCreate(); else if (a === 'contact') addContactModal(); else if (a === 'post') pgPost();
+});
 const flip = k => { const v = localStorage.getItem(k) !== 'off'; localStorage.setItem(k, v ? 'off' : 'on'); return !v; };
 $('#settings').addEventListener('click', e => {
   if (e.target.closest('#set-back')) return closeSettings();
@@ -1927,7 +1951,7 @@ function renderContacts(){
   if (!q) html += `<div class="crow" data-act="sync"><div class="cic"><svg viewBox="0 0 24 24">${CT_USERS}</svg></div><div class="mid"><b>Sync phone contacts</b><span>Find people in your phonebook who are on Haba</span></div></div>`;
   html += '<div class="csec">Contacts on Haba</div>';
   if (!q || 'my account you message yourself'.includes(q)) html += row(me.uid, ((users[me.uid]?.username ? '@' + users[me.uid].username : users[me.uid]?.name || 'My Account')) + ' (You)', 'Message yourself');
-  html += list.length ? list.map(uid => row(uid, uName(uid), sub(uid))).join('') : (q ? '<div class="empty">No contacts match.</div>' : '<div class="empty">No contacts yet.<br>Tap New contact to add friends.</div>');
+  html += list.length ? list.map(uid => row(uid, uName(uid), sub(uid))).join('') : (q ? emptyState('search', 'No contacts found', 'Try a different name or username.') : emptyState('people', 'No contacts yet', 'Add friends by username to start chatting.', 'Add a contact', 'contact'));
   $('#ct-list').innerHTML = html;
 }
 async function unblockContact(uid){
@@ -2018,7 +2042,7 @@ function renderUpdates(){
   $('#up-list').innerHTML = upq.map(jobRow).join('') + own
     + (fresh.length ? '<div class="csec">Recent updates</div>' + fresh.map(row).join('') : '')
     + (seen.length ? '<div class="csec">Viewed updates</div>' + seen.map(row).join('') : '')
-    + (!fresh.length && !seen.length ? '<div class="empty" style="padding:28px 24px">No updates from others right now.<br>Statuses disappear after 24 hours.</div>' : '');
+    + (!fresh.length && !seen.length ? emptyState('updates', 'No updates right now', 'When your contacts share a status it shows up here. Statuses disappear after 24 hours.', 'Post a status', 'status') : '');
 }
 async function openUpdates(){
   $('#updates').classList.remove('hidden');
@@ -2470,13 +2494,13 @@ async function renderPages(load){
   const all = Object.values(pgAll);
   if (pgTab === 'discover') {
     const l = all.filter(p => !pgMine.has(p.id)).sort((a, b) => (b.followerCount || 0) - (a.followerCount || 0) || (b.createdAt || 0) - (a.createdAt || 0));
-    body.innerHTML = l.length ? l.map(p => row(p)).join('') : '<div class="empty">No Pages to discover yet.<br>Tap + to create the first one.</div>';
+    body.innerHTML = l.length ? l.map(p => row(p)).join('') : emptyState('pages', 'No Pages to discover yet', 'Be the first to create a Page for your business, brand or community.', 'Create a Page', 'page');
   } else {
     const m = all.filter(p => pgMine.has(p.id)), f = all.filter(p => pgFollow.has(p.id) && !pgMine.has(p.id));
     let h = '<div class="pgrow" data-act="create"><div class="pgav" style="width:48px;height:48px;background:var(--accent);color:#111"><svg viewBox="0 0 24 24" width="22" height="22" style="stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round"><path d="M12 5v14M5 12h14"/></svg></div><div class="mid"><b>Create a Page</b><span>For your business, brand or community</span></div></div>';
     if (m.length) h += '<div class="csec">Pages you manage</div>' + m.map(p => row(p, true)).join('');
     if (f.length) h += '<div class="csec">Pages you follow</div>' + f.map(p => row(p)).join('');
-    if (!m.length && !f.length) h += '<div class="empty">No Pages yet.<br>Pages you create or follow show up here.</div>';
+    if (!m.length && !f.length) h += emptyState('pages', 'No Pages yet', 'Pages you create or follow show up here.');
     body.innerHTML = h;
   }
 }
@@ -2488,7 +2512,7 @@ async function renderPageView(){
   try {
     const s = await get(query(ref(db, `pagePosts/${id}`), limitToLast(50))), l = []; s.forEach(c => { l.push({ id: c.key, ...c.val() }); });
     if (pgCur !== id) return; l.reverse();
-    $('#pg-posts').innerHTML = l.length ? l.map(x => `<div class="pgpost"><small>${x.createdAt ? new Date(x.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : ''}</small>${esc(x.text)}${/^https:\/\//i.test(x.mediaURL || '') && x.mediaType !== 'video' ? `<img src="${esc(x.mediaURL)}" style="width:100%;border-radius:12px;margin-top:8px" loading="lazy">` : ''}</div>`).join('') : '<div class="empty">No posts yet.</div>';
+    $('#pg-posts').innerHTML = l.length ? l.map(x => `<div class="pgpost"><small>${x.createdAt ? new Date(x.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : ''}</small>${esc(x.text)}${/^https:\/\//i.test(x.mediaURL || '') && x.mediaType !== 'video' ? `<img src="${esc(x.mediaURL)}" style="width:100%;border-radius:12px;margin-top:8px" loading="lazy">` : ''}</div>`).join('') : emptyState('post', 'No posts yet', own ? 'Share your first update with your followers.' : 'This Page hasn’t posted anything yet.', own ? 'New post' : '', 'post');
   } catch { if (pgCur === id) $('#pg-posts').innerHTML = '<div class="empty">Couldn’t load posts.</div>'; }
 }
 async function pgToggleFollow(id){

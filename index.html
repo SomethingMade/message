@@ -462,6 +462,18 @@ select.field{appearance:none}
 #stx .stxc{padding:6px 14px calc(16px + var(--sab));min-height:calc(58px + var(--sab))}
 #stx .stxc i{flex:0 0 auto;width:38px;height:38px;border-radius:50%;border:3px solid rgba(255,255,255,.45);cursor:pointer;scroll-snap-align:center;box-sizing:border-box}
 #stx .stxc i.on{border-color:#fff;box-shadow:0 0 0 2px rgba(0,0,0,.3)}
+.sheet.e2e{animation:sheetUp .28s cubic-bezier(.2,.8,.2,1)}
+@keyframes sheetUp{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}
+.e2e .grab{width:40px;height:4px;border-radius:2px;background:var(--border);margin:-8px auto 14px}
+.e2e h3{text-align:center;margin:0 0 4px;font-size:19px}
+.e2e .sub{text-align:center;color:var(--muted);font-size:14px;margin:0 0 6px}
+.e2e .art{color:var(--text);display:block;width:100%;max-width:340px;margin:6px auto 10px}
+.e2e .pt{display:flex;gap:12px;align-items:flex-start;margin:12px 0}
+.e2e .pt i{flex:0 0 28px;height:28px;border-radius:50%;background:var(--accent);color:#111;font-style:normal;font-weight:800;font-size:14px;display:flex;align-items:center;justify-content:center}
+.e2e .pt b{display:block;font-size:15px;margin-bottom:2px}
+.e2e .pt span{display:block;color:var(--muted);font-size:13.5px;line-height:1.4}
+.e2e .fine{color:var(--muted);font-size:12px;text-align:center;margin:10px 0 14px}
+.e2e .how{display:block;margin:12px auto 0;background:none;border:0;color:var(--accent);font-weight:600;font-size:13.5px;padding:6px}
 #smd-trim{display:none;padding:8px 20px 4px;user-select:none;-webkit-user-select:none}
 #smd-trim.on{display:block}
 #smd-trim .tt{display:flex;justify-content:space-between;font-size:13px;font-weight:600;margin-bottom:8px;color:rgba(255,255,255,.9)}
@@ -704,6 +716,7 @@ const E2E_PREFIX = '\u27e6e2e1\u27e7';
 const UNREADABLE = '🔒 Unable to decrypt message';
 let kp = null;                 // my keypair {privateKey, publicKey}
 let keyState = 'none';         // ready | locked | nobackup
+let backupState = 'unknown', freshKey = false;   // does a PIN backup exist for this account? (yes | no | unknown); freshKey = key was just created on this device
 const peerPub = {}, peerJwk = {}, shared = {};
 
 const idb = () => new Promise((res, rej) => { const r = indexedDB.open('haba-messenger-e2ee', 1); r.onupgradeneeded = () => r.result.createObjectStore('keys'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
@@ -716,7 +729,7 @@ const isE2E = s => typeof s === 'string' && s.startsWith(E2E_PREFIX);
 
 async function initKeys(){
   const uid = me.uid;
-  kp = null; keyState = 'locked';
+  kp = null; keyState = 'locked'; backupState = 'unknown'; freshKey = false;
   const stored = await idbGet('keypair-' + uid).catch(() => null);
   let pubSnap;
   try {
@@ -736,10 +749,36 @@ async function initKeys(){
     const pair = await crypto.subtle.generateKey({ name: 'ECDH', namedCurve: 'P-256' }, true, ['deriveKey']);
     await idbSet('keypair-' + uid, pair);
     await set(ref(db, `users/${uid}/e2ee/publicKey`), await crypto.subtle.exportKey('jwk', pair.publicKey));
-    kp = pair; keyState = 'ready'; return;
+    kp = pair; keyState = 'ready'; backupState = 'no'; freshKey = true; return;
   }
   const bk = await get(ref(db, `users/${uid}/e2ee/keyBackup`));
-  keyState = bk.exists() ? 'locked' : 'nobackup';
+  keyState = bk.exists() ? 'locked' : 'nobackup'; backupState = bk.exists() ? 'yes' : 'no';
+}
+/* ----- backup PIN: the private key, encrypted with a PIN-derived key (PBKDF2 → AES-GCM). Same format restoreFromPin() reads. ----- */
+async function makeBackup(pin, privateKey){
+  const salt = crypto.getRandomValues(new Uint8Array(16)), iv = crypto.getRandomValues(new Uint8Array(12)), iterations = 600000;
+  const base = await crypto.subtle.importKey('raw', new TextEncoder().encode(pin), 'PBKDF2', false, ['deriveKey']);
+  const k = await crypto.subtle.deriveKey({ name: 'PBKDF2', salt, iterations, hash: 'SHA-256' }, base, { name: 'AES-GCM', length: 256 }, false, ['encrypt']);
+  const jwk = await crypto.subtle.exportKey('jwk', privateKey);
+  const ct = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, k, new TextEncoder().encode(JSON.stringify(jwk)));
+  return { salt: b2b64(salt), iv: b2b64(iv), data: b2b64(ct), iterations };
+}
+async function saveBackup(pin){            // key is on this device: (re)create the PIN backup for it
+  if (!kp) throw new Error('LOCKED');
+  await set(ref(db, `users/${me.uid}/e2ee/keyBackup`), await makeBackup(pin, kp.privateKey));
+  backupState = 'yes';
+}
+async function resetKeys(pin){             // no key anywhere we can reach: new key pair + new backup, published together in one atomic write
+  const uid = me.uid, pair = await crypto.subtle.generateKey({ name: 'ECDH', namedCurve: 'P-256' }, true, ['deriveKey']);
+  const backup = await makeBackup(pin, pair.privateKey), pub = await crypto.subtle.exportKey('jwk', pair.publicKey);
+  await update(ref(db), { [`users/${uid}/e2ee/publicKey`]: pub, [`users/${uid}/e2ee/keyBackup`]: backup });
+  await idbSet('keypair-' + uid, pair);
+  kp = pair; keyState = 'ready'; backupState = 'yes';
+  Object.keys(shared).forEach(k => delete shared[k]); decCache.clear();
+}
+function checkBackup(){
+  if (keyState !== 'ready' || backupState !== 'unknown' || !me) return;
+  get(ref(db, `users/${me.uid}/e2ee/keyBackup`)).then(b => { backupState = b.exists() ? 'yes' : 'no'; renderBanner(); renderSettings(); }).catch(() => {});
 }
 
 async function restoreFromPin(pin){
@@ -935,7 +974,7 @@ onAuthStateChanged(auth, async user => {
   $('#chatlist').innerHTML = '<div class="spin"></div>';
   paintCached();                                   // chat list from the offline DB right away, before keys/network
   try { await initKeys(); } catch (e) { console.warn('key init', e); keyState = 'locked'; }
-  renderBanner();
+  renderBanner(); checkBackup();
   if (Object.keys(chats).length) {
     decCache.clear(); renderChatList(); if (activeUid) renderMessages(true);
     Object.keys(chats).forEach(async u => { const t = chats[u].text; const p = isE2E(t) ? await decText(u, t) : (t || ''); if (previews[u] !== p) { previews[u] = p; renderChatList(); } });
@@ -944,6 +983,7 @@ onAuthStateChanged(auth, async user => {
   startChatList();
   startStories();
   if (keyState === 'locked') promptUnlock(true);
+  else if (keyState === 'ready' && freshKey) { freshKey = false; promptCreatePin(); }   // brand-new account: offer a backup PIN right away
 });
 
 function startPresence(){
@@ -1514,8 +1554,8 @@ input.addEventListener('input', () => {
 input.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey && localStorage.getItem('hm-enter') !== 'off' && !/Mobi|Android/i.test(navigator.userAgent)) { e.preventDefault(); sendText(); } });
 $('#send').onclick = sendText;
 
-function lockedGuard(err){
-  if (err && err.message === 'LOCKED') { toast('Unlock encryption to send messages', { label: 'Unlock', fn: () => promptUnlock() }); return true; }
+function lockedGuard(err, retry){
+  if (err && err.message === 'LOCKED') { promptUnlock(false, retry); return true; }   // open the unlock sheet right away; the send resumes after unlocking
   return false;
 }
 async function pushMessage(peer, payload, previewEncrypted){
@@ -1551,14 +1591,16 @@ async function sendText(){
     input.value = ''; autoGrow(); $('#reply-x').click();
     clearTimeout(typingT); typingOn = false; set(ref(db, `dm_threads/${threadId}/typing/${me.uid}`), false).catch(() => {});
     await pushMessage(peer, payload, enc);
-  } catch (e) { if (!lockedGuard(e)) { toast('Message failed to send'); console.error(e); } }
+  } catch (e) { if (!lockedGuard(e, () => { if (activeUid === peer && input.value.trim()) sendText(); })) { toast('Message failed to send'); console.error(e); } }
 }
 
 /* photos */
 $('#btn-attach').onclick = () => $('#file-img').click();
-$('#file-img').addEventListener('change', async e => {
+$('#file-img').addEventListener('change', e => {
   const file = e.target.files[0]; e.target.value = ''; if (!file || !activeUid) return;
-  const peer = activeUid, tid = threadId;
+  sendPhotoFile(file, activeUid, threadId);
+});
+async function sendPhotoFile(file, peer, tid){
   toast('Sending photo…');
   try {
     const prepared = await prepImage(file);
@@ -1572,8 +1614,8 @@ $('#file-img').addEventListener('change', async e => {
     const rp = await replyPayload(peer); if (rp) payload.replyToMessage = rp;
     $('#reply-x').click();
     await pushMessage(peer, payload, '📷 Photo');
-  } catch (err) { if (!lockedGuard(err)) { toast('Couldn’t send photo'); console.error(err); } }
-});
+  } catch (err) { if (!lockedGuard(err, () => sendPhotoFile(file, peer, tid))) { toast('Couldn’t send photo'); console.error(err); } }
+}
 function prepImage(file){
   return new Promise(res => {
     const img = new Image(), url = URL.createObjectURL(file);
@@ -1635,7 +1677,7 @@ function stopRec(send){
     r.stream.getTracks().forEach(t => t.stop());
     if (!send || dur < 1 || !peer) return;
     const type = r.mimeType || 'audio/webm', blob = new Blob(recChunks, { type });
-    try {
+    const sendVoice = async () => { try {
       const { blob: eb, encrypted } = await encFile(peer, blob);
       const snap = await uploadBytes(sRef(storage, `dm_media/${tid}/${Date.now()}_voice.bin`), eb);
       const url = await getDownloadURL(snap.ref);
@@ -1643,7 +1685,8 @@ function stopRec(send){
       if (wave) payload.waveform = wave;
       if (encrypted) { payload.mediaEncrypted = true; payload.mediaMimeType = type; mediaCache[url] = Promise.resolve(URL.createObjectURL(blob)); }
       await pushMessage(peer, payload, '🎤 Voice message');
-    } catch (err) { if (!lockedGuard(err)) toast('Couldn’t send voice message'); }
+    } catch (err) { if (!lockedGuard(err, sendVoice)) toast('Couldn’t send voice message'); } };
+    sendVoice();
   };
   r.stop();
 }
@@ -1773,7 +1816,8 @@ function renderSettings(){
   const u = users[me.uid] || {};
   const on = k => localStorage.getItem(k) !== 'off';
   const dark = document.documentElement.dataset.theme === 'dark';
-  const enc = keyState === 'ready' ? 'Unlocked · messages are end-to-end encrypted' : keyState === 'nobackup' ? 'No key backup found for this account' : 'Locked · tap to enter your backup PIN';
+  const enc = keyState === 'ready' ? 'Unlocked · messages are end-to-end encrypted · tap to learn how' : keyState === 'nobackup' ? 'No key backup found · tap for options' : 'Locked · tap to enter your backup PIN';
+  const pinSub = keyState === 'ready' ? (backupState === 'no' ? 'Not set · tap to create one' : backupState === 'yes' ? 'Set · tap to change it' : 'Tap to set or change') : keyState === 'nobackup' ? 'Not set · tap for options' : 'Unlock your chats first to change it';
   const row = (act, ic, title, sub, sw, cls) => `<div class="srow ${cls || ''}" data-act="${act}"><svg viewBox="0 0 24 24">${SIC[ic]}</svg><div class="st"><b>${title}</b>${sub ? `<span>${esc(sub)}</span>` : ''}</div>${sw === undefined ? '' : `<div class="sw ${sw ? 'on' : ''}"></div>`}</div>`;
   root.innerHTML = `<div class="hero"><div class="htop"><button class="icon" id="set-back" title="Back"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button><button class="icon" data-edit title="Edit profile"><svg viewBox="0 0 24 24">${SIC.pencil}</svg></button></div></div>
   <div class="body"><div class="wrap">
@@ -1790,6 +1834,7 @@ function renderSettings(){
     ${row('size', 'text', 'Text size', curSize()[0].toUpperCase() + curSize().slice(1) + ' · tap to change')}
     ${row('theme', 'palette', 'Appearance', 'Dark mode', dark)}
     ${row('enc', 'key', 'Encryption', enc)}
+    ${row('pin', 'shield', 'Backup PIN', pinSub)}
     ${row('', 'info', 'About', 'Haba Messenger · end-to-end encrypted chat')}
     ${row('signout', 'out', 'Sign out', 'Log out of this device', undefined, 'danger')}
   </div></div>`;
@@ -1862,7 +1907,8 @@ $('#settings').addEventListener('click', e => {
   else if (act === 'enter') { toast(flip('hm-enter') ? 'Enter sends messages' : 'Enter adds a new line'); renderSettings(); }
   else if (act === 'size') { const o = Object.keys(SIZES); localStorage.setItem('hm-size', o[(o.indexOf(curSize()) + 1) % o.length]); applyTextSize(); renderSettings(); }
   else if (act === 'blocked') blockedList();
-  else if (act === 'enc') { keyState === 'ready' ? toast('Your messages are end-to-end encrypted') : promptUnlock(); }
+  else if (act === 'enc') { keyState === 'ready' ? showE2EIntro() : keyState === 'nobackup' ? nobackupSheet() : promptUnlock(); }
+  else if (act === 'pin') { keyState === 'ready' ? createPinSheet({ change: backupState === 'yes' }) : keyState === 'nobackup' ? nobackupSheet() : promptUnlock(); }
   else if (act === 'signout') { closeSettings(); signOut(auth); }
 });
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('#settings').classList.contains('hidden') && $('#viewer').classList.contains('hidden') && !$('#modal-root').firstElementChild) closeSettings(); });
@@ -2855,27 +2901,110 @@ async function doSearch(raw){
 
 /* encryption banner + unlock */
 function renderBanner(){
-  const b = $('#banner');
-  if (keyState === 'ready') return b.classList.add('hidden');
-  b.classList.remove('hidden');
-  if (keyState === 'nobackup') { $('#banner-text').textContent = 'Encrypted messages can’t be read here yet: this account has no key backup. Set a backup PIN in the Haba app (Settings → Privacy), then sign in again.'; $('#banner-btn').classList.add('hidden'); }
-  else { $('#banner-text').textContent = 'Enter your backup PIN to read and send encrypted messages.'; $('#banner-btn').classList.remove('hidden'); }
+  const bn = $('#banner'), btn = $('#banner-btn');
+  if (keyState === 'ready' && backupState !== 'no') return bn.classList.add('hidden');
+  bn.classList.remove('hidden'); btn.classList.remove('hidden');
+  if (keyState === 'ready') { $('#banner-text').textContent = 'Create a backup PIN so you can read your encrypted chats on a new phone or browser.'; btn.textContent = 'Create PIN'; }
+  else if (keyState === 'nobackup') { $('#banner-text').textContent = 'Encrypted messages can’t be read here yet: this account has no key backup.'; btn.textContent = 'Options'; }
+  else { $('#banner-text').textContent = 'Enter your backup PIN to read and send encrypted messages.'; btn.textContent = 'Unlock'; }
 }
-$('#banner-btn').onclick = () => promptUnlock();
-function promptUnlock(auto){
-  if (keyState === 'nobackup') return toast('No key backup found for this account');
-  const ov = modal(`<h3>Unlock encrypted chats</h3><p style="color:var(--muted);margin:0 0 14px">Enter the backup PIN you set in the Haba app. It never leaves this device — it only unlocks your key here.</p><input class="field" id="pin" type="password" placeholder="Backup PIN" autocomplete="off" inputmode="text"><div class="err" id="pin-err"></div><button class="btn" id="pin-go">Unlock</button><button class="btn ghost" id="pin-skip" style="margin-top:8px">${auto ? 'Not now' : 'Cancel'}</button>`);
+$('#banner-btn').onclick = () => keyState === 'ready' ? createPinSheet({}) : keyState === 'nobackup' ? nobackupSheet() : promptUnlock();
+const E2E_ART = `<svg class="art" viewBox="0 0 320 132" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+  <rect x="12" y="10" width="64" height="112" rx="13"/><path d="M36 17h16" opacity=".5"/>
+  <rect x="21" y="38" width="38" height="20" rx="8" fill="var(--accent)" stroke="none"/><path d="M28 45h24M28 51h14" stroke="#111" stroke-width="2"/>
+  <g transform="translate(34 88)" stroke="var(--accent)"><circle cx="6" cy="6" r="6"/><path d="M12 6h14M21 6v6M26 6v4"/></g>
+  <rect x="244" y="10" width="64" height="112" rx="13"/><path d="M268 17h16" opacity=".5"/>
+  <rect x="261" y="38" width="38" height="20" rx="8" fill="var(--accent)" stroke="none"/><path d="M268 45h24M268 51h14" stroke="#111" stroke-width="2"/>
+  <g transform="translate(266 88)" stroke="var(--accent)"><circle cx="6" cy="6" r="6"/><path d="M12 6h14M21 6v6M26 6v4"/></g>
+  <path d="M84 62h22" stroke-dasharray="3 5"/><path d="M214 62h22M230 56l7 6-7 6" stroke-dasharray="3 5"/>
+  <g transform="translate(136 40)"><path d="M12 22v-8a12 12 0 0 1 24 0v8"/><rect x="4" y="22" width="40" height="32" rx="8" fill="var(--accent)" stroke="none"/><circle cx="24" cy="36" r="4" fill="#111" stroke="none"/><path d="M24 38v8" stroke="#111"/></g>
+  <g stroke="none" fill="currentColor" opacity=".45"><rect x="140" y="14" width="5" height="9" rx="2"/><rect x="150" y="10" width="5" height="13" rx="2"/><rect x="160" y="16" width="5" height="7" rx="2"/><rect x="170" y="9" width="5" height="14" rx="2"/><rect x="180" y="15" width="5" height="8" rx="2"/></g>
+  <text x="160" y="116" text-anchor="middle" font-size="11" fill="currentColor" stroke="none" opacity=".6" font-family="system-ui,sans-serif">locked in transit</text>
+</svg>`;
+function showE2EIntro(next, auto, label){
+  const ov = modal(`<div class="grab"></div><h3>Your chats are end-to-end encrypted</h3><p class="sub">Here’s how it works, in 30 seconds.</p>${E2E_ART}
+    <div class="pt"><i>1</i><div><b>Locked on your phone</b><span>Messages, photos and voice notes are scrambled with a key before they leave this device.</span></div></div>
+    <div class="pt"><i>2</i><div><b>Only the two of you can open them</b><span>Your private key stays on this device, so only you and the person you’re chatting with can read the conversation.</span></div></div>
+    <div class="pt"><i>3</i><div><b>Your PIN brings your key to a new device</b><span>On a new phone or browser, enter the backup PIN you set in the Haba app. The PIN never leaves this device.</span></div></div>
+    <p class="fine">If a contact hasn’t turned on encryption yet, messages to them are sent without it.</p>
+    <button class="btn" id="e2e-go">${label || (keyState === 'ready' ? 'Got it' : 'Unlock my chats')}</button><button class="btn ghost" id="e2e-skip" style="margin-top:8px">${next ? 'Not now' : 'Close'}</button>`);
+  ov.firstElementChild.classList.add('e2e');
+  ov.querySelector('#e2e-go').onclick = () => { if (next) next(); else closeModal(); };
+  ov.querySelector('#e2e-skip').onclick = closeModal;
+}
+function introSeen(){ let seen = false; try { seen = localStorage.getItem('hm-e2ee-intro') === '1'; localStorage.setItem('hm-e2ee-intro', '1'); } catch {} return seen; }
+function promptUnlock(auto, retry){
+  if (keyState === 'nobackup') return nobackupSheet(retry);
+  if (!introSeen()) return showE2EIntro(() => unlockSheet(auto, retry), auto);   // first time: explain before asking for the PIN
+  unlockSheet(auto, retry);
+}
+function unlockSheet(auto, retry){
+  const ov = modal(`<div class="grab"></div><h3>Unlock encrypted chats</h3><p style="color:var(--muted);margin:0 0 14px;text-align:center">${retry ? 'Enter your backup PIN and your message will send right after.' : 'Enter the backup PIN you set in the Haba app. It never leaves this device — it only unlocks your key here.'}</p><input class="field" id="pin" type="password" placeholder="Backup PIN" autocomplete="off" inputmode="text"><div class="err" id="pin-err"></div><button class="btn" id="pin-go">Unlock</button><button class="btn ghost" id="pin-skip" style="margin-top:8px">${auto ? 'Not now' : 'Cancel'}</button><button class="how" id="pin-how">How does encryption work?</button>`);
+  ov.firstElementChild.classList.add('e2e');
   const pin = ov.querySelector('#pin'); pin.focus();
   const go = async () => {
     if (!pin.value) return;
     ov.querySelector('#pin-go').disabled = true; ov.querySelector('#pin-err').textContent = 'Checking… this takes a moment';
     const r = await restoreFromPin(pin.value);
-    if (r === 'ok') { closeModal(); renderBanner(); decCache.clear(); toast('Unlocked'); renderSettings(); Object.keys(chats).forEach(async uid => { previews[uid] = await decText(uid, chats[uid].text); renderChatList(); }); if (activeUid) renderMessages(); }
+    if (r === 'ok') {
+      closeModal(); renderBanner(); decCache.clear(); toast(retry ? 'Unlocked — sending…' : 'Unlocked'); renderSettings();
+      Object.keys(chats).forEach(async uid => { previews[uid] = await decText(uid, chats[uid].text); renderChatList(); }); if (activeUid) renderMessages();
+      if (retry) { try { retry(); } catch (e) { console.error(e); } }
+    }
     else { ov.querySelector('#pin-go').disabled = false; ov.querySelector('#pin-err').textContent = r === 'mismatch' ? 'This backup doesn’t match your current key.' : r === 'nobackup' ? 'No backup found.' : 'Wrong PIN. Try again.'; }
   };
   ov.querySelector('#pin-go').onclick = go;
   pin.addEventListener('keydown', e => { if (e.key === 'Enter') go(); });
   ov.querySelector('#pin-skip').onclick = closeModal;
+  ov.querySelector('#pin-how').onclick = () => showE2EIntro(() => unlockSheet(auto, retry), auto);
+}
+
+/* ----- create / change the backup PIN ----- */
+function promptCreatePin(){ if (!introSeen()) showE2EIntro(() => createPinSheet({ auto: true }), true, 'Create backup PIN'); else createPinSheet({ auto: true }); }
+function createPinSheet(o){
+  o = o || {};
+  const title = o.reset ? 'Set a new backup PIN' : o.change ? 'Change backup PIN' : 'Create a backup PIN';
+  const lead = o.reset ? 'This PIN protects the new key we’ll create for you.' : o.change ? 'Your new PIN replaces the old one. Your chats and key stay the same.' : 'Your key lives only on this device. A PIN-protected backup lets you read your chats on a new phone or browser.';
+  const ov = modal(`<div class="grab"></div><h3>${title}</h3><p style="color:var(--muted);margin:0 0 12px;text-align:center">${lead}</p>
+    <input class="field" id="np1" type="password" placeholder="New PIN (at least 6 characters)" autocomplete="new-password" inputmode="text"><input class="field" id="np2" type="password" placeholder="Confirm PIN" autocomplete="new-password" inputmode="text" style="margin-top:8px">
+    <div class="err" id="np-err"></div><p class="fine" style="margin:4px 0 12px">Longer is safer. If you forget this PIN it can’t be recovered, and no one can reset it for you.</p>
+    <button class="btn" id="np-go">${o.change ? 'Save new PIN' : 'Save backup PIN'}</button><button class="btn ghost" id="np-skip" style="margin-top:8px">${o.auto ? 'Not now' : 'Cancel'}</button><button class="how" id="np-how">How does encryption work?</button>`);
+  ov.firstElementChild.classList.add('e2e');
+  const q = id => ov.querySelector(id), err = t => q('#np-err').textContent = t || ''; q('#np1').focus();
+  const go = async () => {
+    const a = q('#np1').value, b = q('#np2').value;
+    if (a.length < 6) return err('Use at least 6 characters.');
+    if (a !== b) return err('The two PINs don’t match.');
+    q('#np-go').disabled = true; err('Securing your key… this takes a moment');
+    try {
+      if (o.reset) await resetKeys(a); else await saveBackup(a);
+    } catch (e) { console.error(e); q('#np-go').disabled = false; return err(e && e.message === 'LOCKED' ? 'Unlock your chats first.' : 'Couldn’t save the backup. Check your connection and try again.'); }
+    closeModal(); renderBanner(); renderSettings(); toast(o.reset ? 'New key and backup PIN created' : 'Backup PIN saved');
+    if (o.reset) { Object.keys(chats).forEach(async uid => { previews[uid] = await decText(uid, chats[uid].text); renderChatList(); }); if (activeUid) renderMessages(); }
+    if (o.retry) { try { o.retry(); } catch (e) { console.error(e); } }
+  };
+  q('#np-go').onclick = go;
+  ov.addEventListener('keydown', e => { if (e.key === 'Enter') go(); });
+  q('#np-skip').onclick = closeModal;
+  q('#np-how').onclick = () => showE2EIntro(() => createPinSheet(o), o.auto, 'Continue');
+}
+/* no key on this device and no PIN backup on the account */
+function nobackupSheet(retry){
+  const ov = modal(`<div class="grab"></div><h3>No key backup found</h3><p class="sub" style="margin-bottom:12px">This account has encrypted chats, but no backup PIN was ever saved, and this browser doesn’t hold the key.</p>
+    <div class="pt"><i>A</i><div><b>Use the Haba app</b><span>If the Haba app is signed in on another device, open Settings → Privacy there and create a backup PIN, then sign in here again.</span></div></div>
+    <div class="pt"><i>B</i><div><b>Start fresh</b><span>Create a new key and a new backup PIN. You can send and receive encrypted messages again, but older encrypted messages stay unreadable.</span></div></div>
+    <button class="btn" id="nb-ok">I’ll use the Haba app</button><button class="btn ghost" id="nb-new" style="margin-top:8px;color:var(--danger)">Start fresh with a new key</button>`);
+  ov.firstElementChild.classList.add('e2e');
+  ov.querySelector('#nb-ok').onclick = closeModal;
+  ov.querySelector('#nb-new').onclick = () => {
+    const c = modal(`<div class="grab"></div><h3>Start fresh?</h3><p class="sub" style="margin-bottom:10px">This can’t be undone.</p>
+      <div class="pt"><i>!</i><div><b>Old encrypted messages stay locked</b><span>Messages encrypted with your previous key can never be read again.</span></div></div>
+      <div class="pt"><i>!</i><div><b>Other devices need the new PIN</b><span>Anywhere else you use Haba, you’ll unlock with the new backup PIN. Contacts may need to reopen their app before new messages reach you.</span></div></div>
+      <button class="btn" id="nf-go" style="margin-top:6px;background:var(--danger)">Yes, start fresh</button><button class="btn ghost" id="nf-x" style="margin-top:8px">Cancel</button>`);
+    c.firstElementChild.classList.add('e2e');
+    c.querySelector('#nf-x').onclick = closeModal;
+    c.querySelector('#nf-go').onclick = () => createPinSheet({ reset: true, retry });
+  };
 }
 
 /* mobile keyboard: keep the composer above the keyboard */

@@ -1390,14 +1390,40 @@ async function chatSheet(uid){
   };
 }
 
+/* message alert: synthesized chime (no audio file needed) + vibration + system notification when the app is in the background */
+let actx = null, lastPing = 0;
+const audioCtx = () => { if (!actx) { const C = window.AudioContext || window.webkitAudioContext; if (C) actx = new C(); } return actx; };
+['pointerdown', 'keydown', 'touchend'].forEach(ev => window.addEventListener(ev, () => { const c = audioCtx(); if (c && c.state === 'suspended') c.resume().catch(() => {}); }, { passive: true }));
+function tone(c, f, t0, dur, vol){
+  const o = c.createOscillator(), g = c.createGain();
+  o.type = 'sine'; o.frequency.value = f;
+  g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(vol, t0 + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+  o.connect(g); g.connect(c.destination); o.start(t0); o.stop(t0 + dur + 0.05);
+}
+function msgPing(soft){
+  const now = Date.now(); if (now - lastPing < 900) return; lastPing = now;
+  if (localStorage.getItem('hm-sound') !== 'off') {
+    try { const c = audioCtx(); if (c && c.state === 'running') { const t = c.currentTime, v = soft ? 0.05 : 0.14; tone(c, 880, t, 0.16, v); tone(c, 1318.5, t + 0.12, 0.26, v); } } catch {}
+  }
+  if (localStorage.getItem('hm-vib') !== 'off' && navigator.vibrate) { try { navigator.vibrate(soft ? 40 : [70, 50, 70]); } catch {} }
+}
+function sysNotify(uid, txt){
+  if (!document.hidden || !('Notification' in window) || Notification.permission !== 'granted' || !navigator.serviceWorker) return;
+  navigator.serviceWorker.ready.then(r => r.showNotification(uName(uid), { body: txt, icon: uAvatar(uid) || undefined, tag: 'dm-' + uid, renotify: true, vibrate: [70, 50, 70], data: { uid } })).catch(() => {});
+}
+if (navigator.serviceWorker) navigator.serviceWorker.addEventListener('message', e => { const u = e.data && e.data.openUid; if (u && me) openThread(u); });
+const sysNotifSub = () => !('Notification' in window) ? 'Not supported on this device' : Notification.permission === 'granted' ? 'On · alerts when the app is in the background' : Notification.permission === 'denied' ? 'Blocked · enable notifications for this site in browser settings' : 'Tap to allow alerts in the background';
+
 /* top slide-in notification for new messages (tap to open, swipe up to dismiss) */
 let notifT = null, notifUid = null, chatsLoaded = false;
 const hideNotif = () => { const n = $('#notif'); n.classList.remove('show'); n.style.transform = ''; clearTimeout(notifT); };
 async function notifyMsg(uid, c){
+  if (me && uid !== activeUid) msgPing();
   if (localStorage.getItem('hm-notif') === 'off') return;
   await loadUser(uid);
   const txt = isE2E(c.text) ? await decText(uid, c.text) : (c.text || 'New message');
   if (!me || uid === activeUid) return;
+  sysNotify(uid, txt);
   notifUid = uid;
   $('#notif-av').style.backgroundImage = `url('${cssUrl(uAvatar(uid))}')`;
   $('#notif-name').textContent = uName(uid);
@@ -1546,6 +1572,7 @@ async function renderMessages(keepScroll){
   if (!msgs.length) html += emptyState('hello', 'No messages yet', `Send the first message to ${uName(uid)}.`, iBlocked || theyBlocked ? '' : 'Say hi 👋', 'sayhi');
   for (const m of msgs) {
     const isNew = !firstLoad && !keepScroll && !renderedKeys.has(m.key) && now - m.createdAt < 10000;
+    if (isNew && !m._pend && m.senderUid && m.senderUid !== me.uid) msgPing(true);
     const dk = new Date(m.createdAt).toDateString();
     if (dk !== last) { html += `<div class="day">${esc(dayLabel(m.createdAt))}</div>`; last = dk; }
     if (m.systemText) { html += `<div class="sys">${esc(m.systemText)}</div>`; continue; }
@@ -2011,6 +2038,9 @@ function renderSettings(){
     ${row('online', 'eye', 'Online status', 'Let others see when you’re online', on('hm-online'))}
     ${row('blocked', 'ban', 'Blocked accounts', 'People you’ve blocked')}
     ${row('notif', 'bell', 'Notifications', 'Banner for new messages', on('hm-notif'))}
+    ${row('nsound', 'bell', 'Message sound', 'Play a tone for new messages', on('hm-sound'))}
+    ${row('nvib', 'bell', 'Vibration', 'Vibrate for new messages', on('hm-vib'))}
+    ${row('sysn', 'bell', 'Background alerts', sysNotifSub())}
     ${row('enter', 'kbd', 'Chats', 'Enter key sends message (desktop)', on('hm-enter'))}
     ${row('size', 'text', 'Text size', curSize()[0].toUpperCase() + curSize().slice(1) + ' · tap to change')}
     ${row('theme', 'palette', 'Appearance', 'Dark mode', dark)}
@@ -2086,6 +2116,14 @@ $('#settings').addEventListener('click', e => {
   }
   else if (act === 'phone') changePhone();
   else if (act === 'notif') { toast(flip('hm-notif') ? 'Notifications on' : 'Notifications off'); renderSettings(); }
+  else if (act === 'nsound') { const v = flip('hm-sound'); toast(v ? 'Message sound on' : 'Message sound off'); if (v) { lastPing = 0; const c = audioCtx(); if (c) c.resume().catch(() => {}); setTimeout(() => msgPing(true), 80); } renderSettings(); }
+  else if (act === 'nvib') { const v = flip('hm-vib'); toast(v ? 'Vibration on' : 'Vibration off'); if (v && navigator.vibrate) navigator.vibrate([70, 50, 70]); renderSettings(); }
+  else if (act === 'sysn') {
+    if (!('Notification' in window)) toast('Not supported on this device');
+    else if (Notification.permission === 'denied') toast('Blocked — allow notifications for this site in browser settings');
+    else if (Notification.permission === 'granted') toast('Background alerts are on');
+    else Notification.requestPermission().then(() => renderSettings());
+  }
   else if (act === 'enter') { toast(flip('hm-enter') ? 'Enter sends messages' : 'Enter adds a new line'); renderSettings(); }
   else if (act === 'size') { const o = Object.keys(SIZES); localStorage.setItem('hm-size', o[(o.indexOf(curSize()) + 1) % o.length]); applyTextSize(); renderSettings(); }
   else if (act === 'blocked') blockedList();
@@ -2951,9 +2989,12 @@ function grEnterChat(){
     if (s.exists() && !grMembers[me.uid]) { toast('You’re no longer in this group'); grMine.delete(id); grCur = null; renderGroups(true); return; }
     grSub(); Object.keys(grMembers).forEach(u => { if (!users[u]) loadUser(u).then(() => { if (grCur === id) grPaint(); }); });
   }, () => {}));
+  let gf = true;
   grUnsubs.push(onValue(query(ref(db, `groupMessages/${id}`), orderByKey(), limitToLast(150)), s => {
     if (grCur !== id) return;
-    const l = []; s.forEach(c => { l.push({ id: c.key, ...c.val() }); }); grMsgs = l;
+    const l = []; s.forEach(c => { l.push({ id: c.key, ...c.val() }); });
+    if (!gf) { const seen = new Set(grMsgs.map(m => m.id)); if (l.some(m => !seen.has(m.id) && m.authorUid && m.authorUid !== me.uid)) msgPing(true); }
+    gf = false; grMsgs = l;
     const need = [...new Set(l.map(m => m.authorUid))].filter(u => u && u !== me.uid && !grNamed.has(u));
     need.forEach(u => grNamed.add(u));
     if (need.length) Promise.all(need.map(loadUser)).then(() => { if (grCur === id) grPaint(); });

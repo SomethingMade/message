@@ -26,3 +26,14 @@ self.addEventListener('fetch', e => {
     return hit || (await net) || Response.error();
   }));
 });
+
+/* tapping a background message alert focuses the app and opens that chat */
+self.addEventListener('notificationclick', e => {
+  e.notification.close();
+  const uid = e.notification.data && e.notification.data.uid;
+  e.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(cs => {
+    const c = cs[0];
+    if (c) { c.postMessage({ openUid: uid }); return c.focus(); }
+    return self.clients.openWindow('./');
+  }));
+});

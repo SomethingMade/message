@@ -382,6 +382,8 @@ select.field{appearance:none}
 #bnav svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
 #bnav button.on{color:var(--text);font-weight:700}
 #bnav button.on .pl{background:color-mix(in srgb,var(--accent) 32%,transparent)}
+#bnav .nav-av{display:block;width:28px;height:28px;border-radius:50%;background:var(--input) center/cover no-repeat;box-shadow:0 0 0 2px transparent;transition:box-shadow .2s}
+#bnav button.on .nav-av{box-shadow:0 0 0 2px var(--text)}
 #bnav .nb{position:absolute;top:-4px;right:8px;min-width:18px;height:18px;border-radius:9px;background:var(--accent);color:#111;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 5px;border:2px solid var(--surface);box-sizing:content-box}
 #chatlist{padding-bottom:var(--nav-h)}
 #fab{bottom:calc(var(--nav-h) + 16px)}
@@ -557,7 +559,7 @@ select.field{appearance:none}
     <button data-tab="chats" class="on"><span class="pl"><svg viewBox="0 0 24 24"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 8.6 8.6 0 0 1-3.6-.8L3 21l1.9-5.4A8.4 8.4 0 1 1 21 11.5Z"/></svg><span class="nb hidden" id="nb-chats"></span></span>Chats</button>
     <button data-tab="updates"><span class="pl"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" stroke-dasharray="3.2 3"/><circle cx="12" cy="12" r="3.6"/></svg><span class="nd hidden" id="nd-upd"></span></span>Updates</button>
     <button data-tab="pages"><span class="pl"><svg viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8Z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></svg></span>Pages</button>
-    <button data-tab="settings"><span class="pl"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></span>You</button>
+    <button data-tab="settings"><span class="pl"><i class="nav-av" id="nav-av"></i></span>You</button>
   </nav>
 </div>
 
@@ -615,7 +617,7 @@ select.field{appearance:none}
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-import { getAuth, onAuthStateChanged, signOut, RecaptchaVerifier, signInWithPhoneNumber, signInWithEmailAndPassword, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+import { getAuth, onAuthStateChanged, signOut, RecaptchaVerifier, PhoneAuthProvider, updatePhoneNumber, signInWithPhoneNumber, signInWithEmailAndPassword, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 import { getDatabase, ref, onValue, get, push, set, update, off, query, orderByChild, orderByKey, limitToLast, limitToFirst, startAt, endAt, increment, onDisconnect, serverTimestamp, remove, orderByValue } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 import { getStorage, ref as sRef, uploadBytes, uploadBytesResumable, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-storage.js";
 
@@ -1728,6 +1730,7 @@ function openSettings(){
 }
 function hideSettings(){ $('#settings').classList.add('hidden'); }
 function closeSettings(){ hideSettings(); if (settingsHist) { settingsHist = false; skipPop = true; history.back(); } }
+SIC.phone = '<path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2Z"/>';
 function renderSettings(){
   const root = $('#settings'); if (root.classList.contains('hidden') || !me) return;
   const top = root.scrollTop;
@@ -1741,7 +1744,8 @@ function renderSettings(){
     <div class="avwrap">${u.bio ? `<div class="about" data-edit>${esc(String(u.bio).split('\n')[0])}</div>` : ''}<div class="av" data-edit style="background-image:url('${cssUrl(uAvatar(me.uid))}')"></div><div class="camb" data-edit><svg viewBox="0 0 24 24">${SIC.camera}</svg></div></div>
     <div class="sname" data-edit><span>${esc(u.name || u.username || me.displayName || 'My Account')}${vbadge(me.uid)}</span><i></i></div>
     <div class="suser">${u.username ? '@' + esc(u.username) : ''}</div>
-    ${row('', 'user', 'Account', me.email || me.phoneNumber || 'Signed in')}
+    ${row('', 'user', 'Account', me.email || 'Signed in with phone')}
+    ${row('phone', 'phone', 'Phone number', (me.phoneNumber || u.phoneNumber) ? (me.phoneNumber || u.phoneNumber) + ' · tap to change' : 'Not linked · tap to add')}
     ${row('receipts', 'shield', 'Privacy', 'Read receipts', on('hm-receipts'))}
     ${row('online', 'eye', 'Online status', 'Let others see when you’re online', on('hm-online'))}
     ${row('blocked', 'ban', 'Blocked accounts', 'People you’ve blocked')}
@@ -1754,6 +1758,39 @@ function renderSettings(){
     ${row('signout', 'out', 'Sign out', 'Log out of this device', undefined, 'danger')}
   </div></div>`;
   root.scrollTop = top;
+}
+/* ----- change / add the phone number linked to this account ----- */
+function changePhone(){
+  const cur = me.phoneNumber || (users[me.uid] || {}).phoneNumber || '';
+  const ov = modal(`<h3>${cur ? 'Change phone number' : 'Add phone number'}</h3>${cur ? `<p style="color:var(--muted);margin:0 0 12px">Current number: <b style="color:var(--text)">${esc(cur)}</b></p>` : ''}
+    <div id="cp1"><div class="row" style="display:flex;gap:8px"><input class="field" id="cp-cc" value="+27" inputmode="tel" style="width:84px;flex:none"><input class="field" id="cp-num" type="tel" placeholder="New phone number" inputmode="tel" autocomplete="tel-national"></div><button class="btn" id="cp-send">Send code</button></div>
+    <div id="cp2" class="hidden"><p style="color:var(--muted);margin:0 0 10px">Enter the 6-digit code we sent to <b id="cp-to" style="color:var(--text)"></b>.</p><input class="field" id="cp-code" placeholder="6-digit code" inputmode="numeric" autocomplete="one-time-code" maxlength="6"><button class="btn" id="cp-ok">Verify &amp; update</button><button class="btn ghost" id="cp-back" style="margin-top:8px">Use a different number</button></div>
+    <div id="cp-err" style="color:var(--danger);font-size:14px;margin-top:8px;min-height:18px"></div><button class="btn ghost" id="cp-x" style="margin-top:6px">Cancel</button>`);
+  const err = t => ov.querySelector('#cp-err').textContent = t || '', q = id => ov.querySelector(id); let vid = '', full = '';
+  const nice2 = e => ({ 'auth/requires-recent-login': 'For your security, sign out and sign back in, then try again.', 'auth/credential-already-in-use': 'That number is already linked to another account.', 'auth/account-exists-with-different-credential': 'That number is already linked to another account.', 'auth/invalid-verification-code': 'That code isn’t right.', 'auth/code-expired': 'That code has expired. Request a new one.', 'auth/invalid-phone-number': 'That phone number looks invalid.', 'auth/too-many-requests': 'Too many attempts. Try again in a bit.' }[e && e.code] || 'Something went wrong. Try again.');
+  q('#cp-x').onclick = closeModal;
+  q('#cp-send').onclick = async () => {
+    let cc = q('#cp-cc').value.trim(), num = q('#cp-num').value.trim().replace(/[\s()-]/g, '');
+    if (!cc.startsWith('+')) cc = '+' + cc; if (num.startsWith('0')) num = num.slice(1); if (num.startsWith('+')) cc = '';
+    if (!num) return err('Enter the new phone number.');
+    full = cc + num; if (full === cur) return err('That’s already your number.');
+    q('#cp-send').disabled = true; err();
+    try { vid = await new PhoneAuthProvider(auth).verifyPhoneNumber(full, getVerifier()); q('#cp1').classList.add('hidden'); q('#cp2').classList.remove('hidden'); q('#cp-to').textContent = full; q('#cp-code').focus(); }
+    catch (e) { err(nice2(e)); }
+    q('#cp-send').disabled = false;
+  };
+  q('#cp-back').onclick = () => { q('#cp2').classList.add('hidden'); q('#cp1').classList.remove('hidden'); q('#cp-code').value = ''; err(); };
+  q('#cp-ok').onclick = async () => {
+    const code = q('#cp-code').value.trim(); if (!code) return err('Enter the code.');
+    q('#cp-ok').disabled = true; err();
+    try {
+      await updatePhoneNumber(me, PhoneAuthProvider.credential(vid, code));
+      try { await me.reload(); } catch {}
+      set(ref(db, `users/${me.uid}/phoneNumber`), me.phoneNumber || full).catch(() => {});
+      users[me.uid] = { ...(users[me.uid] || {}), phoneNumber: me.phoneNumber || full };
+      closeModal(); toast('Phone number updated'); renderSettings();
+    } catch (e) { err(nice2(e)); q('#cp-ok').disabled = false; }
+  };
 }
 const flip = k => { const v = localStorage.getItem(k) !== 'off'; localStorage.setItem(k, v ? 'off' : 'on'); return !v; };
 $('#settings').addEventListener('click', e => {
@@ -1768,6 +1805,7 @@ $('#settings').addEventListener('click', e => {
     set(ref(db, `users/${me.uid}/status`), vis ? 'online' : 'offline').catch(() => {}); set(ref(db, `users/${me.uid}/lastSeen`), serverTimestamp()).catch(() => {});
     toast(vis ? 'Others can see when you’re online' : 'Your online status is hidden'); renderSettings();
   }
+  else if (act === 'phone') changePhone();
   else if (act === 'notif') { toast(flip('hm-notif') ? 'Notifications on' : 'Notifications off'); renderSettings(); }
   else if (act === 'enter') { toast(flip('hm-enter') ? 'Enter sends messages' : 'Enter adds a new line'); renderSettings(); }
   else if (act === 'size') { const o = Object.keys(SIZES); localStorage.setItem('hm-size', o[(o.indexOf(curSize()) + 1) % o.length]); applyTextSize(); renderSettings(); }
@@ -2503,7 +2541,10 @@ const SCREENS = {
   settings: { el: '#settings', scroll: '#settings', state: 'hmSettings', open: () => openSettings(), hide: () => hideSettings(), close: () => closeSettings(), get hist(){ return settingsHist; }, set hist(v){ settingsHist = v; } }
 };
 const navCur = () => Object.keys(SCREENS).find(k => !$(SCREENS[k].el).classList.contains('hidden')) || 'chats';
-function syncNav(){ const t = navCur(); document.querySelectorAll('#bnav button').forEach(b => b.classList.toggle('on', b.dataset.tab === t)); }
+let navAvU = '';
+function paintNavAv(){ if (!me) return; const u = uAvatar(me.uid); if (u === navAvU) return; navAvU = u; $('#nav-av').style.backgroundImage = `url('${cssUrl(u)}')`; }
+setInterval(paintNavAv, 1500);
+function syncNav(){ paintNavAv(); const t = navCur(); document.querySelectorAll('#bnav button').forEach(b => b.classList.toggle('on', b.dataset.tab === t)); }
 function setNavBadge(n){ const b = $('#nb-chats'); b.textContent = n > 99 ? '99+' : n; b.classList.toggle('hidden', !n); }
 function navTo(tab){
   const cur = navCur();

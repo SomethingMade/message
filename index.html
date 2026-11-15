@@ -355,6 +355,20 @@ select.field{appearance:none}
 .mrow .mid b{display:block;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .mrow .mid span{display:block;color:var(--muted);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .mrow .pv{width:34px;height:34px;border-radius:50%;background:var(--input);color:var(--text);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+#msheet .sheet{height:88%}
+#mtabs,#msub{display:flex;gap:8px;overflow-x:auto;padding:10px 0 4px;scrollbar-width:none;flex-shrink:0}
+#mtabs::-webkit-scrollbar,#msub::-webkit-scrollbar,.mhero::-webkit-scrollbar{display:none}
+#mtabs .pill,#msub .pill{flex:0 0 auto}
+.mhero{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;padding:8px 0 4px}
+.mcard{flex:0 0 88%;scroll-snap-align:center;display:flex;gap:12px;align-items:center;padding:12px;border-radius:18px;background:var(--input);border:1px solid var(--border)}
+.mdots{display:flex;gap:5px;justify-content:center;padding:4px 0 6px}
+.mdots i{width:6px;height:6px;border-radius:50%;background:var(--border)}.mdots i.on{background:var(--accent)}
+.mrow .art,.mcard .art{position:relative;width:52px;height:52px;border-radius:8px;background:var(--input) center/cover;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#fff}
+.mrow .art svg,.mcard .art svg{filter:drop-shadow(0 1px 3px rgba(0,0,0,.7))}
+.mcard .mid{flex:1;min-width:0}.mcard .mid b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.mcard .mid span{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--muted);font-size:13px}
+.mst,.mgo{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--text)}
+.mst.on{color:var(--accent)}.mst.on svg{fill:currentColor}.mgo{background:var(--input)}
+.mst svg,.mgo svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 #sv-music{position:absolute;top:calc(74px + var(--sat));left:50%;transform:translateX(-50%);z-index:7;max-width:80%;display:flex;align-items:center;gap:6px;padding:5px 12px;border-radius:20px;background:rgba(0,0,0,.45);font-size:13px;font-weight:600;pointer-events:none}
 #sv-music span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 /* ---- bottom navigation ---- */
@@ -411,7 +425,12 @@ select.field{appearance:none}
 #sv-bot{position:absolute;left:0;right:0;bottom:0;padding:10px 16px calc(12px + var(--sab));display:flex;justify-content:center;gap:14px;z-index:7}
 #sv-bot .pill2{background:rgba(0,0,0,.45);color:#fff;border-radius:22px;padding:0 16px;height:40px;display:flex;align-items:center;gap:8px;font-weight:600}
 #sv-bot .pill2 svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-#sv-like.on svg{fill:#FF453A;stroke:#FF453A}
+#sv-rx{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(66px + var(--sab));z-index:9;display:flex;gap:4px;padding:6px 8px;border-radius:30px;background:rgba(30,30,30,.92);box-shadow:0 6px 24px rgba(0,0,0,.5)}
+#sv-rx button{font-size:26px;width:44px;height:44px;border-radius:50%;line-height:1}#sv-rx button.on{background:rgba(255,255,255,.2)}
+#sv-like span{font-size:21px;line-height:1}
+.cmt{display:flex;gap:10px;padding:8px 0}.cmt .b{flex:1;min-width:0}.cmt b{font-size:14px}.cmt small{color:var(--muted);margin-left:6px}.cmt p{margin:2px 0 0;white-space:pre-wrap;word-break:break-word}.cmt .x{color:var(--muted);font-size:20px;padding:0 6px}
+#cm-list{max-height:48vh;overflow-y:auto;margin-bottom:8px}
+#cm-row{display:flex;gap:8px;align-items:center}#cm-row input{flex:1}
 #stx,#smd{position:fixed;inset:0;z-index:125;display:flex;flex-direction:column;color:#fff}
 #stx .top,#smd .top{display:flex;align-items:center;gap:10px;padding:calc(10px + var(--sat)) 12px 10px}
 #stx .top .grow,#smd .top .grow{flex:1}
@@ -564,7 +583,9 @@ select.field{appearance:none}
   </div>
   <div id="sv-music" class="hidden"><svg width="14" height="14" style="stroke:#fff;fill:none;stroke-width:2;flex-shrink:0" viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg><span id="sv-music-t"></span></div>
   <div id="sv-cap" class="hidden"></div>
+  <div id="sv-rx" class="hidden"></div>
   <div id="sv-bot">
+    <button class="pill2" id="sv-cm"><svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L3 21l1.9-5.4A8 8 0 1 1 21 12Z"/></svg><span id="sv-cc">Comment</span></button>
     <button class="pill2 hidden" id="sv-views"><svg viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg><span id="sv-vc">0</span></button>
     <button class="svb hidden" id="sv-like" title="Like"><svg viewBox="0 0 24 24"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21l7.8-7.5 1-1.1a5.5 5.5 0 0 0 0-7.8Z"/></svg></button>
   </div>
@@ -582,7 +603,7 @@ select.field{appearance:none}
   <div class="capw"><input id="smd-cap" maxlength="200" placeholder="Add a caption…" autocomplete="off" enterkeyhint="done"></div>
 </div>
 <div id="rx-root"></div>
-<div id="msheet" class="hidden"><div class="sheet"><h3 style="margin:0 0 10px">Add music</h3><input class="field" id="mq" placeholder="Search for a song or artist" autocomplete="off"><div id="mres"><div class="empty">Search for a song to add</div></div><button class="btn ghost" id="mclear" style="margin-top:8px">No music</button></div></div>
+<div id="msheet" class="hidden"><div class="sheet"><div style="width:40px;height:4px;border-radius:2px;background:var(--border);margin:0 auto 12px"></div><div style="position:relative"><svg viewBox="0 0 24 24" style="position:absolute;left:14px;top:13px;width:20px;height:20px;stroke:var(--muted);fill:none;stroke-width:2;stroke-linecap:round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input class="field" id="mq" placeholder="Search songs" autocomplete="off" style="padding-left:44px"></div><div id="mtabs"><button class="pill on" data-t="sug">Suggested</button><button class="pill" data-t="mood">Mood</button><button class="pill" data-t="genre">Genre</button><button class="pill" data-t="star">Starred</button></div><div id="msub" class="hidden"></div><div id="mres"></div><button class="btn ghost" id="mclear" style="margin-top:8px">No music</button></div></div>
 <div id="pages" class="hidden"><div class="bar"><button class="icon hidden" id="pg-back" title="Back"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button><div class="grow" id="pg-title" style="font-weight:800;font-size:20px">Pages</div><button class="icon" id="pg-new" title="Create Page"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button></div><div id="pg-tabs"><button class="pill on" data-t="discover">Discover</button><button class="pill" data-t="mine">Your Pages</button></div><div id="pg-body"></div></div>
 <div id="contacts" class="hidden"><div class="bar"><button class="icon" id="ct-back" title="Back"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button><div class="grow"><div style="font-weight:700;font-size:17px">Select contact</div><div id="ct-count" style="font-size:12px;color:var(--muted)"></div></div><button class="icon" id="ct-searchbtn" title="Search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg></button></div><div class="searchwrap hidden" id="ct-sw"><input id="ct-q" placeholder="Search contacts" autocomplete="off"></div><div id="ct-list"></div></div>
 <div id="settings" class="hidden"></div>
@@ -2006,30 +2027,80 @@ function paintMusBtns(){
   ['#stx-mus', '#smd-mus'].forEach(id => { const b = $(id); b.classList.toggle('on', !!stMusic); b.lastElementChild.textContent = stMusic ? stMusic.trackName : 'Music'; });
 }
 function closeMusicSheet(){ stopMPrev(); $('#msheet').classList.add('hidden'); }
-function openMusicSheet(){
-  $('#mq').value = ''; $('#mres').innerHTML = '<div class="empty">Search for a song to add</div>'; $('#mclear').classList.toggle('hidden', !stMusic);
-  $('#msheet').classList.remove('hidden'); setTimeout(() => $('#mq').focus(), 200);
+const MUS_MOODS = ['Chill', 'Happy', 'Party', 'Romantic', 'Sad', 'Workout', 'Focus', 'Throwback'], MUS_GENRES = ['Amapiano', 'Hip-Hop', 'Pop', 'R&B', 'Afrobeats', 'Gospel', 'House', 'Rock', 'Reggae', 'Dancehall'];
+let mTab = 'sug', mSub = '', mSug = null, mTok = 0, mList = [];
+const mStars = () => { try { return JSON.parse(localStorage.getItem('hm-starred') || '[]'); } catch { return []; } };
+const mSaveStars = l => { try { localStorage.setItem('hm-starred', JSON.stringify(l.slice(0, 100))); } catch {} };
+const mNorm = t => ({ id: String(t.trackId || t.previewUrl), trackName: t.trackName || 'Unknown', artistName: t.artistName || '', artworkUrl: (t.artworkUrl100 || '').replace('100x100', '200x200'), previewUrl: t.previewUrl, ms: t.trackTimeMillis || 0 });
+const mDur = ms => ms ? Math.floor(ms / 60000) + ':' + String(Math.floor(ms / 1000) % 60).padStart(2, '0') : '';
+const mCc = () => ((navigator.language || 'en-US').split('-')[1] || 'US').toLowerCase();
+const mOk = t => /^https:\/\//.test(t.previewUrl || '');
+const mArt = t => /^https:\/\//.test(t.artworkUrl || '') ? `style="background-image:url('${encodeURI(t.artworkUrl).replace(/'/g, '%27')}')"` : '';
+async function mFetchSearch(q){ const d = await (await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(q)}&media=music&entity=song&limit=25&country=${mCc()}`)).json(); return (d.results || []).filter(mOk).map(mNorm); }
+async function mSuggested(){
+  if (mSug) return mSug; const cc = mCc();
+  for (const c of [cc, 'us']) {
+    try {
+      const d = await (await fetch(`https://rss.applemarketingtools.com/api/v2/${c}/music/most-played/30/songs.json`)).json(), rs = (d.feed && d.feed.results) || [];
+      if (!rs.length) continue;
+      const l = await (await fetch(`https://itunes.apple.com/lookup?id=${rs.map(x => x.id).join(',')}&country=${c}`)).json();
+      const m = new Map((l.results || []).filter(mOk).map(t => [String(t.trackId), mNorm(t)])), out = rs.map(x => m.get(String(x.id))).filter(Boolean);
+      if (out.length) return mSug = out;
+    } catch {}
+  }
+  try { return mSug = await mFetchSearch('top hits'); } catch { return []; }
 }
-async function musicSearch(q){
-  const box = $('#mres');
+function mPlay(btn, t){ const same = mPrevBtn === btn; stopMPrev(); if (same) return; mPrev = new Audio(t.previewUrl); mPrev.play().catch(() => {}); mPrev.onended = stopMPrev; btn.innerHTML = MUS_PAUSE; mPrevBtn = btn; }
+const STAR_SVG = '<svg viewBox="0 0 24 24"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/></svg>', GO_SVG = '<svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
+function mItem(t, i, card, stars){
+  const d = document.createElement('div'); d.className = card ? 'mcard' : 'mrow'; d.dataset.i = i;
+  d.innerHTML = `<div class="art" ${mArt(t)} data-a="play">${MUS_PLAY}</div><div class="mid"><b>${esc(t.trackName)}</b><span>${esc(t.artistName)}${t.ms ? ' · ' + mDur(t.ms) : ''}</span></div><button class="mst${stars.has(t.id) ? ' on' : ''}" data-a="star" title="Star">${STAR_SVG}</button><button class="mgo" data-a="go" title="Use this song">${GO_SVG}</button>`;
+  return d;
+}
+function mRender(list, hero){
+  const box = $('#mres'); stopMPrev(); mList = list; box.innerHTML = '';
+  if (!list.length) { box.innerHTML = `<div class="empty">${mTab === 'star' && !$('#mq').value.trim() ? 'No starred songs yet.<br>Tap the star on a song to save it.' : 'No previewable songs found'}</div>`; return; }
+  const stars = new Set(mStars().map(t => t.id)); let from = 0;
+  if (hero && list.length > 3) {
+    const h = document.createElement('div'); h.className = 'mhero'; const n = Math.min(5, list.length);
+    for (let i = 0; i < n; i++) h.appendChild(mItem(list[i], i, true, stars));
+    const dots = document.createElement('div'); dots.className = 'mdots'; dots.innerHTML = Array.from({ length: n }, (_, i) => `<i class="${i ? '' : 'on'}"></i>`).join('');
+    h.addEventListener('scroll', () => { const k = Math.round(h.scrollLeft / (h.scrollWidth / n)); [...dots.children].forEach((x, i) => x.classList.toggle('on', i === k)); }, { passive: true });
+    box.appendChild(h); box.appendChild(dots); from = n;
+  }
+  for (let i = from; i < list.length; i++) box.appendChild(mItem(list[i], i, false, stars));
+}
+async function mRefresh(){
+  const q = $('#mq').value.trim(), tok = ++mTok, box = $('#mres');
+  document.querySelectorAll('#mtabs .pill').forEach(b => b.classList.toggle('on', !q && b.dataset.t === mTab));
+  const sub = $('#msub'), opts = mTab === 'mood' ? MUS_MOODS : mTab === 'genre' ? MUS_GENRES : null;
+  sub.classList.toggle('hidden', !!q || !opts);
+  if (opts && !q) { if (!opts.includes(mSub)) mSub = opts[0]; sub.innerHTML = opts.map(o => `<button class="pill${o === mSub ? ' on' : ''}" data-s="${esc(o)}">${esc(o)}</button>`).join(''); }
+  if (!q && mTab === 'star') return mRender(mStars(), false);
+  box.innerHTML = '<div class="spin"></div>';
   try {
-    const r = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(q)}&media=music&entity=song&limit=20`), d = await r.json();
-    if ($('#mq').value.trim() !== q) return;
-    const l = (d.results || []).filter(t => /^https:\/\//.test(t.previewUrl || ''));
-    box.innerHTML = l.length ? '' : '<div class="empty">No previewable songs found</div>';
-    l.forEach((t, i) => {
-      const art = (t.artworkUrl100 || '').replace('100x100', '200x200'), row = document.createElement('div'); row.className = 'mrow';
-      row.innerHTML = `<div class="art" ${/^https:\/\//.test(art) ? `style="background-image:url('${encodeURI(art).replace(/'/g, '%27')}')"` : ''}></div><div class="mid"><b>${esc(t.trackName)}</b><span>${esc(t.artistName)}</span></div><button class="pv" title="Preview">${MUS_PLAY}</button>`;
-      row.querySelector('.pv').onclick = e => {
-        e.stopPropagation(); const b = e.currentTarget, same = mPrevBtn === b; stopMPrev(); if (same) return;
-        mPrev = new Audio(t.previewUrl); mPrev.play().catch(() => {}); mPrev.onended = stopMPrev; b.innerHTML = MUS_PAUSE; mPrevBtn = b;
-      };
-      row.onclick = () => { stMusic = cleanMusic({ trackName: t.trackName, artistName: t.artistName, artworkUrl: art, previewUrl: t.previewUrl }); paintMusBtns(); closeMusicSheet(); };
-      box.appendChild(row);
-    });
-  } catch { box.innerHTML = '<div class="empty">Couldn’t load songs. Check your connection.</div>'; }
+    const list = q ? await mFetchSearch(q) : mTab === 'sug' ? await mSuggested() : await mFetchSearch(mTab === 'mood' ? mSub + ' songs' : mSub);
+    if (tok === mTok) mRender(list, !q && mTab === 'sug');
+  } catch { if (tok === mTok) box.innerHTML = '<div class="empty">Couldn’t load songs. Check your connection.</div>'; }
 }
-$('#mq').addEventListener('input', () => { clearTimeout(mqT); const q = $('#mq').value.trim(); if (!q) { $('#mres').innerHTML = '<div class="empty">Search for a song to add</div>'; return; } $('#mres').innerHTML = '<div class="spin"></div>'; mqT = setTimeout(() => musicSearch(q), 400); });
+function openMusicSheet(){
+  $('#mq').value = ''; mTab = 'sug'; $('#mclear').classList.toggle('hidden', !stMusic);
+  $('#msheet').classList.remove('hidden'); mRefresh();
+}
+$('#mq').addEventListener('input', () => { clearTimeout(mqT); mqT = setTimeout(mRefresh, 400); });
+$('#mtabs').addEventListener('click', e => { const b = e.target.closest('.pill'); if (!b) return; $('#mq').value = ''; mTab = b.dataset.t; mRefresh(); });
+$('#msub').addEventListener('click', e => { const b = e.target.closest('.pill'); if (!b) return; mSub = b.dataset.s; mRefresh(); });
+$('#mres').addEventListener('click', e => {
+  const a = e.target.closest('[data-a]'), row = e.target.closest('[data-i]'); if (!a || !row) return;
+  const t = mList[+row.dataset.i]; if (!t) return;
+  if (a.dataset.a === 'play') return mPlay(a, t);
+  if (a.dataset.a === 'star') {
+    let l = mStars(); const on = l.some(x => x.id === t.id); l = on ? l.filter(x => x.id !== t.id) : [t, ...l]; mSaveStars(l);
+    document.querySelectorAll('#mres [data-i]').forEach(r => { const x = mList[+r.dataset.i]; if (x && x.id === t.id) r.querySelector('.mst').classList.toggle('on', !on); });
+    if (mTab === 'star' && !$('#mq').value.trim()) mRefresh(); return;
+  }
+  stMusic = cleanMusic(t); paintMusBtns(); closeMusicSheet();
+});
 $('#mclear').onclick = () => { stMusic = null; paintMusBtns(); closeMusicSheet(); };
 $('#msheet').addEventListener('click', e => { if (e.target.id === 'msheet') closeMusicSheet(); });
 $('#stx-mus').onclick = $('#smd-mus').onclick = openMusicSheet;
@@ -2192,7 +2263,7 @@ function showItem(){
     const im = new Image(); im.alt = ''; im.onload = done; im.onerror = () => { done(); sv.dur = 2500; im.remove(); stage.textContent = 'Couldn’t load this status'; };
     im.src = url; stage.appendChild(im);
   } else { sv.loaded = true; sv.dur = 2000; stage.textContent = 'Unavailable'; }
-  const mineNow = sv.uid === me.uid;
+  const mineNow = sv.uid === me.uid; hideRx();
   $('#sv-views').classList.toggle('hidden', !mineNow); $('#sv-like').classList.toggle('hidden', mineNow);
   paintStoryMeta(s);
   const mu = cleanMusic(s.music); $('#sv-music').classList.toggle('hidden', !mu);
@@ -2201,10 +2272,18 @@ function showItem(){
   const nx = sv.items[sv.i + 1]; if (nx && nx.type !== 'text' && nx.type !== 'video' && /^https:\/\//.test(nx.mediaURL || '')) { const p = new Image(); p.src = nx.mediaURL; }
   sv.raf = requestAnimationFrame(svLoop);
 }
+const HEART_SVG = $('#sv-like').innerHTML, RX_SET = ['❤️', '😂', '😮', '😢', '🙏', '👍'];
+const myRx = s => (s.reactions && s.reactions[me.uid]) || (s.likes && s.likes[me.uid] ? '❤️' : '');
+const rxOf = (s, u) => (s.reactions && s.reactions[u]) || (s.likes && s.likes[u] ? '❤️' : '');
+const rxAll = s => { const o = {}; Object.keys(Object.assign({}, s.likes || {}, s.reactions || {})).forEach(u => { const e = rxOf(s, u); if (e) o[u] = e; }); return o; };
+const cmCount = s => Object.keys(s.comments || {}).length;
 function paintStoryMeta(s){
-  if (sv.uid === me.uid) $('#sv-vc').textContent = Object.keys(s.views || {}).length;
-  else $('#sv-like').classList.toggle('on', !!(s.likes && s.likes[me.uid]));
+  const mine = sv.uid === me.uid;
+  if (mine) $('#sv-vc').textContent = Object.keys(s.views || {}).length;
+  else { const r = myRx(s); $('#sv-like').innerHTML = r ? `<span>${r}</span>` : HEART_SVG; }
+  const n = cmCount(s); $('#sv-cc').textContent = n || (mine ? '0' : 'Comment');
 }
+function hideRx(){ $('#sv-rx').classList.add('hidden'); }
 function markViewed(uid, s){
   const mine = users[me.uid] || {}, payload = { name: mine.name || me.displayName || 'User', photoURL: mine.photoURL || me.photoURL || '', viewedAt: Date.now() };
   s.views = { ...(s.views || {}), [me.uid]: payload };
@@ -2244,16 +2323,45 @@ $('#sv-close').onclick = closeStory;
   hit.addEventListener('pointercancel', () => { clearTimeout(tm); setSvPaused(false); });
 })();
 $('#sv-like').onclick = () => {
-  const s = sv.items[sv.i]; if (!s) return; const on = !(s.likes && s.likes[me.uid]);
-  s.likes = { ...(s.likes || {}) }; if (on) s.likes[me.uid] = true; else delete s.likes[me.uid];
-  if (stories[sv.uid] && stories[sv.uid][s.key]) stories[sv.uid][s.key].likes = s.likes;
-  paintStoryMeta(s);
-  (on ? set(ref(db, `stories/${sv.uid}/${s.key}/likes/${me.uid}`), true) : remove(ref(db, `stories/${sv.uid}/${s.key}/likes/${me.uid}`))).catch(() => {});
+  const s = sv.items[sv.i]; if (!s) return; const rx = $('#sv-rx'), cur = myRx(s);
+  if (!rx.classList.contains('hidden')) { hideRx(); return setSvPaused(false); }
+  rx.innerHTML = RX_SET.map(e => `<button data-e="${e}" class="${e === cur ? 'on' : ''}">${e}</button>`).join(''); rx.classList.remove('hidden'); setSvPaused(true);
+};
+$('#sv-rx').onclick = e => {
+  const b = e.target.closest('button'); if (!b) return; const s = sv.items[sv.i]; if (!s) return;
+  const em = b.dataset.e, off = myRx(s) === em, base = `stories/${sv.uid}/${s.key}`;
+  s.reactions = { ...(s.reactions || {}) }; s.likes = { ...(s.likes || {}) };
+  if (off) { delete s.reactions[me.uid]; delete s.likes[me.uid]; } else { s.reactions[me.uid] = em; if (em === '❤️') s.likes[me.uid] = true; else delete s.likes[me.uid]; }
+  if (stories[sv.uid] && stories[sv.uid][s.key]) { stories[sv.uid][s.key].reactions = s.reactions; stories[sv.uid][s.key].likes = s.likes; }
+  paintStoryMeta(s); hideRx(); setSvPaused(false);
+  update(ref(db), { [`${base}/reactions/${me.uid}`]: off ? null : em, [`${base}/likes/${me.uid}`]: !off && em === '❤️' ? true : null }).catch(() => toast('Couldn’t send reaction'));
+};
+$('#sv-hit').addEventListener('pointerdown', () => { if (!$('#sv-rx').classList.contains('hidden')) hideRx(); });
+$('#sv-cm').onclick = () => {
+  const s = sv.items[sv.i]; if (!s) return; setSvPaused(true); hideRx();
+  const uid = sv.uid, key = s.key, base = `stories/${uid}/${key}/comments`;
+  const ov = modal(`<h3 id="cm-h">Comments</h3><div id="cm-list"><div class="spin"></div></div><div id="cm-row"><input class="field" id="cm-in" maxlength="300" placeholder="Add a comment…" autocomplete="off" enterkeyhint="send"><button class="pgbtn" id="cm-go">Send</button></div>`);
+  const list = ov.querySelector('#cm-list'); let items = [];
+  const draw = () => {
+    ov.querySelector('#cm-h').textContent = items.length ? `Comments (${items.length})` : 'Comments';
+    list.innerHTML = items.length ? items.map(c => `<div class="cmt" data-k="${esc(c.key)}"><div class="av sm" style="background-image:url('${cssUrl(uAvatar(c.uid))}')"></div><div class="b"><b>${esc(c.uid === me.uid ? 'You' : uName(c.uid))}</b><small>${updAgo(c.createdAt || Date.now())}</small><p>${esc(c.text)}</p></div>${c.uid === me.uid || uid === me.uid ? '<button class="x" data-del title="Delete">×</button>' : ''}</div>`).join('') : '<div class="empty">No comments yet.<br>Be the first to comment.</div>';
+    list.scrollTop = list.scrollHeight; s.comments = Object.fromEntries(items.map(c => [c.key, c])); if (stories[uid] && stories[uid][key]) stories[uid][key].comments = s.comments; if (sv.items[sv.i] === s) paintStoryMeta(s);
+  };
+  get(ref(db, base)).then(sn => { const v = sn.val() || {}; items = Object.entries(v).map(([k, c]) => ({ key: k, ...c })).filter(c => typeof c.text === 'string').sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0)); draw(); }, () => { list.innerHTML = '<div class="empty">Couldn’t load comments.</div>'; });
+  const send = () => {
+    const inp = ov.querySelector('#cm-in'), text = inp.value.trim(); if (!text) return;
+    const nr = push(ref(db, base)), c = { key: nr.key, uid: me.uid, text, createdAt: Date.now() }; inp.value = '';
+    items.push(c); draw();
+    set(nr, { uid: me.uid, text, createdAt: Date.now() }).catch(() => { items = items.filter(x => x.key !== c.key); draw(); toast('Couldn’t post comment'); });
+  };
+  ov.querySelector('#cm-go').onclick = send; ov.querySelector('#cm-in').addEventListener('keydown', e => { if (e.key === 'Enter') send(); });
+  list.onclick = e => { const x = e.target.closest('[data-del]'); if (!x) return; const k = x.closest('.cmt').dataset.k; items = items.filter(c => c.key !== k); draw(); remove(ref(db, `${base}/${k}`)).catch(() => toast('Couldn’t delete')); };
+  const mo = new MutationObserver(() => { if (!document.body.contains(ov)) { mo.disconnect(); setSvPaused(false); } }); mo.observe($('#modal-root'), { childList: true });
 };
 $('#sv-views').onclick = () => {
   const s = sv.items[sv.i]; if (!s) return; setSvPaused(true);
-  const vs = Object.entries(s.views || {}).sort((a, b) => (b[1].viewedAt || 0) - (a[1].viewedAt || 0)), likes = Object.keys(s.likes || {}).length;
-  const ov = modal(`<h3>Viewed by ${vs.length}${likes ? ` · ♥ ${likes}` : ''}</h3>` + (vs.length ? vs.map(([u, v]) => `<div class="blk"><div class="av sm" style="background-image:url('${cssUrl(v.photoURL || DEFAULT_AVATAR)}')"></div><div class="nm"><b>${esc(v.name || 'User')}</b><small>${updAgo(v.viewedAt || Date.now())}</small></div></div>`).join('') : '<div class="empty" style="padding:20px">No views yet</div>'));
+  const vs = Object.entries(s.views || {}).sort((a, b) => (b[1].viewedAt || 0) - (a[1].viewedAt || 0)), rxs = Object.values(rxAll(s)), likes = rxs.length, rxSum = Object.entries(rxs.reduce((o, e) => (o[e] = (o[e] || 0) + 1, o), {})).map(([e, n]) => e + ' ' + n).join('  ');
+  const ov = modal(`<h3>Viewed by ${vs.length}${likes ? ` · ${rxSum}` : ''}</h3>` + (vs.length ? vs.map(([u, v]) => `<div class="blk"><div class="av sm" style="background-image:url('${cssUrl(v.photoURL || DEFAULT_AVATAR)}')"></div><div class="nm"><b>${esc(v.name || 'User')}</b><small>${updAgo(v.viewedAt || Date.now())}</small></div></div>`).join('') : '<div class="empty" style="padding:20px">No views yet</div>'));
   const mo = new MutationObserver(() => { if (!document.body.contains(ov)) { mo.disconnect(); setSvPaused(false); } }); mo.observe($('#modal-root'), { childList: true });
 };
 function deleteStatus(){
@@ -2273,7 +2381,8 @@ $('#sv-more').onclick = e => {
   const s = sv.items[sv.i]; if (!s) return;
   const own = sv.uid === me.uid, r = e.currentTarget.getBoundingClientRect(), items = [];
   if (own) items.push(['Viewed by ' + Object.keys(s.views || {}).length, () => $('#sv-views').click()]);
-  else items.push([(s.likes && s.likes[me.uid]) ? 'Unlike' : 'Like', () => $('#sv-like').click()]);
+  else items.push([myRx(s) ? 'Change reaction' : 'React', () => $('#sv-like').click()]);
+  items.push(['Comments' + (cmCount(s) ? ' (' + cmCount(s) + ')' : ''), () => $('#sv-cm').click()]);
   if (s.type === 'text' && s.text) items.push(['Copy text', () => { (navigator.clipboard ? navigator.clipboard.writeText(s.text) : Promise.reject()).then(() => toast('Copied'), () => toast('Couldn’t copy')); }]);
   else if (/^https:\/\//.test(s.mediaURL || '')) items.push([s.type === 'video' ? 'Open video' : 'Open photo', () => window.open(s.mediaURL, '_blank', 'noopener')]);
   if (own) items.push(['Delete status', deleteStatus, true]);

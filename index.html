@@ -500,6 +500,32 @@ select.field{appearance:none}
 .upjob .pb i{display:block;height:100%;background:var(--accent);transition:width .25s}
 .upjob.err .mid b{color:var(--danger)}
 .upjob .uadd{font-size:20px}
+
+/* ---- groups ---- */
+#groups{position:fixed;inset:0;z-index:72;background:var(--bg);display:flex;flex-direction:column}
+@media(min-width:761px){#groups{right:auto;width:380px;border-right:1px solid var(--border)}}
+#gr-tabs{display:flex;gap:8px;padding:10px 14px}
+#gr-body{flex:1;overflow-y:auto;padding-bottom:calc(var(--nav-h) + 16px)}
+#groups.chat #gr-body{padding-bottom:6px;background:var(--chat-bg)}
+body.gr-chat #bnav{display:none}
+#gr-msgs{display:flex;flex-direction:column;gap:3px;padding:14px 12px}
+.b .gname{font-size:12.5px;font-weight:700;margin-bottom:2px}
+#gr-composer{display:flex;align-items:flex-end;gap:6px;padding:8px 10px calc(8px + var(--sab));background:var(--surface);border-top:1px solid var(--border)}
+#gr-composer textarea{flex:1;resize:none;max-height:130px;min-height:42px;padding:11px 16px;border-radius:22px;border:none;background:var(--input);outline:none;line-height:1.3}
+#gr-send{background:var(--primary);color:var(--inverse)}
+.grhero{display:flex;flex-direction:column;align-items:center;text-align:center;padding:32px 24px}
+.grhero h2{margin:14px 0 4px;font-size:22px}
+.grhero p{margin:6px 0 18px;color:var(--muted);white-space:pre-wrap;max-width:320px}
+.grhero .pgbtn{padding:12px 34px;font-size:15px}
+.grpick{max-height:230px;overflow-y:auto;margin:4px 0 10px;border-radius:12px}
+.grpick .res input{width:20px;height:20px;accent-color:var(--accent);flex-shrink:0}
+.grpick .res .mid{flex:1;min-width:0}
+.grmem{display:flex;gap:12px;align-items:center;padding:8px 2px}
+.grmem .mid{flex:1;min-width:0}
+.grmem .mid span{display:block;color:var(--muted);font-size:12px}
+.grmem .rm{color:var(--danger);font-size:13px;font-weight:600;padding:6px 8px}
+.grfield{border-radius:18px;resize:none}
+:root[data-theme="dark"] #groups .bar,:root[data-theme="dark"] #gr-composer{background:#000}
 </style>
 </head>
 <body>
@@ -589,6 +615,7 @@ select.field{appearance:none}
   <nav id="bnav">
     <button data-tab="chats" class="on"><span class="pl"><svg viewBox="0 0 24 24"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 8.6 8.6 0 0 1-3.6-.8L3 21l1.9-5.4A8.4 8.4 0 1 1 21 11.5Z"/></svg><span class="nb hidden" id="nb-chats"></span></span>Chats</button>
     <button data-tab="updates"><span class="pl"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" stroke-dasharray="3.2 3"/><circle cx="12" cy="12" r="3.6"/></svg><span class="nd hidden" id="nd-upd"></span></span>Updates</button>
+    <button data-tab="groups"><span class="pl"><svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>Groups</button>
     <button data-tab="pages"><span class="pl"><svg viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8Z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></svg></span>Pages</button>
     <button data-tab="settings"><span class="pl"><i class="nav-av" id="nav-av"></i></span>You</button>
   </nav>
@@ -638,6 +665,7 @@ select.field{appearance:none}
 </div>
 <div id="rx-root"></div>
 <div id="msheet" class="hidden"><div class="sheet"><div style="width:40px;height:4px;border-radius:2px;background:var(--border);margin:0 auto 12px"></div><div style="position:relative"><svg viewBox="0 0 24 24" style="position:absolute;left:14px;top:13px;width:20px;height:20px;stroke:var(--muted);fill:none;stroke-width:2;stroke-linecap:round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input class="field" id="mq" placeholder="Search songs" autocomplete="off" style="padding-left:44px"></div><div id="mtabs"><button class="pill on" data-t="sug">Suggested</button><button class="pill" data-t="mood">Mood</button><button class="pill" data-t="genre">Genre</button><button class="pill" data-t="star">Starred</button></div><div id="msub" class="hidden"></div><div id="mres"></div><button class="btn ghost" id="mclear" style="margin-top:8px">No music</button></div></div>
+<div id="groups" class="hidden"><div class="bar"><button class="icon hidden" id="gr-back" title="Back"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button><div class="grow" id="gr-head" style="min-width:0"><div id="gr-title" style="font-weight:800;font-size:20px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Groups</div><div id="gr-sub" class="hidden" style="font-size:12px;color:var(--muted)"></div></div><button class="icon hidden" id="gr-info" title="Group info"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 16v-4M12 8h.01"/></svg></button><button class="icon" id="gr-new" title="Create group"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button></div><div id="gr-tabs"><button class="pill on" data-t="mine">Your Groups</button><button class="pill" data-t="discover">Discover</button></div><div id="gr-body"></div><div id="gr-composer" class="hidden"><textarea id="gr-input" rows="1" maxlength="2000" placeholder="Message" autocomplete="off"></textarea><button class="icon" id="gr-send" title="Send"><svg viewBox="0 0 24 24"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4Z"/></svg></button></div></div>
 <div id="pages" class="hidden"><div class="bar"><button class="icon hidden" id="pg-back" title="Back"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button><div class="grow" id="pg-title" style="font-weight:800;font-size:20px">Pages</div><button class="icon" id="pg-new" title="Create Page"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button></div><div id="pg-tabs"><button class="pill on" data-t="discover">Discover</button><button class="pill" data-t="mine">Your Pages</button></div><div id="pg-body"></div></div>
 <div id="contacts" class="hidden"><div class="bar"><button class="icon" id="ct-back" title="Back"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button><div class="grow"><div style="font-weight:700;font-size:17px">Select contact</div><div id="ct-count" style="font-size:12px;color:var(--muted)"></div></div><button class="icon" id="ct-searchbtn" title="Search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg></button></div><div class="searchwrap hidden" id="ct-sw"><input id="ct-q" placeholder="Search contacts" autocomplete="off"></div><div id="ct-list"></div></div>
 <div id="settings" class="hidden"></div>
@@ -1000,7 +1028,7 @@ function teardown(){
   closeThread(true);
   Object.keys(chats).forEach(k => delete chats[k]); Object.keys(previews).forEach(k => delete previews[k]);
   Object.values(typingWatch).forEach(f => f()); Object.keys(typingWatch).forEach(k => delete typingWatch[k]); Object.keys(typingMap).forEach(k => delete typingMap[k]);
-  chatsLoaded = false; hideNotif(); hideSettings(); hideContacts(); hidePages(); hideStory(); hideUpdates(); stopStories(); cancelAllUploads();
+  chatsLoaded = false; hideNotif(); hideSettings(); hideContacts(); hidePages(); hideGroups(); hideStory(); hideUpdates(); stopStories(); cancelAllUploads();
   kp = null; Object.keys(shared).forEach(k => delete shared[k]); decCache.clear();
   HDB.clear(); Object.keys(users).forEach(k => delete users[k]); userFresh.clear(); avObj.clear(); avTry.clear();
 }
@@ -1270,6 +1298,7 @@ window.addEventListener('popstate', () => {
   if (updatesHist) { updatesHist = false; hideUpdates(); return; }
   if (settingsHist) { settingsHist = false; hideSettings(); return; }
   if (contactsHist) { contactsHist = false; hideContacts(); return; }
+  if (groupsHist) { groupsHist = false; hideGroups(); return; }
   if (pagesHist) { pagesHist = false; hidePages(); return; }
   if (!chatHist) return; chatHist = false; if (activeUid) closeThread();
 });
@@ -1887,7 +1916,7 @@ function emptyState(kind, title, text, cta, act){
 }
 document.addEventListener('click', e => {
   const b = e.target.closest('[data-es]'); if (!b) return; const a = b.dataset.es;
-  if (a === 'newchat') $('#btn-new').click(); else if (a === 'status') openTextComposer(); else if (a === 'page') pgCreate(); else if (a === 'contact') addContactModal(); else if (a === 'post') pgPost();
+  if (a === 'newchat') $('#btn-new').click(); else if (a === 'status') openTextComposer(); else if (a === 'page') pgCreate(); else if (a === 'group') grCreate(); else if (a === 'contact') addContactModal(); else if (a === 'post') pgPost();
 });
 const flip = k => { const v = localStorage.getItem(k) !== 'off'; localStorage.setItem(k, v ? 'off' : 'on'); return !v; };
 $('#settings').addEventListener('click', e => {
@@ -1997,6 +2026,7 @@ const CT_USERPLUS = '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circl
 function hideContacts(){ $('#contacts').classList.add('hidden'); }
 function closeContacts(){ hideContacts(); if (contactsHist) { contactsHist = false; skipPop = true; history.back(); } }
 function goChat(uid){
+  if (groupsHist) { groupsHist = false; hideGroups(); if (!chatHist) { history.replaceState({ hmChat: 1 }, ''); chatHist = true; } }
   if (pagesHist) { pagesHist = false; hidePages(); if (!chatHist) { history.replaceState({ hmChat: 1 }, ''); chatHist = true; } }
   if (contactsHist) { contactsHist = false; hideContacts(); if (!chatHist) { history.replaceState({ hmChat: 1 }, ''); chatHist = true; } }
   openThread(uid);
@@ -2686,6 +2716,211 @@ $('#pg-body').addEventListener('click', e => {
   const r = e.target.closest('.pgrow[data-pid]'); if (r) { pgCur = r.dataset.pid; $('#pg-body').scrollTop = 0; renderPages(); }
 });
 
+
+/* =============== GROUPS =============== */
+let groupsHist = false, grTab = 'mine', grCur = null, grAll = {}, grMine = new Set(), grMembers = {}, grMsgs = [], grUnsubs = [], grNamed = new Set();
+const grHue = k => { let h = 0; for (const c of String(k)) h = (h * 31 + c.charCodeAt(0)) >>> 0; return h % 360; };
+const grCount = n => { n = +n || 0; return n + (n === 1 ? ' member' : ' members'); };
+function grStopChat(){
+  grUnsubs.forEach(f => { try { f(); } catch {} }); grUnsubs = []; grMsgs = []; grMembers = {}; grNamed = new Set();
+  $('#groups').classList.remove('chat'); document.body.classList.remove('gr-chat'); $('#gr-composer').classList.add('hidden');
+}
+function hideGroups(){ grStopChat(); $('#groups').classList.add('hidden'); }
+function closeGroups(){ hideGroups(); if (groupsHist) { groupsHist = false; skipPop = true; history.back(); } }
+async function openGroups(){
+  $('#groups').classList.remove('hidden');
+  if (!groupsHist) { history.pushState({ hmGroups: 1 }, ''); groupsHist = true; }
+  grCur = null; renderGroups(true);
+}
+async function grLoad(){
+  try {
+    const [all, mine] = await Promise.all([
+      get(query(ref(db, 'groups'), orderByChild('createdAt'), limitToLast(100))),
+      get(ref(db, `userGroups/${me.uid}`))]);
+    grAll = {}; all.forEach(c => { grAll[c.key] = { id: c.key, ...c.val() }; });
+    grMine = new Set(Object.keys(mine.val() || {}));
+    for (const id of grMine) if (!grAll[id]) { const s = await get(ref(db, `groups/${id}`)); if (s.exists()) grAll[id] = { id, ...s.val() }; }
+    return true;
+  } catch { return false; }
+}
+async function renderGroups(load){
+  const body = $('#gr-body'), cur = grCur && grAll[grCur], inChat = !!(cur && grMine.has(grCur)), root = $('#groups');
+  $('#gr-back').classList.toggle('hidden', !grCur); $('#gr-tabs').classList.toggle('hidden', !!grCur);
+  $('#gr-new').classList.toggle('hidden', !!grCur); $('#gr-info').classList.toggle('hidden', !inChat);
+  $('#gr-sub').classList.toggle('hidden', !inChat);
+  $('#gr-title').textContent = cur ? (cur.name || 'Group') : 'Groups';
+  $('#gr-title').style.fontSize = cur ? '17px' : '20px';
+  if (load) { body.innerHTML = '<div class="spin"></div>'; if (!await grLoad()) { body.innerHTML = '<div class="empty">Couldn’t load Groups.</div>'; return; } }
+  if (root.classList.contains('hidden')) return;
+  if (grCur && !grAll[grCur]) { grCur = null; return renderGroups(); }
+  root.classList.toggle('chat', inChat); document.body.classList.toggle('gr-chat', inChat);
+  $('#gr-composer').classList.toggle('hidden', !inChat);
+  if (inChat) return grEnterChat();
+  grStopChat(); root.classList.remove('chat'); document.body.classList.remove('gr-chat');
+  if (cur) return grPreview(cur);
+  document.querySelectorAll('#gr-tabs .pill').forEach(b => b.classList.toggle('on', b.dataset.t === grTab));
+  const row = (g, mine) => `<div class="pgrow" data-gid="${esc(g.id)}">${pgAv(g, 48)}<div class="mid"><b>${esc(g.name)}</b><span>${mine ? esc(g.lastText ? (g.lastBy === me.uid ? 'You: ' : '') + g.lastText : grCount(g.memberCount)) : esc(grCount(g.memberCount) + (g.about ? ' · ' + g.about : ''))}</span></div>${mine ? `<small style="color:var(--muted);font-size:12px;flex-shrink:0">${fmtListTime(g.lastAt)}</small>` : `<button class="pgbtn" data-join>Join</button>`}</div>`;
+  const all = Object.values(grAll);
+  if (grTab === 'mine') {
+    const m = all.filter(g => grMine.has(g.id)).sort((a, b) => (b.lastAt || b.createdAt || 0) - (a.lastAt || a.createdAt || 0));
+    let h = '<div class="pgrow" data-act="create"><div class="pgav" style="width:48px;height:48px;background:var(--accent);color:#111"><svg viewBox="0 0 24 24" width="22" height="22" style="stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round"><path d="M12 5v14M5 12h14"/></svg></div><div class="mid"><b>Create a group</b><span>Chat with friends, family or a team</span></div></div>';
+    h += m.length ? m.map(g => row(g, true)).join('') : emptyState('people', 'No groups yet', 'Groups you create or join show up here.');
+    body.innerHTML = h;
+  } else {
+    const l = all.filter(g => g.isPublic && !grMine.has(g.id)).sort((a, b) => (b.memberCount || 0) - (a.memberCount || 0) || (b.createdAt || 0) - (a.createdAt || 0));
+    body.innerHTML = l.length ? l.map(g => row(g)).join('') : emptyState('people', 'No groups to discover yet', 'Be the first to start a public group for your community.', 'Create a group', 'group');
+  }
+}
+function grPreview(g){
+  $('#gr-body').innerHTML = `<div class="grhero">${pgAv(g, 96)}<h2>${esc(g.name)}</h2><span style="color:var(--muted)">${esc(grCount(g.memberCount))}</span><p>${esc(g.about || '')}</p><button class="pgbtn" data-join>Join group</button></div>`;
+}
+async function grJoin(id){
+  const g = grAll[id]; if (!g || grMine.has(id)) return;
+  try {
+    await update(ref(db), { [`groupMembers/${id}/${me.uid}`]: 'member', [`userGroups/${me.uid}/${id}`]: true, [`groups/${id}/memberCount`]: increment(1) });
+    grMine.add(id); g.memberCount = (g.memberCount || 0) + 1; toast('Joined ' + g.name); grCur = id; $('#gr-body').scrollTop = 0; renderGroups();
+  } catch { toast('Couldn’t join group'); }
+}
+/* ---- chat ---- */
+function grEnterChat(){
+  const id = grCur; grStopChat();
+  $('#groups').classList.add('chat'); document.body.classList.add('gr-chat'); $('#gr-composer').classList.remove('hidden');
+  $('#gr-body').innerHTML = '<div id="gr-msgs"><div class="spin"></div></div>';
+  grSub();
+  grUnsubs.push(onValue(ref(db, `groups/${id}`), s => {
+    if (grCur !== id) return;
+    if (!s.exists()) { toast('This group was deleted'); grMine.delete(id); delete grAll[id]; grCur = null; renderGroups(); return; }
+    grAll[id] = { id, ...s.val() }; $('#gr-title').textContent = grAll[id].name || 'Group'; grSub();
+  }));
+  grUnsubs.push(onValue(ref(db, `groupMembers/${id}`), s => {
+    if (grCur !== id) return;
+    grMembers = s.val() || {};
+    if (s.exists() && !grMembers[me.uid]) { toast('You’re no longer in this group'); grMine.delete(id); grCur = null; renderGroups(true); return; }
+    grSub(); Object.keys(grMembers).forEach(u => { if (!users[u]) loadUser(u).then(() => { if (grCur === id) grPaint(); }); });
+  }, () => {}));
+  grUnsubs.push(onValue(query(ref(db, `groupMessages/${id}`), orderByKey(), limitToLast(150)), s => {
+    if (grCur !== id) return;
+    const l = []; s.forEach(c => { l.push({ id: c.key, ...c.val() }); }); grMsgs = l;
+    const need = [...new Set(l.map(m => m.authorUid))].filter(u => u && u !== me.uid && !grNamed.has(u));
+    need.forEach(u => grNamed.add(u));
+    if (need.length) Promise.all(need.map(loadUser)).then(() => { if (grCur === id) grPaint(); });
+    grPaint(true);
+  }, () => { const b = $('#gr-msgs'); if (b) b.innerHTML = '<div class="empty">Couldn’t load messages.</div>'; }));
+}
+function grSub(){ const g = grAll[grCur]; if (!g) return; const n = Object.keys(grMembers).length || g.memberCount || 0; $('#gr-sub').textContent = grCount(n); }
+function grDay(ts){
+  const d = new Date(ts), n = new Date(), y = new Date(n); y.setDate(n.getDate() - 1);
+  if (d.toDateString() === n.toDateString()) return 'Today'; if (d.toDateString() === y.toDateString()) return 'Yesterday';
+  return d.toLocaleDateString([], { weekday: 'short', day: 'numeric', month: 'short' });
+}
+function grPaint(forceBottom){
+  const box = $('#gr-msgs'), sc = $('#gr-body'); if (!box) return;
+  const near = sc.scrollHeight - sc.scrollTop - sc.clientHeight < 140;
+  if (!grMsgs.length) { box.innerHTML = '<div class="sys" style="margin-top:30px">No messages yet — say hi 👋</div>'; return; }
+  let h = '', day = '', prev = '';
+  grMsgs.forEach(m => {
+    const mine = m.authorUid === me.uid, ts = m.createdAt || Date.now(), dk = new Date(ts).toDateString();
+    if (dk !== day) { day = dk; prev = ''; h += `<div class="day">${esc(grDay(ts))}</div>`; }
+    const name = !mine && prev !== m.authorUid ? `<div class="gname" style="color:hsl(${grHue(m.authorUid)},62%,52%)">${esc(uName(m.authorUid))}</div>` : '';
+    prev = m.authorUid;
+    h += `<div class="b ${mine ? 'out' : 'in'}">${name}<div class="t">${linkify(esc(m.text))}</div><div class="meta">${esc(fmtTime(ts))}</div></div>`;
+  });
+  box.innerHTML = h;
+  if (forceBottom && (near || sc.scrollTop === 0)) sc.scrollTop = sc.scrollHeight;
+}
+async function grSend(){
+  const inp = $('#gr-input'), text = inp.value.trim(), id = grCur; if (!text || !id) return;
+  inp.value = ''; inp.style.height = 'auto';
+  try {
+    const k = push(ref(db, `groupMessages/${id}`)).key;
+    await update(ref(db), { [`groupMessages/${id}/${k}`]: { text, authorUid: me.uid, createdAt: serverTimestamp() }, [`groups/${id}/lastText`]: text.slice(0, 80), [`groups/${id}/lastBy`]: me.uid, [`groups/${id}/lastAt`]: serverTimestamp() });
+    const sc = $('#gr-body'); sc.scrollTop = sc.scrollHeight;
+  } catch { inp.value = text; toast('Couldn’t send message'); }
+}
+/* ---- create / manage ---- */
+async function grContacts(exclude){
+  if (!contactIds.length) { try { const cs = await get(ref(db, `contacts/${me.uid}`)); cs.forEach(c => { if (c.val() && c.key !== me.uid && c.key !== AI_UID) contactIds.push(c.key); }); } catch {} }
+  const ids = contactIds.filter(u => u !== me.uid && !(exclude && exclude[u]));
+  await Promise.all(ids.map(loadUser));
+  return ids.sort((a, b) => uName(a).localeCompare(uName(b)));
+}
+const grPickRows = ids => ids.length ? ids.map(u => `<label class="res"><div class="av sm" style="background-image:url('${cssUrl(uAvatar(u))}')"></div><div class="mid"><b>${esc(uName(u))}</b></div><input type="checkbox" value="${esc(u)}"></label>`).join('') : '<div class="empty" style="padding:16px">No contacts to add yet</div>';
+async function grCreate(){
+  const ov = modal(`<h3>Create a group</h3><input class="field" id="gc-name" placeholder="Group name" maxlength="60"><input class="field" id="gc-about" placeholder="Description (optional)" maxlength="300"><select class="field" id="gc-vis"><option value="private">Private — only people you add</option><option value="public">Public — anyone can find and join</option></select><div class="csec" style="padding:6px 4px">Add members</div><div class="grpick" id="gc-list"><div class="spin"></div></div><button class="btn" id="gc-go">Create group</button>`);
+  const ids = await grContacts(); if (!ov.isConnected) return;
+  ov.querySelector('#gc-list').innerHTML = grPickRows(ids);
+  ov.querySelector('#gc-go').onclick = async () => {
+    const name = ov.querySelector('#gc-name').value.trim(); if (name.length < 2) return toast('Give your group a name');
+    const picked = [...ov.querySelectorAll('#gc-list input:checked')].map(i => i.value), isPublic = ov.querySelector('#gc-vis').value === 'public';
+    const b = ov.querySelector('#gc-go'); b.disabled = true;
+    try {
+      const id = push(ref(db, 'groups')).key, members = { [me.uid]: 'admin' }, up = {};
+      picked.forEach(u => { members[u] = 'member'; up[`userGroups/${u}/${id}`] = true; });
+      const g = { name, about: ov.querySelector('#gc-about').value.trim(), ownerUid: me.uid, isPublic, memberCount: picked.length + 1, lastText: '', lastBy: '', lastAt: serverTimestamp() };
+      await update(ref(db), { [`groups/${id}`]: { ...g, createdAt: serverTimestamp() }, [`groupMembers/${id}`]: members, [`userGroups/${me.uid}/${id}`]: true, ...up });
+      grAll[id] = { id, ...g, createdAt: Date.now(), lastAt: Date.now() }; grMine.add(id); closeModal(); toast('Group created');
+      if ($('#groups').classList.contains('hidden')) return; grCur = id; renderGroups();
+    } catch { b.disabled = false; toast('Couldn’t create group'); }
+  };
+}
+async function grInfo(){
+  const id = grCur, g = grAll[id]; if (!g) return;
+  const admin = grMembers[me.uid] === 'admin', owner = g.ownerUid === me.uid;
+  const ov = modal(`<div style="display:flex;flex-direction:column;align-items:center;text-align:center;margin-bottom:10px">${pgAv(g, 72)}<h3 style="margin:10px 0 2px">${esc(g.name)}</h3><span style="color:var(--muted);font-size:13px">${esc(g.isPublic ? 'Public group' : 'Private group')} · ${esc(grCount(Object.keys(grMembers).length))}</span>${g.about ? `<p style="color:var(--muted);margin:8px 0 0;white-space:pre-wrap">${esc(g.about)}</p>` : ''}</div>${admin ? '<button class="sh" id="gi-add">Add members</button>' : ''}<div class="csec" style="padding:8px 2px 2px">Members</div><div id="gi-list"></div>${owner ? '<button class="sh danger" id="gi-del">Delete group</button>' : '<button class="sh danger" id="gi-leave">Leave group</button>'}`);
+  const uids = Object.keys(grMembers); await Promise.all(uids.map(loadUser)); if (!ov.isConnected) return;
+  const sorted = uids.sort((a, b) => (grMembers[a] === 'admin' ? 0 : 1) - (grMembers[b] === 'admin' ? 0 : 1) || uName(a).localeCompare(uName(b)));
+  ov.querySelector('#gi-list').innerHTML = sorted.map(u => `<div class="grmem" data-uid="${esc(u)}"><div class="av sm" style="background-image:url('${cssUrl(uAvatar(u))}')"></div><div class="mid"><b>${esc(uName(u))}</b>${grMembers[u] === 'admin' ? '<span>Admin</span>' : ''}</div>${admin && u !== me.uid && u !== g.ownerUid ? '<button class="rm" data-rm>Remove</button>' : ''}</div>`).join('');
+  ov.querySelector('#gi-list').onclick = async e => {
+    const b = e.target.closest('[data-rm]'); if (!b) return; const u = b.closest('.grmem').dataset.uid; b.disabled = true;
+    try { await update(ref(db), { [`groupMembers/${id}/${u}`]: null, [`userGroups/${u}/${id}`]: null, [`groups/${id}/memberCount`]: increment(-1) }); b.closest('.grmem').remove(); toast('Removed ' + uName(u)); }
+    catch { b.disabled = false; toast('Couldn’t remove member'); }
+  };
+  const add = ov.querySelector('#gi-add'); if (add) add.onclick = () => grAddMembers(id);
+  const leave = ov.querySelector('#gi-leave');
+  if (leave) leave.onclick = async () => {
+    try { await update(ref(db), { [`groupMembers/${id}/${me.uid}`]: null, [`userGroups/${me.uid}/${id}`]: null, [`groups/${id}/memberCount`]: increment(-1) }); closeModal(); grMine.delete(id); grCur = null; toast('You left the group'); renderGroups(true); }
+    catch { toast('Couldn’t leave group'); }
+  };
+  const del = ov.querySelector('#gi-del');
+  if (del) del.onclick = () => {
+    const c = modal(`<h3>Delete this group?</h3><p style="color:var(--muted);margin:0 0 12px">All messages will be permanently deleted for everyone.</p><button class="btn" id="gd-go" style="background:var(--danger)">Delete group</button><button class="btn ghost" id="gd-x" style="margin-top:8px">Cancel</button>`);
+    c.querySelector('#gd-x').onclick = closeModal;
+    c.querySelector('#gd-go').onclick = async () => {
+      c.querySelector('#gd-go').disabled = true;
+      const up = { [`groups/${id}`]: null, [`groupMembers/${id}`]: null, [`groupMessages/${id}`]: null };
+      Object.keys(grMembers).forEach(u => { up[`userGroups/${u}/${id}`] = null; });
+      try { await update(ref(db), up); closeModal(); grMine.delete(id); delete grAll[id]; grCur = null; toast('Group deleted'); renderGroups(true); }
+      catch { c.querySelector('#gd-go').disabled = false; toast('Couldn’t delete group'); }
+    };
+  };
+}
+async function grAddMembers(id){
+  const ov = modal(`<h3>Add members</h3><div class="grpick" id="ga-list"><div class="spin"></div></div><button class="btn" id="ga-go">Add</button>`);
+  const ids = await grContacts(grMembers); if (!ov.isConnected) return;
+  ov.querySelector('#ga-list').innerHTML = grPickRows(ids);
+  ov.querySelector('#ga-go').onclick = async () => {
+    const picked = [...ov.querySelectorAll('#ga-list input:checked')].map(i => i.value); if (!picked.length) return toast('Pick at least one contact');
+    ov.querySelector('#ga-go').disabled = true; const up = { [`groups/${id}/memberCount`]: increment(picked.length) };
+    picked.forEach(u => { up[`groupMembers/${id}/${u}`] = 'member'; up[`userGroups/${u}/${id}`] = true; });
+    try { await update(ref(db), up); closeModal(); toast(picked.length === 1 ? 'Member added' : picked.length + ' members added'); }
+    catch { ov.querySelector('#ga-go').disabled = false; toast('Couldn’t add members'); }
+  };
+}
+$('#gr-back').onclick = () => { grCur = null; $('#gr-body').scrollTop = 0; renderGroups(grMine.size && !Object.keys(grAll).length); };
+$('#gr-new').onclick = grCreate;
+$('#gr-info').onclick = grInfo;
+$('#gr-head').onclick = () => { if (grCur && grMine.has(grCur)) grInfo(); };
+$('#gr-tabs').onclick = e => { const b = e.target.closest('.pill'); if (b) { grTab = b.dataset.t; renderGroups(); } };
+$('#gr-send').onclick = () => { grSend(); $('#gr-input').focus(); };
+$('#gr-input').addEventListener('input', e => { const t = e.target; t.style.height = 'auto'; t.style.height = Math.min(t.scrollHeight, 130) + 'px'; });
+$('#gr-input').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey && !/Mobi|Android/i.test(navigator.userAgent)) { e.preventDefault(); grSend(); } });
+$('#gr-input').addEventListener('focus', () => setTimeout(() => { const b = $('#gr-body'); b.scrollTop = b.scrollHeight; }, 300));
+$('#gr-body').addEventListener('click', e => {
+  if (e.target.closest('[data-join]')) { const r = e.target.closest('[data-gid]'); return grJoin(r ? r.dataset.gid : grCur); }
+  const a = e.target.closest('[data-act]'); if (a && a.dataset.act === 'create') return grCreate();
+  const r = e.target.closest('.pgrow[data-gid]'); if (r) { grCur = r.dataset.gid; $('#gr-body').scrollTop = 0; renderGroups(); }
+});
+
 /* =============== DEVICE BACK BUTTON FOR SHEETS, DIALOGS, COMPOSERS, MENUS =============== */
 /* One sentinel history entry is kept while any transient layer is open; Back closes the top-most layer and the user stays on the tab/screen underneath. */
 let layerSent = false;
@@ -2696,6 +2931,7 @@ const LAYERS = [   // highest first
   { id: 'rx', open: () => !$('#sv-rx').classList.contains('hidden'), close: () => { hideRx(); setSvPaused(false); } },
   { id: 'smd', open: () => !$('#smd').classList.contains('hidden'), close: () => closeMediaComposer() },
   { id: 'stx', open: () => !$('#stx').classList.contains('hidden'), close: () => $('#stx').classList.add('hidden') },
+  { id: 'gr', open: () => !$('#groups').classList.contains('hidden') && !$('#gr-back').classList.contains('hidden'), close: () => $('#gr-back').click() },
   { id: 'pg', open: () => !$('#pages').classList.contains('hidden') && !$('#pg-back').classList.contains('hidden'), close: () => $('#pg-back').click() }
 ];
 const layerTop = () => LAYERS.find(l => l.open());
@@ -2707,13 +2943,14 @@ function layerSync(){
 (() => {
   let t = null; const kick = () => { clearTimeout(t); t = setTimeout(layerSync, 0); };
   const mo = new MutationObserver(kick), cfg = { attributes: true, attributeFilter: ['class'] };
-  ['#menu', '#msheet', '#sv-rx', '#smd', '#stx', '#pages', '#pg-back'].forEach(sel => mo.observe($(sel), cfg));
+  ['#menu', '#msheet', '#sv-rx', '#smd', '#stx', '#pages', '#pg-back', '#groups', '#gr-back'].forEach(sel => mo.observe($(sel), cfg));
   mo.observe($('#modal-root'), { childList: true });
 })();
 
 /* =============== BOTTOM NAV =============== */
 const SCREENS = {
   updates: { el: '#updates', scroll: '#up-list', state: 'hmUpdates', open: () => openUpdates(), hide: () => hideUpdates(), close: () => closeUpdates(), get hist(){ return updatesHist; }, set hist(v){ updatesHist = v; } },
+  groups: { el: '#groups', scroll: '#gr-body', state: 'hmGroups', open: () => openGroups(), hide: () => hideGroups(), close: () => closeGroups(), get hist(){ return groupsHist; }, set hist(v){ groupsHist = v; } },
   pages: { el: '#pages', scroll: '#pg-body', state: 'hmPages', open: () => openPages(), hide: () => hidePages(), close: () => closePages(), get hist(){ return pagesHist; }, set hist(v){ pagesHist = v; } },
   contacts: { el: '#contacts', scroll: '#ct-list', state: 'hmContacts', open: () => openContacts(), hide: () => hideContacts(), close: () => closeContacts(), get hist(){ return contactsHist; }, set hist(v){ contactsHist = v; } },
   settings: { el: '#settings', scroll: '#settings', state: 'hmSettings', open: () => openSettings(), hide: () => hideSettings(), close: () => closeSettings(), get hist(){ return settingsHist; }, set hist(v){ settingsHist = v; } }
@@ -2733,14 +2970,14 @@ function navTo(tab){
   a.hide(); a.hist = false; history.replaceState({ [b.state]: 1 }, ''); b.hist = true; b.open();
 }
 document.querySelectorAll('#bnav button').forEach(b => b.onclick = () => navTo(b.dataset.tab));
-['#contacts', '#settings', '#updates', '#pages'].forEach(sel => new MutationObserver(syncNav).observe($(sel), { attributes: true, attributeFilter: ['class'] }));
+['#contacts', '#settings', '#updates', '#pages', '#groups'].forEach(sel => new MutationObserver(syncNav).observe($(sel), { attributes: true, attributeFilter: ['class'] }));
 syncNav();
 
 /* swipe left/right to switch bottom-nav tabs */
 (() => {
-  const ORDER = ['chats', 'updates', 'pages', 'settings'];
+  const ORDER = ['chats', 'updates', 'groups', 'pages', 'settings'];
   let sx = 0, sy = 0, st = 0, ok = false;
-  const blocked = t => !t || t.closest('input,textarea,select,#pills,#pg-tabs,#msgs,#thread,#sv,#stx,#smd,#viewer,#modal-root,#menu,#notif');
+  const blocked = t => !t || t.closest('input,textarea,select,#pills,#pg-tabs,#gr-tabs,#groups.chat,#msgs,#thread,#sv,#stx,#smd,#viewer,#modal-root,#menu,#notif');
   document.addEventListener('touchstart', e => {
     const t = e.touches[0]; sx = t.clientX; sy = t.clientY; st = Date.now();
     ok = e.touches.length === 1 && !blocked(e.target) && !$('#modal-root').firstElementChild && getComputedStyle($('#bnav')).display !== 'none' && ORDER.includes(navCur());
@@ -3009,7 +3246,7 @@ function nobackupSheet(retry){
 
 /* mobile keyboard: keep the composer above the keyboard */
 if (window.visualViewport) {
-  const fit = () => { const h = window.visualViewport.height; $('#app').style.height = h + 'px'; $('#main').style.height = h + 'px'; if (matchMedia('(max-width:760px)').matches) { $('#main').style.top = window.visualViewport.offsetTop + 'px'; } };
+  const fit = () => { const h = window.visualViewport.height; $('#app').style.height = h + 'px'; $('#main').style.height = h + 'px'; $('#groups').style.height = h + 'px'; $('#groups').style.top = window.visualViewport.offsetTop + 'px'; if (matchMedia('(max-width:760px)').matches) { $('#main').style.top = window.visualViewport.offsetTop + 'px'; } };
   window.visualViewport.addEventListener('resize', fit); window.visualViewport.addEventListener('scroll', fit);
   input.addEventListener('focus', () => setTimeout(() => { const b = $('#msgs'); b.scrollTop = b.scrollHeight; }, 300));
 }

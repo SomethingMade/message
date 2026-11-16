@@ -295,6 +295,10 @@ input,textarea{-webkit-user-select:text;user-select:text;-webkit-touch-callout:d
 .srow.prem .pbadge{flex-shrink:0;display:flex}
 .srow.prem .pbadge .verified-badge{width:38px;height:38px;margin:0;top:0}
 .srow.prem .pbtn{background:#0A84FF;color:#fff;border-radius:50px;padding:8px 16px;font-weight:700;font-size:13px;flex-shrink:0}
+.b .tr{margin-top:6px;padding-top:6px;border-top:1px solid rgba(128,128,128,.4);white-space:pre-wrap;line-height:1.35;font-size:var(--msgsz,15px)}
+.b .tr i{display:block;font-style:normal;font-size:11px;opacity:.7;margin-top:3px}
+.lng{display:flex;justify-content:space-between;align-items:center;width:100%;padding:13px 4px;border-bottom:1px solid var(--border);text-align:left;font-size:15px}
+.lng.on{font-weight:700}.lng.on::after{content:'✓';color:var(--primary)}
 .skp{background:var(--chat-bg);border-radius:16px;padding:12px;display:flex;flex-direction:column;gap:6px;margin:14px 0 4px}
 .skp div{max-width:78%;padding:8px 12px;border-radius:16px;font-size:14px;line-height:1.3}
 .skp .a{background:var(--in-bg);color:var(--in-text);align-self:flex-start;border-bottom-left-radius:5px}
@@ -1664,6 +1668,7 @@ async function renderMessages(keepScroll){
       else inner += `<div class="file" data-file="${m.key}">📄 <div><b>${esc(m.fileName || 'File')}</b><div style="font-size:12px;opacity:.7">${m.fileSize ? fmtSize(m.fileSize) + ' · ' : ''}tap to download</div></div></div>`;
     }
     if (m._t) inner += `<div class="t">${linkify(esc(m._t))}</div>`;
+    { const tr = trStore.get(trKey(m.key)); if (tr) inner += `<div class="tr">${esc(tr.text)}<i>Translated to ${esc(trName(tr.lang))}</i></div>`; }
     const ticks = m._pend ? '<span class="tick">🕓</span>' : out ? `<span class="tick ${otherLastRead >= m.createdAt ? 'seen' : ''}" data-ts="${m.createdAt}">${otherLastRead >= m.createdAt ? '✓✓' : '✓'}</span>` : '';
     const rxl = m.reactions && typeof m.reactions === 'object' ? Object.values(m.reactions).filter(x => typeof x === 'string' && x) : [];
     let rxHTML = '';
@@ -1739,6 +1744,8 @@ function msgPopup(b){
   const react = emo => { close(); set(ref(db, `dm_threads/${threadId}/messages/${key}/reactions/${me.uid}`), emo === mine ? null : emo).catch(() => toast('Couldn’t react')); };
   const items = [['Reply', () => startReply(key)]];
   if (b.querySelector('.t')) items.push(['Copy text', () => navigator.clipboard.writeText(b.querySelector('.t:last-of-type')?.textContent || '').then(() => toast('Copied'))]);
+  { const tEls = b.querySelectorAll('.t'), trText = tEls.length && !m.viewOnce ? tEls[tEls.length - 1].textContent.trim() : '';
+    if (trText) items.push([trStore.has(trKey(key)) ? 'Hide translation' : skinOK ? 'Translate' : 'Translate · Premium', () => skinOK ? translateMsg(key, trText) : premiumSheet()]); }
   if (m.senderUid === me.uid) items.push(['Delete for everyone', () => deleteMsg(key), true]);
   items.forEach(([label, fn, danger]) => { const x = document.createElement('button'); x.textContent = label; if (danger) x.className = 'danger'; x.onclick = () => { close(); fn(); }; menu.appendChild(x); });
   const r = b.getBoundingClientRect(), out = b.classList.contains('out');
@@ -2112,11 +2119,93 @@ function premiumSheet(){
     <h3 style="margin:10px 0 4px">${paid ? 'You’re on Premium' : 'Haba Premium'}</h3>
     <div style="color:var(--muted);font-size:14px">${paid ? 'Verified since ' + esc(premSince(u)) : 'Get the blue verified badge on your account'}</div></div>
     ${perk('Blue verified badge', 'Shown next to your name in chats, groups and updates')}
+    ${perk('Message translation', 'Translate any message into your language')}
     ${perk('Chat themes', 'Pick a colour theme for your chats in Messenger')}
     ${perk('Feed ranking boost', 'Your posts rank higher on the Haba Feed')}
     ${perk('One account, everywhere', 'Works across Haba Messenger and the Haba app')}
     ${paid ? '<button id="prem-pay" style="background:var(--input);color:var(--text)">Close</button>' : `<button id="prem-pay">Pay R${PREMIUM.price} · ${esc(PREMIUM.note)}</button><div style="text-align:center;color:var(--muted);font-size:12px;margin-top:8px">Permanent badge · Secure payment by Yoco</div>`}`);
   ov.querySelector('#prem-pay').onclick = e => paid ? closeModal() : premiumPay(e.currentTarget);
+}
+/* ---------- message translation (verified accounts) ----------
+   1) the browser's own on-device translator when it has the language pair downloaded (private, nothing leaves the phone)
+   2) otherwise the MyMemory web service, after the person agrees once. To use a different provider, change trOnline() only. */
+const TR_LANGS = [['en','English'],['af','Afrikaans'],['zu','isiZulu'],['xh','isiXhosa'],['st','Sesotho'],['sw','Kiswahili'],['fr','French'],['pt','Portuguese'],['es','Spanish'],['de','German'],['it','Italian'],['nl','Dutch'],['ru','Russian'],['ar','Arabic'],['hi','Hindi'],['zh-CN','Chinese'],['ja','Japanese'],['ko','Korean'],['tr','Turkish']];
+const trStore = new Map();   // `${threadId}:${msgKey}` → { text, lang }; kept in memory only
+const trKey = k => threadId + ':' + k;
+const trName = c => (TR_LANGS.find(l => l[0] === c) || [c, c])[1];
+function trLang(){
+  const saved = localStorage.getItem('hm-trlang'); if (saved && TR_LANGS.some(l => l[0] === saved)) return saved;
+  const d = (navigator.language || 'en').split('-')[0];
+  return d === 'zh' ? 'zh-CN' : TR_LANGS.some(l => l[0] === d) ? d : 'en';
+}
+async function trLocal(text, tgt){
+  try {
+    if (!('Translator' in self) || !('LanguageDetector' in self)) return null;
+    if ((await LanguageDetector.availability()) !== 'available') return null;
+    const det = await LanguageDetector.create(), res = await det.detect(text);
+    const src = res && res[0] && res[0].detectedLanguage; if (!src || src === 'und') return null;
+    if (src.split('-')[0] === tgt.split('-')[0]) return text;
+    if ((await Translator.availability({ sourceLanguage: src, targetLanguage: tgt })) !== 'available') return null;
+    const t = await Translator.create({ sourceLanguage: src, targetLanguage: tgt });
+    return await t.translate(text);
+  } catch { return null; }
+}
+function trChunks(text, max){
+  const parts = text.match(/[^.!?\n]+[.!?]*\s*|\n+/g) || [text], out = []; let cur = '';
+  const push = () => { if (cur.trim()) out.push(cur); cur = ''; };
+  for (let p of parts) {
+    while (p.length > max) { let cut = p.lastIndexOf(' ', max); if (cut < max / 2) cut = max; if ((cur + p.slice(0, cut)).length > max) push(); cur += p.slice(0, cut); push(); p = p.slice(cut); }
+    if ((cur + p).length > max) push();
+    cur += p;
+  }
+  push(); return out;
+}
+async function trOnline(text, tgt){
+  const dec = document.createElement('textarea'), out = [];
+  for (const c of trChunks(text, 450)) {
+    const r = await fetch('https://api.mymemory.translated.net/get?q=' + encodeURIComponent(c) + '&langpair=' + encodeURIComponent('autodetect|' + tgt));
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const j = await r.json(), t = j && j.responseData && j.responseData.translatedText;
+    if (!t || (j.responseStatus && Number(j.responseStatus) !== 200) || /MYMEMORY WARNING|INVALID LANGUAGE/i.test(t)) throw new Error('unavailable');
+    dec.innerHTML = t; out.push(dec.value);
+  }
+  return out.join(' ').trim();
+}
+function trAsk(){
+  return new Promise(res => {
+    const ov = modal(`<h3 style="margin:2px 0 6px">Translate this message?</h3><div style="color:var(--muted);font-size:14px;line-height:1.4">Your device can’t translate this by itself, so the message text will be sent to an online translation service (MyMemory). That leaves end-to-end encryption for this message. Only text you choose to translate is sent.</div><button class="btn" id="tr-ok" style="margin-top:14px">Translate</button><button class="btn ghost" id="tr-no" style="margin-top:8px">Cancel</button>`);
+    let done = false; const fin = v => { if (done) return; done = true; mo.disconnect(); res(v); };
+    ov.querySelector('#tr-ok').onclick = () => { localStorage.setItem('hm-trok', '1'); closeModal(); fin(true); };
+    ov.querySelector('#tr-no').onclick = () => { closeModal(); fin(false); };
+    const mo = new MutationObserver(() => { if (!document.body.contains(ov)) fin(false); }); mo.observe($('#modal-root'), { childList: true });
+  });
+}
+async function translateMsg(key, text){
+  const k = trKey(key), tgt = trLang();
+  if (trStore.has(k)) { trStore.delete(k); return renderMessages(true); }
+  toast('Translating…');
+  try {
+    let out = await trLocal(text, tgt);
+    if (out == null) {
+      if (!navigator.onLine) return toast('You’re offline');
+      if (localStorage.getItem('hm-trok') !== '1' && !(await trAsk())) return;
+      out = await trOnline(text, tgt);
+    }
+    const norm = x => x.toLowerCase().replace(/[\s.,!?'’"]+/g, '');
+    if (!out || norm(out) === norm(text)) return toast('Already in ' + trName(tgt));
+    trStore.set(k, { text: out, lang: tgt });
+    renderMessages(true);
+  } catch (e) { console.error('translate failed', e); toast('Couldn’t translate this message. Please try again.'); }
+}
+function trLangSheet(){
+  if (!skinOK) return premiumSheet();
+  const cur = trLang();
+  const ov = modal(`<h3 style="margin:2px 0 2px">Translate messages to</h3><div style="color:var(--muted);font-size:13.5px;margin-bottom:6px">Press and hold a message, then tap Translate.</div>
+    <div style="max-height:52vh;overflow:auto">${TR_LANGS.map(([c, n]) => `<button class="lng${c === cur ? ' on' : ''}" data-l="${c}">${n}</button>`).join('')}</div>`);
+  ov.onclick = e => {
+    const b = e.target.closest('.lng'); if (!b) return;
+    localStorage.setItem('hm-trlang', b.dataset.l); closeModal(); renderSettings(); toast('Translating to ' + trName(b.dataset.l));
+  };
 }
 /* Who may use themes: Haba Premium (blue badge) or a business account. Last known answer is kept so it still applies offline. */
 let skinOK = false;
@@ -2294,6 +2383,7 @@ function renderSettings(){
     ${row('enter', 'kbd', 'Chats', 'Enter key sends message (desktop)', on('hm-enter'))}
     ${row('size', 'text', 'Text size', curSize()[0].toUpperCase() + curSize().slice(1) + ' · tap to change')}
     ${row('theme', 'palette', 'Appearance', 'Dark mode', dark)}
+    ${row('trlang', 'text', 'Message translation', skinOK ? 'Translate to ' + trName(trLang()) + ' · tap to change' : 'Verified accounts only · tap to unlock')}
     ${row('skin', 'palette', 'Chat theme', skinOK ? SKINS[skinId || 'default'].name + ' · tap to change' : 'Verified accounts only · tap to unlock')}
     ${row('enc', 'key', 'Encryption', enc)}
     ${row('pin', 'shield', 'Backup PIN', pinSub)}
@@ -2367,6 +2457,7 @@ $('#settings').addEventListener('click', e => {
   }
   else if (act === 'phone') changePhone();
   else if (act === 'premium') premiumSheet();
+  else if (act === 'trlang') { if (!skinOK) toast('Translation is for verified accounts'); trLangSheet(); }
   else if (act === 'skin') { if (!skinOK) toast('Chat themes are for verified accounts'); skinSheet(); }
   else if (act === 'notif') { toast(flip('hm-notif') ? 'Notifications on' : 'Notifications off'); renderSettings(); }
   else if (act === 'nsound') { const v = flip('hm-sound'); toast(v ? 'Message sound on' : 'Message sound off'); if (v) { lastPing = 0; const c = audioCtx(); if (c) c.resume().catch(() => {}); setTimeout(() => msgPing(true), 80); } renderSettings(); }

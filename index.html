@@ -295,6 +295,17 @@ input,textarea{-webkit-user-select:text;user-select:text;-webkit-touch-callout:d
 .srow.prem .pbadge{flex-shrink:0;display:flex}
 .srow.prem .pbadge .verified-badge{width:38px;height:38px;margin:0;top:0}
 .srow.prem .pbtn{background:#0A84FF;color:#fff;border-radius:50px;padding:8px 16px;font-weight:700;font-size:13px;flex-shrink:0}
+.skp{background:var(--chat-bg);border-radius:16px;padding:12px;display:flex;flex-direction:column;gap:6px;margin:14px 0 4px}
+.skp div{max-width:78%;padding:8px 12px;border-radius:16px;font-size:14px;line-height:1.3}
+.skp .a{background:var(--in-bg);color:var(--in-text);align-self:flex-start;border-bottom-left-radius:5px}
+.skp .b{background:var(--out-bg);color:var(--out-text);align-self:flex-end;border-bottom-right-radius:5px}
+.skg{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:14px 0 4px}
+.skn{display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 4px;border-radius:14px;font-size:12.5px;font-weight:600;color:var(--muted)}
+.skn span{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:inset 0 0 0 2px rgba(255,255,255,.18)}
+.skn svg{width:20px;height:20px;stroke:#fff;fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;display:none}
+.skn.on{color:var(--text);background:var(--input)}
+.skn.on span{box-shadow:0 0 0 3px var(--surface),0 0 0 5px currentColor}
+.skn.on svg{display:block}
 .srow.prem .pon{display:inline-block;background:#0A84FF;color:#fff;border-radius:50px;padding:1px 9px;font-size:11px;font-weight:700;margin-left:8px;vertical-align:middle}
 .pperk{display:flex;gap:12px;align-items:flex-start;padding:10px 0}
 .pperk svg{width:22px;height:22px;stroke:#0A84FF;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;margin-top:1px}
@@ -752,11 +763,31 @@ function toast(msg, action){
   t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), action ? 6000 : 3200);
 }
 
-/* ---------- theme ---------- */
+/* ---------- premium colour themes (verified accounts only; cosmetic, saved on this device) ---------- */
+const SKINS = {
+  default: { name: 'Classic' },
+  ocean:   { name: 'Ocean',   c: '#0A7AF0', seen: '#A5F3FC', bgL: '#E6F0FB', bgD: '#08131F' },
+  forest:  { name: 'Forest',  c: '#15803D', seen: '#D9F99D', bgL: '#E8F3EC', bgD: '#0A150E' },
+  sunset:  { name: 'Sunset',  c: '#EA580C', seen: '#FEF08A', bgL: '#FDEEE2', bgD: '#1A0E07' },
+  rose:    { name: 'Rose',    c: '#DB2777', seen: '#FDE047', bgL: '#FCE8EF', bgD: '#1A0A10' },
+  violet:  { name: 'Violet',  c: '#7C3AED', seen: '#FDE68A', bgL: '#EFE9FD', bgD: '#110A1F' }
+};
+SKINS.default.c = '#111';
+let skinId = null;   // active theme id, or null for Classic
+function applySkin(){
+  const st = document.documentElement.style, k = skinId && skinId !== 'default' ? SKINS[skinId] : null;
+  ['--primary', '--inverse', '--accent', '--out-bg', '--out-text', '--seen', '--chat-bg'].forEach(v => st.removeProperty(v));
+  if (!k) return;
+  const dark = document.documentElement.dataset.theme === 'dark';
+  st.setProperty('--primary', k.c); st.setProperty('--inverse', '#fff'); st.setProperty('--accent', k.c);
+  st.setProperty('--out-bg', k.c); st.setProperty('--out-text', '#fff'); st.setProperty('--seen', k.seen);
+  st.setProperty('--chat-bg', dark ? k.bgD : k.bgL);
+}
 function applyTheme(){
   const pref = localStorage.getItem('hm-theme') || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
   document.documentElement.dataset.theme = pref;
   document.querySelector('meta[name=theme-color]').content = pref === 'dark' ? '#000000' : '#FFFFFF';
+  applySkin();
 }
 applyTheme();
 
@@ -1023,8 +1054,9 @@ $('#btn-back-phone').onclick = () => { $('#phone-step2').classList.add('hidden')
 
 /* =============== SESSION =============== */
 onAuthStateChanged(auth, async user => {
-  if (!user) { teardown(); me = null; $('#app').classList.add('hidden'); $('#auth').classList.remove('hidden'); return; }
+  if (!user) { teardown(); me = null; skinOK = false; refreshSkin(); $('#app').classList.add('hidden'); $('#auth').classList.remove('hidden'); return; }
   me = user;
+  skinOK = localStorage.getItem('hm-skinok:' + user.uid) === '1'; refreshSkin(); skinGate();
   $('#auth').classList.add('hidden'); $('#app').classList.remove('hidden');
   $('#chatlist').innerHTML = '<div class="spin"></div>';
   paintCached();                                   // chat list from the offline DB right away, before keys/network
@@ -2080,10 +2112,49 @@ function premiumSheet(){
     <h3 style="margin:10px 0 4px">${paid ? 'You’re on Premium' : 'Haba Premium'}</h3>
     <div style="color:var(--muted);font-size:14px">${paid ? 'Verified since ' + esc(premSince(u)) : 'Get the blue verified badge on your account'}</div></div>
     ${perk('Blue verified badge', 'Shown next to your name in chats, groups and updates')}
+    ${perk('Chat themes', 'Pick a colour theme for your chats in Messenger')}
     ${perk('Feed ranking boost', 'Your posts rank higher on the Haba Feed')}
     ${perk('One account, everywhere', 'Works across Haba Messenger and the Haba app')}
     ${paid ? '<button id="prem-pay" style="background:var(--input);color:var(--text)">Close</button>' : `<button id="prem-pay">Pay R${PREMIUM.price} · ${esc(PREMIUM.note)}</button><div style="text-align:center;color:var(--muted);font-size:12px;margin-top:8px">Permanent badge · Secure payment by Yoco</div>`}`);
   ov.querySelector('#prem-pay').onclick = e => paid ? closeModal() : premiumPay(e.currentTarget);
+}
+/* Who may use themes: Haba Premium (blue badge) or a business account. Last known answer is kept so it still applies offline. */
+let skinOK = false;
+function refreshSkin(){
+  const id = me && skinOK ? localStorage.getItem('hm-skin:' + me.uid) : null;
+  skinId = id && SKINS[id] ? id : null; applySkin();
+}
+async function skinGate(){
+  const uid = me && me.uid; if (!uid) return;
+  const u = users[uid] || {};
+  let ok = !!(u.paidVerifiedAt || u.isBusinessAccount), known = ok;
+  if (!ok) {
+    try {
+      const [a, b] = await Promise.all([get(ref(db, `users/${uid}/paidVerifiedAt`)), get(ref(db, `users/${uid}/isBusinessAccount`))]);
+      ok = a.exists() || b.val() === true; known = true;
+    } catch {}
+  }
+  if (!me || me.uid !== uid) return;
+  if (known) { skinOK = ok; localStorage.setItem('hm-skinok:' + uid, ok ? '1' : '0'); }
+  refreshSkin(); renderSettings();
+}
+function skinSheet(){
+  if (!skinOK) return premiumSheet();
+  const cur = () => skinId || 'default';
+  const tick = '<svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>';
+  const ov = modal(`<h3 style="margin:2px 0 2px">Chat theme</h3><div style="color:var(--muted);font-size:13.5px">A Haba Premium perk. Colours your messages, buttons and chat background.</div>
+    <div class="skp"><div class="a">Hey! How does the new theme look?</div><div class="b">Love it ✓✓</div></div>
+    <div class="skg">${Object.entries(SKINS).map(([id, k]) => `<button class="skn${id === cur() ? ' on' : ''}" data-id="${id}"><span style="background:${k.c}">${tick}</span>${k.name}</button>`).join('')}</div>
+    <button class="btn" id="skn-done" style="margin-top:10px">Done</button>`);
+  ov.querySelector('#skn-done').onclick = closeModal;
+  ov.querySelector('.skg').onclick = e => {
+    const b = e.target.closest('.skn'); if (!b || !me) return;
+    const id = b.dataset.id;
+    if (id === 'default') localStorage.removeItem('hm-skin:' + me.uid); else localStorage.setItem('hm-skin:' + me.uid, id);
+    refreshSkin();
+    ov.querySelectorAll('.skn').forEach(x => x.classList.toggle('on', x === b));
+    renderSettings();
+  };
 }
 /* Checkout opens in the system browser (a new tab/window) so the app stays put. The window is opened
    synchronously on tap so popup blockers allow it, then pointed at the Yoco URL once the server returns it.
@@ -2098,7 +2169,7 @@ async function premiumCheck(){
     if (s.exists()) {
       stopPremiumWatch();
       users[me.uid] = { ...(users[me.uid] || {}), paidVerifiedAt: s.val() };
-      closeModal(); toast('Welcome to Haba Premium'); renderSettings(); renderChatList();
+      closeModal(); toast('Welcome to Haba Premium'); skinGate(); renderSettings(); renderChatList();
       return true;
     }
   } catch {}
@@ -2223,6 +2294,7 @@ function renderSettings(){
     ${row('enter', 'kbd', 'Chats', 'Enter key sends message (desktop)', on('hm-enter'))}
     ${row('size', 'text', 'Text size', curSize()[0].toUpperCase() + curSize().slice(1) + ' · tap to change')}
     ${row('theme', 'palette', 'Appearance', 'Dark mode', dark)}
+    ${row('skin', 'palette', 'Chat theme', skinOK ? SKINS[skinId || 'default'].name + ' · tap to change' : 'Verified accounts only · tap to unlock')}
     ${row('enc', 'key', 'Encryption', enc)}
     ${row('pin', 'shield', 'Backup PIN', pinSub)}
     ${row('', 'info', 'About', 'Haba Messenger · end-to-end encrypted chat')}
@@ -2295,6 +2367,7 @@ $('#settings').addEventListener('click', e => {
   }
   else if (act === 'phone') changePhone();
   else if (act === 'premium') premiumSheet();
+  else if (act === 'skin') { if (!skinOK) toast('Chat themes are for verified accounts'); skinSheet(); }
   else if (act === 'notif') { toast(flip('hm-notif') ? 'Notifications on' : 'Notifications off'); renderSettings(); }
   else if (act === 'nsound') { const v = flip('hm-sound'); toast(v ? 'Message sound on' : 'Message sound off'); if (v) { lastPing = 0; const c = audioCtx(); if (c) c.resume().catch(() => {}); setTimeout(() => msgPing(true), 80); } renderSettings(); }
   else if (act === 'nvib') { const v = flip('hm-vib'); toast(v ? 'Vibration on' : 'Vibration off'); if (v && navigator.vibrate) navigator.vibrate([70, 50, 70]); renderSettings(); }

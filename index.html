@@ -405,9 +405,9 @@ input,textarea{-webkit-user-select:text;user-select:text;-webkit-touch-callout:d
 @media(min-width:761px){#pages{right:auto;width:380px;border-right:1px solid var(--border)}}
 #pg-body{flex:1;overflow-y:auto;padding-bottom:calc(var(--nav-h) + 16px)}
 /* ---------- Pages = WhatsApp-Channels style ---------- */
-:root{--ch-wall:#EFEAE2;--ch-green:#00A884;--ch-green-d:#008069;--ch-card:#fff;--ch-text:#111B21;--ch-sub:#667781;--ch-pill:#fff;--ch-pill-b:rgba(0,0,0,.06);
+:root{--ch-wall:#EFEAE2;--ch-green:var(--primary);--ch-green-d:var(--primary);--ch-card:#fff;--ch-text:#111B21;--ch-sub:#667781;--ch-pill:#fff;--ch-pill-b:rgba(0,0,0,.06);
 --ch-doodle:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160' viewBox='0 0 160 160' fill='none' stroke='%23000' stroke-opacity='.055' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='24' cy='26' r='9'/%3E%3Cpath d='M70 20l4 9 10 1-8 7 3 10-9-6-9 6 3-10-8-7 10-1z'/%3E%3Cpath d='M118 24c8-10 22-2 14 8l-14 14-14-14c-8-10 6-18 14-8z'/%3E%3Cpath d='M20 84q8-12 16 0t16 0'/%3E%3Crect x='78' y='72' width='24' height='18' rx='5'/%3E%3Cpath d='M126 74l16 16M142 74l-16 16'/%3E%3Cpath d='M30 132l10-16 10 16z'/%3E%3Ccircle cx='86' cy='130' r='3'/%3E%3Ccircle cx='100' cy='122' r='3'/%3E%3Cpath d='M122 124h20M122 134h14'/%3E%3C/svg%3E")}
-:root[data-theme="dark"]{--ch-wall:#0B141A;--ch-green:#25D366;--ch-card:#202C33;--ch-text:#E9EDEF;--ch-sub:#8696A0;--ch-pill:#202C33;--ch-pill-b:rgba(255,255,255,.07);
+:root[data-theme="dark"]{--ch-wall:#0B141A;--ch-card:#202C33;--ch-text:#E9EDEF;--ch-sub:#8696A0;--ch-pill:#202C33;--ch-pill-b:rgba(255,255,255,.07);
 --ch-doodle:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160' viewBox='0 0 160 160' fill='none' stroke='%23fff' stroke-opacity='.045' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='24' cy='26' r='9'/%3E%3Cpath d='M70 20l4 9 10 1-8 7 3 10-9-6-9 6 3-10-8-7 10-1z'/%3E%3Cpath d='M118 24c8-10 22-2 14 8l-14 14-14-14c-8-10 6-18 14-8z'/%3E%3Cpath d='M20 84q8-12 16 0t16 0'/%3E%3Crect x='78' y='72' width='24' height='18' rx='5'/%3E%3Cpath d='M126 74l16 16M142 74l-16 16'/%3E%3Cpath d='M30 132l10-16 10 16z'/%3E%3Ccircle cx='86' cy='130' r='3'/%3E%3Ccircle cx='100' cy='122' r='3'/%3E%3Cpath d='M122 124h20M122 134h14'/%3E%3C/svg%3E")}
 #pages .bar .grow{display:flex;align-items:center;gap:10px;min-width:0}
 .ch-hd{display:flex;align-items:center;gap:10px;min-width:0;flex:1;cursor:pointer}
@@ -420,7 +420,7 @@ body.pg-chat #bnav{display:none}
 #pages.chan #pg-tabs{display:none}
 #pg-search{padding:2px 14px 6px}
 #pg-search input{width:100%;padding:11px 16px;border-radius:50px;border:none;background:var(--input);outline:none}
-#pg-tabs .pill.on{background:var(--ch-green);color:#fff}
+#pg-tabs .pill.on{background:var(--ch-green);color:var(--inverse)}
 .ch-sec{padding:16px 18px 6px;font-size:15px;font-weight:700;display:flex;align-items:center;justify-content:space-between}
 .ch-sec small{font-weight:500;color:var(--muted);font-size:13px}
 .ch-row{display:flex;gap:12px;align-items:center;padding:10px 16px;cursor:pointer}
@@ -432,24 +432,24 @@ body.pg-chat #bnav{display:none}
 .ch-fbtn{padding:7px 16px;border-radius:50px;font-weight:700;font-size:13.5px;flex-shrink:0;border:1.5px solid var(--ch-green);color:var(--ch-green-d);background:transparent}
 :root[data-theme="dark"] .ch-fbtn{color:var(--ch-green)}
 .ch-fbtn.on{border-color:var(--border);color:var(--muted)}
-.ch-fbtn.solid{background:var(--ch-green);color:#fff}
+.ch-fbtn.solid{background:var(--ch-green);color:var(--inverse)}
 .ch-info{margin:14px 12px 6px;padding:20px 18px 16px;border-radius:16px;background:var(--ch-card);color:var(--ch-text);text-align:center;box-shadow:0 1px 1.5px rgba(11,20,26,.14)}
 .ch-info .pgav{margin:0 auto 10px}
 .ch-info h2{margin:0;font-size:21px;display:flex;align-items:center;justify-content:center;gap:2px}
 .ch-info .meta{color:var(--ch-sub);font-size:13.5px;margin-top:3px}
 .ch-info p{margin:12px 0 0;font-size:14.5px;line-height:1.45;white-space:pre-wrap;word-break:break-word}
-.ch-info a{color:var(--ch-green-d);text-decoration:none;word-break:break-all}
+.ch-info a{color:var(--ch-green-d);text-decoration:underline;word-break:break-all}
 :root[data-theme="dark"] .ch-info a{color:var(--ch-green)}
 .ch-date{align-self:center;margin:12px 0 4px;padding:5px 12px;border-radius:8px;background:var(--ch-pill);color:var(--ch-sub);font-size:12.5px;box-shadow:0 1px 1px rgba(11,20,26,.1)}
 #pg-posts{display:flex;flex-direction:column;padding:4px 10px 14px;gap:2px;flex:1}
 .ch-post{align-self:flex-start;width:min(100%,430px);margin:4px 0 0}
-.ch-card{background:var(--ch-card);color:var(--ch-text);border-radius:12px;overflow:hidden;box-shadow:0 1px 1.5px rgba(11,20,26,.14)}
+.ch-card{background:var(--in-bg);color:var(--in-text);border-radius:16px;border-bottom-left-radius:4px;overflow:hidden;box-shadow:0 1px .5px rgba(0,0,0,.13)}
 .ch-card .ph{display:block;width:100%;max-height:480px;object-fit:cover;background:var(--input)}
 .ch-card video.ph{background:#000}
-.ch-card .tx{padding:9px 12px 4px;font-size:15.5px;line-height:1.38;white-space:pre-wrap;word-break:break-word}
-.ch-card .tx a{color:var(--ch-green-d);text-decoration:none}
-:root[data-theme="dark"] .ch-card .tx a{color:var(--ch-green)}
-.ch-card .tm{display:block;text-align:right;padding:0 12px 7px;font-size:11.5px;color:var(--ch-sub)}
+.ch-card .tx{padding:7px 10px 2px;font-size:var(--msgsz,15px);line-height:1.35;white-space:pre-wrap;word-break:break-word}
+.ch-card .tx a{color:#0B5FFF;text-decoration:underline;text-underline-offset:2px}
+:root[data-theme="dark"] .ch-card .tx a{color:#6CB6FF}
+.ch-card .tm{display:block;text-align:right;padding:2px 10px 5px;font-size:11px;color:var(--in-time)}
 .ch-card.mo .tm{padding-top:6px}
 .ch-rx{display:flex;gap:6px;margin-top:4px;flex-wrap:wrap}
 .ch-chip{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:50px;background:var(--ch-pill);color:var(--ch-sub);font-size:12.5px;font-weight:600;border:1px solid var(--ch-pill-b);box-shadow:0 1px 1px rgba(11,20,26,.08)}
@@ -3785,10 +3785,12 @@ async function pgLoad(){
     pgAll = {}; all.forEach(c => { pgAll[c.key] = { id: c.key, ...c.val() }; });
     pgMine = new Set(Object.keys(mine.val() || {})); pgFollow = new Set(Object.keys(fol.val() || {}));
     for (const id of [...pgMine, ...pgFollow]) if (!pgAll[id]) { const s = await get(ref(db, `pages/${id}`)); if (s.exists()) pgAll[id] = { id, ...s.val() }; }
+    /* a Page shows the verified badge only when its owner's account is verified, so make sure every owner's profile is loaded */
+    await Promise.all([...new Set(Object.values(pgAll).map(p => p.ownerUid).filter(Boolean))].map(loadUser));
     return true;
   } catch { return false; }
 }
-const pgBadge = p => (p && p.ownerUid && typeof vbadge === 'function') ? vbadge(p.ownerUid) : '';
+const pgBadge = p => { if (!p || !p.ownerUid) return ''; const o = users[p.ownerUid]; return o && o.paidVerifiedAt ? VERIFIED_BADGE_SVG : ''; };
 const pgLink = t => esc(t).replace(/(https?:\/\/[^\s<]+)/g, u => `<a href="${u}" target="_blank" rel="noopener noreferrer nofollow">${u.replace(/^https?:\/\//, '')}</a>`);
 const pgCount = n => { n = +n || 0; if (n >= 1e6) return (n / 1e6).toFixed(1).replace('.', ',').replace(',0', '') + 'M'; if (n >= 1e4) return Math.round(n / 1e3) + 'K'; if (n >= 1e3) return (n / 1e3).toFixed(1).replace('.', ',').replace(',0', '') + 'K'; return String(n); };
 const pgFollowers = n => { n = +n || 0; return pgCount(n) + (n === 1 ? ' follower' : ' followers'); };
@@ -3826,7 +3828,7 @@ async function renderPages(load){
     body.innerHTML = l.length ? `<div class="ch-sec">Find Pages to follow<small>${l.length}</small></div>` + l.map(p => row(p)).join('') : (q ? '<div class="empty">No Pages match your search.</div>' : emptyState('pages', 'No Pages to discover yet', 'Be the first to create a Page for your business, brand or community.', 'Create a Page', 'page'));
   } else {
     const m = all.filter(p => pgMine.has(p.id)), f = all.filter(p => pgFollow.has(p.id) && !pgMine.has(p.id));
-    let h = '<div class="ch-row" data-act="create"><div class="pgav" style="width:52px;height:52px;background:var(--ch-green);color:#fff"><svg viewBox="0 0 24 24" width="24" height="24" style="stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round"><path d="M12 5v14M5 12h14"/></svg></div><div class="mid"><b>Create a Page</b><span>For your business, brand or community</span></div></div>';
+    let h = '<div class="ch-row" data-act="create"><div class="pgav" style="width:52px;height:52px;background:var(--ch-green);color:var(--inverse)"><svg viewBox="0 0 24 24" width="24" height="24" style="stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round"><path d="M12 5v14M5 12h14"/></svg></div><div class="mid"><b>Create a Page</b><span>For your business, brand or community</span></div></div>';
     if (m.length) h += '<div class="ch-sec">Pages you manage</div>' + m.map(p => row(p, true)).join('');
     if (f.length) h += '<div class="ch-sec">Following</div>' + f.map(p => row(p)).join('');
     if (!m.length && !f.length) h += emptyState('pages', q ? 'No Pages match your search' : 'No Pages yet', q ? '' : 'Pages you create or follow show up here.');
@@ -3897,9 +3899,12 @@ function pgCreate(){
   };
 }
 function pgPost(){
-  const id = pgCur, ov = modal(`<h3>New post</h3><textarea class="field" id="pp-text" rows="4" maxlength="500" placeholder="What’s new?" style="border-radius:18px;resize:none"></textarea><button class="btn" id="pp-go">Post</button>`);
+  const id = pgCur;
+  if (!id || !pgAll[id] || pgAll[id].ownerUid !== me.uid) { toast('Only the Page admin can post'); return; }   // owner = admin
+  const ov = modal(`<h3>New post</h3><textarea class="field" id="pp-text" rows="4" maxlength="500" placeholder="What’s new?" style="border-radius:18px;resize:none"></textarea><button class="btn" id="pp-go">Post</button>`);
   ov.querySelector('#pp-go').onclick = async () => {
     const text = ov.querySelector('#pp-text').value.trim(); if (!text) return;
+    if (!pgAll[id] || pgAll[id].ownerUid !== me.uid) return;
     ov.querySelector('#pp-go').disabled = true;
     try {
       const k = push(ref(db, `pagePosts/${id}`)).key;

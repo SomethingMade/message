@@ -211,11 +211,30 @@ input,textarea{font:inherit;color:inherit}
 #composer.emo-mode .ic-media{display:none}
 #composer.emo-mode .ic-emoji{display:block}
 #composer.emo-mode #btn-attach{color:var(--accent)}
-#emopanel{display:grid;grid-template-columns:repeat(auto-fill,minmax(40px,1fr));gap:2px;max-height:210px;overflow-y:auto;padding:8px 10px;background:var(--surface);border-top:1px solid var(--border);-webkit-overflow-scrolling:touch}
+#emopanel{background:var(--surface);border-top:1px solid var(--border)}
 #emopanel.hidden{display:none}
-#emopanel button{font-size:24px;line-height:1;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center}
-#emopanel button:hover{background:var(--input)}
-#emopanel .lbl{grid-column:1/-1;font-size:12px;font-weight:700;color:var(--muted);padding:4px 4px 0}
+.emotabs{display:flex;gap:6px;padding:6px 10px 0}
+.emotabs button{flex:1;padding:7px 10px;border-radius:50px;font-size:13px;font-weight:700;color:var(--muted);background:transparent}
+.emotabs button.on{background:var(--input);color:var(--text)}
+#emogrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(40px,1fr));gap:2px;max-height:210px;overflow-y:auto;padding:8px 10px;-webkit-overflow-scrolling:touch}
+#emogrid.stk{grid-template-columns:repeat(auto-fill,minmax(76px,1fr));gap:6px}
+#emogrid button{font-size:24px;line-height:1;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center}
+#emogrid.stk button{height:76px;padding:4px}
+#emogrid.stk button img{width:100%;height:100%;object-fit:contain;pointer-events:none;-webkit-user-drag:none}
+#emogrid button:hover{background:var(--input)}
+#emogrid button.add{border:2px dashed var(--border);color:var(--muted);font-size:30px}
+#emogrid .lbl{grid-column:1/-1;font-size:12px;font-weight:700;color:var(--muted);padding:4px 4px 0}
+#emogrid .none{grid-column:1/-1;color:var(--muted);font-size:13px;padding:6px 4px;text-align:center}
+.b.stk{background:transparent!important;box-shadow:none;padding:2px 4px 0}
+.b.stk .iw{border-radius:0;background:none;margin:0;cursor:zoom-in}
+.b.stk img{width:160px;height:160px;min-width:0;min-height:0;object-fit:contain;background:none;border-radius:0;margin:0}
+.b.stk .meta{color:var(--muted)!important}
+.stkprev{width:256px;height:256px;max-width:100%;margin:6px auto 10px;border-radius:14px;touch-action:none;cursor:grab;display:block;background-color:#fff;background-image:linear-gradient(45deg,#ddd 25%,transparent 25%,transparent 75%,#ddd 75%),linear-gradient(45deg,#ddd 25%,transparent 25%,transparent 75%,#ddd 75%);background-size:16px 16px;background-position:0 0,8px 8px}
+.stkctl{display:flex;gap:10px;align-items:center;margin:6px 0}
+.stkctl .seg{display:flex;background:var(--input);border-radius:50px;padding:3px}
+.stkctl .seg button{padding:6px 16px;border-radius:50px;font-weight:600;font-size:13px}
+.stkctl .seg button.on{background:var(--surface);box-shadow:0 1px 2px rgba(0,0,0,.15)}
+.stkctl input[type=range]{flex:1;accent-color:var(--accent)}
 #btn-mic{touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;transition:transform .15s,background .15s}
 #btn-mic .ic-send{display:none}
 #btn-mic.rec{background:var(--danger);color:#fff;transform:scale(1.35);z-index:2}
@@ -662,7 +681,7 @@ body.gr-chat #bnav{display:none}
       <div id="msgs"></div>
       <div id="replybar" class="hidden"><div class="q" id="reply-q"></div><button class="icon" id="reply-x"><svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
       <div id="blocked" class="hidden"></div>
-      <div id="emopanel" class="hidden"></div>
+      <div id="emopanel" class="hidden"><div class="emotabs"><button type="button" data-t="emoji" class="on">😀 Emoji</button><button type="button" data-t="stk">🏷️ Stickers</button></div><div id="emogrid"></div></div><input type="file" id="stk-file" accept="image/*" class="hidden">
       <div id="composer">
         <input type="file" id="file-img" accept="image/*,video/*" class="hidden">
         <button class="icon" id="btn-attach" title="Send photo or video"><svg class="ic-media" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg><svg class="ic-emoji" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 14.5a4.5 4.5 0 0 0 8 0M9 9.5h.01M15 9.5h.01"/></svg></button>
@@ -1702,11 +1721,11 @@ async function renderMessages(keepScroll){
       const rm = m.replyToMessage, rt = m._rt || (rm.mediaType ? '📎 ' + rm.mediaType : 'Message');
       inner += `<div class="quote"><b>${esc(uName(rm.senderUid))}</b>${esc(rt)}</div>`;
     }
-    if (m._pendMedia) inner += `<div class="t">${m.mediaType === 'audio' ? '🎤 Voice message' : m.mediaType === 'video' ? '🎥 Video' : '📷 Photo'}</div>`;
+    if (m._pendMedia) inner += `<div class="t">${m.mediaType === 'audio' ? '🎤 Voice message' : m.mediaType === 'video' ? '🎥 Video' : m.sticker ? '🏷️ Sticker' : '📷 Photo'}</div>`;
     else if (m.viewOnce) inner += `<div class="t">🔒 View-once ${esc(m.mediaType || 'media')} — open it in the Haba app</div>`;
     else if (m.mediaURL) {
       const mt = m.mediaType || '';
-      if (mt === 'image') inner += `<span class="iw shim" data-open="${m.key}"><img data-mk="${m.key}" alt="photo"></span>`;
+      if (mt === 'image') inner += `<span class="iw shim" data-open="${m.key}"><img data-mk="${m.key}" alt="${m.sticker ? 'sticker' : 'photo'}"></span>`;
       else if (mt === 'video') inner += `<div class="mwrap shim" data-open="${m.key}"><video data-mk="${m.key}" playsinline muted preload="metadata"></video><span class="playbadge">▶</span></div>`;
       else if (mt === 'audio') inner += vnHTML(m);
       else inner += `<div class="file" data-file="${m.key}">📄 <div><b>${esc(m.fileName || 'File')}</b><div style="font-size:12px;opacity:.7">${m.fileSize ? fmtSize(m.fileSize) + ' · ' : ''}tap to download</div></div></div>`;
@@ -1717,7 +1736,7 @@ async function renderMessages(keepScroll){
     const rxl = m.reactions && typeof m.reactions === 'object' ? Object.values(m.reactions).filter(x => typeof x === 'string' && x) : [];
     let rxHTML = '';
     if (rxl.length) { const cnt = {}; rxl.forEach(x => cnt[x] = (cnt[x] || 0) + 1); const top = Object.entries(cnt).sort((a, b) => b[1] - a[1]).slice(0, 3).map(x => x[0]).join(''); rxHTML = `<div class="rx${typeof m.reactions[me.uid] === 'string' ? ' mine' : ''}">${esc(top)}${rxl.length > 1 ? ' ' + rxl.length : ''}</div>`; }
-    html += `<div class="b ${out ? 'out' : 'in'}${m._pend ? ' pending' : ''}${isNew ? ' pop' : ''}${rxl.length ? ' hasrx' : ''}" data-key="${m.key}">${inner}<div class="meta">${m.expiresAt ? '⏱ ' : ''}${m.editedAt ? 'edited · ' : ''}${fmtTime(m.createdAt)} ${ticks}</div>${rxHTML}</div>`;
+    html += `<div class="b ${out ? 'out' : 'in'}${m.sticker && m.mediaType === 'image' && !m.text ? ' stk' : ''}${m._pend ? ' pending' : ''}${isNew ? ' pop' : ''}${rxl.length ? ' hasrx' : ''}" data-key="${m.key}">${inner}<div class="meta">${m.expiresAt ? '⏱ ' : ''}${m.editedAt ? 'edited · ' : ''}${fmtTime(m.createdAt)} ${ticks}</div>${rxHTML}</div>`;
   }
   box.innerHTML = html;
   msgs.forEach(m => renderedKeys.add(m.key));
@@ -1791,6 +1810,10 @@ function msgPopup(b){
   if (b.querySelector('.t')) items.push(['Copy text', () => navigator.clipboard.writeText(b.querySelector('.t:last-of-type')?.textContent || '').then(() => toast('Copied'))]);
   { const tEls = b.querySelectorAll('.t'), trText = tEls.length && !m.viewOnce ? tEls[tEls.length - 1].textContent.trim() : '';
     if (trText) items.push([trStore.has(trKey(key)) ? 'Hide translation' : skinOK ? 'Translate' : 'Translate · Premium', () => skinOK ? translateMsg(key, trText) : premiumSheet()]); }
+  if (m.sticker && m.mediaType === 'image' && m.mediaURL) items.push(['Add to my stickers', async () => {
+    try { const u = await mediaSrc(m, activeUid), bl = await (await fetch(u)).blob(); if (await saveSticker(bl)) toast('Sticker saved'); }
+    catch (e) { toast('Couldn’t save sticker'); console.error(e); }
+  }]);
   if (m.senderUid === me.uid) items.push(['Delete for everyone', () => deleteMsg(key), true]);
   items.forEach(([label, fn, danger]) => { const x = document.createElement('button'); x.textContent = label; if (danger) x.className = 'danger'; x.onclick = () => { close(); fn(); }; menu.appendChild(x); });
   const r = b.getBoundingClientRect(), out = b.classList.contains('out');
@@ -2020,19 +2043,91 @@ async function sendText(){
 /* photos */
 $('#btn-attach').onclick = () => $('#file-img').click();
 
-/* emoji button: while the message box is focused, the photo button turns into an emoji picker */
+/* ---------- custom stickers (stored on this device, per account) ---------- */
+const STK_MAX = 120;
+const stkDB = (() => {
+  let dbp = null;
+  const open = () => dbp || (dbp = new Promise((res, rej) => {
+    if (!window.indexedDB) return rej(new Error('no idb'));
+    const r = indexedDB.open('haba-stickers', 1);
+    r.onupgradeneeded = () => r.result.createObjectStore('st');
+    r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
+  }));
+  const tx = (mode, fn) => open().then(d => new Promise((res, rej) => { const t = d.transaction('st', mode); const q = fn(t.objectStore('st')); t.oncomplete = () => res(q && 'result' in q ? q.result : undefined); t.onerror = t.onabort = () => rej(t.error); }));
+  return {
+    list: uid => tx('readonly', s => s.getAll(IDBKeyRange.bound(uid + '|', uid + '|\uffff'))).then(a => (a || []).sort((x, y) => y.t - x.t)),
+    add: (uid, blob) => { const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 6); return tx('readwrite', s => s.put({ id, t: Date.now(), blob }, uid + '|' + id)).then(() => id); },
+    del: (uid, id) => tx('readwrite', s => s.delete(uid + '|' + id))
+  };
+})();
+let emoShow = () => {};
+async function saveSticker(blob){
+  const cur = await stkDB.list(me.uid).catch(() => []);
+  if (cur.length >= STK_MAX) { toast('Sticker limit reached (' + STK_MAX + '). Delete some first.'); return false; }
+  await stkDB.add(me.uid, blob); return true;
+}
+/* editor: fit/fill + zoom + drag, exported as a 512×512 transparent sticker */
+function openStickerEditor(file){
+  const url = URL.createObjectURL(file), img = new Image();
+  img.onerror = () => { URL.revokeObjectURL(url); toast('Couldn’t open that image'); };
+  img.onload = () => {
+    let mode = 'fit', zoom = 1, ox = 0, oy = 0;
+    const ov = modal(`<h3>Create sticker</h3><canvas class="stkprev" id="sc" width="512" height="512"></canvas>
+      <div class="stkctl"><div class="seg" id="sc-mode"><button data-m="fit" class="on">Fit</button><button data-m="fill">Fill</button></div><input type="range" id="sc-z" min="1" max="3" step="0.01" value="1"></div>
+      <div style="font-size:12px;color:var(--muted);text-align:center;margin-bottom:8px">Drag to move · slider to zoom</div>
+      <button class="btn" id="sc-save">Save sticker</button><button class="btn ghost" id="sc-x" style="margin-top:8px">Cancel</button>`);
+    const cv = ov.querySelector('#sc'), cx = cv.getContext('2d');
+    const draw = () => {
+      cx.clearRect(0, 0, 512, 512);
+      const base = (mode === 'fit' ? Math.min : Math.max)(512 / img.width, 512 / img.height), sc = base * zoom, w = img.width * sc, h = img.height * sc;
+      cx.drawImage(img, 256 - w / 2 + ox, 256 - h / 2 + oy, w, h);
+    };
+    draw();
+    const done = () => { URL.revokeObjectURL(url); closeModal(); };
+    ov.querySelector('#sc-mode').onclick = e => { const b = e.target.closest('button'); if (!b) return; mode = b.dataset.m; ox = oy = 0; ov.querySelectorAll('#sc-mode button').forEach(x => x.classList.toggle('on', x === b)); draw(); };
+    ov.querySelector('#sc-z').oninput = e => { zoom = +e.target.value; draw(); };
+    let drag = null;
+    cv.onpointerdown = e => { drag = { x: e.clientX, y: e.clientY, ox, oy }; cv.setPointerCapture(e.pointerId); cv.style.cursor = 'grabbing'; };
+    cv.onpointermove = e => { if (!drag) return; const k = 512 / cv.getBoundingClientRect().width; ox = drag.ox + (e.clientX - drag.x) * k; oy = drag.oy + (e.clientY - drag.y) * k; draw(); };
+    cv.onpointerup = cv.onpointercancel = () => { drag = null; cv.style.cursor = 'grab'; };
+    ov.querySelector('#sc-x').onclick = done;
+    ov.querySelector('#sc-save').onclick = () => {
+      cv.toBlob(async b0 => {
+        const go = async b => { try { if (await saveSticker(b)) { toast('Sticker saved'); done(); emoShow('stk'); } } catch (e) { toast('Couldn’t save sticker'); console.error(e); } };
+        if (b0 && b0.type === 'image/webp') return go(b0);
+        cv.toBlob(b => b ? go(b) : toast('Couldn’t save sticker'), 'image/png');
+      }, 'image/webp', .92);
+    };
+  };
+  img.src = url;
+}
+$('#stk-file').addEventListener('change', e => { const f = e.target.files[0]; e.target.value = ''; if (f) openStickerEditor(f); });
+
+/* emoji button: while the message box is focused, the photo button turns into an emoji / sticker picker */
 (() => {
-  const comp = $('#composer'), btn = $('#btn-attach'), panel = $('#emopanel');
+  const comp = $('#composer'), btn = $('#btn-attach'), panel = $('#emopanel'), grid = $('#emogrid');
   const EMO = '😀 😃 😄 😁 😆 😅 😂 🤣 😊 😇 🙂 😉 😍 🥰 😘 😋 😛 😜 🤪 🤔 🤗 🤭 😏 😌 😴 😎 🤓 🥳 😢 😭 😤 😡 🥺 😱 😳 🙄 😬 🤯 🥵 🥶 😷 🤒 🤝 👍 👎 👏 🙌 🙏 💪 👋 ✌️ 🤞 👌 🤙 ❤️ 🧡 💛 💚 💙 💜 🖤 💔 💕 💖 🔥 ✨ 🎉 🎊 💯 ✅ ❌ ⭐ 🌟 💥 💫 🌈 ☀️ 🌙 ⚡ ❄️ 🌹 🌸 🍀 🐶 🐱 🐻 🦁 🐼 🐵 🦋 🍕 🍔 🍟 🍿 🍩 🍫 🍺 🍷 ☕ 🎂 ⚽ 🏀 🎵 🎮 📷 💼 📱 💻 🚗 ✈️ 🏠 🌍 🇿🇦'.split(' ');
   let recent = []; try { recent = JSON.parse(localStorage.getItem('hm-emo-recent') || '[]'); } catch {}
+  let tab = 'emoji', stkUrls = [], stkList = [];
   const b = e => `<button type="button" data-e="${e}">${e}</button>`;
-  const render = () => { panel.innerHTML = (recent.length ? '<div class="lbl">Recent</div>' + recent.map(b).join('') + '<div class="lbl">All</div>' : '') + EMO.map(b).join(''); };
   const isOpen = () => !panel.classList.contains('hidden');
   const closePanel = () => panel.classList.add('hidden');
-  const sync = () => { if (document.activeElement !== input && !isOpen()) comp.classList.remove('emo-mode'); };
+  const freeUrls = () => { stkUrls.forEach(u => URL.revokeObjectURL(u)); stkUrls = []; };
+  async function render(){
+    panel.querySelectorAll('.emotabs button').forEach(x => x.classList.toggle('on', x.dataset.t === tab));
+    grid.classList.toggle('stk', tab === 'stk');
+    if (tab === 'emoji') { freeUrls(); grid.innerHTML = (recent.length ? '<div class="lbl">Recent</div>' + recent.map(b).join('') + '<div class="lbl">All</div>' : '') + EMO.map(b).join(''); return; }
+    try { stkList = await stkDB.list(me.uid); } catch { stkList = []; }
+    if (tab !== 'stk') return;
+    freeUrls();
+    grid.innerHTML = '<button type="button" class="add" data-add="1" title="Create a sticker">+</button>'
+      + stkList.map(x => { const u = URL.createObjectURL(x.blob); stkUrls.push(u); return `<button type="button" data-s="${x.id}"><img src="${u}" alt="sticker"></button>`; }).join('')
+      + (stkList.length ? '<div class="none">Tap to send · press and hold to delete</div>' : '<div class="none">Tap + to make a sticker from any photo. Stickers are saved on this device.</div>');
+  }
+  emoShow = t => { tab = t || tab; render(); panel.classList.remove('hidden'); comp.classList.add('emo-mode'); input.focus(); };
 
   input.addEventListener('focus', () => comp.classList.add('emo-mode'));
-  input.addEventListener('blur', () => setTimeout(() => { if (document.activeElement !== input) { closePanel(); comp.classList.remove('emo-mode'); } }, 0));
+  input.addEventListener('blur', () => setTimeout(() => { if (document.activeElement !== input && !$('#modal-root').firstChild) { closePanel(); comp.classList.remove('emo-mode'); } else if (document.activeElement !== input) comp.classList.remove('emo-mode'); }, 0));
 
   let handled = false;
   btn.addEventListener('pointerdown', e => {
@@ -2047,8 +2142,30 @@ $('#btn-attach').onclick = () => $('#file-img').click();
     if (comp.classList.contains('emo-mode')) e.stopImmediatePropagation();
   }, true);
 
-  panel.addEventListener('pointerdown', e => e.preventDefault());   // tapping an emoji must not blur the box
-  panel.addEventListener('click', e => {
+  panel.addEventListener('pointerdown', e => e.preventDefault());   // tapping inside must not blur the box
+  panel.querySelector('.emotabs').addEventListener('click', e => { const t = e.target.closest('button'); if (!t) return; tab = t.dataset.t; render(); });
+
+  /* long-press / right-click a sticker to delete it */
+  let lpT = null, lpFired = false;
+  const askDelete = id => {
+    const ov = modal(`<h3>Delete sticker?</h3><p style="color:var(--muted);margin:0 0 14px">It’s removed from your stickers on this device. Messages you already sent aren’t affected.</p><button class="btn" id="sd-y" style="background:var(--danger)">Delete</button><button class="btn ghost" id="sd-n" style="margin-top:8px">Cancel</button>`);
+    ov.querySelector('#sd-n').onclick = closeModal;
+    ov.querySelector('#sd-y').onclick = async () => { closeModal(); try { await stkDB.del(me.uid, id); } catch {} emoShow('stk'); };
+  };
+  grid.addEventListener('pointerdown', e => { const k = e.target.closest('button[data-s]'); if (!k) return; lpFired = false; clearTimeout(lpT); lpT = setTimeout(() => { lpFired = true; askDelete(k.dataset.s); }, 550); });
+  ['pointerup', 'pointerleave', 'pointercancel', 'scroll'].forEach(ev => grid.addEventListener(ev, () => clearTimeout(lpT)));
+  grid.addEventListener('contextmenu', e => { const k = e.target.closest('button[data-s]'); if (k) { e.preventDefault(); clearTimeout(lpT); lpFired = true; askDelete(k.dataset.s); } });
+
+  grid.addEventListener('click', e => {
+    if (lpFired) { lpFired = false; return; }
+    if (e.target.closest('[data-add]')) { $('#stk-file').click(); return; }
+    const sk = e.target.closest('button[data-s]');
+    if (sk) {
+      const x = stkList.find(v => v.id === sk.dataset.s); if (!x || !activeUid || iBlocked || theyBlocked) return;
+      const type = x.blob.type || 'image/webp';
+      sendMediaFile(new File([x.blob], 'sticker.' + (type.includes('png') ? 'png' : 'webp'), { type }), activeUid, threadId, '', true);
+      closePanel(); return;
+    }
     const k = e.target.closest('button[data-e]'); if (!k) return;
     const em = k.dataset.e, a = input.selectionStart ?? input.value.length, z = input.selectionEnd ?? a;
     input.setRangeText(em, a, z, 'end');
@@ -2094,11 +2211,11 @@ $('#mc-send').onclick = () => {
   sendMediaFile(f, peer, tid, cap);
 };
 function sendPhotoFile(file, peer, tid, caption){ return sendMediaFile(file, peer, tid, caption); }
-async function sendMediaFile(file, peer, tid, caption = ''){
-  const vid = file.type.startsWith('video/'), kind = vid ? 'video' : 'image', label = vid ? '🎥 Video' : '📷 Photo';
-  toast(vid ? 'Sending video…' : 'Sending photo…');
+async function sendMediaFile(file, peer, tid, caption = '', sticker = false){
+  const vid = !sticker && file.type.startsWith('video/'), kind = vid ? 'video' : 'image', label = sticker ? '🏷️ Sticker' : vid ? '🎥 Video' : '📷 Photo';
+  if (!sticker) toast(vid ? 'Sending video…' : 'Sending photo…');
   try {
-    const prepared = vid ? file : await prepImage(file);
+    const prepared = (vid || sticker) ? file : await prepImage(file);
     const mime = prepared.type || (vid ? 'video/mp4' : 'image/jpeg');
     const { blob, encrypted } = await encFile(peer, prepared);
     const capEnc = caption ? await encText(peer, caption) : '';
@@ -2108,6 +2225,7 @@ async function sendMediaFile(file, peer, tid, caption = ''){
       const pl = withExpiry({ senderUid: me.uid, createdAt: Date.now(), mediaType: kind, ...extra });
       if (encrypted) { pl.mediaEncrypted = true; pl.mediaMimeType = mime; }
       if (capEnc) pl.text = capEnc;
+      if (sticker) pl.sticker = true;
       if (vid) pl.fileName = file.name || 'video.mp4', pl.fileSize = file.size;
       return pl;
     };
@@ -2124,7 +2242,7 @@ async function sendMediaFile(file, peer, tid, caption = ''){
     const rp = await replyPayload(peer); if (rp) payload.replyToMessage = rp;
     $('#reply-x').click();
     await pushMessage(peer, payload, preview);
-  } catch (err) { if (!lockedGuard(err, () => sendMediaFile(file, peer, tid, caption))) { toast(vid ? 'Couldn’t send video' : 'Couldn’t send photo'); console.error(err); } }
+  } catch (err) { if (!lockedGuard(err, () => sendMediaFile(file, peer, tid, caption, sticker))) { toast(sticker ? 'Couldn’t send sticker' : vid ? 'Couldn’t send video' : 'Couldn’t send photo'); console.error(err); } }
 }
 function prepImage(file){
   return new Promise(res => {

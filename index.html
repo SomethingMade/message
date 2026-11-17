@@ -187,6 +187,15 @@ input,textarea{font:inherit;color:inherit}
 #rec-cancel{display:none;color:var(--danger)}
 #composer.locked #rec-cancel{display:flex}
 #composer.ai #btn-attach,#composer.ai #btn-mic{display:none!important}
+#composer .ic-emoji{display:none}
+#composer.emo-mode .ic-media{display:none}
+#composer.emo-mode .ic-emoji{display:block}
+#composer.emo-mode #btn-attach{color:var(--accent)}
+#emopanel{display:grid;grid-template-columns:repeat(auto-fill,minmax(40px,1fr));gap:2px;max-height:210px;overflow-y:auto;padding:8px 10px;background:var(--surface);border-top:1px solid var(--border);-webkit-overflow-scrolling:touch}
+#emopanel.hidden{display:none}
+#emopanel button{font-size:24px;line-height:1;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center}
+#emopanel button:hover{background:var(--input)}
+#emopanel .lbl{grid-column:1/-1;font-size:12px;font-weight:700;color:var(--muted);padding:4px 4px 0}
 #btn-mic{touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;transition:transform .15s,background .15s}
 #btn-mic .ic-send{display:none}
 #btn-mic.rec{background:var(--danger);color:#fff;transform:scale(1.35);z-index:2}
@@ -632,9 +641,10 @@ body.gr-chat #bnav{display:none}
       <div id="msgs"></div>
       <div id="replybar" class="hidden"><div class="q" id="reply-q"></div><button class="icon" id="reply-x"><svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
       <div id="blocked" class="hidden"></div>
+      <div id="emopanel" class="hidden"></div>
       <div id="composer">
         <input type="file" id="file-img" accept="image/*" class="hidden">
-        <button class="icon" id="btn-attach" title="Send photo"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg></button>
+        <button class="icon" id="btn-attach" title="Send photo"><svg class="ic-media" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg><svg class="ic-emoji" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 14.5a4.5 4.5 0 0 0 8 0M9 9.5h.01M15 9.5h.01"/></svg></button>
         <div id="recbar">
           <button class="icon" id="rec-cancel" title="Delete"><svg viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/></svg></button>
           <span class="recdot"></span><span id="rec-time">0:00</span>
@@ -1917,6 +1927,46 @@ async function sendText(){
 
 /* photos */
 $('#btn-attach').onclick = () => $('#file-img').click();
+
+/* emoji button: while the message box is focused, the photo button turns into an emoji picker */
+(() => {
+  const comp = $('#composer'), btn = $('#btn-attach'), panel = $('#emopanel');
+  const EMO = '😀 😃 😄 😁 😆 😅 😂 🤣 😊 😇 🙂 😉 😍 🥰 😘 😋 😛 😜 🤪 🤔 🤗 🤭 😏 😌 😴 😎 🤓 🥳 😢 😭 😤 😡 🥺 😱 😳 🙄 😬 🤯 🥵 🥶 😷 🤒 🤝 👍 👎 👏 🙌 🙏 💪 👋 ✌️ 🤞 👌 🤙 ❤️ 🧡 💛 💚 💙 💜 🖤 💔 💕 💖 🔥 ✨ 🎉 🎊 💯 ✅ ❌ ⭐ 🌟 💥 💫 🌈 ☀️ 🌙 ⚡ ❄️ 🌹 🌸 🍀 🐶 🐱 🐻 🦁 🐼 🐵 🦋 🍕 🍔 🍟 🍿 🍩 🍫 🍺 🍷 ☕ 🎂 ⚽ 🏀 🎵 🎮 📷 💼 📱 💻 🚗 ✈️ 🏠 🌍 🇿🇦'.split(' ');
+  let recent = []; try { recent = JSON.parse(localStorage.getItem('hm-emo-recent') || '[]'); } catch {}
+  const b = e => `<button type="button" data-e="${e}">${e}</button>`;
+  const render = () => { panel.innerHTML = (recent.length ? '<div class="lbl">Recent</div>' + recent.map(b).join('') + '<div class="lbl">All</div>' : '') + EMO.map(b).join(''); };
+  const isOpen = () => !panel.classList.contains('hidden');
+  const closePanel = () => panel.classList.add('hidden');
+  const sync = () => { if (document.activeElement !== input && !isOpen()) comp.classList.remove('emo-mode'); };
+
+  input.addEventListener('focus', () => comp.classList.add('emo-mode'));
+  input.addEventListener('blur', () => setTimeout(() => { if (document.activeElement !== input) { closePanel(); comp.classList.remove('emo-mode'); } }, 0));
+
+  let handled = false;
+  btn.addEventListener('pointerdown', e => {
+    if (!comp.classList.contains('emo-mode')) return;
+    e.preventDefault();                      // keep the keyboard / focus
+    handled = true;
+    if (isOpen()) closePanel(); else { render(); panel.classList.remove('hidden'); }
+    input.focus();
+  });
+  btn.addEventListener('click', e => {
+    if (handled) { handled = false; e.stopImmediatePropagation(); return; }
+    if (comp.classList.contains('emo-mode')) e.stopImmediatePropagation();
+  }, true);
+
+  panel.addEventListener('pointerdown', e => e.preventDefault());   // tapping an emoji must not blur the box
+  panel.addEventListener('click', e => {
+    const k = e.target.closest('button[data-e]'); if (!k) return;
+    const em = k.dataset.e, a = input.selectionStart ?? input.value.length, z = input.selectionEnd ?? a;
+    input.setRangeText(em, a, z, 'end');
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    recent = [em, ...recent.filter(x => x !== em)].slice(0, 16);
+    try { localStorage.setItem('hm-emo-recent', JSON.stringify(recent)); } catch {}
+    input.focus();
+  });
+  $('#send').addEventListener('click', closePanel);
+})();
 $('#file-img').addEventListener('change', e => {
   const file = e.target.files[0]; e.target.value = ''; if (!file || !activeUid) return;
   sendPhotoFile(file, activeUid, threadId);

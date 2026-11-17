@@ -609,9 +609,27 @@ body.gr-chat #bnav{display:none}
 #netbar.show{transform:none}
 #netbar.ok{background:#1F9D55}
 .b.pending{opacity:.72}
+#applock{position:fixed;inset:0;z-index:2147483000;background:var(--bg);color:var(--text);display:flex;align-items:center;justify-content:center;padding:calc(20px + var(--sat)) 20px calc(20px + var(--sab));overflow:auto}
+.al-box{width:100%;max-width:320px;text-align:center}
+.al-logo{width:64px;height:64px;margin:0 auto 14px}.al-logo svg{width:100%;height:100%}
+.al-title{font-size:22px;font-weight:700}
+.al-sub{color:var(--muted);font-size:14px;margin:6px 0 22px;min-height:20px}
+.al-dots{display:flex;justify-content:center;gap:14px;margin-bottom:26px;height:14px}
+.al-dots i{width:14px;height:14px;border-radius:50%;border:2px solid var(--muted);box-sizing:border-box}
+.al-dots i.on{background:var(--text);border-color:var(--text)}
+.al-dots.shake{animation:alshake .4s}
+@keyframes alshake{20%,60%{transform:translateX(-9px)}40%,80%{transform:translateX(9px)}}
+.al-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:14px 18px;justify-items:center}
+.al-pad button{width:72px;height:72px;border-radius:50%;background:var(--input);font-size:26px;font-weight:600;color:var(--text);display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent}
+.al-pad button:active{background:var(--border)}
+.al-pad button.ghost{background:none}
+.al-pad svg{width:28px;height:28px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.al-forgot{margin-top:22px;color:var(--muted);font-size:14px;padding:8px}
 </style>
 </head>
 <body>
+<div id="applock" class="hidden" role="dialog" aria-modal="true" aria-label="Haba is locked"></div>
+<script>try{if(localStorage.getItem('hm-lock'))document.getElementById('applock').classList.remove('hidden')}catch(e){}</script>
 
 <!-- ============ AUTH ============ -->
 <div id="auth" class="hidden">
@@ -651,7 +669,7 @@ body.gr-chat #bnav{display:none}
   <aside id="side">
     <div class="bar">
       <div class="grow brand">Haba<i>.</i></div>
-      <button class="icon" id="btn-ai" title="Haba AI" aria-label="Haba AI"><svg viewBox="0 0 24 24"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9Z"/><path d="M19 15.5l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8Z"/></svg></button>
+      <button class="icon" id="btn-ai" title="Haba AI" aria-label="Haba AI"><svg viewBox="0 0 96 96" style="width:28px;height:28px;stroke:none"><circle cx="48" cy="48" r="48" fill="#000"/><circle cx="48" cy="48" r="23" fill="none" stroke="#fff" stroke-width="4"/></svg></button>
       <button class="icon" id="btn-settings" title="Settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="12" cy="19" r="1.4"/></svg></button>
     </div>
     <div id="banner" class="hidden"><span id="banner-text" style="flex:1"></span><button id="banner-btn">Unlock</button></div>
@@ -2658,6 +2676,214 @@ function openSettings(){
 function hideSettings(){ $('#settings').classList.add('hidden'); }
 function closeSettings(){ hideSettings(); if (settingsHist) { settingsHist = false; skipPop = true; history.back(); } }
 SIC.phone = '<path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2Z"/>';
+/* =============== APP LOCK (PIN + device biometrics) ===============
+   The PIN is stored only as a salted PBKDF2 hash on this device. Biometrics use the device's own fingerprint / face
+   unlock through WebAuthn (a platform authenticator), so no biometric data ever reaches this page or the server.
+   This is a screen lock for this device: it doesn't change message encryption or your account. */
+SIC.lock = '<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>';
+const AL_FP = '<path d="M12 10a2 2 0 0 0-2 2c0 1.02-.1 2.51-.26 4"/><path d="M14 13.12c0 2.38 0 6.38-1 8.88"/><path d="M17.29 21.02c.12-.6.43-2.3.5-3.02"/><path d="M2 12a10 10 0 0 1 18-6"/><path d="M2 16h.01"/><path d="M21.8 16c.2-2 .131-5.354 0-6"/><path d="M5 19.5C5.5 18 6 15 6 12a6 6 0 0 1 .34-2"/><path d="M8.65 22c.21-.66.45-1.32.57-2"/><path d="M9 6.8a6 6 0 0 1 9 5.2v2"/>';
+const AL_BK = '<path d="M21 5H9l-6 7 6 7h12a1 1 0 0 0 1-1V6a1 1 0 0 0-1-1Z"/><path d="m13 9 4 6m0-6-4 6"/>';
+const AL_DELAYS = [[0, 'Immediately'], [60, 'After 1 minute'], [300, 'After 5 minutes'], [900, 'After 15 minutes'], [3600, 'After 1 hour']];
+const alDelayLabel = s => (AL_DELAYS.find(d => d[0] === s) || AL_DELAYS[1])[1];
+const alB64 = buf => btoa(String.fromCharCode(...new Uint8Array(buf)));
+const alUnb64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+const lockCfg = () => { try { const c = JSON.parse(localStorage.getItem('hm-lock')); return c && c.hash && c.salt && c.len ? c : null; } catch { return null; } };
+const lockSave = c => localStorage.setItem('hm-lock', JSON.stringify(c));
+function lockWipe(){ localStorage.removeItem('hm-lock'); localStorage.removeItem('hm-lock-fail'); alUnlockUI(); }
+const lockSub = () => { const c = lockCfg(); return c ? `On · PIN${c.bio ? ' + fingerprint / face' : ''} · ${alDelayLabel(c.delay)}` : 'Off · protect Haba with a PIN or fingerprint / face'; };
+async function alHash(pin, saltB64){
+  const k = await crypto.subtle.importKey('raw', new TextEncoder().encode(pin), 'PBKDF2', false, ['deriveBits']);
+  return alB64(await crypto.subtle.deriveBits({ name: 'PBKDF2', salt: alUnb64(saltB64), iterations: 150000, hash: 'SHA-256' }, k, 256));
+}
+/* wrong-PIN throttling: after every 5 misses, wait 30s, then 60s, 2 min … (max 15 min) */
+const alFail = () => { try { return JSON.parse(localStorage.getItem('hm-lock-fail')) || { n: 0, until: 0 }; } catch { return { n: 0, until: 0 }; } };
+const alWait = () => Math.max(0, Math.ceil((alFail().until - Date.now()) / 1000));
+async function alCheck(pin){
+  const c = lockCfg(); if (!c) return { ok: true };
+  if (alWait()) return { ok: false, wait: alWait() };
+  if (await alHash(pin, c.salt) === c.hash) { localStorage.removeItem('hm-lock-fail'); return { ok: true }; }
+  const f = alFail(); f.n++;
+  if (f.n % 5 === 0) f.until = Date.now() + Math.min(30 * 2 ** (f.n / 5 - 1), 900) * 1000;
+  localStorage.setItem('hm-lock-fail', JSON.stringify(f));
+  return { ok: false, wait: alWait() };
+}
+/* biometrics */
+let alBusy = false;
+const alBioOK = async () => { try { return !!(window.PublicKeyCredential && PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable && await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable()); } catch { return false; } };
+async function alBioEnroll(){
+  alBusy = true;
+  try {
+    const cred = await navigator.credentials.create({ publicKey: {
+      challenge: crypto.getRandomValues(new Uint8Array(32)), rp: { name: 'Haba Messenger' },
+      user: { id: crypto.getRandomValues(new Uint8Array(16)), name: 'haba-app-lock', displayName: 'Haba app lock' },
+      pubKeyCredParams: [{ type: 'public-key', alg: -7 }, { type: 'public-key', alg: -257 }],
+      authenticatorSelection: { authenticatorAttachment: 'platform', userVerification: 'required', residentKey: 'discouraged' },
+      timeout: 60000, attestation: 'none' } });
+    return alB64(cred.rawId);
+  } finally { alBusy = false; hiddenAt = 0; }
+}
+async function alBioCheck(id){
+  alBusy = true;
+  try {
+    await navigator.credentials.get({ publicKey: { challenge: crypto.getRandomValues(new Uint8Array(32)),
+      allowCredentials: [{ type: 'public-key', id: alUnb64(id), transports: ['internal'] }], userVerification: 'required', timeout: 60000 } });
+    return true;
+  } catch { return false; } finally { alBusy = false; hiddenAt = 0; }
+}
+/* lock screen */
+let locked = false, alEntry = '', alTimer = 0, hiddenAt = 0;
+const AL_INERT = ['#app', '#settings', '#auth', '#modal-root'];
+function alUnlockUI(){
+  locked = false; alEntry = ''; hiddenAt = 0; clearInterval(alTimer);
+  const el = $('#applock'); if (el) { el.classList.add('hidden'); el.innerHTML = ''; }
+  AL_INERT.forEach(s => { const n = $(s); if (n) n.inert = false; });
+}
+function alPaint(msg){
+  const c = lockCfg(); if (!c) return;
+  const dots = $('#al-dots'); if (dots) dots.innerHTML = Array.from({ length: c.len }, (_, i) => `<i class="${i < alEntry.length ? 'on' : ''}"></i>`).join('');
+  const sub = $('#al-sub'); if (!sub) return;
+  const w = alWait();
+  sub.textContent = w ? `Too many attempts. Try again in ${w >= 60 ? Math.ceil(w / 60) + ' min' : w + ' s'}.` : (msg || 'Enter your PIN');
+}
+function alBuild(){
+  const c = lockCfg(), el = $('#applock'); if (!c || !el) return;
+  const key = n => `<button type="button" data-k="${n}">${n}</button>`;
+  el.innerHTML = `<div class="al-box">
+    <div class="al-logo"><svg viewBox="0 0 96 96"><circle cx="48" cy="48" r="48" fill="#000"/><circle cx="48" cy="48" r="23" fill="none" stroke="#fff" stroke-width="4"/></svg></div>
+    <div class="al-title">Haba is locked</div><div class="al-sub" id="al-sub"></div><div class="al-dots" id="al-dots"></div>
+    <div class="al-pad">${[1, 2, 3, 4, 5, 6, 7, 8, 9].map(key).join('')}
+      ${c.bio ? `<button type="button" class="ghost" data-k="bio" aria-label="Unlock with fingerprint or face"><svg viewBox="0 0 24 24">${AL_FP}</svg></button>` : '<span></span>'}
+      ${key(0)}<button type="button" class="ghost" data-k="del" aria-label="Delete"><svg viewBox="0 0 24 24">${AL_BK}</svg></button></div>
+    <button type="button" class="al-forgot" id="al-forgot">Forgot PIN? Sign out</button></div>`;
+  el.onclick = e => {
+    const b = e.target.closest('[data-k]');
+    if (b) { const k = b.dataset.k; if (k === 'bio') alTryBio(); else if (k === 'del') alKey('del'); else alKey(k); return; }
+    if (e.target.closest('#al-forgot') && confirm('Signing out removes the app lock from this device. You’ll need to sign in again. Continue?')) { lockWipe(); closeModal(); closeSettings(); signOut(auth); }
+  };
+  clearInterval(alTimer); alTimer = setInterval(() => { if (locked) alPaint(); }, 1000);
+  alPaint();
+}
+function lockNow(){
+  const c = lockCfg(), el = $('#applock'); if (!c || !el) return;
+  locked = true; alEntry = ''; el.classList.remove('hidden');
+  AL_INERT.forEach(s => { const n = $(s); if (n) n.inert = true; });
+  if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+  alBuild(); if (c.bio && !alWait()) setTimeout(alTryBio, 300);
+}
+async function alTryBio(){
+  const c = lockCfg(); if (!c || !c.bio || !locked || alBusy) return;
+  if (await alBioCheck(c.bio)) alUnlockUI(); else alPaint('Use your PIN to unlock');
+}
+async function alKey(k){
+  const c = lockCfg(); if (!c || !locked || alWait()) return;
+  if (k === 'del') alEntry = alEntry.slice(0, -1); else if (alEntry.length < c.len) alEntry += k;
+  alPaint();
+  if (alEntry.length < c.len) return;
+  const pin = alEntry, r = await alCheck(pin);
+  if (r.ok) return alUnlockUI();
+  alEntry = '';
+  const d = $('#al-dots'); if (d) { d.classList.remove('shake'); void d.offsetWidth; d.classList.add('shake'); }
+  if (navigator.vibrate && localStorage.getItem('hm-vib') !== 'off') navigator.vibrate(120);
+  alPaint(r.wait ? '' : 'Wrong PIN. Try again.');
+}
+document.addEventListener('keydown', e => {
+  if (!locked) return;
+  if (/^\d$/.test(e.key)) { e.preventDefault(); alKey(e.key); }
+  else if (e.key === 'Backspace') { e.preventDefault(); alKey('del'); }
+}, true);
+/* auto-lock when the app has been in the background long enough */
+document.addEventListener('visibilitychange', () => {
+  const c = lockCfg(); if (!c || alBusy) return;
+  if (document.visibilityState === 'hidden') { if (!locked) hiddenAt = Date.now(); }
+  else if (hiddenAt && !locked) { if (Date.now() - hiddenAt >= (c.delay || 0) * 1000) lockNow(); hiddenAt = 0; }
+});
+/* settings sheets */
+function alDigits(inp){ inp.addEventListener('input', () => { inp.value = inp.value.replace(/\D/g, '').slice(0, 6); }); }
+function appLockSheet(){ lockCfg() ? alManage() : alSetup(); }
+function alSetup(){
+  const ov = modal(`<h3>Set up app lock</h3><p style="color:var(--muted);margin:0 0 12px;font-size:14px;line-height:1.4">Choose a 4–6 digit PIN. Haba will ask for it when you come back after it’s been in the background.</p>
+    <input class="field" id="al-p1" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" placeholder="New PIN" autocomplete="new-password">
+    <input class="field" id="al-p2" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" placeholder="Confirm PIN" autocomplete="new-password">
+    <div id="al-err" style="color:var(--danger);font-size:14px;min-height:18px;margin:0 0 6px"></div>
+    <button class="btn" id="al-save">Turn on app lock</button><button class="btn ghost" id="al-x" style="margin-top:8px">Cancel</button>`);
+  const q = s => ov.querySelector(s), err = t => q('#al-err').textContent = t || '';
+  alDigits(q('#al-p1')); alDigits(q('#al-p2')); q('#al-x').onclick = closeModal; q('#al-p1').focus();
+  q('#al-save').onclick = async () => {
+    const a = q('#al-p1').value, b = q('#al-p2').value;
+    if (!/^\d{4,6}$/.test(a)) return err('PIN must be 4 to 6 digits.');
+    if (a !== b) return err('The two PINs don’t match.');
+    q('#al-save').disabled = true;
+    try {
+      const salt = alB64(crypto.getRandomValues(new Uint8Array(16)));
+      lockSave({ salt, hash: await alHash(a, salt), len: a.length, bio: null, delay: 60 });
+    } catch { err('Couldn’t set the PIN on this device.'); q('#al-save').disabled = false; return; }
+    renderSettings();
+    if (await alBioOK()) alOfferBio(); else { closeModal(); toast('App lock is on'); }
+  };
+}
+function alOfferBio(){
+  const ov = modal(`<h3>Use fingerprint or face unlock?</h3><p style="color:var(--muted);margin:0 0 14px;font-size:14px;line-height:1.4">Open Haba with your device’s biometrics. Your PIN always works as a backup.</p>
+    <button class="btn" id="al-bio-y">Enable</button><button class="btn ghost" id="al-bio-n" style="margin-top:8px">Not now</button>`);
+  ov.querySelector('#al-bio-n').onclick = () => { closeModal(); toast('App lock is on'); };
+  ov.querySelector('#al-bio-y').onclick = async () => {
+    try { const c = lockCfg(); c.bio = await alBioEnroll(); lockSave(c); closeModal(); toast('App lock is on · biometrics enabled'); renderSettings(); }
+    catch { closeModal(); toast('Couldn’t enable biometrics. You can try again in App lock settings.'); }
+  };
+}
+function alManage(){
+  const c = lockCfg(); if (!c) return closeModal();
+  const ov = modal(`<h3>App lock</h3>
+    <div class="srow" id="al-r-bio" style="padding:12px 4px;gap:14px"><svg viewBox="0 0 24 24">${AL_FP}</svg><div class="st"><b style="font-size:16px">Fingerprint / face unlock</b><span id="al-bio-sub">Checking…</span></div><div class="sw ${c.bio ? 'on' : ''}"></div></div>
+    <div class="srow" id="al-r-delay" style="padding:12px 4px;gap:14px"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><div class="st"><b style="font-size:16px">Auto-lock</b><span>${alDelayLabel(c.delay)} · tap to change</span></div></div>
+    <div class="srow" id="al-r-pin" style="padding:12px 4px;gap:14px"><svg viewBox="0 0 24 24">${SIC.key}</svg><div class="st"><b style="font-size:16px">Change PIN</b></div></div>
+    <div class="srow danger" id="al-r-off" style="padding:12px 4px;gap:14px"><svg viewBox="0 0 24 24">${SIC.lock}</svg><div class="st"><b style="font-size:16px">Turn off app lock</b></div></div>
+    <button class="btn ghost" id="al-done" style="margin-top:10px">Done</button>`);
+  const q = s => ov.querySelector(s); let bioOK = false;
+  alBioOK().then(ok => { bioOK = ok; const s = q('#al-bio-sub'); if (s) s.textContent = ok ? 'Open Haba with your device’s biometrics' : 'Not available on this device'; });
+  q('#al-done').onclick = closeModal;
+  q('#al-r-bio').onclick = async () => {
+    const cur = lockCfg();
+    if (cur.bio) { cur.bio = null; lockSave(cur); renderSettings(); return alManage(); }
+    if (!bioOK) return toast('Biometrics aren’t available on this device');
+    try { cur.bio = await alBioEnroll(); lockSave(cur); toast('Biometric unlock on'); } catch { toast('Couldn’t enable biometrics'); }
+    renderSettings(); alManage();
+  };
+  q('#al-r-delay').onclick = () => { const cur = lockCfg(), i = AL_DELAYS.findIndex(d => d[0] === cur.delay); cur.delay = AL_DELAYS[(i + 1) % AL_DELAYS.length][0]; lockSave(cur); renderSettings(); alManage(); };
+  q('#al-r-pin').onclick = alChangePin;
+  q('#al-r-off').onclick = () => alAskPin('Turn off app lock', 'Enter your PIN to turn off app lock.', 'Turn off', () => { lockWipe(); closeModal(); renderSettings(); toast('App lock is off'); });
+}
+function alAskPin(title, text, cta, done){
+  const ov = modal(`<h3>${title}</h3><p style="color:var(--muted);margin:0 0 12px;font-size:14px">${text}</p>
+    <input class="field" id="al-cur" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" placeholder="Current PIN" autocomplete="off">
+    <div id="al-err" style="color:var(--danger);font-size:14px;min-height:18px;margin:0 0 6px"></div>
+    <button class="btn" id="al-go">${cta}</button><button class="btn ghost" id="al-back" style="margin-top:8px">Cancel</button>`);
+  const q = s => ov.querySelector(s); alDigits(q('#al-cur')); q('#al-cur').focus(); q('#al-back').onclick = alManage;
+  q('#al-go').onclick = async () => {
+    q('#al-go').disabled = true;
+    const r = await alCheck(q('#al-cur').value);
+    if (r.ok) return done();
+    q('#al-err').textContent = r.wait ? `Too many attempts. Try again in ${r.wait}s.` : 'Wrong PIN.'; q('#al-go').disabled = false;
+  };
+}
+function alChangePin(){
+  alAskPin('Change PIN', 'Enter your current PIN first.', 'Continue', () => {
+    const ov = modal(`<h3>New PIN</h3><input class="field" id="al-p1" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" placeholder="New PIN (4–6 digits)" autocomplete="new-password">
+      <input class="field" id="al-p2" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" placeholder="Confirm new PIN" autocomplete="new-password">
+      <div id="al-err" style="color:var(--danger);font-size:14px;min-height:18px;margin:0 0 6px"></div>
+      <button class="btn" id="al-save">Save PIN</button><button class="btn ghost" id="al-back" style="margin-top:8px">Cancel</button>`);
+    const q = s => ov.querySelector(s), err = t => q('#al-err').textContent = t || '';
+    alDigits(q('#al-p1')); alDigits(q('#al-p2')); q('#al-p1').focus(); q('#al-back').onclick = alManage;
+    q('#al-save').onclick = async () => {
+      const a = q('#al-p1').value, b = q('#al-p2').value;
+      if (!/^\d{4,6}$/.test(a)) return err('PIN must be 4 to 6 digits.');
+      if (a !== b) return err('The two PINs don’t match.');
+      const c = lockCfg(), salt = alB64(crypto.getRandomValues(new Uint8Array(16)));
+      c.salt = salt; c.hash = await alHash(a, salt); c.len = a.length; lockSave(c);
+      toast('PIN changed'); alManage();
+    };
+  });
+}
+if (lockCfg()) lockNow();   // cold start: locked before anything is shown
 function renderSettings(){
   const root = $('#settings'); if (root.classList.contains('hidden') || !me) return;
   const top = root.scrollTop;
@@ -2678,6 +2904,7 @@ function renderSettings(){
     ${row('receipts', 'shield', 'Privacy', 'Read receipts', on('hm-receipts'))}
     ${row('online', 'eye', 'Online status', 'Let others see when you’re online', on('hm-online'))}
     ${row('blocked', 'ban', 'Blocked accounts', 'People you’ve blocked')}
+    ${row('applock', 'lock', 'App lock', lockSub())}
     ${row('notif', 'bell', 'Notifications', 'Banner for new messages', on('hm-notif'))}
     ${row('nsound', 'bell', 'Message sound', 'Play a tone for new messages', on('hm-sound'))}
     ${row('nvib', 'bell', 'Vibration', 'Vibrate for new messages', on('hm-vib'))}
@@ -2773,9 +3000,10 @@ $('#settings').addEventListener('click', e => {
   else if (act === 'enter') { toast(flip('hm-enter') ? 'Enter sends messages' : 'Enter adds a new line'); renderSettings(); }
   else if (act === 'size') { const o = Object.keys(SIZES); localStorage.setItem('hm-size', o[(o.indexOf(curSize()) + 1) % o.length]); applyTextSize(); renderSettings(); }
   else if (act === 'blocked') blockedList();
+  else if (act === 'applock') appLockSheet();
   else if (act === 'enc') { keyState === 'ready' ? showE2EIntro() : keyState === 'nobackup' ? nobackupSheet() : promptUnlock(); }
   else if (act === 'pin') { keyState === 'ready' ? createPinSheet({ change: backupState === 'yes' }) : keyState === 'nobackup' ? nobackupSheet() : promptUnlock(); }
-  else if (act === 'signout') { closeSettings(); signOut(auth); }
+  else if (act === 'signout') { lockWipe(); closeSettings(); signOut(auth); }
 });
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('#settings').classList.contains('hidden') && $('#viewer').classList.contains('hidden') && !$('#modal-root').firstElementChild) closeSettings(); });
 

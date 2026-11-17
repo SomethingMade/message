@@ -1840,11 +1840,18 @@ function startReply(key){
   $('#replybar').classList.remove('hidden'); $('#input').focus();
 }
 $('#reply-x').onclick = () => { replyTo = null; $('#replybar').classList.add('hidden'); };
+const DEL_PREVIEW = '🚫 This message was deleted';
 async function deleteMsg(key){
   const base = `dm_threads/${threadId}/messages/${key}/`, u = {};
   ['text', 'mediaURL', 'mediaType', 'reactions', 'replyToMessage', 'fileName', 'fileSize', 'duration', 'editedAt'].forEach(f => u[base + f] = null);
   u[base + 'waveform'] = null;
   u[base + 'deleted'] = true; u[base + 'deletedAt'] = Date.now();
+  /* if this was the latest message, the chat-list preview (both sides) says it was deleted too */
+  const peer = activeUid, dm = rawMsgs[key];
+  if (peer && dm && Object.values(rawMsgs).every(x => !x || (x.createdAt || 0) <= (dm.createdAt || 0))) {
+    u[`user_chats/${me.uid}/${peer}/text`] = DEL_PREVIEW;
+    u[`user_chats/${peer}/${me.uid}/text`] = DEL_PREVIEW;
+  }
   try { await update(ref(db), u); } catch { toast('Couldn’t delete message'); }
 }
 

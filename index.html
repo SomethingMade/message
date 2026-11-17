@@ -199,6 +199,14 @@ input,textarea{font:inherit;color:inherit}
 #mc-cap::placeholder{color:rgba(255,255,255,.6)}
 #mc-send{background:var(--primary);color:var(--inverse)}
 #mc-send:disabled{opacity:.5}
+#dm-timer{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;padding:6px 12px;font-size:12.5px;font-weight:600;color:var(--muted);background:var(--surface);border-bottom:1px solid var(--border)}
+#dm-timer.hidden{display:none}
+.dtopt{display:flex;align-items:center;justify-content:space-between;width:100%;text-align:left;padding:14px 8px;font-size:16px;border-radius:10px}
+.dtopt:hover{background:var(--input)}
+.dtopt .ck{color:var(--accent);font-weight:800;opacity:0}.dtopt.on .ck{opacity:1}
+.dtcustom{display:flex;gap:8px;align-items:center;margin-top:10px}
+.dtcustom .field{margin:0;border-radius:14px;padding:11px 14px}
+.dtcustom input.field{width:90px;flex:none}.dtcustom select.field{flex:1}
 #composer .ic-emoji{display:none}
 #composer.emo-mode .ic-media{display:none}
 #composer.emo-mode .ic-emoji{display:block}
@@ -650,6 +658,7 @@ body.gr-chat #bnav{display:none}
         </div>
         <button class="icon" id="btn-thread-menu"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="12" cy="19" r="1.4"/></svg></button>
       </div>
+      <button id="dm-timer" class="hidden"></button>
       <div id="msgs"></div>
       <div id="replybar" class="hidden"><div class="q" id="reply-q"></div><button class="icon" id="reply-x"><svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
       <div id="blocked" class="hidden"></div>
@@ -1583,7 +1592,7 @@ async function openThread(uid){
   if (activeUid) closeThread(true);
   const seq = ++openSeq, tid = threadIdFor(me.uid, uid), live = () => seq === openSeq && activeUid === uid && threadId === tid;
   activeUid = uid; threadId = tid; msgLimit = PAGE; rawMsgs = {}; firstLoad = true; renderedKeys = new Set();
-  otherLastRead = 0; otherTyping = false; iBlocked = false; theyBlocked = false; disappearing = 0; replyTo = null;
+  otherLastRead = 0; otherTyping = false; iBlocked = false; theyBlocked = false; disappearing = 0; paintDisap(); replyTo = null;
   $('#placeholder').classList.add('hidden'); $('#thread').classList.remove('hidden'); $('#app').classList.add('chat-open');
   if (!chatHist) { history.pushState({ hmChat: 1 }, ''); chatHist = true; }   // device back closes the chat, not the app
   $('#msgs').innerHTML = '<div class="spin"></div>'; $('#input').value = ''; autoGrow(); $('#replybar').classList.add('hidden');
@@ -1600,7 +1609,7 @@ async function openThread(uid){
   if (uid !== AI_UID) watch(`users/${uid}`, s => { if (s.exists()) { users[uid] = s.val(); userFresh.add(uid); cacheUser(uid); warmAvatar(users[uid].photoURL); paintHeader(); } });
   watch(`dm_threads/${tid}/readReceipts/${uid}`, s => { otherLastRead = s.val() || 0; paintTicks(); });
   watch(`dm_threads/${tid}/typing/${uid}`, s => { otherTyping = !!s.val(); paintTyping(); });
-  watch(`dm_threads/${tid}/settings/disappearingSeconds`, s => { disappearing = s.val() || 0; });
+  watch(`dm_threads/${tid}/settings/disappearingSeconds`, s => { disappearing = s.val() || 0; paintDisap(); });
   watch(`blocks/${me.uid}/${uid}`, s => { iBlocked = s.val() === true; paintBlocked(); });
   watch(`blocks/${uid}/${me.uid}`, s => { theyBlocked = s.val() === true; paintBlocked(); });
   const mq = query(ref(db, `dm_threads/${tid}/messages`), orderByChild('createdAt'), limitToLast(msgLimit));
@@ -1708,7 +1717,7 @@ async function renderMessages(keepScroll){
     const rxl = m.reactions && typeof m.reactions === 'object' ? Object.values(m.reactions).filter(x => typeof x === 'string' && x) : [];
     let rxHTML = '';
     if (rxl.length) { const cnt = {}; rxl.forEach(x => cnt[x] = (cnt[x] || 0) + 1); const top = Object.entries(cnt).sort((a, b) => b[1] - a[1]).slice(0, 3).map(x => x[0]).join(''); rxHTML = `<div class="rx${typeof m.reactions[me.uid] === 'string' ? ' mine' : ''}">${esc(top)}${rxl.length > 1 ? ' ' + rxl.length : ''}</div>`; }
-    html += `<div class="b ${out ? 'out' : 'in'}${m._pend ? ' pending' : ''}${isNew ? ' pop' : ''}${rxl.length ? ' hasrx' : ''}" data-key="${m.key}">${inner}<div class="meta">${m.editedAt ? 'edited · ' : ''}${fmtTime(m.createdAt)} ${ticks}</div>${rxHTML}</div>`;
+    html += `<div class="b ${out ? 'out' : 'in'}${m._pend ? ' pending' : ''}${isNew ? ' pop' : ''}${rxl.length ? ' hasrx' : ''}" data-key="${m.key}">${inner}<div class="meta">${m.expiresAt ? '⏱ ' : ''}${m.editedAt ? 'edited · ' : ''}${fmtTime(m.createdAt)} ${ticks}</div>${rxHTML}</div>`;
   }
   box.innerHTML = html;
   msgs.forEach(m => renderedKeys.add(m.key));
@@ -1716,6 +1725,7 @@ async function renderMessages(keepScroll){
   if (near) box.scrollTop = box.scrollHeight; else if (keepScroll) box.scrollTop = box.scrollHeight - prevH + prevTop;
   firstLoad = false;
   vnPaint();
+  schedExpiry(uid);
 
   box.querySelectorAll('[data-mk]').forEach(async el => {
     const m = rawMsgs[el.dataset.mk]; if (!m) return;
@@ -1820,6 +1830,16 @@ function openViewer(key){
   $('#viewer').classList.remove('hidden');
   if (!viewerHist) { history.pushState({ hmViewer: 1 }, ''); viewerHist = true; }
 }
+function openAvatarViewer(uid){
+  const raw = users[uid]?.photoURL, src = uid === AI_UID ? AI_AVATAR : (raw ? (avObj.get(raw) || raw) : DEFAULT_AVATAR);
+  const stage = $('#v-stage'); stage.innerHTML = '';
+  const img = document.createElement('img'); img.alt = 'Profile photo'; img.src = src; stage.appendChild(img);
+  $('#v-name').innerHTML = esc(uid === me.uid ? 'My Account' : uName(uid)) + vbadge(uid);
+  $('#v-time').textContent = 'Profile photo';
+  const dl = $('#v-dl'); dl.href = src; dl.download = 'profile.jpg';
+  $('#viewer').classList.remove('hidden');
+  if (!viewerHist) { history.pushState({ hmViewer: 1 }, ''); viewerHist = true; }
+}
 function hideViewer(){ const st = $('#v-stage'); st.querySelectorAll('video').forEach(v => v.pause()); st.innerHTML = ''; $('#viewer').classList.add('hidden'); }
 function closeViewer(){ hideViewer(); if (viewerHist) { viewerHist = false; skipPop = true; history.back(); } }
 $('#v-close').onclick = closeViewer;
@@ -1888,6 +1908,58 @@ async function pushMessage(peer, payload, previewEncrypted, fixedKey){
   u[`user_chats/${peer}/${me.uid}/unreadCount`] = increment(1);
   u[`user_chats/${peer}/${me.uid}/senderUid`] = me.uid;
   await update(ref(db), u);
+}
+/* ---------- disappearing messages ---------- */
+const DIS_OPTS = [[0, 'Off'], [3600, '1 hour'], [86400, '24 hours'], [604800, '7 days'], [2592000, '30 days'], [7776000, '90 days']];
+function fmtTimer(sec){
+  if (!sec) return 'Off';
+  const u = [[2592000, 'month'], [604800, 'week'], [86400, 'day'], [3600, 'hour'], [60, 'minute'], [1, 'second']];
+  for (const [n, name] of u) if (sec % n === 0 || n === 1) { const v = Math.round(sec / n); return v + ' ' + name + (v === 1 ? '' : 's'); }
+}
+function paintDisap(){
+  const b = $('#dm-timer'); if (!b) return;
+  const on = disappearing > 0 && activeUid && activeUid !== AI_UID;
+  b.classList.toggle('hidden', !on);
+  if (on) b.textContent = '⏱ New messages disappear after ' + fmtTimer(disappearing);
+}
+$('#dm-timer').onclick = () => openDisappearing();
+async function setDisappearing(secs){
+  if (!threadId) return;
+  try {
+    await set(ref(db, `dm_threads/${threadId}/settings/disappearingSeconds`), secs > 0 ? secs : null);
+    disappearing = secs > 0 ? secs : 0; paintDisap();
+    toast(secs > 0 ? 'Disappearing messages: ' + fmtTimer(secs) : 'Disappearing messages turned off');
+  } catch (e) { toast('Couldn’t change the timer'); console.error(e); }
+}
+function openDisappearing(){
+  if (!activeUid || activeUid === AI_UID) return;
+  const preset = DIS_OPTS.some(o => o[0] === disappearing);
+  const rows = DIS_OPTS.map(([n, l]) => `<button class="dtopt${disappearing === n ? ' on' : ''}" data-n="${n}">${l}<span class="ck">✓</span></button>`).join('')
+    + (disappearing && !preset ? `<button class="dtopt on" data-n="${disappearing}">${fmtTimer(disappearing)} (custom)<span class="ck">✓</span></button>` : '');
+  const ov = modal(`<h3>Disappearing messages</h3><p style="color:var(--muted);margin:0 0 8px;font-size:14px">New messages in this chat will be removed after the time you choose. Messages already sent aren’t affected. This applies for both of you.</p>${rows}
+    <div class="dtcustom"><input class="field" id="dt-n" type="number" min="1" max="999" placeholder="e.g. 5" inputmode="numeric"><select class="field" id="dt-u"><option value="60">minutes</option><option value="3600">hours</option><option value="86400" selected>days</option><option value="604800">weeks</option></select><button class="btn" id="dt-set" style="width:auto;padding:11px 18px;margin:0">Set</button></div>`);
+  ov.addEventListener('click', e => { const o = e.target.closest('.dtopt'); if (o) { closeModal(); setDisappearing(+o.dataset.n); } });
+  $('#dt-set').onclick = () => {
+    const n = Math.floor(+$('#dt-n').value), secs = n * +$('#dt-u').value;
+    if (!(n >= 1)) return toast('Enter a number');
+    if (secs > 31536000) return toast('Maximum is 1 year');
+    closeModal(); setDisappearing(secs);
+  };
+}
+let expT = null; const expDone = new Set();
+function schedExpiry(uid){
+  clearTimeout(expT);
+  const now = Date.now(); let next = Infinity;
+  for (const [k, m] of Object.entries(rawMsgs)) {
+    if (!m || !m.expiresAt) continue;
+    if (m.expiresAt > now) { next = Math.min(next, m.expiresAt); continue; }
+    // expired: drop my own copy for good (best effort); anyone's expired message is already hidden from view
+    if (m.senderUid === me.uid && threadId && !expDone.has(k)) {
+      expDone.add(k);
+      update(ref(db), { [`dm_threads/${threadId}/messages/${k}`]: null }).catch(() => expDone.delete(k));
+    }
+  }
+  if (next < Infinity) expT = setTimeout(() => { if (activeUid === uid) renderMessages(true); }, Math.min(next - now + 300, 2147483000));
 }
 function withExpiry(p){ if (disappearing > 0) p.expiresAt = p.createdAt + disappearing * 1000; return p; }
 async function replyPayload(peer){
@@ -2659,6 +2731,7 @@ $('#btn-thread-menu').onclick = e => {
   const r = e.currentTarget.getBoundingClientRect();
   showMenu(r.right - 180, r.bottom + 4, [
     ['Refresh chat', () => { renderMessages(); }],
+    ...(activeUid === AI_UID ? [] : [['Disappearing messages' + (disappearing ? ' · ' + fmtTimer(disappearing) : ''), openDisappearing]]),
     ...(activeUid === AI_UID ? [] : [[iBlocked ? 'Unblock' : 'Block', () => set(ref(db, `blocks/${me.uid}/${activeUid}`), iBlocked ? null : true)]]),
     ['Close chat', exitChat]
   ]);
@@ -3782,7 +3855,7 @@ async function showProfile(uid){
   const online = u.status === 'online';
   const st = online ? 'online' : (u.lastSeen ? 'last seen ' + fmtListTime(u.lastSeen) : '');
   const ov = modal(`<div style="text-align:center">
-    <div class="av" style="width:104px;height:104px;margin:4px auto 12px;background-image:url('${cssUrl(uAvatar(uid))}')"></div>
+    <div class="av" id="pf-av" title="View photo" style="width:104px;height:104px;margin:4px auto 12px;cursor:pointer;background-image:url('${cssUrl(uAvatar(uid))}')"></div>
     <h3 style="margin:0">${esc(uid === me.uid ? 'My Account' : uName(uid))}${vbadge(uid)}</h3>
     ${u.username ? `<div style="color:var(--muted);margin-top:2px">@${esc(u.username)}</div>` : ''}
     ${st ? `<div style="font-size:13px;margin-top:4px;color:${online ? '#34C759' : 'var(--muted)'}">${esc(st)}</div>` : ''}
@@ -3792,6 +3865,7 @@ async function showProfile(uid){
   <button class="btn ghost" id="pf-close" style="margin-top:8px">Close</button>`);
   ov.querySelector('#pf-msg').onclick = () => { closeModal(); if (activeUid !== uid) openThread(uid); };
   ov.querySelector('#pf-close').onclick = closeModal;
+  ov.querySelector('#pf-av').onclick = () => openAvatarViewer(uid);
 }
 
 /* new chat */

@@ -187,6 +187,18 @@ input,textarea{font:inherit;color:inherit}
 #rec-cancel{display:none;color:var(--danger)}
 #composer.locked #rec-cancel{display:flex}
 #composer.ai #btn-attach,#composer.ai #btn-mic{display:none!important}
+#mcap{position:fixed;inset:0;z-index:140;background:#000;display:flex;flex-direction:column;color:#fff}
+#mcap.hidden{display:none}
+#mcap .mc-top{display:flex;align-items:center;gap:10px;padding:calc(10px + var(--sat)) 12px 8px}
+#mcap .mc-top .icon{color:#fff}#mcap .mc-top .icon:hover{background:rgba(255,255,255,.14)}
+#mc-name{flex:1;min-width:0;font-size:14px;opacity:.8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#mc-stage{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;padding:0 8px}
+#mc-stage img,#mc-stage video{max-width:100%;max-height:100%;object-fit:contain;border-radius:8px}
+#mcap .mc-bar{display:flex;align-items:flex-end;gap:8px;padding:10px 12px calc(10px + var(--sab))}
+#mc-cap{flex:1;resize:none;max-height:120px;min-height:42px;padding:11px 16px;border-radius:22px;border:none;outline:none;background:rgba(255,255,255,.14);color:#fff;line-height:1.3}
+#mc-cap::placeholder{color:rgba(255,255,255,.6)}
+#mc-send{background:var(--primary);color:var(--inverse)}
+#mc-send:disabled{opacity:.5}
 #composer .ic-emoji{display:none}
 #composer.emo-mode .ic-media{display:none}
 #composer.emo-mode .ic-emoji{display:block}
@@ -643,8 +655,8 @@ body.gr-chat #bnav{display:none}
       <div id="blocked" class="hidden"></div>
       <div id="emopanel" class="hidden"></div>
       <div id="composer">
-        <input type="file" id="file-img" accept="image/*" class="hidden">
-        <button class="icon" id="btn-attach" title="Send photo"><svg class="ic-media" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg><svg class="ic-emoji" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 14.5a4.5 4.5 0 0 0 8 0M9 9.5h.01M15 9.5h.01"/></svg></button>
+        <input type="file" id="file-img" accept="image/*,video/*" class="hidden">
+        <button class="icon" id="btn-attach" title="Send photo or video"><svg class="ic-media" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg><svg class="ic-emoji" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 14.5a4.5 4.5 0 0 0 8 0M9 9.5h.01M15 9.5h.01"/></svg></button>
         <div id="recbar">
           <button class="icon" id="rec-cancel" title="Delete"><svg viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/></svg></button>
           <span class="recdot"></span><span id="rec-time">0:00</span>
@@ -713,6 +725,7 @@ body.gr-chat #bnav{display:none}
 <div id="pages" class="hidden"><div class="bar"><button class="icon hidden" id="pg-back" title="Back"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button><div class="grow" id="pg-title" style="font-weight:800;font-size:20px">Pages</div><button class="icon" id="pg-new" title="Create Page"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button></div><div id="pg-tabs"><button class="pill on" data-t="discover">Discover</button><button class="pill" data-t="mine">Your Pages</button></div><div id="pg-body"></div></div>
 <div id="contacts" class="hidden"><div class="bar"><button class="icon" id="ct-back" title="Back"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button><div class="grow"><div style="font-weight:700;font-size:17px">Select contact</div><div id="ct-count" style="font-size:12px;color:var(--muted)"></div></div><button class="icon" id="ct-searchbtn" title="Search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg></button></div><div class="searchwrap hidden" id="ct-sw"><input id="ct-q" placeholder="Search contacts" autocomplete="off"></div><div id="ct-list"></div></div>
 <div id="settings" class="hidden"></div>
+<div id="mcap" class="hidden"><div class="mc-top"><button class="icon" id="mc-x" title="Cancel"><svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button><div id="mc-name"></div></div><div id="mc-stage"></div><div class="mc-bar"><textarea id="mc-cap" rows="1" maxlength="1000" placeholder="Add a caption…" autocomplete="off"></textarea><button class="icon" id="mc-send" title="Send"><svg viewBox="0 0 24 24"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4Z"/></svg></button></div></div>
 <div id="viewer" class="hidden"><div class="vbar"><button class="icon" id="v-close" title="Close"><svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button><div class="vmeta"><b id="v-name"></b><span id="v-time"></span></div><a class="icon" id="v-dl" title="Save"><svg viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg></a></div><div id="v-stage"></div></div>
 <div id="menu" class="hidden"></div>
 <div id="notif"><div class="av sm" id="notif-av"></div><div class="nmid"><b id="notif-name"></b><span id="notif-text"></span></div></div>
@@ -1680,7 +1693,7 @@ async function renderMessages(keepScroll){
       const rm = m.replyToMessage, rt = m._rt || (rm.mediaType ? '📎 ' + rm.mediaType : 'Message');
       inner += `<div class="quote"><b>${esc(uName(rm.senderUid))}</b>${esc(rt)}</div>`;
     }
-    if (m._pendMedia) inner += `<div class="t">${m.mediaType === 'audio' ? '🎤 Voice message' : '📷 Photo'}</div>`;
+    if (m._pendMedia) inner += `<div class="t">${m.mediaType === 'audio' ? '🎤 Voice message' : m.mediaType === 'video' ? '🎥 Video' : '📷 Photo'}</div>`;
     else if (m.viewOnce) inner += `<div class="t">🔒 View-once ${esc(m.mediaType || 'media')} — open it in the Haba app</div>`;
     else if (m.mediaURL) {
       const mt = m.mediaType || '';
@@ -1969,30 +1982,70 @@ $('#btn-attach').onclick = () => $('#file-img').click();
 })();
 $('#file-img').addEventListener('change', e => {
   const file = e.target.files[0]; e.target.value = ''; if (!file || !activeUid) return;
-  sendPhotoFile(file, activeUid, threadId);
+  const isVid = file.type.startsWith('video/');
+  if (!isVid && !file.type.startsWith('image/')) return toast('Pick a photo or video');
+  if (isVid && file.size > MAX_DM_VIDEO) return toast('That video is too big (max ' + Math.round(MAX_DM_VIDEO / 1048576) + ' MB)');
+  openMediaCaption(file);
 });
-async function sendPhotoFile(file, peer, tid){
-  toast('Sending photo…');
+const MAX_DM_VIDEO = 64 * 1048576;
+/* caption preview: shown for a photo or video before it is sent */
+let mcFile = null, mcUrl = null;
+function openMediaCaption(file){
+  mcFile = file; mcUrl = URL.createObjectURL(file);
+  const vid = file.type.startsWith('video/');
+  $('#mc-stage').innerHTML = vid ? '<video playsinline controls></video>' : '<img alt="">';
+  $('#mc-stage').firstChild.src = mcUrl;
+  $('#mc-name').textContent = file.name || (vid ? 'Video' : 'Photo');
+  $('#mc-cap').value = ''; $('#mc-cap').style.height = 'auto'; $('#mc-send').disabled = false;
+  $('#mcap').classList.remove('hidden');
+}
+function closeMediaCaption(){
+  const v = $('#mc-stage').querySelector('video'); if (v) v.pause();
+  $('#mc-stage').innerHTML = ''; $('#mcap').classList.add('hidden');
+  if (mcUrl) URL.revokeObjectURL(mcUrl); mcFile = mcUrl = null;
+}
+$('#mc-x').onclick = closeMediaCaption;
+$('#mc-cap').addEventListener('input', e => { const t = e.target; t.style.height = 'auto'; t.style.height = Math.min(t.scrollHeight, 120) + 'px'; });
+$('#mc-cap').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey && !/Mobi|Android/i.test(navigator.userAgent)) { e.preventDefault(); $('#mc-send').click(); } });
+$('#mc-send').onclick = () => {
+  if (!mcFile || !activeUid) return closeMediaCaption();
+  if (iBlocked || theyBlocked) { closeMediaCaption(); return toast('You can’t send messages to this chat'); }
+  const f = mcFile, cap = $('#mc-cap').value.trim(), peer = activeUid, tid = threadId;
+  closeMediaCaption();
+  sendMediaFile(f, peer, tid, cap);
+};
+function sendPhotoFile(file, peer, tid, caption){ return sendMediaFile(file, peer, tid, caption); }
+async function sendMediaFile(file, peer, tid, caption = ''){
+  const vid = file.type.startsWith('video/'), kind = vid ? 'video' : 'image', label = vid ? '🎥 Video' : '📷 Photo';
+  toast(vid ? 'Sending video…' : 'Sending photo…');
   try {
-    const prepared = await prepImage(file);
+    const prepared = vid ? file : await prepImage(file);
+    const mime = prepared.type || (vid ? 'video/mp4' : 'image/jpeg');
     const { blob, encrypted } = await encFile(peer, prepared);
-    const name = (file.name || 'photo.jpg').replace(/[^a-zA-Z0-9.\-_]/g, '_');
+    const capEnc = caption ? await encText(peer, caption) : '';
+    const preview = caption ? await encText(peer, label.split(' ')[0] + ' ' + caption) : label;
+    const name = (file.name || (vid ? 'video.mp4' : 'photo.jpg')).replace(/[^a-zA-Z0-9.\-_]/g, '_');
+    const build = extra => {
+      const pl = withExpiry({ senderUid: me.uid, createdAt: Date.now(), mediaType: kind, ...extra });
+      if (encrypted) { pl.mediaEncrypted = true; pl.mediaMimeType = mime; }
+      if (capEnc) pl.text = capEnc;
+      if (vid) pl.fileName = file.name || 'video.mp4', pl.fileSize = file.size;
+      return pl;
+    };
     if (!netOK()) {
-      const pl = withExpiry({ senderUid: me.uid, createdAt: Date.now(), mediaType: 'image' });
-      if (encrypted) { pl.mediaEncrypted = true; pl.mediaMimeType = prepared.type || 'image/jpeg'; }
+      const pl = build({});
       const rp0 = await replyPayload(peer); if (rp0) pl.replyToMessage = rp0;
       $('#reply-x').click();
-      await obAddMedia(peer, tid, blob, name, pl, '📷 Photo'); return;
+      await obAddMedia(peer, tid, blob, name, pl, preview); return;
     }
     const snap = await uploadBytes(sRef(storage, `dm_media/${tid}/${Date.now()}_${name}`), blob);
     const url = await getDownloadURL(snap.ref);
     if (encrypted) mediaCache[url] = Promise.resolve(URL.createObjectURL(prepared));
-    const payload = withExpiry({ senderUid: me.uid, createdAt: Date.now(), mediaURL: url, mediaType: 'image' });
-    if (encrypted) { payload.mediaEncrypted = true; payload.mediaMimeType = prepared.type || 'image/jpeg'; }
+    const payload = build({ mediaURL: url });
     const rp = await replyPayload(peer); if (rp) payload.replyToMessage = rp;
     $('#reply-x').click();
-    await pushMessage(peer, payload, '📷 Photo');
-  } catch (err) { if (!lockedGuard(err, () => sendPhotoFile(file, peer, tid))) { toast('Couldn’t send photo'); console.error(err); } }
+    await pushMessage(peer, payload, preview);
+  } catch (err) { if (!lockedGuard(err, () => sendMediaFile(file, peer, tid, caption))) { toast(vid ? 'Couldn’t send video' : 'Couldn’t send photo'); console.error(err); } }
 }
 function prepImage(file){
   return new Promise(res => {

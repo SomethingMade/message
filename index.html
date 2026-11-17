@@ -260,6 +260,18 @@ input,textarea{font:inherit;color:inherit}
 .b.in .vn-wave i.on{background:var(--seen)}
 .vn-row{display:flex;align-items:center;justify-content:space-between;margin-top:1px}
 .vn-time{font-size:11px;opacity:.75;font-variant-numeric:tabular-nums}
+.mu{display:flex;align-items:center;gap:10px;width:250px;max-width:100%;padding:2px 0}
+.mu-art{position:relative;width:56px;height:56px;border-radius:10px;background:rgba(128,128,128,.25) center/cover;flex-shrink:0;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.mu-play{width:30px;height:30px;border-radius:50%;background:rgba(0,0,0,.55);color:#fff;display:flex;align-items:center;justify-content:center}
+.mu-play svg{width:15px;height:15px;fill:currentColor}
+.mu-play .pa{display:none}.mu.playing .mu-play .pa{display:block}.mu.playing .mu-play .pl{display:none}
+.mu-mid{flex:1;min-width:0}
+.mu-mid b{display:block;font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mu-mid>span{display:block;font-size:12.5px;opacity:.75;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mu-bar{height:4px;border-radius:2px;background:rgba(128,128,128,.3);margin-top:7px;overflow:hidden;cursor:pointer}
+.mu-bar i{display:block;height:100%;width:0;background:currentColor}
+.b.out .mu-bar i{background:var(--accent)}.b.in .mu-bar i{background:var(--seen)}
+.mu-row{display:flex;justify-content:space-between;align-items:center;margin-top:4px;font-size:11px;opacity:.75;font-variant-numeric:tabular-nums}
 .vn-spd{display:none;font-size:11px;font-weight:700;padding:1px 8px;border-radius:50px;background:rgba(128,128,128,.25)}
 .vn.playing .vn-spd{display:inline-block}
 
@@ -750,7 +762,7 @@ body.gr-chat #bnav{display:none}
       <div id="msgs"></div>
       <div id="replybar" class="hidden"><div class="q" id="reply-q"></div><button class="icon" id="reply-x"><svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
       <div id="blocked" class="hidden"></div>
-      <div id="emopanel" class="hidden"><div class="emotabs"><button type="button" data-t="emoji" class="on">😀 Emoji</button><button type="button" data-t="stk">🏷️ Stickers</button></div><div id="emogrid"></div></div><input type="file" id="stk-file" accept="image/*" class="hidden">
+      <div id="emopanel" class="hidden"><div class="emotabs"><button type="button" data-t="emoji" class="on">😀 Emoji</button><button type="button" data-t="stk">🏷️ Stickers</button><button type="button" data-t="music">🎵 Music</button></div><div id="emogrid"></div></div><input type="file" id="stk-file" accept="image/*" class="hidden">
       <div id="composer">
         <input type="file" id="file-img" accept="image/*,video/*" class="hidden">
         <button class="icon" id="btn-attach" title="Send photo or video"><svg class="ic-media" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg><svg class="ic-emoji" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 14.5a4.5 4.5 0 0 0 8 0M9 9.5h.01M15 9.5h.01"/></svg></button>
@@ -1667,7 +1679,7 @@ window.addEventListener('popstate', () => {
 function closeThread(silent){
   openSeq++;
   if (rec) stopRec(false);
-  vnStop();
+  vnStop(); muStop();
   threadUnsubs.forEach(f => f()); threadUnsubs = [];
   if (threadId && me && !silent) set(ref(db, `dm_threads/${threadId}/typing/${me.uid}`), false).catch(() => {});
   activeUid = null; threadId = null; rawMsgs = {}; replyTo = null; $('#composer').classList.remove('ai');
@@ -1767,6 +1779,7 @@ async function renderMessages(keepScroll){
   await Promise.all(msgs.map(async m => {
     if (m.text && !m.deleted) m._t = await decText(uid, m.text);
     if (m.replyToMessage && m.replyToMessage.text) m._rt = await decText(uid, m.replyToMessage.text);
+    if (m.music && !m.deleted) { m._mu = muParse(await decText(uid, m.music)); if (m._mu) muStore.set(m.key, m._mu); }
   }));
   if (tok !== renderTok || uid !== activeUid) return;
 
@@ -1787,7 +1800,7 @@ async function renderMessages(keepScroll){
     if (m.deleted) { html += `<div class="b ${out ? 'out' : 'in'} del" data-key="${m.key}"><div class="t">🚫 This message was deleted</div><div class="meta">${fmtTime(m.createdAt)}</div></div>`; continue; }
     let inner = '';
     if (m.replyToMessage) {
-      const rm = m.replyToMessage, rt = m._rt || (rm.mediaType ? '📎 ' + rm.mediaType : 'Message');
+      const rm = m.replyToMessage, rt = m._rt || (rm.mediaType === 'music' ? '🎵 Song' : rm.mediaType ? '📎 ' + rm.mediaType : 'Message');
       inner += `<div class="quote"><b>${esc(uName(rm.senderUid))}</b>${esc(rt)}</div>`;
     }
     if (m._pendMedia) inner += `<div class="t">${m.mediaType === 'audio' ? '🎤 Voice message' : m.mediaType === 'video' ? '🎥 Video' : m.sticker ? '🏷️ Sticker' : '📷 Photo'}</div>`;
@@ -1799,6 +1812,7 @@ async function renderMessages(keepScroll){
       else if (mt === 'audio') inner += vnHTML(m);
       else inner += `<div class="file" data-file="${m.key}">📄 <div><b>${esc(m.fileName || 'File')}</b><div style="font-size:12px;opacity:.7">${m.fileSize ? fmtSize(m.fileSize) + ' · ' : ''}tap to download</div></div></div>`;
     }
+    if (m.music) inner += m._mu ? muHTML(m.key, m._mu) : '<div class="t">🎵 Song unavailable</div>';
     if (m._t) inner += `<div class="t">${linkify(esc(m._t))}</div>`;
     { const tr = trStore.get(trKey(m.key)); if (tr) inner += `<div class="tr">${esc(tr.text)}<i>Translated to ${esc(trName(tr.lang))}</i></div>`; }
     const ticks = m._pend ? '<span class="tick">🕓</span>' : out ? `<span class="tick ${otherLastRead >= m.createdAt ? 'seen' : ''}" data-ts="${m.createdAt}">${otherLastRead >= m.createdAt ? '✓✓' : '✓'}</span>` : '';
@@ -1812,7 +1826,7 @@ async function renderMessages(keepScroll){
   paintTyping(true);
   if (near) box.scrollTop = box.scrollHeight; else if (keepScroll) box.scrollTop = box.scrollHeight - prevH + prevTop;
   firstLoad = false;
-  vnPaint();
+  vnPaint(); muPaint();
   schedExpiry(uid);
 
   box.querySelectorAll('[data-mk]').forEach(async el => {
@@ -1845,6 +1859,12 @@ $('#msgs').addEventListener('click', async e => {
     const w = e.target.closest('.vn-wave');
     if (w) { const r = w.getBoundingClientRect(); return vnToggle(vn.dataset.vn, Math.min(1, Math.max(0, (e.clientX - r.left) / r.width))); }
     if (e.target.closest('.vn-play')) return vnToggle(vn.dataset.vn);
+  }
+  const mu = e.target.closest('.mu');
+  if (mu) {
+    const bar = e.target.closest('.mu-bar');
+    if (bar) { const r = bar.getBoundingClientRect(); return muToggle(mu.dataset.mu, Math.min(1, Math.max(0, (e.clientX - r.left) / r.width))); }
+    if (e.target.closest('.mu-play,.mu-art')) return muToggle(mu.dataset.mu);
   }
   if (e.target.closest('a,audio')) return;
   const f = e.target.closest('[data-file]');
@@ -1879,6 +1899,11 @@ function msgPopup(b){
   if (b.querySelector('.t')) items.push(['Copy text', () => navigator.clipboard.writeText(b.querySelector('.t:last-of-type')?.textContent || '').then(() => toast('Copied'))]);
   { const tEls = b.querySelectorAll('.t'), trText = tEls.length && !m.viewOnce ? tEls[tEls.length - 1].textContent.trim() : '';
     if (trText) items.push([trStore.has(trKey(key)) ? 'Hide translation' : skinOK ? 'Translate' : 'Translate · Premium', () => skinOK ? translateMsg(key, trText) : premiumSheet()]); }
+  if (muStore.get(key)) items.push(['Star song', () => {
+    const t = muStore.get(key), id = t.id || t.previewUrl, l = mStars();
+    if (!l.some(x => x.id === id)) mSaveStars([{ id, trackName: t.trackName, artistName: t.artistName, artworkUrl: t.artworkUrl, previewUrl: t.previewUrl, ms: t.ms || 0 }, ...l]);
+    toast('Song starred');
+  }]);
   if (m.sticker && m.mediaType === 'image' && m.mediaURL) items.push(['Add to my stickers', async () => {
     try { const u = await mediaSrc(m, activeUid), bl = await (await fetch(u)).blob(); if (await saveSticker(bl)) toast('Sticker saved'); }
     catch (e) { toast('Couldn’t save sticker'); console.error(e); }
@@ -1946,8 +1971,8 @@ async function downloadFile(m){
 }
 function startReply(key){
   const m = rawMsgs[key]; if (!m) return;
-  const txt = m.text ? decCache.get(m.text) ?? m.text : (m.mediaType ? '📎 ' + m.mediaType : '');
-  replyTo = { key, senderUid: m.senderUid, text: m.text || '', mediaType: m.mediaType || '' };
+  const txt = m.text ? decCache.get(m.text) ?? m.text : m.music ? '🎵 Song' : (m.mediaType ? '📎 ' + m.mediaType : '');
+  replyTo = { key, senderUid: m.senderUid, text: m.text || '', mediaType: m.mediaType || (m.music ? 'music' : '') };
   $('#reply-q').innerHTML = `<b>${esc(uName(m.senderUid))}</b><br>${esc(txt)}`;
   $('#replybar').classList.remove('hidden'); $('#input').focus();
 }
@@ -1955,7 +1980,7 @@ $('#reply-x').onclick = () => { replyTo = null; $('#replybar').classList.add('hi
 const DEL_PREVIEW = '🚫 This message was deleted';
 async function deleteMsg(key){
   const base = `dm_threads/${threadId}/messages/${key}/`, u = {};
-  ['text', 'mediaURL', 'mediaType', 'reactions', 'replyToMessage', 'fileName', 'fileSize', 'duration', 'editedAt'].forEach(f => u[base + f] = null);
+  ['text', 'mediaURL', 'mediaType', 'reactions', 'replyToMessage', 'fileName', 'fileSize', 'duration', 'editedAt', 'music'].forEach(f => u[base + f] = null);
   u[base + 'waveform'] = null;
   u[base + 'deleted'] = true; u[base + 'deletedAt'] = Date.now();
   /* if this was the latest message, the chat-list preview (both sides) says it was deleted too */
@@ -2212,7 +2237,7 @@ $('#stk-file').addEventListener('change', e => { const f = e.target.files[0]; e.
   }, true);
 
   panel.addEventListener('pointerdown', e => e.preventDefault());   // tapping inside must not blur the box
-  panel.querySelector('.emotabs').addEventListener('click', e => { const t = e.target.closest('button'); if (!t) return; tab = t.dataset.t; render(); });
+  panel.querySelector('.emotabs').addEventListener('click', e => { const t = e.target.closest('button'); if (!t) return; if (t.dataset.t === 'music') { closePanel(); openMusicForDM(); return; } tab = t.dataset.t; render(); });
 
   /* long-press / right-click a sticker to delete it */
   let lpT = null, lpFired = false;
@@ -2456,6 +2481,44 @@ async function vnToggle(key, frac){
     if (frac != null) a.addEventListener('loadedmetadata', () => { const d = vnDur(m); if (d) a.currentTime = frac * d; }, { once: true });
     await a.play(); vnPaint();
   } catch { toast('Couldn’t play voice message'); vnStop(); vnPaint(); }
+}
+
+/* song bubble player (30s previews; one global Audio so re-renders never interrupt playback) */
+let muAudio = null, muKey = null; const muStore = new Map();
+const MU_HOST = /^https:\/\/([a-z0-9-]+\.)+(mzstatic\.com|apple\.com)\//i;    // only Apple's preview / artwork hosts are accepted from other people
+function muParse(txt){
+  try {
+    const o = JSON.parse(txt), c = cleanMusic(o); if (!c || !MU_HOST.test(c.previewUrl)) return null;
+    if (c.artworkUrl && !MU_HOST.test(c.artworkUrl)) c.artworkUrl = '';
+    return { ...c, id: String(o.id || '').slice(0, 40), ms: +o.ms || 0 };
+  } catch { return null; }
+}
+const MU_ICONS = '<svg class="pl" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg><svg class="pa" viewBox="0 0 24 24"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>';
+const muHTML = (key, t) => `<div class="mu" data-mu="${esc(key)}"><div class="mu-art" ${mArt(t)}><button class="mu-play" aria-label="Play song preview">${MU_ICONS}</button></div><div class="mu-mid"><b>${esc(t.trackName)}</b><span>${esc(t.artistName)}</span><div class="mu-bar"><i></i></div><div class="mu-row"><span class="mu-time">0:30</span><span>🎵 30s preview</span></div></div></div>`;
+function muPaint(){
+  document.querySelectorAll('.mu').forEach(el => {
+    const on = !!muAudio && el.dataset.mu === muKey, dur = on && isFinite(muAudio.duration) && muAudio.duration ? muAudio.duration : 30;
+    el.classList.toggle('playing', on && !muAudio.paused);
+    el.querySelector('.mu-bar i').style.width = (on ? Math.min(100, muAudio.currentTime / dur * 100) : 0) + '%';
+    el.querySelector('.mu-time').textContent = fmtDur(on && muAudio.currentTime > 0 ? muAudio.currentTime : dur);
+  });
+}
+function muStop(){ if (muAudio) muAudio.pause(); muAudio = null; muKey = null; }
+async function muToggle(key, frac){
+  const t = muStore.get(key); if (!t) return;
+  if (muKey === key && muAudio) {
+    if (frac != null && isFinite(muAudio.duration)) muAudio.currentTime = frac * muAudio.duration;
+    else if (muAudio.paused) muAudio.play().catch(() => {}); else muAudio.pause();
+    return muPaint();
+  }
+  muStop(); vnStop(); stopMPrev(); vnPaint(); muKey = key;
+  const a = muAudio = new Audio(t.previewUrl);
+  a.ontimeupdate = a.onplay = a.onpause = muPaint;
+  a.onended = () => { if (muAudio === a) { muStop(); muPaint(); } };
+  const fail = () => { if (muAudio === a) { toast('Couldn’t play song'); muStop(); muPaint(); } };
+  a.onerror = fail;
+  if (frac != null) a.addEventListener('loadedmetadata', () => { if (isFinite(a.duration)) a.currentTime = frac * a.duration; }, { once: true });
+  try { await a.play(); muPaint(); } catch { fail(); }
 }
 
 /* =============== MENUS / MODALS =============== */
@@ -3301,7 +3364,7 @@ async function postStory(payload){
   await set(nr, { ...payload, createdAt: Date.now() });
 }
 /* ----- status music (30s previews from the iTunes Search API, same as Haba stories) ----- */
-let stMusic = null, mqT = null, mPrev = null, mPrevBtn = null;
+let stMusic = null, mqT = null, mPrev = null, mPrevBtn = null, mMode = 'status', mDmPeer = null;
 const MUS_PLAY = '<svg viewBox="0 0 24 24" width="16" height="16" style="fill:currentColor;stroke:none"><path d="M8 5v14l11-7z"/></svg>', MUS_PAUSE = '<svg viewBox="0 0 24 24" width="16" height="16" style="fill:currentColor;stroke:none"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>';
 const okMusic = m => m && typeof m.previewUrl === 'string' && /^https:\/\//.test(m.previewUrl);
 const cleanMusic = m => okMusic(m) ? { trackName: String(m.trackName || 'Unknown').slice(0, 120), artistName: String(m.artistName || '').slice(0, 120), artworkUrl: /^https:\/\//.test(m.artworkUrl || '') ? m.artworkUrl : '', previewUrl: m.previewUrl } : null;
@@ -3367,6 +3430,7 @@ async function mRefresh(){
   } catch { if (tok === mTok) box.innerHTML = '<div class="empty">Couldn’t load songs. Check your connection.</div>'; }
 }
 function openMusicSheet(){
+  mMode = 'status';
   $('#mq').value = ''; mTab = 'sug'; $('#mclear').classList.toggle('hidden', !stMusic);
   $('#msheet').classList.remove('hidden'); mRefresh();
 }
@@ -3382,8 +3446,30 @@ $('#mres').addEventListener('click', e => {
     document.querySelectorAll('#mres [data-i]').forEach(r => { const x = mList[+r.dataset.i]; if (x && x.id === t.id) r.querySelector('.mst').classList.toggle('on', !on); });
     if (mTab === 'star' && !$('#mq').value.trim()) mRefresh(); return;
   }
+  if (mMode === 'dm') { const peer = mDmPeer; closeMusicSheet(); sendMusic(peer, t); return; }
   stMusic = cleanMusic(t); paintMusBtns(); closeMusicSheet();
 });
+/* ----- send a 30s song in a DM (same picker as status music) ----- */
+function openMusicForDM(){
+  if (!activeUid || activeUid === AI_UID) return;
+  if (iBlocked || theyBlocked) return toast('You can’t send messages to this chat');
+  mMode = 'dm'; mDmPeer = activeUid;
+  $('#mq').value = ''; mTab = 'sug'; $('#mclear').classList.add('hidden');
+  $('#msheet').classList.remove('hidden'); mRefresh();
+}
+const dmMusic = t => { const c = cleanMusic(t); return c ? { ...c, id: String(t.id || '').slice(0, 40), ms: +t.ms || 0 } : null; };
+async function sendMusic(peer, t){
+  const mu = dmMusic(t); if (!mu || !peer || peer !== activeUid || iBlocked || theyBlocked) return;
+  try {
+    const label = '🎵 ' + mu.trackName + (mu.artistName ? ' · ' + mu.artistName : '');
+    const [music, preview] = await Promise.all([encText(peer, JSON.stringify(mu)), encText(peer, label)]);
+    const payload = withExpiry({ music, senderUid: me.uid, createdAt: Date.now() });
+    const rp = await replyPayload(peer); if (rp) payload.replyToMessage = rp;
+    $('#reply-x').click();
+    if (!netOK()) { await obAdd({ id: newKey(threadIdFor(me.uid, peer)), peer, tid: threadIdFor(me.uid, peer), kind: 'text', payload, preview }); return; }
+    await pushMessage(peer, payload, preview);
+  } catch (e) { if (!lockedGuard(e, () => sendMusic(peer, t))) { toast('Couldn’t send song'); console.error(e); } }
+}
 $('#mclear').onclick = () => { stMusic = null; paintMusBtns(); closeMusicSheet(); };
 $('#msheet').addEventListener('click', e => { if (e.target.id === 'msheet') closeMusicSheet(); });
 $('#stx-mus').onclick = $('#smd-mus').onclick = openMusicSheet;
@@ -3559,7 +3645,7 @@ function openStoryFor(uid){
   const seen = others.filter(u => liveStories(u).every(storySeen)).sort((a, b) => known(b) - known(a) || lastOf(b) - lastOf(a));
   sv.list = uid === me.uid ? [me.uid] : [...fresh, ...seen];
   const ai = sv.list.indexOf(uid); if (ai < 0) return;
-  vnStop(); try { vnPaint(); } catch {}
+  vnStop(); muStop(); try { vnPaint(); muPaint(); } catch {}
   $('#sv').classList.remove('hidden');
   if (!svHist) { history.pushState({ hmStory: 1 }, ''); svHist = true; }
   loadAuthor(ai, true);

@@ -282,6 +282,21 @@ input,textarea{font:inherit;color:inherit}
 .typing::before{width:12px;height:12px;left:-3px;bottom:0}
 .typing::after{width:6px;height:6px;left:-8px;bottom:-4px}
 .typing i{width:8px;height:8px;background:#9A9AA0;animation:tdot 1.3s infinite}
+.typing.fx-wave i{background:var(--accent);animation:twave 1s infinite ease-in-out}
+.typing.fx-wave i:nth-child(2){animation-delay:.12s}.typing.fx-wave i:nth-child(3){animation-delay:.24s}
+@keyframes twave{0%,100%{transform:translateY(0) scale(1)}40%{transform:translateY(-8px) scale(1.2)}}
+.typing.fx-neon i{background:var(--accent);box-shadow:0 0 5px var(--accent),0 0 12px var(--accent);animation:tglow 1.2s infinite ease-in-out}
+@keyframes tglow{0%,100%{opacity:.3;transform:scale(.8)}50%{opacity:1;transform:scale(1.15)}}
+.typing.fx-aurora i{background:linear-gradient(135deg,#7C5CFF,#00D4FF,#00E5A0);animation:tdot 1.3s infinite,thue 3s linear infinite}
+@keyframes thue{to{filter:hue-rotate(360deg)}}
+.typing.fx-sparkle i,.typing.fx-heart i{width:auto;height:auto;background:none;border-radius:0;font-style:normal;line-height:1}
+.typing.fx-sparkle i::before{content:'✦';color:#FFB020;font-size:14px;text-shadow:0 0 6px #FFB02088}
+.typing.fx-sparkle i{animation:tspark 1.3s infinite ease-in-out}
+@keyframes tspark{0%,100%{transform:scale(.55) rotate(0);opacity:.4}50%{transform:scale(1.2) rotate(90deg);opacity:1}}
+.typing.fx-heart i::before{content:'♥';color:#FF3B6B;font-size:14px}
+.typing.fx-heart i{animation:tbeat 1.1s infinite ease-in-out}
+@keyframes tbeat{0%,100%{transform:scale(.8)}30%{transform:scale(1.35)}60%{transform:scale(.95)}}
+.lng .ck{font-weight:800}.lng.on{font-weight:700}
 @keyframes tdot{0%,60%,100%{transform:translateY(0);opacity:.45}30%{transform:translateY(-4px);opacity:1}}
 @keyframes tpop{from{transform:scale(.2);opacity:0}to{transform:scale(1);opacity:1}}
 .b.pop{animation:bpop .3s cubic-bezier(.2,1.25,.4,1)}
@@ -1292,7 +1307,7 @@ const HDB = (() => {
 })();
 
 /* profile fields worth keeping offline (no keys, no presence — status would be stale) */
-const slimUser = u => { const o = {}; ['name', 'username', 'bio', 'photoURL', 'lastSeen', 'isBusinessAccount', 'paidVerifiedAt'].forEach(k => { if (u && u[k] !== undefined) o[k] = u[k]; }); return o; };
+const slimUser = u => { const o = {}; ['name', 'username', 'bio', 'photoURL', 'lastSeen', 'isBusinessAccount', 'paidVerifiedAt', 'typingFx'].forEach(k => { if (u && u[k] !== undefined) o[k] = u[k]; }); return o; };
 const cacheUser = uid => { if (users[uid] && users[uid].name !== 'Unknown user') HDB.set('u|' + uid, slimUser(users[uid])); };
 async function cachedUser(uid){
   if (users[uid]) return;
@@ -1605,16 +1620,33 @@ async function chatSheet(uid){
 let actx = null, lastPing = 0;
 const audioCtx = () => { if (!actx) { const C = window.AudioContext || window.webkitAudioContext; if (C) actx = new C(); } return actx; };
 ['pointerdown', 'keydown', 'touchend'].forEach(ev => window.addEventListener(ev, () => { const c = audioCtx(); if (c && c.state === 'suspended') c.resume().catch(() => {}); }, { passive: true }));
-function tone(c, f, t0, dur, vol){
+function tone(c, f, t0, dur, vol, type){
   const o = c.createOscillator(), g = c.createGain();
-  o.type = 'sine'; o.frequency.value = f;
+  o.type = type || 'sine'; o.frequency.value = f;
   g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(vol, t0 + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
   o.connect(g); g.connect(c.destination); o.start(t0); o.stop(t0 + dur + 0.05);
 }
+function sweep(c, f0, f1, t0, dur, vol){
+  const o = c.createOscillator(), g = c.createGain();
+  o.type = 'sine'; o.frequency.setValueAtTime(f0, t0); o.frequency.exponentialRampToValueAtTime(f1, t0 + dur * 0.8);
+  g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(vol, t0 + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+  o.connect(g); g.connect(c.destination); o.start(t0); o.stop(t0 + dur + 0.05);
+}
+/* notification sounds: Classic is free, the rest are Haba Premium perks (all synthesized, no audio files) */
+const SND = {
+  classic: { n: 'Classic', free: 1, p: (c, t, v) => { tone(c, 880, t, 0.16, v); tone(c, 1318.5, t + 0.12, 0.26, v); } },
+  crystal: { n: 'Crystal', p: (c, t, v) => [1568, 2093, 2637].forEach((f, i) => tone(c, f, t + i * 0.09, 0.55, v * 0.8)) },
+  harp:    { n: 'Harp', p: (c, t, v) => [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => tone(c, f, t + i * 0.08, 0.4, v, 'triangle')) },
+  marimba: { n: 'Marimba', p: (c, t, v) => [523.25, 659.25, 523.25].forEach((f, i) => { tone(c, f, t + i * 0.11, 0.2, v * 1.2, 'triangle'); tone(c, f * 2, t + i * 0.11, 0.1, v * 0.4); }) },
+  bubble:  { n: 'Bubble', p: (c, t, v) => { sweep(c, 380, 1100, t, 0.14, v); sweep(c, 520, 1500, t + 0.16, 0.12, v); } },
+  aurora:  { n: 'Aurora', p: (c, t, v) => [659.25, 987.77, 1318.5, 1975.5].forEach((f, i) => tone(c, f, t + i * 0.07, 0.8, v * 0.7)) },
+  royal:   { n: 'Royal', p: (c, t, v) => { [523.25, 659.25, 783.99].forEach((f, i) => tone(c, f, t + i * 0.1, 0.22, v, 'triangle')); tone(c, 1046.5, t + 0.32, 0.6, v, 'triangle'); tone(c, 523.25, t + 0.32, 0.6, v * 0.6, 'triangle'); } },
+};
+const sndId = () => { const id = me && skinOK ? localStorage.getItem('hm-snd:' + me.uid) : null; return SND[id] ? id : 'classic'; };
 function msgPing(soft){
   const now = Date.now(); if (now - lastPing < 900) return; lastPing = now;
   if (localStorage.getItem('hm-sound') !== 'off') {
-    try { const c = audioCtx(); if (c && c.state === 'running') { const t = c.currentTime, v = soft ? 0.05 : 0.14; tone(c, 880, t, 0.16, v); tone(c, 1318.5, t + 0.12, 0.26, v); } } catch {}
+    try { const c = audioCtx(); if (c && c.state === 'running') SND[sndId()].p(c, c.currentTime, soft ? 0.05 : 0.14); } catch {}
   }
   if (localStorage.getItem('hm-vib') !== 'off' && navigator.vibrate) { try { navigator.vibrate(soft ? 40 : [70, 50, 70]); } catch {} }
 }
@@ -1754,7 +1786,8 @@ function paintTyping(still){
   paintHeader();
   const box = $('#msgs'); let t = $('#typing-ind');
   const near = box.scrollHeight - box.scrollTop - box.clientHeight < 150;
-  if (otherTyping && !t) { t = document.createElement('div'); t.id = 'typing-ind'; t.className = 'typing' + (still ? ' still' : ''); t.innerHTML = '<i></i><i></i><i></i>'; box.appendChild(t); if (near) box.scrollTop = box.scrollHeight; }
+  if (otherTyping && !t) { const pu = users[activeUid] || {}, fx = (pu.paidVerifiedAt || pu.isBusinessAccount) && TFX[pu.typingFx] ? pu.typingFx : '';   /* effects only show for verified senders */
+    t = document.createElement('div'); t.id = 'typing-ind'; t.className = 'typing' + (fx ? ' fx-' + fx : '') + (still ? ' still' : ''); t.innerHTML = '<i></i><i></i><i></i>'; box.appendChild(t); if (near) box.scrollTop = box.scrollHeight; }
   else if (!otherTyping && t) t.remove();
 }
 function paintTicks(){
@@ -2562,6 +2595,7 @@ function premiumSheet(){
     ${perk('Blue verified badge', 'Shown next to your name in chats, groups and updates')}
     ${perk('Message translation', 'Translate any message into your language')}
     ${perk('Chat themes', 'Pick a colour theme for your chats in Messenger')}
+    ${perk('Premium sounds & typing effects', 'Special notification sounds, and animated typing bubbles your contacts see')}
     ${perk('Feed ranking boost', 'Your posts rank higher on the Haba Feed')}
     ${perk('One account, everywhere', 'Works across Haba Messenger and the Haba app')}
     ${paid ? '<button id="prem-pay" style="background:var(--input);color:var(--text)">Close</button>' : `<button id="prem-pay">Pay R${PREMIUM.price} · ${esc(PREMIUM.note)}</button><div style="text-align:center;color:var(--muted);font-size:12px;margin-top:8px">Permanent badge · Secure payment by Yoco</div>`}`);
@@ -2657,6 +2691,42 @@ async function skinGate(){
   if (!me || me.uid !== uid) return;
   if (known) { skinOK = ok; localStorage.setItem('hm-skinok:' + uid, ok ? '1' : '0'); }
   refreshSkin(); renderSettings();
+}
+const TFX = { wave: 'Wave', neon: 'Neon glow', aurora: 'Aurora', sparkle: 'Sparkle', heart: 'Heartbeat' };
+const tfxId = () => { const id = me && skinOK ? localStorage.getItem('hm-tfx:' + me.uid) : null; return TFX[id] ? id : 'default'; };
+function soundSheet(){
+  if (!skinOK) return premiumSheet();
+  const cur = () => sndId();
+  const ov = modal(`<h3 style="margin:2px 0 2px">Notification sound</h3><div style="color:var(--muted);font-size:13.5px;margin-bottom:6px">A Haba Premium perk. Tap a sound to hear it and use it for new messages.</div>
+    <div style="max-height:52vh;overflow:auto">${Object.entries(SND).map(([id, k]) => `<button class="lng${id === cur() ? ' on' : ''}" data-s="${id}"><span>${k.n}${k.free ? '' : ' <span class="pon">PREMIUM</span>'}</span>${id === cur() ? '<span class="ck">✓</span>' : ''}</button>`).join('')}</div>
+    <button class="btn" id="snd-done" style="margin-top:10px">Done</button>`);
+  ov.querySelector('#snd-done').onclick = closeModal;
+  ov.onclick = e => {
+    const b = e.target.closest('.lng'); if (!b || !me) return;
+    const id = b.dataset.s;
+    localStorage.setItem('hm-snd:' + me.uid, id);
+    ov.querySelectorAll('.lng').forEach(x => { const on = x === b; x.classList.toggle('on', on); const k = x.querySelector('.ck'); if (k) k.remove(); if (on) x.insertAdjacentHTML('beforeend', '<span class="ck">✓</span>'); });
+    const c = audioCtx(); if (c) c.resume().then(() => SND[id].p(c, c.currentTime + 0.02, 0.14)).catch(() => {});
+    if (localStorage.getItem('hm-sound') === 'off') toast('Message sound is off — turn it on to hear alerts');
+    renderSettings();
+  };
+}
+function typingSheet(){
+  if (!skinOK) return premiumSheet();
+  const opts = [['default', 'Classic dots'], ...Object.entries(TFX)];
+  const ov = modal(`<h3 style="margin:2px 0 2px">Typing effect</h3><div style="color:var(--muted);font-size:13.5px;margin-bottom:6px">A Haba Premium perk. This is the animation people see while you type to them.</div>
+    <div style="max-height:52vh;overflow:auto">${opts.map(([id, n]) => `<button class="lng${id === tfxId() ? ' on' : ''}" data-f="${id}"><span>${n}</span><span style="display:flex;align-items:center;gap:10px"><span class="typing${id === 'default' ? '' : ' fx-' + id}" style="margin:0;padding:9px 12px;align-self:auto"><i></i><i></i><i></i></span>${id === tfxId() ? '<span class="ck">✓</span>' : ''}</span></button>`).join('')}</div>
+    <button class="btn" id="tfx-done" style="margin-top:10px">Done</button>`);
+  ov.querySelector('#tfx-done').onclick = closeModal;
+  ov.onclick = e => {
+    const b = e.target.closest('.lng'); if (!b || !me) return;
+    const id = b.dataset.f;
+    if (id === 'default') localStorage.removeItem('hm-tfx:' + me.uid); else localStorage.setItem('hm-tfx:' + me.uid, id);
+    set(ref(db, `users/${me.uid}/typingFx`), id === 'default' ? null : id).catch(e2 => console.error('typing effect not saved', e2));
+    users[me.uid] = { ...(users[me.uid] || {}), typingFx: id === 'default' ? null : id };
+    ov.querySelectorAll('.lng').forEach(x => { const on = x === b; x.classList.toggle('on', on); const k = x.querySelector('.ck'); if (k) k.remove(); if (on) x.lastElementChild.insertAdjacentHTML('beforeend', '<span class="ck">✓</span>'); });
+    renderSettings();
+  };
 }
 function skinSheet(){
   if (!skinOK) return premiumSheet();
@@ -3018,12 +3088,14 @@ function renderSettings(){
     ${row('applock', 'lock', 'App lock', lockSub())}
     ${row('notif', 'bell', 'Notifications', 'Banner for new messages', on('hm-notif'))}
     ${row('nsound', 'bell', 'Message sound', 'Play a tone for new messages', on('hm-sound'))}
+    ${row('sndfx', 'bell', 'Notification sound', skinOK ? SND[sndId()].n + ' · tap to change' : 'Verified accounts only · tap to unlock')}
     ${row('nvib', 'bell', 'Vibration', 'Vibrate for new messages', on('hm-vib'))}
     ${row('sysn', 'bell', 'Background alerts', sysNotifSub())}
     ${row('enter', 'kbd', 'Chats', 'Enter key sends message (desktop)', on('hm-enter'))}
     ${row('size', 'text', 'Text size', curSize()[0].toUpperCase() + curSize().slice(1) + ' · tap to change')}
     ${row('theme', 'palette', 'Appearance', 'Dark mode', dark)}
     ${row('trlang', 'text', 'Message translation', skinOK ? 'Translate to ' + trName(trLang()) + ' · tap to change' : 'Verified accounts only · tap to unlock')}
+    ${row('tfx', 'palette', 'Typing effect', skinOK ? (tfxId() === 'default' ? 'Classic dots' : TFX[tfxId()]) + ' · tap to change' : 'Verified accounts only · tap to unlock')}
     ${row('skin', 'palette', 'Chat theme', skinOK ? SKINS[skinId || 'default'].name + ' · tap to change' : 'Verified accounts only · tap to unlock')}
     ${row('enc', 'key', 'Encryption', enc)}
     ${row('pin', 'shield', 'Backup PIN', pinSub)}
@@ -3098,6 +3170,8 @@ $('#settings').addEventListener('click', e => {
   else if (act === 'phone') changePhone();
   else if (act === 'premium') premiumSheet();
   else if (act === 'trlang') { if (!skinOK) toast('Translation is for verified accounts'); trLangSheet(); }
+  else if (act === 'sndfx') { if (!skinOK) toast('Premium sounds are for verified accounts'); soundSheet(); }
+  else if (act === 'tfx') { if (!skinOK) toast('Typing effects are for verified accounts'); typingSheet(); }
   else if (act === 'skin') { if (!skinOK) toast('Chat themes are for verified accounts'); skinSheet(); }
   else if (act === 'notif') { toast(flip('hm-notif') ? 'Notifications on' : 'Notifications off'); renderSettings(); }
   else if (act === 'nsound') { const v = flip('hm-sound'); toast(v ? 'Message sound on' : 'Message sound off'); if (v) { lastPing = 0; const c = audioCtx(); if (c) c.resume().catch(() => {}); setTimeout(() => msgPing(true), 80); } renderSettings(); }

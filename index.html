@@ -282,6 +282,13 @@ input,textarea{font:inherit;color:inherit}
 .typing::before{width:12px;height:12px;left:-3px;bottom:0}
 .typing::after{width:6px;height:6px;left:-8px;bottom:-4px}
 .typing i{width:8px;height:8px;background:#9A9AA0;animation:tdot 1.3s infinite}
+.b.in{margin-left:34px}.b.out{margin-right:34px}
+.bav{position:absolute;bottom:0;width:28px;height:28px;border-radius:50%;background:var(--input) center/cover no-repeat;pointer-events:none}
+.b.in .bav{left:-34px}.b.out .bav{right:-34px}
+.typing{margin-left:40px}.typing .bav{left:-40px;bottom:0}
+#msgs.noav .b,#gr-msgs.noav .b{margin-left:0;margin-right:0}
+#msgs.noav .typing,#gr-msgs.noav .typing{margin-left:6px}
+#msgs.noav .bav,#gr-msgs.noav .bav{display:none}
 .typing.fx-wave i{background:var(--accent);animation:twave 1s infinite ease-in-out}
 .typing.fx-wave i:nth-child(2){animation-delay:.12s}.typing.fx-wave i:nth-child(3){animation-delay:.24s}
 @keyframes twave{0%,100%{transform:translateY(0) scale(1)}40%{transform:translateY(-8px) scale(1.2)}}
@@ -1820,7 +1827,7 @@ function paintTyping(still){
   const box = $('#msgs'); let t = $('#typing-ind');
   const near = box.scrollHeight - box.scrollTop - box.clientHeight < 150;
   if (otherTyping && !t) { const pu = users[activeUid] || {}, fx = (pu.paidVerifiedAt || pu.isBusinessAccount) && TFX[pu.typingFx] ? pu.typingFx : '';   /* effects only show for verified senders */
-    t = document.createElement('div'); t.id = 'typing-ind'; t.className = 'typing' + (fx ? ' fx-' + fx : '') + (still ? ' still' : ''); t.innerHTML = '<i></i><i></i><i></i>'; box.appendChild(t); if (near) box.scrollTop = box.scrollHeight; }
+    t = document.createElement('div'); t.id = 'typing-ind'; t.className = 'typing' + (fx ? ' fx-' + fx : '') + (still ? ' still' : ''); t.innerHTML = `<i></i><i></i><i></i><span class="bav" style="background-image:url('${cssUrl(uAvatar(activeUid))}')"></span>`; box.appendChild(t); if (near) box.scrollTop = box.scrollHeight; }
   else if (!otherTyping && t) t.remove();
 }
 function paintTicks(){
@@ -1855,14 +1862,18 @@ async function renderMessages(keepScroll){
   if (Object.keys(rawMsgs).length >= msgLimit) html += '<button id="more">Load older messages</button>';
   if (uid === AI_UID) html += `<div class="sys">${AI_NAME} replies come from Haba’s AI service. These chats aren’t end-to-end encrypted.</div>`;
   if (!msgs.length) html += emptyState('hello', 'No messages yet', `Send the first message to ${uName(uid)}.`, iBlocked || theyBlocked ? '' : 'Say hi 👋', 'sayhi');
-  for (const m of msgs) {
+  for (let mi = 0; mi < msgs.length; mi++) {
+    const m = msgs[mi];
     const isNew = !firstLoad && !keepScroll && !renderedKeys.has(m.key) && now - m.createdAt < 10000;
     if (isNew && !m._pend && m.senderUid && m.senderUid !== me.uid) msgPing(true);
     const dk = new Date(m.createdAt).toDateString();
     if (dk !== last) { html += `<div class="day">${esc(dayLabel(m.createdAt))}</div>`; last = dk; }
     if (m.systemText) { html += `<div class="sys">${esc(m.systemText)}</div>`; continue; }
     const out = m.senderUid === me.uid;
-    if (m.deleted) { html += `<div class="b ${out ? 'out' : 'in'} del" data-key="${m.key}"><div class="t">🚫 This message was deleted</div><div class="meta">${fmtTime(m.createdAt)}</div></div>`; continue; }
+    /* profile photo beside the last bubble of each run from the same sender */
+    const nx = msgs[mi + 1], endRun = !(nx && !nx.systemText && nx.senderUid === m.senderUid && new Date(nx.createdAt).toDateString() === dk);
+    const avHTML = endRun ? `<span class="bav" style="background-image:url('${cssUrl(uAvatar(out ? me.uid : uid))}')"></span>` : '';
+    if (m.deleted) { html += `<div class="b ${out ? 'out' : 'in'} del" data-key="${m.key}"><div class="t">🚫 This message was deleted</div><div class="meta">${fmtTime(m.createdAt)}</div>${avHTML}</div>`; continue; }
     let inner = '';
     if (m.replyToMessage) {
       const rm = m.replyToMessage, rt = m._rt || (rm.mediaType === 'music' ? '🎵 Song' : rm.mediaType ? '📎 ' + rm.mediaType : 'Message');
@@ -1884,8 +1895,9 @@ async function renderMessages(keepScroll){
     const rxl = m.reactions && typeof m.reactions === 'object' ? Object.values(m.reactions).filter(x => typeof x === 'string' && x) : [];
     let rxHTML = '';
     if (rxl.length) { const cnt = {}; rxl.forEach(x => cnt[x] = (cnt[x] || 0) + 1); const top = Object.entries(cnt).sort((a, b) => b[1] - a[1]).slice(0, 3).map(x => x[0]).join(''); rxHTML = `<div class="rx${typeof m.reactions[me.uid] === 'string' ? ' mine' : ''}">${esc(top)}${rxl.length > 1 ? ' ' + rxl.length : ''}</div>`; }
-    html += `<div class="b ${out ? 'out' : 'in'}${m.sticker && m.mediaType === 'image' && !m.text ? ' stk' : ''}${m._pend ? ' pending' : ''}${isNew ? ' pop' : ''}${rxl.length ? ' hasrx' : ''}" data-key="${m.key}">${inner}<div class="meta">${m.expiresAt ? '⏱ ' : ''}${m.editedAt ? 'edited · ' : ''}${fmtTime(m.createdAt)} ${ticks}</div>${rxHTML}</div>`;
+    html += `<div class="b ${out ? 'out' : 'in'}${m.sticker && m.mediaType === 'image' && !m.text ? ' stk' : ''}${m._pend ? ' pending' : ''}${isNew ? ' pop' : ''}${rxl.length ? ' hasrx' : ''}" data-key="${m.key}">${inner}<div class="meta">${m.expiresAt ? '⏱ ' : ''}${m.editedAt ? 'edited · ' : ''}${fmtTime(m.createdAt)} ${ticks}</div>${rxHTML}${avHTML}</div>`;
   }
+  box.classList.toggle('noav', localStorage.getItem('hm-bav') === 'off');
   box.innerHTML = html;
   msgs.forEach(m => renderedKeys.add(m.key));
   paintTyping(true);
@@ -3128,6 +3140,7 @@ function renderSettings(){
     ${row('sndfx', 'bell', 'Notification sound', skinOK ? SND[sndId()].n + ' · tap to change' : 'Verified accounts only · tap to unlock')}
     ${row('nvib', 'bell', 'Vibration', 'Vibrate for new messages', on('hm-vib'))}
     ${row('sysn', 'bell', 'Background alerts', sysNotifSub())}
+    ${row('bav', 'user', 'Profile photos on messages', 'Show avatars beside chat bubbles', on('hm-bav'))}
     ${row('enter', 'kbd', 'Chats', 'Enter key sends message (desktop)', on('hm-enter'))}
     ${row('size', 'text', 'Text size', curSize()[0].toUpperCase() + curSize().slice(1) + ' · tap to change')}
     ${row('theme', 'palette', 'Appearance', 'Dark mode', dark)}
@@ -3221,6 +3234,7 @@ $('#settings').addEventListener('click', e => {
     else if (Notification.permission === 'granted') toast('Background alerts are on');
     else Notification.requestPermission().then(() => renderSettings());
   }
+  else if (act === 'bav') { toast(flip('hm-bav') ? 'Profile photos shown on messages' : 'Profile photos hidden'); renderSettings(); if (activeUid) renderMessages(true); if ($('#gr-msgs')) grPaint(false); }
   else if (act === 'enter') { toast(flip('hm-enter') ? 'Enter sends messages' : 'Enter adds a new line'); renderSettings(); }
   else if (act === 'size') { const o = Object.keys(SIZES); localStorage.setItem('hm-size', o[(o.indexOf(curSize()) + 1) % o.length]); applyTextSize(); renderSettings(); }
   else if (act === 'blocked') blockedList();
@@ -4231,13 +4245,16 @@ function grPaint(forceBottom){
   const near = sc.scrollHeight - sc.scrollTop - sc.clientHeight < 140;
   if (!grMsgs.length) { box.innerHTML = emptyState('hello', 'No messages yet', 'Be the first to say something to the group.'); return; }
   let h = '', day = '', prev = '';
-  grMsgs.forEach(m => {
+  grMsgs.forEach((m, gi) => {
     const mine = m.authorUid === me.uid, ts = m.createdAt || Date.now(), dk = new Date(ts).toDateString();
     if (dk !== day) { day = dk; prev = ''; h += `<div class="day">${esc(grDay(ts))}</div>`; }
     const name = !mine && prev !== m.authorUid ? `<div class="gname" style="color:hsl(${grHue(m.authorUid)},62%,52%)">${esc(uName(m.authorUid))}</div>` : '';
     prev = m.authorUid;
-    h += `<div class="b ${mine ? 'out' : 'in'}">${name}<div class="t">${linkify(esc(m.text))}</div><div class="meta">${esc(fmtTime(ts))}</div></div>`;
+    const gx = grMsgs[gi + 1], gEnd = !(gx && gx.authorUid === m.authorUid && new Date(gx.createdAt || Date.now()).toDateString() === dk);
+    const gav = gEnd ? `<span class="bav" style="background-image:url('${cssUrl(uAvatar(m.authorUid))}')"></span>` : '';
+    h += `<div class="b ${mine ? 'out' : 'in'}">${name}<div class="t">${linkify(esc(m.text))}</div><div class="meta">${esc(fmtTime(ts))}</div>${gav}</div>`;
   });
+  box.classList.toggle('noav', localStorage.getItem('hm-bav') === 'off');
   box.innerHTML = h;
   if (forceBottom && (near || sc.scrollTop === 0)) sc.scrollTop = sc.scrollHeight;
 }

@@ -509,6 +509,14 @@ body.pg-chat #bnav{display:none}
 #ch-bar .note{flex:1;color:var(--muted);font-size:13.5px;min-width:0}
 #ch-bar .ch-fbtn{padding:11px 28px;font-size:15px}
 #ch-bar.one{justify-content:center}
+#ch-bar.own{align-items:flex-end;gap:6px;padding:8px 10px calc(8px + var(--sab))}
+#ch-bar.own textarea{flex:1;resize:none;max-height:130px;min-height:42px;padding:11px 16px;border-radius:22px;border:none;background:var(--input);outline:none;line-height:1.3}
+#ch-bar.own .icon:disabled,#ch-bar.own textarea:disabled{opacity:.5}
+#ch-bar.own #ch-send{background:var(--primary);color:var(--inverse)}
+.ch-avedit{position:relative;width:88px;height:88px;margin:0 auto 10px;cursor:pointer}
+.ch-avedit .pgav{margin:0}
+.ch-avedit i{position:absolute;right:-2px;bottom:-2px;width:28px;height:28px;border-radius:50%;background:var(--primary);color:var(--inverse);display:flex;align-items:center;justify-content:center;border:2px solid var(--surface)}
+.ch-avedit i svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
 #ch-bar.one .ch-fbtn{flex:1;max-width:340px}
 .ch-emp{align-self:center;margin:24px 20px;padding:14px 18px;border-radius:12px;background:var(--ch-card);color:var(--ch-sub);text-align:center;font-size:14px;box-shadow:0 1px 1.5px rgba(11,20,26,.14)}
 :root[data-theme="dark"] #ch-bar,:root[data-theme="dark"] #pages .bar{background:#000}
@@ -4149,6 +4157,7 @@ let pgQ = '', pgRx = {}, pgPostList = [], pgViewId = null;
 function pgMoreMenu(){
   const p = pgAll[pgCur]; if (!p) return;
   const own = p.ownerUid === me.uid, r = $('#pg-more').getBoundingClientRect(), items = [];
+  if (own) items.push(['Edit channel / photo', pgEditSheet]);
   if (!own) items.push([pgFollow.has(p.id) ? 'Unfollow' : 'Follow', () => pgToggleFollow(p.id), pgFollow.has(p.id)]);
   if (!own && p.ownerUid) items.push(['Message owner', () => goChat(p.ownerUid)]);
   items.push(['Share Channel', () => pgShare(p)]);
@@ -4197,7 +4206,27 @@ async function renderPages(load){
 }
 function pgBar(p){
   const own = p.ownerUid === me.uid, bar = $('#ch-bar'); if (!bar) return;
-  if (own) { bar.className = 'one'; bar.innerHTML = '<button class="ch-fbtn solid" data-act="post">Add update</button>'; }
+  if (own) {
+    if (bar.querySelector('#ch-in')) return;   // keep what the owner is typing when the page re-renders
+    bar.className = 'own';
+    bar.innerHTML = `<input type="file" id="ch-file" accept="image/*" class="hidden"><button class="icon" id="ch-attach" title="Add photo"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg></button><textarea id="ch-in" rows="1" maxlength="500" placeholder="Post an update" autocomplete="off"></textarea><button class="icon" id="ch-send" title="Post"><svg viewBox="0 0 24 24"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4Z"/></svg></button>`;
+    const ta = bar.querySelector('#ch-in'), fi = bar.querySelector('#ch-file'), sb = bar.querySelector('#ch-send');
+    let photo = null;
+    const grow = () => { ta.style.height = 'auto'; ta.style.height = Math.min(ta.scrollHeight, 130) + 'px'; };
+    const clear = () => { ta.value = ''; photo = null; bar.querySelector('#ch-attach').style.color = ''; grow(); };
+    const go = async () => {
+      const text = ta.value.trim(); if (!text && !photo) return;
+      ta.disabled = sb.disabled = true;
+      const ok = await pgSend(p.id, text, photo);
+      ta.disabled = sb.disabled = false;
+      if (ok) clear(); ta.focus();
+    };
+    ta.addEventListener('input', grow);
+    ta.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey && !/Mobi|Android/i.test(navigator.userAgent)) { e.preventDefault(); go(); } });
+    sb.onclick = go;
+    bar.querySelector('#ch-attach').onclick = () => fi.click();
+    fi.onchange = () => { const f = fi.files[0]; fi.value = ''; if (!f) return; photo = f; bar.querySelector('#ch-attach').style.color = 'var(--accent)'; toast('Photo added'); ta.focus(); };
+  }
   else if (pgFollow.has(p.id)) { bar.className = ''; bar.innerHTML = `<span class="note">You’re following ${esc(p.name)}</span><button class="ch-fbtn on" data-fol>Following</button>`; }
   else { bar.className = 'one'; bar.innerHTML = '<button class="ch-fbtn solid" data-fol>Follow</button>'; }
 }
@@ -4246,18 +4275,71 @@ async function pgToggleFollow(id){
   try { await update(ref(db), { [`channelFollowers/${id}/${me.uid}`]: was ? null : true, [`userFollowedChannels/${me.uid}/${id}`]: was ? null : true, [`channels/${id}/followerCount`]: increment(was ? -1 : 1) }); }
   catch { was ? pgFollow.add(id) : pgFollow.delete(id); p.followerCount = Math.max(0, (p.followerCount || 0) + (was ? 1 : -1)); renderPages(); toast('Couldn’t update follow'); }
 }
+const PG_CAM = '<svg viewBox="0 0 24 24"><path d="M3 8a2 2 0 0 1 2-2h2l1.5-2h7L17 6h2a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><circle cx="12" cy="13" r="3.5"/></svg>';
+async function pgUploadAvatar(id, blob){
+  const snap = await uploadBytes(sRef(storage, `channel_photos/${id}/${Date.now()}.jpg`), blob, { contentType: 'image/jpeg' });
+  return getDownloadURL(snap.ref);
+}
+function pgEditSheet(){
+  const id = pgCur, p = pgAll[id]; if (!p || p.ownerUid !== me.uid) return;
+  const ov = modal(`<h3>Edit channel</h3><div class="ch-avedit" id="ce-av">${pgAv(p, 88)}<i>${PG_CAM}</i></div><input type="file" id="ce-file" accept="image/*" class="hidden">
+    <input class="field" id="ce-name" maxlength="60" placeholder="Channel name" value="${esc(p.name || '')}"><textarea class="field" id="ce-about" maxlength="300" rows="3" placeholder="About (optional)" style="border-radius:22px;resize:none">${esc(p.about || '')}</textarea>
+    <div class="err" id="ce-err"></div><button class="btn" id="ce-save">Save</button><button class="btn ghost" id="ce-x" style="margin-top:8px">Cancel</button>`);
+  let pending = null; const fi = ov.querySelector('#ce-file');
+  ov.querySelector('#ce-av').onclick = () => fi.click();
+  fi.onchange = async () => {
+    const f = fi.files[0]; fi.value = ''; if (!f) return;
+    try { pending = await prepSquare(f); ov.querySelector('#ce-av .pgav').style.cssText += `;background:url('${URL.createObjectURL(pending)}') center/cover no-repeat`; ov.querySelector('#ce-av .pgav').textContent = ''; }
+    catch { ov.querySelector('#ce-err').textContent = 'That image couldn’t be read.'; }
+  };
+  ov.querySelector('#ce-x').onclick = closeModal;
+  ov.querySelector('#ce-save').onclick = async () => {
+    const name = ov.querySelector('#ce-name').value.trim(), about = ov.querySelector('#ce-about').value.trim(), err = ov.querySelector('#ce-err'), b = ov.querySelector('#ce-save');
+    if (name.length < 2) { err.textContent = 'Give your Channel a name.'; return; }
+    b.disabled = true; b.textContent = 'Saving…'; err.textContent = '';
+    try {
+      const up = { name, about };
+      if (pending) up.avatarURL = await pgUploadAvatar(id, pending);
+      await update(ref(db, `channels/${id}`), up);
+      Object.assign(pgAll[id], up); closeModal(); toast('Channel updated'); pgViewId = null; renderPages();
+    } catch (e) { console.error(e); b.disabled = false; b.textContent = 'Save'; err.textContent = 'Couldn’t save. Check your database / storage rules.'; }
+  };
+}
 function pgCreate(){
-  const ov = modal(`<h3>Create a Channel</h3><input class="field" id="pc-name" placeholder="Channel name" maxlength="60"><select class="field" id="pc-cat">${PG_CATS.map(c => `<option>${esc(c)}</option>`).join('')}</select><input class="field" id="pc-about" placeholder="About (optional)" maxlength="300"><button class="btn" id="pc-go">Create</button>`);
+  const ov = modal(`<h3>Create a Channel</h3><div class="ch-avedit" id="pc-av"><div class="pgav" style="width:88px;height:88px;background:var(--input);color:var(--muted)"></div><i>${PG_CAM}</i></div><input type="file" id="pc-file" accept="image/*" class="hidden"><input class="field" id="pc-name" placeholder="Channel name" maxlength="60"><select class="field" id="pc-cat">${PG_CATS.map(c => `<option>${esc(c)}</option>`).join('')}</select><input class="field" id="pc-about" placeholder="About (optional)" maxlength="300"><button class="btn" id="pc-go">Create</button>`);
+  let pcPhoto = null; const pcf = ov.querySelector('#pc-file');
+  ov.querySelector('#pc-av').onclick = () => pcf.click();
+  pcf.onchange = async () => {
+    const f = pcf.files[0]; pcf.value = ''; if (!f) return;
+    try { pcPhoto = await prepSquare(f); ov.querySelector('#pc-av .pgav').style.background = `url('${URL.createObjectURL(pcPhoto)}') center/cover no-repeat`; } catch { toast('That image couldn’t be read'); }
+  };
   ov.querySelector('#pc-go').onclick = async () => {
     const name = ov.querySelector('#pc-name').value.trim(); if (name.length < 2) return toast('Give your Channel a name');
     const data = { name, category: ov.querySelector('#pc-cat').value, about: ov.querySelector('#pc-about').value.trim(), website: '', location: '', avatarURL: '', coverURL: '' };
     const b = ov.querySelector('#pc-go'); b.disabled = true;
     try {
       const id = push(ref(db, 'channels')).key;
+      if (pcPhoto) data.avatarURL = await pgUploadAvatar(id, pcPhoto);
       await update(ref(db), { [`channels/${id}`]: { ownerUid: me.uid, createdAt: serverTimestamp(), followerCount: 0, postCount: 0, ...data }, [`userChannels/${me.uid}/${id}`]: true });
       pgAll[id] = { id, ownerUid: me.uid, createdAt: Date.now(), followerCount: 0, postCount: 0, ...data }; pgMine.add(id); closeModal(); toast('Channel created'); pgCur = id; renderPages();
     } catch { b.disabled = false; toast('Couldn’t create Channel'); }
   };
+}
+async function pgSend(id, text, photo){
+  const c = pgAll[id]; if (!c || c.ownerUid !== me.uid) { toast('Only the Channel admin can post'); return false; }
+  try {
+    const k = push(ref(db, `channelPosts/${id}`)).key; let mediaURL = '', mediaType = '';
+    if (photo) {
+      const f = await prepImage(photo);
+      const snap = await uploadBytes(sRef(storage, `channel_media/${id}/${Date.now()}.jpg`), f, { contentType: 'image/jpeg' });
+      mediaURL = await getDownloadURL(snap.ref); mediaType = 'image';
+    }
+    const prev = (text || '📷 Photo').slice(0, 120);
+    await update(ref(db), { [`channelPosts/${id}/${k}`]: { text, mediaURL, mediaType, authorUid: me.uid, createdAt: serverTimestamp() }, [`channels/${id}/postCount`]: increment(1), [`channels/${id}/lastPostText`]: prev, [`channels/${id}/lastPostAt`]: serverTimestamp() });
+    c.postCount = (c.postCount || 0) + 1; c.lastPostText = prev; c.lastPostAt = Date.now(); pgMarkSeen(id, c.postCount);
+    if (pgCur === id) { pgViewId = id; await renderPageView(); }
+    return true;
+  } catch (e) { console.error(e); toast('Couldn’t post'); return false; }
 }
 function pgPost(){
   const id = pgCur;
@@ -4833,7 +4915,7 @@ function startFreshSheet(retry){
 
 /* mobile keyboard: keep the composer above the keyboard */
 if (window.visualViewport) {
-  const fit = () => { const h = window.visualViewport.height; $('#app').style.height = h + 'px'; $('#main').style.height = h + 'px'; $('#groups').style.height = h + 'px'; $('#groups').style.top = window.visualViewport.offsetTop + 'px'; if (matchMedia('(max-width:760px)').matches) { $('#main').style.top = window.visualViewport.offsetTop + 'px'; } };
+  const fit = () => { const h = window.visualViewport.height; $('#app').style.height = h + 'px'; $('#main').style.height = h + 'px'; $('#groups').style.height = h + 'px'; $('#groups').style.top = window.visualViewport.offsetTop + 'px'; $('#pages').style.height = h + 'px'; $('#pages').style.top = window.visualViewport.offsetTop + 'px'; if (matchMedia('(max-width:760px)').matches) { $('#main').style.top = window.visualViewport.offsetTop + 'px'; } };
   window.visualViewport.addEventListener('resize', fit); window.visualViewport.addEventListener('scroll', fit);
   input.addEventListener('focus', () => setTimeout(() => { const b = $('#msgs'); b.scrollTop = b.scrollHeight; }, 300));
 }

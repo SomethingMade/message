@@ -678,17 +678,23 @@ select.field{appearance:none}
 #sv-bot{position:absolute;left:0;right:0;bottom:0;padding:10px 16px calc(12px + var(--sab));display:flex;justify-content:center;gap:14px;z-index:7}
 #sv-bot .pill2{background:rgba(0,0,0,.45);color:#fff;border-radius:22px;padding:0 16px;height:40px;display:flex;align-items:center;gap:8px;font-weight:600}
 #sv-bot .pill2 svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-#sv-ad{position:absolute;left:12px;right:12px;bottom:calc(60px + var(--sab));z-index:8;display:flex;align-items:center;gap:10px;padding:10px;border-radius:18px;background:rgba(255,255,255,.13);-webkit-backdrop-filter:blur(16px) saturate(1.4);backdrop-filter:blur(16px) saturate(1.4);border:1px solid rgba(255,255,255,.2);color:#fff;cursor:pointer;text-shadow:0 1px 3px rgba(0,0,0,.45);animation:adin .35s ease both}
+#sv-ad{position:absolute;left:12px;right:12px;bottom:calc(60px + var(--sab));z-index:8;display:flex;align-items:stretch;min-height:84px;border-radius:18px;background:rgba(38,38,40,.74);-webkit-backdrop-filter:blur(18px) saturate(1.3);backdrop-filter:blur(18px) saturate(1.3);color:#fff;cursor:pointer;box-shadow:0 8px 28px rgba(0,0,0,.35);animation:adin .35s ease both}
 @keyframes adin{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
-#sv-ad .ad-th{width:46px;height:46px;border-radius:12px;background:rgba(255,255,255,.16) center/cover no-repeat;flex-shrink:0}
-#sv-ad .ad-mid{flex:1;min-width:0}
-#sv-ad .ad-tag{display:block;font-size:10px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;opacity:.8}
-#sv-ad b{display:block;font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-#sv-ad small{display:block;font-size:12.5px;opacity:.88;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-#sv-ad .ad-cta{flex-shrink:0;padding:8px 14px;border-radius:20px;background:rgba(255,255,255,.92);color:#111;font-weight:700;font-size:13px;text-shadow:none}
-#sv-ad .ad-x{position:absolute;top:-9px;right:-3px;width:22px;height:22px;border-radius:50%;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;text-shadow:none}
-#sv-ad .ad-x svg{width:12px;height:12px;fill:none;stroke:#fff;stroke-width:2.6;stroke-linecap:round}
-#sv.has-ad #sv-cap{bottom:calc(62px + var(--sab) + 84px)}
+#sv-ad .ad-th{width:92px;flex-shrink:0;border-radius:18px 0 0 18px;background:#fff center/cover no-repeat;display:flex;align-items:center;justify-content:center;color:#111;font-weight:800;font-size:22px}
+#sv-ad .ad-body{flex:1;min-width:0;padding:11px 40px 10px 13px;display:flex;flex-direction:column;justify-content:center;gap:5px}
+#sv-ad .ad-t{font-size:14.5px;font-weight:700;line-height:1.25;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+#sv-ad .ad-meta{display:flex;align-items:center;gap:5px;font-size:12.5px;font-weight:600;color:rgba(255,255,255,.7);min-width:0}
+#sv-ad .ad-n{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+#sv-ad .ad-meta svg{width:13px;height:13px;flex-shrink:0}
+#sv-ad .ad-tag{flex-shrink:0;margin-left:2px;padding:1px 6px;border-radius:5px;border:1px solid rgba(255,255,255,.45);font-size:10.5px;font-weight:800;letter-spacing:.4px;color:rgba(255,255,255,.85)}
+#sv-ad .ad-x,#sv-ad .ad-m{position:absolute;right:6px;width:30px;height:30px;display:flex;align-items:center;justify-content:center;border-radius:50%}
+#sv-ad .ad-x{top:5px}#sv-ad .ad-m{bottom:5px}
+#sv-ad .ad-x svg{width:15px;height:15px;fill:none;stroke:#fff;stroke-width:2.4;stroke-linecap:round}
+#sv-ad .ad-m svg{width:17px;height:17px;fill:#fff}
+#sv-ad .ad-menu{position:absolute;right:6px;bottom:calc(100% + 8px);min-width:190px;padding:6px;border-radius:14px;background:rgba(38,38,40,.96);box-shadow:0 8px 28px rgba(0,0,0,.45)}
+#sv-ad .ad-menu button{display:block;width:100%;text-align:left;padding:11px 12px;border-radius:9px;background:none;border:0;color:#fff;font:600 14px/1.2 inherit}
+#sv-ad .ad-menu button:active{background:rgba(255,255,255,.12)}
+#sv.has-ad #sv-cap{bottom:calc(62px + var(--sab) + 100px)}
 #sv-rx{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(66px + var(--sab));z-index:9;display:flex;gap:4px;padding:6px 8px;border-radius:30px;background:rgba(30,30,30,.92);box-shadow:0 6px 24px rgba(0,0,0,.5)}
 #sv-rx button{font-size:26px;width:44px;height:44px;border-radius:50%;line-height:1}#sv-rx button.on{background:rgba(255,255,255,.2)}
 #sv-like span{font-size:21px;line-height:1}
@@ -3908,14 +3914,14 @@ async function loadHabaAds(){
 function svAdHide(){ clearTimeout(svAdT); const el = $('#sv-ad'); if (el) el.classList.add('hidden'); $('#sv').classList.remove('has-ad'); }
 function svAdMaybe(uid){
   svAdHide();
-  if (!me || uid === me.uid || !habaAds.length) return;
+  if (!me || !habaAds.length) return;   /* shows on your own statuses too, like everyone else's */
   svAdGap++;
-  if (svAdGap < 2 || Math.random() > 0.45) return;
+  if (svAdGap < 2) return;   /* first status, then every other one */
   const pool = habaAds.length > 1 ? habaAds.filter(a => a.id !== svAdLast) : habaAds, ad = pool[Math.floor(Math.random() * pool.length)];
   const media = adSafe(ad.imageUrl || (ad.imageUrls && ad.imageUrls[0]) || ad.videoThumbnail || ad.photoURL || '');
-  const el = $('#sv-ad');
-  el.innerHTML = `<div class="ad-th"${media ? ` style="background-image:url('${cssUrl(media)}')"` : ''}></div><div class="ad-mid"><span class="ad-tag">Sponsored</span><b>${esc(ad.adTitle || ad.name || 'Sponsored')}</b>${ad.text ? `<small>${esc(ad.text)}</small>` : ''}</div><span class="ad-cta">${esc(ad.adCta || 'Learn more')}</span><span class="ad-x" data-x="1" role="button" aria-label="Hide ad"><svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></span>`;
-  el.dataset.url = adSafe(ad.adUrl); el.classList.remove('hidden'); $('#sv').classList.add('has-ad');
+  const el = $('#sv-ad'), who = ad.userName || ad.name || ad.adTitle || 'Sponsored', head = ad.adTitle || ad.text || who, auid = ad.userId || ad.uid || ad.authorId || '';
+  el.innerHTML = `<div class="ad-th"${media ? ` style="background-image:url('${cssUrl(media)}')"` : ''}>${media ? '' : esc(String(who).charAt(0).toUpperCase())}</div><div class="ad-body"><b class="ad-t">${esc(head)}</b><div class="ad-meta"><span class="ad-n">${esc(who)}</span>${auid ? vbadge(auid) : ''}<span class="ad-tag">Ad</span></div></div><span class="ad-x" data-x="1" role="button" aria-label="Hide ad"><svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></span><span class="ad-m" data-m="1" role="button" aria-label="Ad options"><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg></span>`;
+  el.dataset.url = adSafe(ad.adUrl); el.dataset.who = who; el.classList.remove('hidden'); $('#sv').classList.add('has-ad');
   svAdGap = 0; svAdLast = ad.id;
   const cur = sv.items[sv.i];
   svAdT = setTimeout(() => {   /* count a view once, after 1s on screen, the same way Haba does */
@@ -3926,9 +3932,18 @@ function svAdMaybe(uid){
 }
 $('#sv-ad').addEventListener('click', e => {
   e.stopPropagation();
-  if (e.target.closest('[data-x]')) return svAdHide();
-  const u = $('#sv-ad').dataset.url; if (u) window.open(u, '_blank', 'noopener,noreferrer');
+  const el = $('#sv-ad'), menu = el.querySelector('.ad-menu');
+  if (e.target.closest('[data-x]') || e.target.closest('[data-hide]')) return svAdHide();
+  if (e.target.closest('[data-why]')) { if (menu) menu.remove(); return toast('Sponsored by ' + (el.dataset.who || 'an advertiser') + '. Ads help keep Haba free.'); }
+  if (e.target.closest('[data-m]')) {
+    if (menu) return menu.remove();
+    el.insertAdjacentHTML('beforeend', '<div class="ad-menu"><button data-hide="1">Hide this ad</button><button data-why="1">Why am I seeing this?</button></div>');
+    return;
+  }
+  if (menu) return menu.remove();
+  const u = el.dataset.url; if (u) window.open(u, '_blank', 'noopener,noreferrer');
 });
+
 function openStoryFor(uid){
   loadHabaAds();
   const others = Object.keys(stories).filter(u => u !== me.uid && liveStories(u).length);

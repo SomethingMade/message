@@ -451,7 +451,7 @@ input,textarea{-webkit-user-select:text;user-select:text;-webkit-touch-callout:d
 #pages{position:fixed;inset:0;z-index:72;background:var(--bg);display:flex;flex-direction:column}
 @media(min-width:761px){#pages{right:auto;width:380px;border-right:1px solid var(--border)}}
 #pg-body{flex:1;overflow-y:auto;padding-bottom:calc(var(--nav-h) + 16px)}
-/* ---------- Pages = WhatsApp-Channels style ---------- */
+/* ---------- Channels ---------- */
 :root{--ch-wall:#EFEAE2;--ch-green:var(--primary);--ch-green-d:var(--primary);--ch-card:#fff;--ch-text:#111B21;--ch-sub:#667781;--ch-pill:#fff;--ch-pill-b:rgba(0,0,0,.06);
 --ch-doodle:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160' viewBox='0 0 160 160' fill='none' stroke='%23000' stroke-opacity='.055' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='24' cy='26' r='9'/%3E%3Cpath d='M70 20l4 9 10 1-8 7 3 10-9-6-9 6 3-10-8-7 10-1z'/%3E%3Cpath d='M118 24c8-10 22-2 14 8l-14 14-14-14c-8-10 6-18 14-8z'/%3E%3Cpath d='M20 84q8-12 16 0t16 0'/%3E%3Crect x='78' y='72' width='24' height='18' rx='5'/%3E%3Cpath d='M126 74l16 16M142 74l-16 16'/%3E%3Cpath d='M30 132l10-16 10 16z'/%3E%3Ccircle cx='86' cy='130' r='3'/%3E%3Ccircle cx='100' cy='122' r='3'/%3E%3Cpath d='M122 124h20M122 134h14'/%3E%3C/svg%3E")}
 :root[data-theme="dark"]{--ch-wall:#0B141A;--ch-card:#202C33;--ch-text:#E9EDEF;--ch-sub:#8696A0;--ch-pill:#202C33;--ch-pill-b:rgba(255,255,255,.07);
@@ -473,6 +473,7 @@ body.pg-chat #bnav{display:none}
 .ch-row{display:flex;gap:12px;align-items:center;padding:10px 16px;cursor:pointer}
 .ch-row:hover{background:var(--alt)}
 .ch-row .mid{flex:1;min-width:0}
+.ch-row .udot{width:10px;height:10px;border-radius:50%;background:var(--accent);flex-shrink:0}
 .ch-row .mid b{display:flex;align-items:center;font-weight:600;font-size:16px}
 .ch-row .mid b .nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ch-row .mid span{display:block;color:var(--muted);font-size:13px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -513,6 +514,22 @@ body.pg-chat #bnav{display:none}
 :root[data-theme="dark"] #ch-bar,:root[data-theme="dark"] #pages .bar{background:#000}
 
 #pg-tabs{display:flex;gap:8px;padding:10px 14px}
+.chhero{margin:4px 14px 6px;padding:16px 18px;border-radius:18px;background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 24%,transparent),color-mix(in srgb,var(--accent) 6%,transparent))}
+.chhero h3{margin:0 0 4px;font-size:18px;font-weight:800}
+.chhero p{margin:0;color:var(--muted);font-size:13.5px;line-height:1.4}
+.cchips{display:flex;gap:8px;padding:8px 14px 4px;overflow-x:auto;scrollbar-width:none}.cchips::-webkit-scrollbar{display:none}
+.cchip{flex-shrink:0;padding:7px 14px;border-radius:50px;background:var(--input);color:var(--text);font-weight:600;font-size:13px}
+.cchip.on{background:var(--ch-green);color:var(--inverse)}
+.chc{display:flex;gap:12px;align-items:center;margin:8px 12px;padding:14px;border-radius:18px;background:var(--alt);cursor:pointer}
+.chc:active{opacity:.85}
+.chc .mid{flex:1;min-width:0}
+.chc b{display:flex;align-items:center;font-size:16px;font-weight:700}
+.chc b .nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chc .cat{display:inline-block;margin-top:4px;padding:2px 9px;border-radius:50px;background:var(--input);color:var(--muted);font-size:11.5px;font-weight:600}
+.chc p{margin:6px 0 0;font-size:13.5px;line-height:1.38;opacity:.88;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word}
+.chc small{display:block;margin-top:6px;color:var(--muted);font-size:12.5px}
+.chc.cta{background:transparent;border:1.5px dashed var(--border)}
+.ci .prev span.un{color:var(--text);font-weight:600}
 .pgav{border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;flex-shrink:0;background-size:cover;background-position:center}
 .pgrow{display:flex;gap:12px;align-items:center;padding:10px 16px;cursor:pointer}
 .pgrow:hover{background:var(--alt)}
@@ -827,7 +844,7 @@ body.gr-chat #bnav{display:none}
   <nav id="bnav">
     <button data-tab="chats" class="on"><span class="pl"><svg viewBox="0 0 24 24"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 8.6 8.6 0 0 1-3.6-.8L3 21l1.9-5.4A8.4 8.4 0 1 1 21 11.5Z"/></svg><span class="nb hidden" id="nb-chats"></span></span>Chats</button>
     <button data-tab="updates"><span class="pl"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" stroke-dasharray="3.2 3"/><circle cx="12" cy="12" r="3.6"/></svg><span class="nd hidden" id="nd-upd"></span></span>Updates</button>
-    <button data-tab="pages"><span class="pl"><svg viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8Z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></svg></span>Pages</button>
+    <button data-tab="pages"><span class="pl"><svg viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8Z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></svg><span class="nd hidden" id="nd-pg"></span></span>Channels</button>
     <button data-tab="settings"><span class="pl"><i class="nav-av" id="nav-av"></i></span>You</button>
   </nav>
 </div>
@@ -878,7 +895,7 @@ body.gr-chat #bnav{display:none}
 <div id="rx-root"></div>
 <div id="msheet" class="hidden"><div class="sheet"><div style="width:40px;height:4px;border-radius:2px;background:var(--border);margin:0 auto 12px"></div><div style="position:relative"><svg viewBox="0 0 24 24" style="position:absolute;left:14px;top:13px;width:20px;height:20px;stroke:var(--muted);fill:none;stroke-width:2;stroke-linecap:round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input class="field" id="mq" placeholder="Search songs" autocomplete="off" style="padding-left:44px"></div><div id="mtabs"><button class="pill on" data-t="sug">Suggested</button><button class="pill" data-t="mood">Mood</button><button class="pill" data-t="genre">Genre</button><button class="pill" data-t="star">Starred</button></div><div id="msub" class="hidden"></div><div id="mres"></div><button class="btn ghost" id="mclear" style="margin-top:8px">No music</button></div></div>
 <div id="groups" class="hidden"><div class="bar"><button class="icon hidden" id="gr-back" title="Back"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button><div class="grow" id="gr-head" style="min-width:0"><div id="gr-title" style="font-weight:800;font-size:20px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Groups</div><div id="gr-sub" class="hidden" style="font-size:12px;color:var(--muted)"></div></div><button class="icon hidden" id="gr-info" title="Group info"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 16v-4M12 8h.01"/></svg></button><button class="icon" id="gr-new" title="Create group"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button></div><div id="gr-tabs"><button class="pill on" data-t="mine">Your Groups</button><button class="pill" data-t="discover">Discover</button></div><div id="gr-body"></div><div id="gr-composer" class="hidden"><textarea id="gr-input" rows="1" maxlength="2000" placeholder="Message" autocomplete="off"></textarea><button class="icon" id="gr-send" title="Send"><svg viewBox="0 0 24 24"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4Z"/></svg></button></div></div>
-<div id="pages" class="hidden"><div class="bar"><button class="icon hidden" id="pg-back" title="Back"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button><div class="grow" id="pg-title" style="font-weight:800;font-size:20px">Pages</div><button class="icon" id="pg-new" title="Create Page"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button><button class="icon hidden" id="pg-more" title="More"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="12" cy="19" r="1.2"/></svg></button></div><div id="pg-tabs"><button class="pill on" data-t="discover">Discover</button><button class="pill" data-t="mine">Your Pages</button></div><div id="pg-search"><input id="pg-q" type="search" placeholder="Search Pages" autocomplete="off"></div><div id="pg-body"></div></div>
+<div id="pages" class="hidden"><div class="bar"><button class="icon hidden" id="pg-back" title="Back"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button><div class="grow" id="pg-title" style="font-weight:800;font-size:20px">Channels</div><button class="icon" id="pg-new" title="Create channel"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button><button class="icon hidden" id="pg-more" title="More"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="12" cy="19" r="1.2"/></svg></button></div><div id="pg-tabs"><button class="pill on" data-t="fol">Following</button><button class="pill" data-t="discover">Explore</button><button class="pill" data-t="mine">Yours</button></div><div id="pg-search"><input id="pg-q" type="search" placeholder="Search channels" autocomplete="off"></div><div id="pg-body"></div></div>
 <div id="contacts" class="hidden"><div class="bar"><button class="icon" id="ct-back" title="Back"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button><div class="grow"><div style="font-weight:700;font-size:17px">Select contact</div><div id="ct-count" style="font-size:12px;color:var(--muted)"></div></div><button class="icon" id="ct-searchbtn" title="Search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg></button></div><div class="searchwrap hidden" id="ct-sw"><input id="ct-q" placeholder="Search contacts" autocomplete="off"></div><div id="ct-list"></div></div>
 <div id="settings" class="hidden"></div>
 <div id="mcap" class="hidden"><div class="mc-top"><button class="icon" id="mc-x" title="Cancel"><svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button><div id="mc-name"></div></div><div id="mc-stage"></div><div class="mc-bar"><textarea id="mc-cap" rows="1" maxlength="1000" placeholder="Add a caption…" autocomplete="off"></textarea><button class="icon" id="mc-send" title="Send"><svg viewBox="0 0 24 24"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4Z"/></svg></button></div></div>
@@ -1264,7 +1281,7 @@ onAuthStateChanged(auth, async user => {
   startPresence();
   obInit(); premiumReturn();
   startChatList(); seedAI();
-  startStories();
+  startStories(); pgDotStart();
   if (keyState === 'locked') promptUnlock(true);
   else if (keyState === 'ready' && freshKey) { freshKey = false; promptCreatePin(); }   // brand-new account: offer a backup PIN right away
 });
@@ -3244,7 +3261,7 @@ function emptyState(kind, title, text, cta, act){
 }
 document.addEventListener('click', e => {
   const b = e.target.closest('[data-es]'); if (!b) return; const a = b.dataset.es;
-  if (a === 'newchat') openNewChat(); else if (a === 'status') openTextComposer(); else if (a === 'page') pgCreate(); else if (a === 'group') grCreate(); else if (a === 'contact') addContactModal(); else if (a === 'post') pgPost(); else if (a === 'sayhi') { if (activeUid && !input.value.trim()) { input.value = '👋'; sendText(); } }
+  if (a === 'newchat') openNewChat(); else if (a === 'status') openTextComposer(); else if (a === 'page') pgCreate(); else if (a === 'chexplore') { pgTab = 'discover'; pgTabChosen = true; renderPages(); } else if (a === 'group') grCreate(); else if (a === 'contact') addContactModal(); else if (a === 'post') pgPost(); else if (a === 'sayhi') { if (activeUid && !input.value.trim()) { input.value = '👋'; sendText(); } }
 });
 const flip = k => { const v = localStorage.getItem(k) !== 'off'; localStorage.setItem(k, v ? 'off' : 'on'); return !v; };
 $('#settings').addEventListener('click', e => {
@@ -3448,6 +3465,7 @@ function startStories(){
   storiesUnsub = () => off(q, 'value', cb);
 }
 function stopStories(){
+  pgDotStop();
   if (storiesUnsub) { storiesUnsub(); storiesUnsub = null; }
   Object.values(storyWatch).forEach(f => f()); Object.keys(storyWatch).forEach(k => delete storyWatch[k]);
   Object.keys(stories).forEach(k => delete stories[k]); storyAuthors = {};
@@ -4050,10 +4068,50 @@ $('#sv-more').onclick = e => {
   mo.observe(m, { attributes: true, attributeFilter: ['class'] });
 };
 
-/* =============== PAGES (same data model as Haba: pages, pagePosts, pageFollowers, userFollowedPages, userPages) =============== */
-let pagesHist = false, pgTab = 'discover', pgCur = null, pgAll = {}, pgFollow = new Set(), pgMine = new Set(), pgPosts = null;
+/* ---- unread dot + counts for Channels: a followed Channel has new posts since you last opened it ---- */
+const pgSeenKey = () => 'hm-pg-seen:' + (me ? me.uid : '');
+const pgCounts = {}, pgDotW = {}; let pgFolUnsub = null;
+const pgSeenMap = () => { try { return JSON.parse(localStorage.getItem(pgSeenKey()) || '{}') || {}; } catch { return {}; } };
+const pgUnreadN = id => { const n = pgCounts[id]; if (n == null) return 0; const m = pgSeenMap(); return m[id] != null && n > m[id] ? n - m[id] : 0; };
+const pgUnread = id => pgUnreadN(id) > 0;
+function pgSyncDot(){
+  const pagesOpen = !$('#pages').classList.contains('hidden');
+  $('#nd-pg').classList.toggle('hidden', pagesOpen || !Object.keys(pgCounts).some(pgUnread));
+}
+function pgMarkSeen(id, n){
+  const cnt = n != null ? n : (pgCounts[id] != null ? pgCounts[id] : (pgAll[id] && pgAll[id].postCount) || 0), m = pgSeenMap();
+  if (m[id] !== cnt) { m[id] = cnt; try { localStorage.setItem(pgSeenKey(), JSON.stringify(m)); } catch {} }
+  pgSyncDot();
+}
+function pgDotStart(){
+  pgDotStop();
+  const fr = ref(db, `userFollowedChannels/${me.uid}`);
+  const fcb = onValue(fr, snap => {
+    const ids = new Set(Object.keys(snap.val() || {}));
+    Object.keys(pgDotW).forEach(id => { if (!ids.has(id)) { pgDotW[id](); delete pgDotW[id]; delete pgCounts[id]; } });
+    ids.forEach(id => {
+      if (pgDotW[id]) return;
+      const r = ref(db, `channels/${id}/postCount`);
+      const cb = onValue(r, s => {
+        const n = +s.val() || 0; pgCounts[id] = n;
+        const m = pgSeenMap(); if (m[id] == null) { m[id] = n; try { localStorage.setItem(pgSeenKey(), JSON.stringify(m)); } catch {} }   /* first sight: older posts don't count as new */
+        pgSyncDot(); if (!$('#pages').classList.contains('hidden') && !pgCur) renderPages();
+      }, () => {});
+      pgDotW[id] = () => off(r, 'value', cb);
+    });
+    pgSyncDot();
+  }, () => {});
+  pgFolUnsub = () => off(fr, 'value', fcb);
+}
+function pgDotStop(){
+  if (pgFolUnsub) { pgFolUnsub(); pgFolUnsub = null; }
+  Object.values(pgDotW).forEach(f => f()); Object.keys(pgDotW).forEach(k => delete pgDotW[k]); Object.keys(pgCounts).forEach(k => delete pgCounts[k]);
+  const d = $('#nd-pg'); if (d) d.classList.add('hidden');
+}
+/* =============== PAGES (same data model as Haba: pages, channelPosts, channelFollowers, userFollowedChannels, userChannels) =============== */
+let pagesHist = false, pgTab = 'fol', pgTabChosen = false, pgCat = 'all', pgCur = null, pgAll = {}, pgFollow = new Set(), pgMine = new Set(), pgPosts = null;
 const PG_CATS = ['Business','Brand','Creator','Community','Local business','Education','Entertainment','Food & drink','News & media','Non-profit','Sports','Tech','Other'];
-function hidePages(){ $('#pages').classList.add('hidden'); $('#pages').classList.remove('chan'); document.body.classList.remove('pg-chat'); }
+function hidePages(){ $('#pages').classList.add('hidden'); $('#pages').classList.remove('chan'); document.body.classList.remove('pg-chat'); pgSyncDot(); }
 function closePages(){ hidePages(); if (pagesHist) { pagesHist = false; skipPop = true; history.back(); } }
 function pgAv(p, sz){
   const u = /^https:\/\//i.test(p.avatarURL || '') ? p.avatarURL : '', n = p.name || '?';
@@ -4066,18 +4124,19 @@ const pgFc = n => { n = +n || 0; return n + (n === 1 ? ' follower' : ' followers
 async function openPages(){
   $('#pages').classList.remove('hidden');
   if (!pagesHist) { history.pushState({ hmPages: 1 }, ''); pagesHist = true; }
-  pgCur = null; pgViewId = null; renderPages(true);
+  pgCur = null; pgViewId = null; pgTabChosen = false; renderPages(true);
 }
 async function pgLoad(){
   try {
     const [all, mine, fol] = await Promise.all([
-      get(query(ref(db, 'pages'), orderByChild('createdAt'), limitToLast(100))),
-      get(ref(db, `userPages/${me.uid}`)), get(ref(db, `userFollowedPages/${me.uid}`))]);
+      get(query(ref(db, 'channels'), orderByChild('createdAt'), limitToLast(100))),
+      get(ref(db, `userChannels/${me.uid}`)), get(ref(db, `userFollowedChannels/${me.uid}`))]);
     pgAll = {}; all.forEach(c => { pgAll[c.key] = { id: c.key, ...c.val() }; });
     pgMine = new Set(Object.keys(mine.val() || {})); pgFollow = new Set(Object.keys(fol.val() || {}));
-    for (const id of [...pgMine, ...pgFollow]) if (!pgAll[id]) { const s = await get(ref(db, `pages/${id}`)); if (s.exists()) pgAll[id] = { id, ...s.val() }; }
-    /* a Page shows the verified badge only when its owner's account is verified, so make sure every owner's profile is loaded */
+    for (const id of [...pgMine, ...pgFollow]) if (!pgAll[id]) { const s = await get(ref(db, `channels/${id}`)); if (s.exists()) pgAll[id] = { id, ...s.val() }; }
+    /* a Channel shows the verified badge only when its owner's account is verified, so make sure every owner's profile is loaded */
     await Promise.all([...new Set(Object.values(pgAll).map(p => p.ownerUid).filter(Boolean))].map(loadUser));
+    if (!pgTabChosen) pgTab = pgFollow.size ? 'fol' : 'discover';
     return true;
   } catch { return false; }
 }
@@ -4092,7 +4151,7 @@ function pgMoreMenu(){
   const own = p.ownerUid === me.uid, r = $('#pg-more').getBoundingClientRect(), items = [];
   if (!own) items.push([pgFollow.has(p.id) ? 'Unfollow' : 'Follow', () => pgToggleFollow(p.id), pgFollow.has(p.id)]);
   if (!own && p.ownerUid) items.push(['Message owner', () => goChat(p.ownerUid)]);
-  items.push(['Share Page', () => pgShare(p)]);
+  items.push(['Share Channel', () => pgShare(p)]);
   showMenu(r.right - 190, r.bottom + 6, items);
 }
 async function pgShare(p, text){
@@ -4100,30 +4159,40 @@ async function pgShare(p, text){
   try { if (navigator.share) { await navigator.share({ title: p.name, text: t }); return; } await navigator.clipboard.writeText(t); toast('Copied'); } catch {}
 }
 async function renderPages(load){
+  pgSyncDot();
   const body = $('#pg-body'), cur = pgCur && pgAll[pgCur], root = $('#pages');
   const chan = !!pgCur;
   root.classList.toggle('chan', chan); document.body.classList.toggle('pg-chat', chan);
   $('#pg-back').classList.toggle('hidden', !pgCur); $('#pg-tabs').classList.toggle('hidden', chan); $('#pg-new').classList.toggle('hidden', chan);
   $('#pg-more').classList.toggle('hidden', !chan); $('#pg-search').classList.toggle('hidden', chan);
-  if (cur) $('#pg-title').innerHTML = `<div class="ch-hd" data-top>${pgAv(cur, 40)}<div class="t"><b><span class="nm">${esc(cur.name || 'Page')}</span>${pgBadge(cur)}</b><small>${esc(pgFollowers(cur.followerCount))}</small></div></div>`;
-  else $('#pg-title').textContent = 'Pages';
-  if (load) { body.innerHTML = '<div class="spin"></div>'; if (!await pgLoad()) { body.innerHTML = '<div class="empty">Couldn’t load Pages.</div>'; return; } }
+  if (cur) $('#pg-title').innerHTML = `<div class="ch-hd" data-top>${pgAv(cur, 40)}<div class="t"><b><span class="nm">${esc(cur.name || 'Channel')}</span>${pgBadge(cur)}</b><small>${esc(pgFollowers(cur.followerCount))}</small></div></div>`;
+  else $('#pg-title').textContent = 'Channels';
+  if (load) { body.innerHTML = '<div class="spin"></div>'; if (!await pgLoad()) { body.innerHTML = '<div class="empty">Couldn’t load Channels.</div>'; return; } }
   if (!$('#pages') || $('#pages').classList.contains('hidden')) return;
-  if (pgCur) { if (pgViewId === pgCur && !load && $('#pg-posts')) { const p = pgAll[pgCur], mt = document.querySelector('.ch-info .meta'); if (mt) mt.textContent = `${p.category || 'Page'} · ${pgFollowers(p.followerCount)} · ${p.postCount || 0} ${(p.postCount || 0) === 1 ? 'post' : 'posts'}`; pgBar(p); return; } pgViewId = pgCur; return renderPageView(); }
+  if (pgCur) { if (pgViewId === pgCur && !load && $('#pg-posts')) { const p = pgAll[pgCur], mt = document.querySelector('.ch-info .meta'); if (mt) mt.textContent = `${p.category || 'Channel'} · ${pgFollowers(p.followerCount)} · ${p.postCount || 0} ${(p.postCount || 0) === 1 ? 'post' : 'posts'}`; pgBar(p); return; } pgViewId = pgCur; return renderPageView(); }
   document.querySelectorAll('#pg-tabs .pill').forEach(b => b.classList.toggle('on', b.dataset.t === pgTab));
-  const row = (p, mine) => `<div class="ch-row" data-pid="${esc(p.id)}">${pgAv(p, 52)}<div class="mid"><b><span class="nm">${esc(p.name)}</span>${pgBadge(p)}</b><span>${esc(pgFollowers(p.followerCount))} · ${esc(p.category || 'Page')}</span></div>${mine ? '<button class="ch-fbtn on" data-open>Manage</button>' : `<button class="ch-fbtn${pgFollow.has(p.id) ? ' on' : ''}" data-fol>${pgFollow.has(p.id) ? 'Following' : 'Follow'}</button>`}</div>`;
   const q = pgQ.trim().toLowerCase(), hit = p => !q || (p.name || '').toLowerCase().includes(q) || (p.category || '').toLowerCase().includes(q) || (p.about || '').toLowerCase().includes(q);
-  const all = Object.values(pgAll).filter(hit);
-  if (pgTab === 'discover') {
-    const l = all.filter(p => !pgMine.has(p.id)).sort((a, b) => (b.followerCount || 0) - (a.followerCount || 0) || (b.createdAt || 0) - (a.createdAt || 0));
-    body.innerHTML = l.length ? `<div class="ch-sec">Find Pages to follow<small>${l.length}</small></div>` + l.map(p => row(p)).join('') : (q ? '<div class="empty">No Pages match your search.</div>' : emptyState('pages', 'No Pages to discover yet', 'Be the first to create a Page for your business, brand or community.', 'Create a Page', 'page'));
+  const all = Object.values(pgAll).filter(hit), nm = p => `<b><span class="nm">${esc(p.name)}</span>${pgBadge(p)}</b>`;
+  const stat = p => `${pgFollowers(p.followerCount)} · ${p.postCount || 0} ${(p.postCount || 0) === 1 ? 'post' : 'posts'}`;
+  /* Following: chat-style rows, latest post + time + unread count */
+  const folRow = p => { const n = pgUnreadN(p.id), last = p.lastPostAt || p.createdAt || 0;
+    return `<div class="ci" data-pid="${esc(p.id)}">${pgAv(p, 52)}<div class="mid"><div class="top">${nm(p)}<span class="time">${last ? fmtListTime(last) : ''}</span></div><div class="prev"><span${n ? ' class="un"' : ''}>${esc(p.lastPostText || p.about || 'No posts yet')}</span>${n ? `<div class="badge">${n > 99 ? '99+' : n}</div>` : ''}</div></div></div>`; };
+  /* Explore / Yours: cards */
+  const card = (p, mine) => `<div class="chc" data-pid="${esc(p.id)}">${pgAv(p, 56)}<div class="mid">${nm(p)}<span class="cat">${esc(p.category || 'Channel')}</span>${p.about ? `<p>${esc(p.about)}</p>` : ''}<small>${esc(mine ? stat(p) : pgFollowers(p.followerCount))}</small></div>${mine ? '<button class="ch-fbtn on" data-open>Manage</button>' : `<button class="ch-fbtn${pgFollow.has(p.id) ? ' on' : ''}" data-fol>${pgFollow.has(p.id) ? 'Following' : 'Follow'}</button>`}</div>`;
+  if (pgTab === 'fol') {
+    const f = all.filter(p => pgFollow.has(p.id) && !pgMine.has(p.id)).sort((x, y) => (y.lastPostAt || y.createdAt || 0) - (x.lastPostAt || x.createdAt || 0));
+    body.innerHTML = f.length ? f.map(folRow).join('') : (q ? '<div class="empty">No channels match your search.</div>' : emptyState('pages', 'You’re not following any channels', 'Follow channels from brands, creators and communities to get their updates here.', 'Explore channels', 'chexplore'));
+  } else if (pgTab === 'discover') {
+    const cats = ['all', ...new Set(Object.values(pgAll).filter(p => !pgMine.has(p.id)).map(p => p.category).filter(Boolean))];
+    if (!cats.includes(pgCat)) pgCat = 'all';
+    const l = all.filter(p => !pgMine.has(p.id) && (pgCat === 'all' || p.category === pgCat)).sort((x, y) => (y.followerCount || 0) - (x.followerCount || 0) || (y.createdAt || 0) - (x.createdAt || 0));
+    body.innerHTML = `<div class="chhero"><h3>Find channels to follow</h3><p>Brands, creators and communities share their updates here. Follow a channel to get new posts.</p></div>`
+      + `<div class="cchips">${cats.map(c => `<button class="cchip${c === pgCat ? ' on' : ''}" data-cat="${esc(c)}">${c === 'all' ? 'All' : esc(c)}</button>`).join('')}</div>`
+      + (l.length ? l.map(p => card(p)).join('') : (q || pgCat !== 'all' ? '<div class="empty">No channels match.</div>' : emptyState('pages', 'No channels to explore yet', 'Be the first to create a channel for your business, brand or community.', 'Create a channel', 'page')));
   } else {
-    const m = all.filter(p => pgMine.has(p.id)), f = all.filter(p => pgFollow.has(p.id) && !pgMine.has(p.id));
-    let h = '<div class="ch-row" data-act="create"><div class="pgav" style="width:52px;height:52px;background:var(--ch-green);color:var(--inverse)"><svg viewBox="0 0 24 24" width="24" height="24" style="stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round"><path d="M12 5v14M5 12h14"/></svg></div><div class="mid"><b>Create a Page</b><span>For your business, brand or community</span></div></div>';
-    if (m.length) h += '<div class="ch-sec">Pages you manage</div>' + m.map(p => row(p, true)).join('');
-    if (f.length) h += '<div class="ch-sec">Following</div>' + f.map(p => row(p)).join('');
-    if (!m.length && !f.length) h += emptyState('pages', q ? 'No Pages match your search' : 'No Pages yet', q ? '' : 'Pages you create or follow show up here.');
-    body.innerHTML = h;
+    const m = all.filter(p => pgMine.has(p.id)).sort((x, y) => (y.createdAt || 0) - (x.createdAt || 0));
+    body.innerHTML = `<div class="chc cta" data-act="create"><div class="pgav" style="width:56px;height:56px;background:var(--ch-green);color:var(--inverse)"><svg viewBox="0 0 24 24" width="26" height="26" style="stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round"><path d="M12 5v14M5 12h14"/></svg></div><div class="mid"><b>Create a channel</b><small>Broadcast updates to your followers</small></div></div>`
+      + (m.length ? '<div class="ch-sec">Channels you manage</div>' + m.map(p => card(p, true)).join('') : '');
   }
 }
 function pgBar(p){
@@ -4144,20 +4213,21 @@ function pgPostHTML(x, p, dayKey){
 async function renderPageView(){
   const p = pgAll[pgCur], body = $('#pg-body'), own = p.ownerUid === me.uid;
   const site = /^https?:\/\//i.test(p.website || '') ? `<p><a href="${esc(p.website)}" target="_blank" rel="noopener noreferrer nofollow">${esc(p.website.replace(/^https?:\/\//i, ''))}</a></p>` : '';
-  body.innerHTML = `<div class="ch-info">${pgAv(p, 88)}<h2><span>${esc(p.name)}</span>${pgBadge(p)}</h2><div class="meta">${esc(p.category || 'Page')} · ${esc(pgFollowers(p.followerCount))} · ${p.postCount || 0} ${(p.postCount || 0) === 1 ? 'post' : 'posts'}</div>${p.about ? `<p>${pgLink(p.about)}</p>` : ''}${site}${p.location ? `<p>📍 ${esc(p.location)}</p>` : ''}</div><div id="pg-posts"><div class="spin"></div></div><div id="ch-bar"></div>`;
+  body.innerHTML = `<div class="ch-info">${pgAv(p, 88)}<h2><span>${esc(p.name)}</span>${pgBadge(p)}</h2><div class="meta">${esc(p.category || 'Channel')} · ${esc(pgFollowers(p.followerCount))} · ${p.postCount || 0} ${(p.postCount || 0) === 1 ? 'post' : 'posts'}</div>${p.about ? `<p>${pgLink(p.about)}</p>` : ''}${site}${p.location ? `<p>📍 ${esc(p.location)}</p>` : ''}</div><div id="pg-posts"><div class="spin"></div></div><div id="ch-bar"></div>`;
   pgBar(p);
   const id = pgCur;
   try {
-    const s = await get(query(ref(db, `pagePosts/${id}`), limitToLast(50))), l = []; s.forEach(c => { l.push({ id: c.key, ...c.val() }); });
+    const s = await get(query(ref(db, `channelPosts/${id}`), limitToLast(50))), l = []; s.forEach(c => { l.push({ id: c.key, ...c.val() }); });
     if (pgCur !== id) return;
     pgPostList = l;   // oldest → newest, like a channel feed
+    pgMarkSeen(id);
     let h = '', last = '';
     l.forEach(x => {
       const d = x.createdAt ? new Date(x.createdAt) : null, key = d ? d.toDateString() : '';
       if (key && key !== last) { last = key; const t = new Date(), y = new Date(Date.now() - 864e5); h += `<div class="ch-date">${key === t.toDateString() ? 'Today' : key === y.toDateString() ? 'Yesterday' : d.toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' })}</div>`; }
       h += pgPostHTML(x, p);
     });
-    $('#pg-posts').innerHTML = h || `<div class="ch-emp">${own ? 'Share your first update with your followers.' : 'This Page hasn’t posted anything yet.'}</div>`;
+    $('#pg-posts').innerHTML = h || `<div class="ch-emp">${own ? 'Share your first update with your followers.' : 'This Channel hasn’t posted anything yet.'}</div>`;
     const bd = $('#pg-body'); bd.scrollTop = bd.scrollHeight;
   } catch { if (pgCur === id) $('#pg-posts').innerHTML = '<div class="ch-emp">Couldn’t load posts.</div>'; }
 }
@@ -4167,49 +4237,50 @@ async function pgReact(k, e){
   PG_RX.forEach(x => delete mine[x]); if (!was) mine[e] = 1;     // one reaction per person, tap again to remove
   const x = pgPostList.find(q => q.id === k), el = document.querySelector(`.ch-post[data-k="${CSS.escape(k)}"]`);
   if (x && el) el.outerHTML = pgPostHTML(x, pgAll[id]);
-  try { await update(ref(db), { [`pagePostReactions/${id}/${k}/${me.uid}`]: was ? null : e }); } catch {}   // best-effort; stays local if rules don't allow it yet
+  try { await update(ref(db), { [`channelPostReactions/${id}/${k}/${me.uid}`]: was ? null : e }); } catch {}   // best-effort; stays local if rules don't allow it yet
 }
 async function pgToggleFollow(id){
   const p = pgAll[id]; if (!p || p.ownerUid === me.uid) return;
   const was = pgFollow.has(id);
   was ? pgFollow.delete(id) : pgFollow.add(id); p.followerCount = Math.max(0, (p.followerCount || 0) + (was ? -1 : 1)); renderPages();
-  try { await update(ref(db), { [`pageFollowers/${id}/${me.uid}`]: was ? null : true, [`userFollowedPages/${me.uid}/${id}`]: was ? null : true, [`pages/${id}/followerCount`]: increment(was ? -1 : 1) }); }
+  try { await update(ref(db), { [`channelFollowers/${id}/${me.uid}`]: was ? null : true, [`userFollowedChannels/${me.uid}/${id}`]: was ? null : true, [`channels/${id}/followerCount`]: increment(was ? -1 : 1) }); }
   catch { was ? pgFollow.add(id) : pgFollow.delete(id); p.followerCount = Math.max(0, (p.followerCount || 0) + (was ? 1 : -1)); renderPages(); toast('Couldn’t update follow'); }
 }
 function pgCreate(){
-  const ov = modal(`<h3>Create a Page</h3><input class="field" id="pc-name" placeholder="Page name" maxlength="60"><select class="field" id="pc-cat">${PG_CATS.map(c => `<option>${esc(c)}</option>`).join('')}</select><input class="field" id="pc-about" placeholder="About (optional)" maxlength="300"><button class="btn" id="pc-go">Create</button>`);
+  const ov = modal(`<h3>Create a Channel</h3><input class="field" id="pc-name" placeholder="Channel name" maxlength="60"><select class="field" id="pc-cat">${PG_CATS.map(c => `<option>${esc(c)}</option>`).join('')}</select><input class="field" id="pc-about" placeholder="About (optional)" maxlength="300"><button class="btn" id="pc-go">Create</button>`);
   ov.querySelector('#pc-go').onclick = async () => {
-    const name = ov.querySelector('#pc-name').value.trim(); if (name.length < 2) return toast('Give your Page a name');
+    const name = ov.querySelector('#pc-name').value.trim(); if (name.length < 2) return toast('Give your Channel a name');
     const data = { name, category: ov.querySelector('#pc-cat').value, about: ov.querySelector('#pc-about').value.trim(), website: '', location: '', avatarURL: '', coverURL: '' };
     const b = ov.querySelector('#pc-go'); b.disabled = true;
     try {
-      const id = push(ref(db, 'pages')).key;
-      await update(ref(db), { [`pages/${id}`]: { ownerUid: me.uid, createdAt: serverTimestamp(), followerCount: 0, postCount: 0, ...data }, [`userPages/${me.uid}/${id}`]: true });
-      pgAll[id] = { id, ownerUid: me.uid, createdAt: Date.now(), followerCount: 0, postCount: 0, ...data }; pgMine.add(id); closeModal(); toast('Page created'); pgCur = id; renderPages();
-    } catch { b.disabled = false; toast('Couldn’t create Page'); }
+      const id = push(ref(db, 'channels')).key;
+      await update(ref(db), { [`channels/${id}`]: { ownerUid: me.uid, createdAt: serverTimestamp(), followerCount: 0, postCount: 0, ...data }, [`userChannels/${me.uid}/${id}`]: true });
+      pgAll[id] = { id, ownerUid: me.uid, createdAt: Date.now(), followerCount: 0, postCount: 0, ...data }; pgMine.add(id); closeModal(); toast('Channel created'); pgCur = id; renderPages();
+    } catch { b.disabled = false; toast('Couldn’t create Channel'); }
   };
 }
 function pgPost(){
   const id = pgCur;
-  if (!id || !pgAll[id] || pgAll[id].ownerUid !== me.uid) { toast('Only the Page admin can post'); return; }   // owner = admin
+  if (!id || !pgAll[id] || pgAll[id].ownerUid !== me.uid) { toast('Only the Channel admin can post'); return; }   // owner = admin
   const ov = modal(`<h3>New post</h3><textarea class="field" id="pp-text" rows="4" maxlength="500" placeholder="What’s new?" style="border-radius:18px;resize:none"></textarea><button class="btn" id="pp-go">Post</button>`);
   ov.querySelector('#pp-go').onclick = async () => {
     const text = ov.querySelector('#pp-text').value.trim(); if (!text) return;
     if (!pgAll[id] || pgAll[id].ownerUid !== me.uid) return;
     ov.querySelector('#pp-go').disabled = true;
     try {
-      const k = push(ref(db, `pagePosts/${id}`)).key;
-      await update(ref(db), { [`pagePosts/${id}/${k}`]: { text, mediaURL: '', mediaType: '', authorUid: me.uid, createdAt: serverTimestamp() }, [`pages/${id}/postCount`]: increment(1) });
-      pgAll[id].postCount = (pgAll[id].postCount || 0) + 1; closeModal(); toast('Posted'); if (pgCur === id) { pgViewId = id; renderPageView(); }
+      const k = push(ref(db, `channelPosts/${id}`)).key;
+      await update(ref(db), { [`channelPosts/${id}/${k}`]: { text, mediaURL: '', mediaType: '', authorUid: me.uid, createdAt: serverTimestamp() }, [`channels/${id}/postCount`]: increment(1), [`channels/${id}/lastPostText`]: text.slice(0, 120), [`channels/${id}/lastPostAt`]: serverTimestamp() });
+      pgAll[id].postCount = (pgAll[id].postCount || 0) + 1; pgAll[id].lastPostText = text.slice(0, 120); pgAll[id].lastPostAt = Date.now(); pgMarkSeen(id, pgAll[id].postCount); closeModal(); toast('Posted'); if (pgCur === id) { pgViewId = id; renderPageView(); }
     } catch { ov.querySelector('#pp-go').disabled = false; toast('Couldn’t post'); }
   };
 }
 $('#pg-back').onclick = () => { pgCur = null; pgViewId = null; renderPages(); };
 $('#pg-new').onclick = pgCreate;
 $('#pg-more').onclick = e => { e.stopPropagation(); pgMoreMenu(); };
-$('#pg-tabs').onclick = e => { const b = e.target.closest('.pill'); if (b) { pgTab = b.dataset.t; renderPages(); } };
+$('#pg-tabs').onclick = e => { const b = e.target.closest('.pill'); if (b) { pgTab = b.dataset.t; pgTabChosen = true; renderPages(); } };
 $('#pg-q').oninput = e => { pgQ = e.target.value; if (!pgCur) renderPages(); };
 $('#pg-body').addEventListener('click', e => {
+  const cc = e.target.closest('[data-cat]'); if (cc) { pgCat = cc.dataset.cat; return renderPages(); }
   if (e.target.closest('[data-fol]')) { const r = e.target.closest('[data-pid]'); return pgToggleFollow(r ? r.dataset.pid : pgCur); }
   const rx = e.target.closest('[data-rx]'); if (rx) return pgReact(rx.closest('.ch-post').dataset.k, rx.dataset.rx);
   const add = e.target.closest('[data-rxadd]');
@@ -4217,7 +4288,7 @@ $('#pg-body').addEventListener('click', e => {
   const fw = e.target.closest('[data-fwd]'); if (fw) { const x = pgPostList.find(q => q.id === fw.closest('.ch-post').dataset.k); return pgShare(pgAll[pgCur], x && x.text); }
   const a = e.target.closest('[data-act]');
   if (a) { if (a.dataset.act === 'create') return pgCreate(); if (a.dataset.act === 'post') return pgPost(); if (a.dataset.act === 'msg') { const o = pgAll[pgCur].ownerUid; if (o) goChat(o); return; } }
-  const r = e.target.closest('.ch-row[data-pid]'); if (r) { pgCur = r.dataset.pid; $('#pg-body').scrollTop = 0; renderPages(); }
+  const r = e.target.closest('[data-pid]'); if (r) { pgCur = r.dataset.pid; $('#pg-body').scrollTop = 0; renderPages(); }
 });
 $('#pg-title').addEventListener('click', e => { if (e.target.closest('[data-top]')) $('#pg-body').scrollTo({ top: 0, behavior: 'smooth' }); });
 

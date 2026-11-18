@@ -64,6 +64,10 @@ input,textarea{font:inherit;color:inherit}
 .ci:hover,.ci.active{background:var(--alt)}
 .av{width:48px;height:48px;border-radius:50%;background:#000 center/cover no-repeat;flex-shrink:0;position:relative}
 .av.sm{width:40px;height:40px}
+.tmr{position:absolute;right:-4px;bottom:-4px;width:21px;height:21px;border-radius:50%;background:var(--surface);border:2px solid var(--surface);display:flex;align-items:center;justify-content:center;color:#8696A0;z-index:3;box-sizing:content-box}
+.tmr svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.av.hastmr .dot{bottom:auto;top:0}
+.av .stg{position:absolute;left:-5px;top:-5px;width:58px;height:58px;pointer-events:none;z-index:1}
 .dot{position:absolute;right:0;bottom:0;width:12px;height:12px;border-radius:50%;background:#34C759;border:2px solid var(--surface)}
 .ci .mid{flex:1;min-width:0}
 .ci .top{display:flex;justify-content:space-between;gap:8px}
@@ -1183,7 +1187,7 @@ let me = null;
 const users = {};          // uid -> profile
 const chats = {};          // uid -> user_chats meta
 const previews = {};       // uid -> decrypted preview text
-const typingMap = {}, typingWatch = {};   // uid -> is typing to me / listener unsubs
+const typingMap = {}, typingWatch = {}, disMap = {}, disWatch = {};   // uid -> is typing to me / listener unsubs
 let chatsUnsub = null;
 let activeUid = null, threadId = null, msgLimit = PAGE, rawMsgs = {};
 let threadUnsubs = [], openSeq = 0;   // openSeq changes on every open/close, so a late callback from an older chat can tell it is stale
@@ -1286,7 +1290,7 @@ function teardown(){
   if (chatsUnsub) { chatsUnsub(); chatsUnsub = null; }
   closeThread(true);
   Object.keys(chats).forEach(k => delete chats[k]); Object.keys(previews).forEach(k => delete previews[k]);
-  Object.values(typingWatch).forEach(f => f()); Object.keys(typingWatch).forEach(k => delete typingWatch[k]); Object.keys(typingMap).forEach(k => delete typingMap[k]);
+  Object.values(typingWatch).forEach(f => f()); Object.keys(typingWatch).forEach(k => delete typingWatch[k]); Object.keys(typingMap).forEach(k => delete typingMap[k]); Object.values(disWatch).forEach(f => f()); Object.keys(disWatch).forEach(k => delete disWatch[k]); Object.keys(disMap).forEach(k => delete disMap[k]);
   chatsLoaded = false; hideNotif(); hideSettings(); hideContacts(); hidePages(); hideGroups(); hideStory(); hideUpdates(); stopStories(); cancelAllUploads();
   kp = null; Object.keys(shared).forEach(k => delete shared[k]); decCache.clear();
   HDB.clear(); Object.keys(users).forEach(k => delete users[k]); userFresh.clear(); avObj.clear(); avTry.clear();
@@ -1528,6 +1532,12 @@ function startChatList(){
       const tcb = onValue(tr, s => { const v = !!s.val(); if (typingMap[uid] !== v) { typingMap[uid] = v; renderChatList(); } });
       typingWatch[uid] = () => off(tr, 'value', tcb);
     });
+    uids.forEach(uid => {   /* disappearing-messages timer per chat, so the list can show the timer badge on the avatar */
+      if (uid === AI_UID || disWatch[uid]) return;
+      const dr = ref(db, `dm_threads/${threadIdFor(me.uid, uid)}/settings/disappearingSeconds`);
+      const dcb = onValue(dr, s => { const v = s.val() || 0; if (disMap[uid] !== v) { disMap[uid] = v; renderChatList(); } }, () => {});
+      disWatch[uid] = () => off(dr, 'value', dcb);
+    });
     Promise.all(uids.map(loadUser)).then(renderChatList);
     uids.forEach(async uid => {
       const t = chats[uid].text;
@@ -1547,6 +1557,7 @@ function fmtListTime(ts){
   return d.toLocaleDateString([], { day: 'numeric', month: 'short' });
 }
 let chatFilter = 'all';
+const TMR_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9.2" stroke-dasharray="2.3 2.5"/><path d="M12 7.2V12l3.2 2"/></svg>';
 function renderChatList(){
   const q = $('#filter').value.trim().toLowerCase();
   const list = Object.entries(chats).filter(([uid]) => !q || uName(uid).toLowerCase().includes(q) || (users[uid]?.username || '').toLowerCase().includes(q))
@@ -1566,8 +1577,10 @@ function renderChatList(){
     const own = c.senderUid === me.uid;
     const online = users[uid]?.status === 'online';
     const pv = previews[uid] ?? (isE2E(c.text) ? '…' : c.text || '');
+    if (storyAuthors[uid]) watchAuthor(uid);   /* load their live statuses so the avatar can show a status ring */
+    const sf = uid === AI_UID ? [] : liveStories(uid).map(storySeen);
     return `<div class="ci ${uid === activeUid ? 'active' : ''}" data-uid="${esc(uid)}">
-      <div class="av" style="background-image:url('${cssUrl(uAvatar(uid))}')">${online ? '<span class="dot"></span>' : ''}</div>
+      <div class="av${disMap[uid] > 0 ? ' hastmr' : ''}${sf.length ? ' hasst' : ''}" style="background-image:url('${cssUrl(uAvatar(uid))}')">${sf.length ? ringSvg(sf).replace('<svg ', '<svg class="stg" ') : ''}${online ? '<span class="dot"></span>' : ''}${disMap[uid] > 0 ? `<span class="tmr" title="Disappearing messages: ${esc(fmtTimer(disMap[uid]))}">${TMR_SVG}</span>` : ''}</div>
       <div class="mid"><div class="top"><span class="name">${esc(uid === me.uid ? 'My Account' : uName(uid))}${vbadge(uid)}</span><span class="time">${c.pinned ? '📌 ' : ''}${fmtListTime(c.timestamp)}</span></div>
       <div class="prev">${typingMap[uid] ? '<span class="tp">typing…</span>' : `<span>${own ? 'You: ' : ''}${esc(pv)}</span>`}${c.unreadCount > 0 ? `<div class="badge">${c.unreadCount > 99 ? '99+' : c.unreadCount}</div>` : ''}</div></div></div>`;
   }).join('');
@@ -1603,6 +1616,7 @@ $('#chatlist').addEventListener('click', e => {
   const ci = e.target.closest('.ci'); if (!ci) return;
   if (ci.dataset.gact) { if (ci.dataset.gact === 'new') return grCreate(); grTab = 'discover'; grFromChats = false; return openGroups(); }
   if (ci.dataset.gid) return openGroupFromChats(ci.dataset.gid);
+  if (e.target.closest('.av.hasst')) return openStoryFor(ci.dataset.uid);   // avatar with a status ring → watch it
   if (e.target.closest('.av')) return showProfile(ci.dataset.uid);   // avatar → profile sheet
   openThread(ci.dataset.uid);
 });
@@ -3429,7 +3443,7 @@ function startStories(){
   const q = query(ref(db, 'story_authors'), orderByValue(), startAt(Date.now() - STORY_TTL));
   const cb = onValue(q, snap => {
     storyAuthors = {}; snap.forEach(c => { storyAuthors[c.key] = c.val(); });
-    syncUpdDot(); if (updatesOpen()) ensureStoryWatchers();
+    syncUpdDot(); if (updatesOpen()) ensureStoryWatchers(); renderChatListSoon();
   }, () => {});
   storiesUnsub = () => off(q, 'value', cb);
 }
@@ -3450,7 +3464,7 @@ function watchAuthor(uid){
     });
     if (Object.keys(live).length) stories[uid] = live; else delete stories[uid];
     loadUser(uid).then(renderUpdatesSoon);
-    renderUpdatesSoon();
+    renderUpdatesSoon(); renderChatListSoon();
   }, () => { delete storyWatch[uid]; });
   storyWatch[uid] = () => off(r, 'value', cb);
 }
@@ -3458,6 +3472,7 @@ function ensureStoryWatchers(){
   watchAuthor(me.uid);
   Object.keys(storyAuthors).sort((a, b) => storyAuthors[b] - storyAuthors[a]).slice(0, 60).forEach(watchAuthor);
 }
+let clRaf = 0; const renderChatListSoon = () => { cancelAnimationFrame(clRaf); clRaf = requestAnimationFrame(() => { try { renderChatList(); } catch {} }); };
 const renderUpdatesSoon = () => { cancelAnimationFrame(upRaf); upRaf = requestAnimationFrame(renderUpdates); };
 function ringSvg(flags){
   const n = Math.min(flags.length, 24), S = 58, r = 26, c = 2 * Math.PI * r, gap = n > 1 ? 4 : 0, seg = Math.max(3, c / n - gap);

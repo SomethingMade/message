@@ -1779,7 +1779,6 @@ async function renderMessages(keepScroll){
   await Promise.all(msgs.map(async m => {
     if (m.text && !m.deleted) m._t = await decText(uid, m.text);
     if (m.replyToMessage && m.replyToMessage.text) m._rt = await decText(uid, m.replyToMessage.text);
-    if (m.music && !m.deleted) { m._mu = muParse(await decText(uid, m.music)); if (m._mu) muStore.set(m.key, m._mu); }
   }));
   if (tok !== renderTok || uid !== activeUid) return;
 
@@ -1803,7 +1802,8 @@ async function renderMessages(keepScroll){
       const rm = m.replyToMessage, rt = m._rt || (rm.mediaType === 'music' ? '🎵 Song' : rm.mediaType ? '📎 ' + rm.mediaType : 'Message');
       inner += `<div class="quote"><b>${esc(uName(rm.senderUid))}</b>${esc(rt)}</div>`;
     }
-    if (m._pendMedia) inner += `<div class="t">${m.mediaType === 'audio' ? '🎤 Voice message' : m.mediaType === 'video' ? '🎥 Video' : m.sticker ? '🏷️ Sticker' : '📷 Photo'}</div>`;
+    if (m.mediaType === 'music' && !m.deleted) { const mu = muFromMsg(m); if (mu) muStore.set(m.key, mu); inner += mu ? muHTML(m.key, mu) : '<div class="t">🎵 Song unavailable</div>'; }
+    else if (m._pendMedia) inner += `<div class="t">${m.mediaType === 'audio' ? '🎤 Voice message' : m.mediaType === 'video' ? '🎥 Video' : m.sticker ? '🏷️ Sticker' : '📷 Photo'}</div>`;
     else if (m.viewOnce) inner += `<div class="t">🔒 View-once ${esc(m.mediaType || 'media')} — open it in the Haba app</div>`;
     else if (m.mediaURL) {
       const mt = m.mediaType || '';
@@ -1812,7 +1812,6 @@ async function renderMessages(keepScroll){
       else if (mt === 'audio') inner += vnHTML(m);
       else inner += `<div class="file" data-file="${m.key}">📄 <div><b>${esc(m.fileName || 'File')}</b><div style="font-size:12px;opacity:.7">${m.fileSize ? fmtSize(m.fileSize) + ' · ' : ''}tap to download</div></div></div>`;
     }
-    if (m.music) inner += m._mu ? muHTML(m.key, m._mu) : '<div class="t">🎵 Song unavailable</div>';
     if (m._t) inner += `<div class="t">${linkify(esc(m._t))}</div>`;
     { const tr = trStore.get(trKey(m.key)); if (tr) inner += `<div class="tr">${esc(tr.text)}<i>Translated to ${esc(trName(tr.lang))}</i></div>`; }
     const ticks = m._pend ? '<span class="tick">🕓</span>' : out ? `<span class="tick ${otherLastRead >= m.createdAt ? 'seen' : ''}" data-ts="${m.createdAt}">${otherLastRead >= m.createdAt ? '✓✓' : '✓'}</span>` : '';
@@ -1971,8 +1970,8 @@ async function downloadFile(m){
 }
 function startReply(key){
   const m = rawMsgs[key]; if (!m) return;
-  const txt = m.text ? decCache.get(m.text) ?? m.text : m.music ? '🎵 Song' : (m.mediaType ? '📎 ' + m.mediaType : '');
-  replyTo = { key, senderUid: m.senderUid, text: m.text || '', mediaType: m.mediaType || (m.music ? 'music' : '') };
+  const txt = m.text ? decCache.get(m.text) ?? m.text : m.mediaType === 'music' ? '🎵 ' + (m.musicTitle || 'Song') : (m.mediaType ? '📎 ' + m.mediaType : '');
+  replyTo = { key, senderUid: m.senderUid, text: m.text || '', mediaType: m.mediaType || '' };
   $('#reply-q').innerHTML = `<b>${esc(uName(m.senderUid))}</b><br>${esc(txt)}`;
   $('#replybar').classList.remove('hidden'); $('#input').focus();
 }
@@ -1980,7 +1979,7 @@ $('#reply-x').onclick = () => { replyTo = null; $('#replybar').classList.add('hi
 const DEL_PREVIEW = '🚫 This message was deleted';
 async function deleteMsg(key){
   const base = `dm_threads/${threadId}/messages/${key}/`, u = {};
-  ['text', 'mediaURL', 'mediaType', 'reactions', 'replyToMessage', 'fileName', 'fileSize', 'duration', 'editedAt', 'music'].forEach(f => u[base + f] = null);
+  ['text', 'mediaURL', 'mediaType', 'reactions', 'replyToMessage', 'fileName', 'fileSize', 'duration', 'editedAt', 'musicTitle', 'musicArtist', 'musicArt'].forEach(f => u[base + f] = null);
   u[base + 'waveform'] = null;
   u[base + 'deleted'] = true; u[base + 'deletedAt'] = Date.now();
   /* if this was the latest message, the chat-list preview (both sides) says it was deleted too */
@@ -2486,12 +2485,10 @@ async function vnToggle(key, frac){
 /* song bubble player (30s previews; one global Audio so re-renders never interrupt playback) */
 let muAudio = null, muKey = null; const muStore = new Map();
 const MU_HOST = /^https:\/\/([a-z0-9-]+\.)+(mzstatic\.com|apple\.com)\//i;    // only Apple's preview / artwork hosts are accepted from other people
-function muParse(txt){
-  try {
-    const o = JSON.parse(txt), c = cleanMusic(o); if (!c || !MU_HOST.test(c.previewUrl)) return null;
-    if (c.artworkUrl && !MU_HOST.test(c.artworkUrl)) c.artworkUrl = '';
-    return { ...c, id: String(o.id || '').slice(0, 40), ms: +o.ms || 0 };
-  } catch { return null; }
+function muFromMsg(m){
+  if (!m || m.mediaType !== 'music' || typeof m.mediaURL !== 'string' || !MU_HOST.test(m.mediaURL)) return null;
+  const art = typeof m.musicArt === 'string' && MU_HOST.test(m.musicArt) ? m.musicArt : '';
+  return { trackName: String(m.musicTitle || 'Unknown').slice(0, 120), artistName: String(m.musicArtist || '').slice(0, 120), artworkUrl: art, previewUrl: m.mediaURL, id: m.mediaURL, ms: 0 };
 }
 const MU_ICONS = '<svg class="pl" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg><svg class="pa" viewBox="0 0 24 24"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>';
 const muHTML = (key, t) => `<div class="mu" data-mu="${esc(key)}"><div class="mu-art" ${mArt(t)}><button class="mu-play" aria-label="Play song preview">${MU_ICONS}</button></div><div class="mu-mid"><b>${esc(t.trackName)}</b><span>${esc(t.artistName)}</span><div class="mu-bar"><i></i></div><div class="mu-row"><span class="mu-time">0:30</span><span>🎵 30s preview</span></div></div></div>`;
@@ -3461,9 +3458,9 @@ const dmMusic = t => { const c = cleanMusic(t); return c ? { ...c, id: String(t.
 async function sendMusic(peer, t){
   const mu = dmMusic(t); if (!mu || !peer || peer !== activeUid || iBlocked || theyBlocked) return;
   try {
-    const label = '🎵 ' + mu.trackName + (mu.artistName ? ' · ' + mu.artistName : '');
-    const [music, preview] = await Promise.all([encText(peer, JSON.stringify(mu)), encText(peer, label)]);
-    const payload = withExpiry({ music, senderUid: me.uid, createdAt: Date.now() });
+    /* same message shape the Haba app sends/reads for DM songs, so both apps play the same preview */
+    const preview = '🎵 ' + mu.trackName;
+    const payload = withExpiry({ mediaURL: mu.previewUrl, mediaType: 'music', musicTitle: mu.trackName, musicArtist: mu.artistName, musicArt: mu.artworkUrl || '', senderUid: me.uid, createdAt: Date.now() });
     const rp = await replyPayload(peer); if (rp) payload.replyToMessage = rp;
     $('#reply-x').click();
     if (!netOK()) { await obAdd({ id: newKey(threadIdFor(me.uid, peer)), peer, tid: threadIdFor(me.uid, peer), kind: 'text', payload, preview }); return; }

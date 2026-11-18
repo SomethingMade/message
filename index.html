@@ -48,6 +48,44 @@ input,textarea{font:inherit;color:inherit}
 .row{display:flex;gap:8px}
 .row .field:first-child{max-width:90px}
 
+/* ===== premium auth (scoped to #auth — always dark, independent of app theme) ===== */
+#auth{--mint:#2FD9B8;--mint-d:#1fb89a;--ink:#202225;--stage:#2B2C2F;display:block;padding:0;background:#161718;color:#fff}
+#auth .stage{position:relative;width:100%;max-width:430px;min-height:100%;margin:0 auto;display:flex;flex-direction:column;background:var(--stage);overflow:hidden;
+  padding:calc(var(--sat) + 14px) 26px calc(var(--sab) + 26px)}
+#auth .blobwrap{position:absolute;left:0;right:0;top:0;height:0;pointer-events:none}
+#auth .blob{position:absolute;width:150%;aspect-ratio:1;left:-5%;top:0;transform:translateY(-52%);border-radius:50%;
+  background:radial-gradient(circle at 30% 70%,#43E6C6 0%,var(--mint) 45%,#1CC4A3 100%);box-shadow:0 30px 80px rgba(47,217,184,.25)}
+#auth .top{position:relative;z-index:2;display:flex;align-items:center;justify-content:center;height:34px}
+#auth .top .brand{font-size:15px;color:#fff;letter-spacing:.35em;margin-right:-.35em}
+#auth .top .brand i{color:#FFB020}
+#auth .hero{position:relative;z-index:2;flex:1 1 auto;min-height:clamp(170px,30vh,300px);display:flex;align-items:center;justify-content:center;padding-top:10px}
+#auth .bottle{height:clamp(190px,32vh,300px);width:auto;overflow:visible;animation:aFloat 6s ease-in-out infinite;filter:drop-shadow(0 28px 22px rgba(0,0,0,.35))}
+#auth .headline{position:relative;z-index:2;text-align:center;margin:6px 0 20px}
+#auth .headline h1{margin:0;font-family:var(--brand);font-weight:400;font-size:clamp(18px,5.4vw,23px);letter-spacing:.22em;margin-right:-.22em;text-transform:uppercase;color:#fff}
+#auth .headline p{margin:10px 0 0;font-size:12.5px;font-weight:600;letter-spacing:.04em;color:rgba(255,255,255,.62)}
+#auth .card{position:relative;z-index:2;max-width:none;width:100%}
+#auth .tabs{background:rgba(255,255,255,.07);padding:4px;margin-bottom:14px}
+#auth .tabs button{color:rgba(255,255,255,.55);font-size:13px;letter-spacing:.06em;transition:background .25s,color .25s}
+#auth .tabs button.on{background:rgba(255,255,255,.14);color:#fff;box-shadow:none}
+#auth .field{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.08);color:#fff;font-size:16px;padding:15px 20px;margin-bottom:10px;transition:border-color .2s,background .2s,box-shadow .2s}
+#auth .field::placeholder{color:rgba(255,255,255,.42)}
+#auth .field:focus{border-color:var(--mint);background:rgba(255,255,255,.1);box-shadow:0 0 0 4px rgba(47,217,184,.14)}
+#auth .field:-webkit-autofill{-webkit-text-fill-color:#fff;caret-color:#fff;box-shadow:0 0 0 40px #3a3c40 inset;transition:background-color 9999s}
+#auth .btn{background:var(--mint);color:#10231f;font-size:12px;font-weight:800;letter-spacing:.24em;text-transform:uppercase;padding:17px;margin-top:8px;
+  box-shadow:0 10px 26px rgba(47,217,184,.32);transition:transform .15s,box-shadow .2s,background .2s}
+#auth .btn:active{transform:scale(.97);box-shadow:0 4px 12px rgba(47,217,184,.3)}
+#auth .btn:disabled{opacity:.5;box-shadow:none}
+#auth .btn.ghost{background:none;box-shadow:none;color:rgba(255,255,255,.62);letter-spacing:.06em;text-transform:none;font-size:13px;font-weight:600;padding:12px;margin-top:4px}
+#auth .btn.ghost:active{transform:none;color:#fff}
+#auth .err{color:#FF8A80;text-align:center;margin:8px 4px 0}
+#auth .legal{position:relative;z-index:2;text-align:center;margin:14px 0 0;font-size:11px;letter-spacing:.04em;color:rgba(255,255,255,.35)}
+#auth .rv{opacity:0;transform:translateY(14px);animation:aRise .7s cubic-bezier(.2,.8,.2,1) forwards}
+#auth .rv.d1{animation-delay:.12s}#auth .rv.d2{animation-delay:.24s}#auth .rv.d3{animation-delay:.36s}
+@keyframes aRise{to{opacity:1;transform:none}}
+@keyframes aFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}
+@media (prefers-reduced-motion:reduce){#auth .bottle{animation:none}#auth .rv{animation:none;opacity:1;transform:none}}
+@media (max-height:640px){#auth .hero{min-height:130px}#auth .bottle{height:140px}}
+
 /* app layout */
 #app{height:100%;display:flex}
 #side{width:380px;max-width:100%;border-right:1px solid var(--border);display:flex;flex-direction:column;background:var(--surface);min-width:0}
@@ -767,34 +805,61 @@ body.gr-chat #bnav{display:none}
 
 <!-- ============ AUTH ============ -->
 <div id="auth" class="hidden">
-  <div class="card">
-    <h1 class="brand">Haba<i>.</i></h1>
-    <p class="sub">Messenger — sign in with your Haba account.</p>
-    <div class="tabs"><button id="tab-email" class="on">Email</button><button id="tab-phone">Phone</button></div>
-
-    <div id="pane-email">
-      <input class="field" id="email" type="email" placeholder="Email" autocomplete="username">
-      <input class="field" id="password" type="password" placeholder="Password" autocomplete="current-password">
-      <button class="btn" id="btn-email">Sign in</button>
-      <button class="btn ghost" id="btn-reset" style="margin-top:8px">Forgot password</button>
+  <div class="stage">
+    <div class="blobwrap"><div class="blob"></div></div>
+    <div class="top"><span class="brand">Haba<i>.</i></span></div>
+    <div class="hero">
+      <svg class="bottle" viewBox="0 0 160 330" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <defs>
+          <linearGradient id="hb-body" x1="0" x2="1"><stop offset="0" stop-color="#0c0d0e"/><stop offset=".32" stop-color="#3b3d41"/><stop offset=".55" stop-color="#1b1c1e"/><stop offset="1" stop-color="#070708"/></linearGradient>
+          <linearGradient id="hb-cap" x1="0" x2="1"><stop offset="0" stop-color="#cfcfcb"/><stop offset=".4" stop-color="#f3f2ee"/><stop offset="1" stop-color="#a9a9a5"/></linearGradient>
+          <radialGradient id="hb-sh"><stop offset="0" stop-color="#000" stop-opacity=".45"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient>
+        </defs>
+        <ellipse cx="80" cy="318" rx="58" ry="9" fill="url(#hb-sh)"/>
+        <path d="M44 62h72v30c0 14 22 26 22 58v142a22 22 0 0 1-22 22H44a22 22 0 0 1-22-22V150c0-32 22-44 22-58z" fill="url(#hb-body)"/>
+        <path d="M52 100c-10 12-18 24-18 50v140" fill="none" stroke="#fff" stroke-opacity=".12" stroke-width="5" stroke-linecap="round"/>
+        <rect x="40" y="6" width="80" height="62" rx="12" fill="url(#hb-cap)"/>
+        <rect x="40" y="52" width="80" height="16" rx="6" fill="#000" opacity=".12"/>
+        <g transform="translate(52 188) scale(.28)">
+          <path d="M54 55a13 13 0 0 1 26 0V200H54Z" fill="#fff"/>
+          <path d="M67 114C67 88 88 78 108 78C132 78 142 94 142 116L142 200" fill="none" stroke="#fff" stroke-width="26" stroke-linejoin="round"/>
+          <circle cx="148" cy="46" r="13" fill="#FFB020"/>
+        </g>
+      </svg>
+    </div>
+    <div class="headline rv d1">
+      <h1>Haba Messenger</h1>
+      <p>Sign in with your Haba account</p>
     </div>
 
-    <div id="pane-phone" class="hidden">
-      <div id="phone-step1">
-        <div class="row">
-          <input class="field" id="cc" value="+27" inputmode="tel">
-          <input class="field" id="phone" type="tel" placeholder="Phone number" inputmode="tel" autocomplete="tel-national">
+    <div class="card rv d2">
+      <div class="tabs"><button id="tab-email" class="on">Email</button><button id="tab-phone">Phone</button></div>
+
+      <div id="pane-email">
+        <input class="field" id="email" type="email" placeholder="Email" autocomplete="username">
+        <input class="field" id="password" type="password" placeholder="Password" autocomplete="current-password">
+        <button class="btn" id="btn-email">Sign in</button>
+        <button class="btn ghost" id="btn-reset">Forgot password?</button>
+      </div>
+
+      <div id="pane-phone" class="hidden">
+        <div id="phone-step1">
+          <div class="row">
+            <input class="field" id="cc" value="+27" inputmode="tel">
+            <input class="field" id="phone" type="tel" placeholder="Phone number" inputmode="tel" autocomplete="tel-national">
+          </div>
+          <button class="btn" id="btn-sendcode">Send code</button>
         </div>
-        <button class="btn" id="btn-sendcode">Send code</button>
+        <div id="phone-step2" class="hidden">
+          <input class="field" id="code" placeholder="6-digit code" inputmode="numeric" autocomplete="one-time-code">
+          <button class="btn" id="btn-verify">Verify &amp; sign in</button>
+          <button class="btn ghost" id="btn-back-phone">Use a different number</button>
+        </div>
       </div>
-      <div id="phone-step2" class="hidden">
-        <input class="field" id="code" placeholder="6-digit code" inputmode="numeric" autocomplete="one-time-code">
-        <button class="btn" id="btn-verify">Verify &amp; sign in</button>
-        <button class="btn ghost" id="btn-back-phone" style="margin-top:8px">Use a different number</button>
-      </div>
+      <div class="err" id="auth-err"></div>
+      <div id="recaptcha-container"></div>
     </div>
-    <div class="err" id="auth-err"></div>
-    <div id="recaptcha-container"></div>
+    <p class="legal rv d3">Secured by Haba &middot; End-to-end encrypted</p>
   </div>
 </div>
 

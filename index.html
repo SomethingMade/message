@@ -1620,11 +1620,11 @@ async function chatSheet(uid){
 let actx = null, lastPing = 0;
 const audioCtx = () => { if (!actx) { const C = window.AudioContext || window.webkitAudioContext; if (C) actx = new C(); } return actx; };
 ['pointerdown', 'keydown', 'touchend'].forEach(ev => window.addEventListener(ev, () => { const c = audioCtx(); if (c && c.state === 'suspended') c.resume().catch(() => {}); }, { passive: true }));
-function tone(c, f, t0, dur, vol, type){
+function tone(c, f, t0, dur, vol, type, dest){
   const o = c.createOscillator(), g = c.createGain();
   o.type = type || 'sine'; o.frequency.value = f;
   g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(vol, t0 + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
-  o.connect(g); g.connect(c.destination); o.start(t0); o.stop(t0 + dur + 0.05);
+  o.connect(g); g.connect(dest || c.destination); o.start(t0); o.stop(t0 + dur + 0.05);
 }
 function sweep(c, f0, f1, t0, dur, vol){
   const o = c.createOscillator(), g = c.createGain();
@@ -1642,6 +1642,39 @@ const SND = {
   aurora:  { n: 'Aurora', p: (c, t, v) => [659.25, 987.77, 1318.5, 1975.5].forEach((f, i) => tone(c, f, t + i * 0.07, 0.8, v * 0.7)) },
   royal:   { n: 'Royal', p: (c, t, v) => { [523.25, 659.25, 783.99].forEach((f, i) => tone(c, f, t + i * 0.1, 0.22, v, 'triangle')); tone(c, 1046.5, t + 0.32, 0.6, v, 'triangle'); tone(c, 523.25, t + 0.32, 0.6, v * 0.6, 'triangle'); } },
 };
+/* typing sounds: a soft looping sound the person typing hears (Premium typing effect) until they pause or stop */
+let tSnd = null, tPrevT = null;
+function tSndStop(){
+  if (!tSnd) return; const s = tSnd; tSnd = null;
+  try {
+    clearInterval(s.iv); const c = audioCtx(), t = c.currentTime;
+    s.g.gain.cancelScheduledValues(t); s.g.gain.setValueAtTime(Math.max(s.g.gain.value, 0.0001), t); s.g.gain.linearRampToValueAtTime(0.0001, t + 0.2);
+    setTimeout(() => s.nodes.forEach(n => { try { n.stop && n.stop(); } catch {} try { n.disconnect(); } catch {} }), 300);
+  } catch {}
+}
+function tSndStart(fx){
+  if (tSnd && tSnd.fx === fx) return;
+  tSndStop();
+  if (document.hidden || localStorage.getItem('hm-sound') === 'off' || localStorage.getItem('hm-tsound') === 'off') return;
+  const c = audioCtx(); if (!c || c.state !== 'running') return;
+  const g = c.createGain(); g.gain.value = 0.0001; g.connect(c.destination); g.gain.linearRampToValueAtTime(1, c.currentTime + 0.25);
+  const s = tSnd = { fx, g, nodes: [g], iv: 0 };
+  const osc = (type, f, dest) => { const o = c.createOscillator(); o.type = type; o.frequency.value = f; o.connect(dest); o.start(); s.nodes.push(o); return o; };
+  const lfo = (rate, depth, param) => { const l = c.createOscillator(), d = c.createGain(); l.frequency.value = rate; d.gain.value = depth; l.connect(d); d.connect(param); l.start(); s.nodes.push(l, d); };
+  const pick = a => a[Math.floor(Math.random() * a.length)];
+  try {
+    if (fx === 'wave') { let i = 0; const f = [440, 523.25, 659.25, 523.25]; const go = () => tone(c, f[i++ % f.length], c.currentTime, 0.32, 0.05, 'sine', g); go(); s.iv = setInterval(go, 300); }
+    else if (fx === 'neon') {
+      const hv = c.createGain(); hv.gain.value = 0.05; const lp = c.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 650; hv.connect(lp); lp.connect(g); s.nodes.push(hv, lp);
+      osc('sawtooth', 110, hv); osc('sawtooth', 110.9, hv); lfo(3.2, 0.03, hv.gain);
+    }
+    else if (fx === 'aurora') { [[523.25, 0.7], [783.99, 1.1], [1046.5, 1.5]].forEach(([f, r]) => { const v = c.createGain(); v.gain.value = 0.03; v.connect(g); s.nodes.push(v); osc('sine', f, v); lfo(r, 0.022, v.gain); }); }
+    else if (fx === 'sparkle') { const go = () => { if (Math.random() < 0.75) tone(c, pick([2093, 2349.3, 2637, 3136]), c.currentTime, 0.25, 0.035, 'sine', g); }; go(); s.iv = setInterval(go, 170); }
+    else if (fx === 'heart') { const go = () => { const t = c.currentTime; tone(c, 120, t, 0.18, 0.16, 'triangle', g); tone(c, 96, t + 0.2, 0.22, 0.12, 'triangle', g); }; go(); s.iv = setInterval(go, 950); }
+    else tSndStop();
+  } catch (e) { console.error('typing sound', e); tSndStop(); }
+}
+document.addEventListener('visibilitychange', () => { if (document.hidden) tSndStop(); });
 const sndId = () => { const id = me && skinOK ? localStorage.getItem('hm-snd:' + me.uid) : null; return SND[id] ? id : 'classic'; };
 function msgPing(soft){
   const now = Date.now(); if (now - lastPing < 900) return; lastPing = now;
@@ -1711,7 +1744,7 @@ window.addEventListener('popstate', () => {
 function closeThread(silent){
   openSeq++;
   if (rec) stopRec(false);
-  vnStop(); muStop();
+  vnStop(); muStop(); tSndStop();
   threadUnsubs.forEach(f => f()); threadUnsubs = [];
   if (threadId && me && !silent) set(ref(db, `dm_threads/${threadId}/typing/${me.uid}`), false).catch(() => {});
   activeUid = null; threadId = null; rawMsgs = {}; replyTo = null; $('#composer').classList.remove('ai');
@@ -2030,9 +2063,11 @@ function autoGrow(){ input.style.height = 'auto'; input.style.height = Math.min(
 let typingT = null, typingOn = false;
 input.addEventListener('input', () => {
   autoGrow();
+  /* Premium typing effect: the person typing hears its sound, looping until they pause or stop */
+  const fx = tfxId(); if (fx !== 'default' && input.value.length) tSndStart(fx); else tSndStop();
   if (!threadId) return;
   if (!typingOn) { typingOn = true; set(ref(db, `dm_threads/${threadId}/typing/${me.uid}`), true).catch(() => {}); }
-  clearTimeout(typingT); typingT = setTimeout(() => { typingOn = false; if (threadId) set(ref(db, `dm_threads/${threadId}/typing/${me.uid}`), false).catch(() => {}); }, 2500);
+  clearTimeout(typingT); typingT = setTimeout(() => { tSndStop(); typingOn = false; if (threadId) set(ref(db, `dm_threads/${threadId}/typing/${me.uid}`), false).catch(() => {}); }, 2500);
 });
 input.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey && localStorage.getItem('hm-enter') !== 'off' && !/Mobi|Android/i.test(navigator.userAgent)) { e.preventDefault(); sendText(); } });
 $('#send').onclick = sendText;
@@ -2160,7 +2195,7 @@ async function sendText(){
     const payload = withExpiry({ text: enc, senderUid: me.uid, createdAt: Date.now() });
     const rp = await replyPayload(peer); if (rp) payload.replyToMessage = rp;
     input.value = ''; autoGrow(); $('#reply-x').click();
-    clearTimeout(typingT); typingOn = false; set(ref(db, `dm_threads/${threadId}/typing/${me.uid}`), false).catch(() => {});
+    clearTimeout(typingT); typingOn = false; tSndStop(); set(ref(db, `dm_threads/${threadId}/typing/${me.uid}`), false).catch(() => {});
     if (!netOK()) { await obAdd({ id: newKey(threadIdFor(me.uid, peer)), peer, tid: threadIdFor(me.uid, peer), kind: 'text', payload, preview: enc }); return; }
     await pushMessage(peer, payload, enc);
   } catch (e) { if (!lockedGuard(e, () => { if (activeUid === peer && input.value.trim()) sendText(); })) { toast('Message failed to send'); console.error(e); } }
@@ -2714,14 +2749,16 @@ function soundSheet(){
 function typingSheet(){
   if (!skinOK) return premiumSheet();
   const opts = [['default', 'Classic dots'], ...Object.entries(TFX)];
-  const ov = modal(`<h3 style="margin:2px 0 2px">Typing effect</h3><div style="color:var(--muted);font-size:13.5px;margin-bottom:6px">A Haba Premium perk. This is the animation people see while you type to them.</div>
+  const ov = modal(`<h3 style="margin:2px 0 2px">Typing effect</h3><div style="color:var(--muted);font-size:13.5px;margin-bottom:6px">A Haba Premium perk. You hear its sound while you type, and people see the animation while you type to them. Tap one to preview.</div>
     <div style="max-height:52vh;overflow:auto">${opts.map(([id, n]) => `<button class="lng${id === tfxId() ? ' on' : ''}" data-f="${id}"><span>${n}</span><span style="display:flex;align-items:center;gap:10px"><span class="typing${id === 'default' ? '' : ' fx-' + id}" style="margin:0;padding:9px 12px;align-self:auto"><i></i><i></i><i></i></span>${id === tfxId() ? '<span class="ck">✓</span>' : ''}</span></button>`).join('')}</div>
     <button class="btn" id="tfx-done" style="margin-top:10px">Done</button>`);
-  ov.querySelector('#tfx-done').onclick = closeModal;
+  ov.querySelector('#tfx-done').onclick = () => { clearTimeout(tPrevT); tSndStop(); closeModal(); };
   ov.onclick = e => {
     const b = e.target.closest('.lng'); if (!b || !me) return;
     const id = b.dataset.f;
     if (id === 'default') localStorage.removeItem('hm-tfx:' + me.uid); else localStorage.setItem('hm-tfx:' + me.uid, id);
+    clearTimeout(tPrevT); tSndStop();
+    if (id !== 'default') { const c = audioCtx(); if (c) c.resume().then(() => { tSndStart(id); tPrevT = setTimeout(tSndStop, 2000); }).catch(() => {}); }
     set(ref(db, `users/${me.uid}/typingFx`), id === 'default' ? null : id).catch(e2 => console.error('typing effect not saved', e2));
     users[me.uid] = { ...(users[me.uid] || {}), typingFx: id === 'default' ? null : id };
     ov.querySelectorAll('.lng').forEach(x => { const on = x === b; x.classList.toggle('on', on); const k = x.querySelector('.ck'); if (k) k.remove(); if (on) x.lastElementChild.insertAdjacentHTML('beforeend', '<span class="ck">✓</span>'); });
@@ -3096,6 +3133,7 @@ function renderSettings(){
     ${row('theme', 'palette', 'Appearance', 'Dark mode', dark)}
     ${row('trlang', 'text', 'Message translation', skinOK ? 'Translate to ' + trName(trLang()) + ' · tap to change' : 'Verified accounts only · tap to unlock')}
     ${row('tfx', 'palette', 'Typing effect', skinOK ? (tfxId() === 'default' ? 'Classic dots' : TFX[tfxId()]) + ' · tap to change' : 'Verified accounts only · tap to unlock')}
+    ${row('tsnd', 'bell', 'Typing sounds', 'Hear your typing effect while you type', on('hm-tsound'))}
     ${row('skin', 'palette', 'Chat theme', skinOK ? SKINS[skinId || 'default'].name + ' · tap to change' : 'Verified accounts only · tap to unlock')}
     ${row('enc', 'key', 'Encryption', enc)}
     ${row('pin', 'shield', 'Backup PIN', pinSub)}
@@ -3170,6 +3208,7 @@ $('#settings').addEventListener('click', e => {
   else if (act === 'phone') changePhone();
   else if (act === 'premium') premiumSheet();
   else if (act === 'trlang') { if (!skinOK) toast('Translation is for verified accounts'); trLangSheet(); }
+  else if (act === 'tsnd') { toast(flip('hm-tsound') ? 'Typing sounds on' : 'Typing sounds off'); tSndStop(); renderSettings(); }
   else if (act === 'sndfx') { if (!skinOK) toast('Premium sounds are for verified accounts'); soundSheet(); }
   else if (act === 'tfx') { if (!skinOK) toast('Typing effects are for verified accounts'); typingSheet(); }
   else if (act === 'skin') { if (!skinOK) toast('Chat themes are for verified accounts'); skinSheet(); }

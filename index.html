@@ -608,6 +608,17 @@ select.field{appearance:none}
 #sv-bot{position:absolute;left:0;right:0;bottom:0;padding:10px 16px calc(12px + var(--sab));display:flex;justify-content:center;gap:14px;z-index:7}
 #sv-bot .pill2{background:rgba(0,0,0,.45);color:#fff;border-radius:22px;padding:0 16px;height:40px;display:flex;align-items:center;gap:8px;font-weight:600}
 #sv-bot .pill2 svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+#sv-ad{position:absolute;left:12px;right:12px;bottom:calc(60px + var(--sab));z-index:8;display:flex;align-items:center;gap:10px;padding:10px;border-radius:18px;background:rgba(255,255,255,.13);-webkit-backdrop-filter:blur(16px) saturate(1.4);backdrop-filter:blur(16px) saturate(1.4);border:1px solid rgba(255,255,255,.2);color:#fff;cursor:pointer;text-shadow:0 1px 3px rgba(0,0,0,.45);animation:adin .35s ease both}
+@keyframes adin{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+#sv-ad .ad-th{width:46px;height:46px;border-radius:12px;background:rgba(255,255,255,.16) center/cover no-repeat;flex-shrink:0}
+#sv-ad .ad-mid{flex:1;min-width:0}
+#sv-ad .ad-tag{display:block;font-size:10px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;opacity:.8}
+#sv-ad b{display:block;font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#sv-ad small{display:block;font-size:12.5px;opacity:.88;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#sv-ad .ad-cta{flex-shrink:0;padding:8px 14px;border-radius:20px;background:rgba(255,255,255,.92);color:#111;font-weight:700;font-size:13px;text-shadow:none}
+#sv-ad .ad-x{position:absolute;top:-9px;right:-3px;width:22px;height:22px;border-radius:50%;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;text-shadow:none}
+#sv-ad .ad-x svg{width:12px;height:12px;fill:none;stroke:#fff;stroke-width:2.6;stroke-linecap:round}
+#sv.has-ad #sv-cap{bottom:calc(62px + var(--sab) + 84px)}
 #sv-rx{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(66px + var(--sab));z-index:9;display:flex;gap:4px;padding:6px 8px;border-radius:30px;background:rgba(30,30,30,.92);box-shadow:0 6px 24px rgba(0,0,0,.5)}
 #sv-rx button{font-size:26px;width:44px;height:44px;border-radius:50%;line-height:1}#sv-rx button.on{background:rgba(255,255,255,.2)}
 #sv-like span{font-size:21px;line-height:1}
@@ -840,6 +851,7 @@ body.gr-chat #bnav{display:none}
   <div id="sv-music" class="hidden"><svg width="14" height="14" style="stroke:#fff;fill:none;stroke-width:2;flex-shrink:0" viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg><span id="sv-music-t"></span></div>
   <div id="sv-cap" class="hidden"></div>
   <div id="sv-rx" class="hidden"></div>
+  <div id="sv-ad" class="hidden"></div>
   <div id="sv-bot">
     <button class="pill2" id="sv-cm"><svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L3 21l1.9-5.4A8 8 0 1 1 21 12Z"/></svg><span id="sv-cc">Reply</span></button>
     <button class="pill2 hidden" id="sv-views"><svg viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg><span id="sv-vc">0</span></button>
@@ -890,7 +902,7 @@ body.gr-chat #bnav{display:none}
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut, RecaptchaVerifier, PhoneAuthProvider, updatePhoneNumber, signInWithPhoneNumber, signInWithEmailAndPassword, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-import { getDatabase, ref, onValue, get, push, set, update, off, query, orderByChild, orderByKey, limitToLast, limitToFirst, startAt, endAt, increment, onDisconnect, serverTimestamp, remove, orderByValue } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+import { getDatabase, ref, onValue, get, push, set, update, off, query, orderByChild, orderByKey, limitToLast, limitToFirst, startAt, endAt, increment, onDisconnect, serverTimestamp, remove, orderByValue, runTransaction } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-functions.js";
 import { getStorage, ref as sRef, uploadBytes, uploadBytesResumable, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-storage.js";
 
@@ -3778,7 +3790,44 @@ let svAudio = null;
 function svDropVideo(){ const o = sv.video; if (!o) return; sv.video = null; o.onloadeddata = o.onerror = null; try { o.pause(); o.removeAttribute('src'); o.load(); } catch {} }
 function svStopMusic(){ if (svAudio) { svAudio.pause(); svAudio = null; } }
 const sv = { list: [], ai: 0, uid: null, items: [], i: 0, elapsed: 0, dur: 5000, last: null, paused: false, loaded: false, raf: 0, video: null, vs: 0 };
+/* ---- Haba ads in statuses: a transparent sponsored card at the bottom of some statuses, picked at random ---- */
+let habaAds = [], habaAdsAt = 0, svAdGap = 1, svAdLast = '', svAdT = null;
+const adSafe = u => { try { const x = new URL(u); return /^https?:$/.test(x.protocol) ? x.href : ''; } catch { return ''; } };
+async function loadHabaAds(){
+  if (Date.now() - habaAdsAt < 10 * 60 * 1000) return;
+  habaAdsAt = Date.now();
+  try {
+    const snap = await get(query(ref(db, 'posts'), orderByChild('timestamp'), limitToLast(80)));
+    const out = []; snap.forEach(c => { const p = c.val(); if (p && p.isAd && adSafe(p.adUrl)) out.push({ id: c.key, ...p }); });
+    habaAds = out;
+  } catch (e) { habaAdsAt = 0; console.error('ads', e); }
+}
+function svAdHide(){ clearTimeout(svAdT); const el = $('#sv-ad'); if (el) el.classList.add('hidden'); $('#sv').classList.remove('has-ad'); }
+function svAdMaybe(uid){
+  svAdHide();
+  if (!me || uid === me.uid || !habaAds.length) return;
+  svAdGap++;
+  if (svAdGap < 2 || Math.random() > 0.45) return;
+  const pool = habaAds.length > 1 ? habaAds.filter(a => a.id !== svAdLast) : habaAds, ad = pool[Math.floor(Math.random() * pool.length)];
+  const media = adSafe(ad.imageUrl || (ad.imageUrls && ad.imageUrls[0]) || ad.videoThumbnail || ad.photoURL || '');
+  const el = $('#sv-ad');
+  el.innerHTML = `<div class="ad-th"${media ? ` style="background-image:url('${cssUrl(media)}')"` : ''}></div><div class="ad-mid"><span class="ad-tag">Sponsored</span><b>${esc(ad.adTitle || ad.name || 'Sponsored')}</b>${ad.text ? `<small>${esc(ad.text)}</small>` : ''}</div><span class="ad-cta">${esc(ad.adCta || 'Learn more')}</span><span class="ad-x" data-x="1" role="button" aria-label="Hide ad"><svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></span>`;
+  el.dataset.url = adSafe(ad.adUrl); el.classList.remove('hidden'); $('#sv').classList.add('has-ad');
+  svAdGap = 0; svAdLast = ad.id;
+  const cur = sv.items[sv.i];
+  svAdT = setTimeout(() => {   /* count a view once, after 1s on screen, the same way Haba does */
+    if (sv.items[sv.i] !== cur || el.classList.contains('hidden')) return;
+    runTransaction(ref(db, `post_views/${ad.id}/${me.uid}`), c => c === true ? undefined : true)
+      .then(r => { if (r.committed) update(ref(db, `posts/${ad.id}`), { impressionCount: increment(1) }).catch(() => {}); }).catch(() => {});
+  }, 1000);
+}
+$('#sv-ad').addEventListener('click', e => {
+  e.stopPropagation();
+  if (e.target.closest('[data-x]')) return svAdHide();
+  const u = $('#sv-ad').dataset.url; if (u) window.open(u, '_blank', 'noopener,noreferrer');
+});
 function openStoryFor(uid){
+  loadHabaAds();
   const others = Object.keys(stories).filter(u => u !== me.uid && liveStories(u).length);
   const known = u => (chats[u] || contactIds.includes(u)) ? 1 : 0, lastOf = u => { const a = liveStories(u); return a[a.length - 1].createdAt; };
   const fresh = others.filter(u => !liveStories(u).every(storySeen)).sort((a, b) => known(b) - known(a) || lastOf(b) - lastOf(a));
@@ -3802,6 +3851,7 @@ function loadAuthor(ai, firstUnseen){
 function showItem(){
   cancelAnimationFrame(sv.raf); svDropVideo(); svStopMusic();
   const s = sv.items[sv.i]; if (!s) return nextAuthor();
+  svAdMaybe(sv.uid);
   sv.elapsed = 0; sv.last = null; sv.loaded = false; sv.dur = 5000; sv.paused = false; sv.vs = 0;
   $('#sv-bars').innerHTML = sv.items.map((_, j) => `<i><b style="width:${j < sv.i ? 100 : 0}%"></b></i>`).join('');
   $('#sv-time').textContent = updAgo(s.createdAt);
@@ -3873,7 +3923,7 @@ function prevItem(){
   const items = liveStories(sv.list[sv.ai - 1]); loadAuthor(sv.ai - 1); sv.i = Math.max(0, items.length - 1); showItem();
 }
 function nextAuthor(){ if (sv.ai + 1 < sv.list.length) loadAuthor(sv.ai + 1, true); else closeStory(); }
-function hideStory(){ cancelAnimationFrame(sv.raf); svDropVideo(); svStopMusic(); $('#sv-stage').innerHTML = ''; $('#sv').classList.add('hidden'); renderUpdatesSoon(); }
+function hideStory(){ svAdHide(); cancelAnimationFrame(sv.raf); svDropVideo(); svStopMusic(); $('#sv-stage').innerHTML = ''; $('#sv').classList.add('hidden'); renderUpdatesSoon(); }
 function closeStory(){ hideStory(); if (svHist) { svHist = false; skipPop = true; history.back(); } }
 $('#sv-close').onclick = closeStory;
 (() => {

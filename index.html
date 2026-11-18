@@ -292,6 +292,7 @@ input,textarea{font:inherit;color:inherit}
 .gname .verified-badge,.quote .verified-badge{width:13px;height:13px;vertical-align:-2px;margin-left:3px}
 .b.in{margin-left:34px}.b.out{margin-right:34px}
 .bav{position:absolute;bottom:0;width:28px;height:28px;border-radius:50%;background:var(--input) center/cover no-repeat;pointer-events:none}
+.bav .verified-badge{position:absolute;right:-4px;bottom:-3px;width:15px;height:15px;border-radius:50%;background:var(--chat-bg,var(--bg));box-shadow:0 0 0 1.5px var(--chat-bg,var(--bg))}
 .b.in .bav{left:-34px}.b.out .bav{right:-34px}
 .typing{margin-left:40px}.typing .bav{left:-40px;bottom:0}
 #msgs.noav .b,#gr-msgs.noav .b{margin-left:0;margin-right:0}
@@ -1835,7 +1836,7 @@ function paintTyping(still){
   const box = $('#msgs'); let t = $('#typing-ind');
   const near = box.scrollHeight - box.scrollTop - box.clientHeight < 150;
   if (otherTyping && !t) { const pu = users[activeUid] || {}, fx = (pu.paidVerifiedAt || pu.isBusinessAccount) && TFX[pu.typingFx] ? pu.typingFx : '';   /* effects only show for verified senders */
-    t = document.createElement('div'); t.id = 'typing-ind'; t.className = 'typing' + (fx ? ' fx-' + fx : '') + (still ? ' still' : ''); t.innerHTML = `<i></i><i></i><i></i><span class="bav" style="background-image:url('${cssUrl(uAvatar(activeUid))}')"></span>`; box.appendChild(t); if (near) box.scrollTop = box.scrollHeight; }
+    t = document.createElement('div'); t.id = 'typing-ind'; t.className = 'typing' + (fx ? ' fx-' + fx : '') + (still ? ' still' : ''); t.innerHTML = `<i></i><i></i><i></i><span class="bav" style="background-image:url('${cssUrl(uAvatar(activeUid))}')">${vbadge(activeUid)}</span>`; box.appendChild(t); if (near) box.scrollTop = box.scrollHeight; }
   else if (!otherTyping && t) t.remove();
 }
 function paintTicks(){
@@ -1880,7 +1881,7 @@ async function renderMessages(keepScroll){
     const out = m.senderUid === me.uid;
     /* profile photo beside the last bubble of each run from the same sender */
     const nx = msgs[mi + 1], endRun = !(nx && !nx.systemText && nx.senderUid === m.senderUid && new Date(nx.createdAt).toDateString() === dk);
-    const avHTML = endRun ? `<span class="bav" style="background-image:url('${cssUrl(uAvatar(out ? me.uid : uid))}')"></span>` : '';
+    const avHTML = endRun ? `<span class="bav" style="background-image:url('${cssUrl(uAvatar(out ? me.uid : uid))}')">${vbadge(out ? me.uid : uid)}</span>` : '';
     if (m.deleted) { html += `<div class="b ${out ? 'out' : 'in'} del" data-key="${m.key}"><div class="t">🚫 This message was deleted</div><div class="meta">${fmtTime(m.createdAt)}</div>${avHTML}</div>`; continue; }
     let inner = '';
     if (m.replyToMessage) {
@@ -4266,7 +4267,7 @@ function grPaint(forceBottom){
     const name = !mine && prev !== m.authorUid ? `<div class="gname" style="color:hsl(${grHue(m.authorUid)},62%,52%)">${esc(uName(m.authorUid))}${vbadge(m.authorUid)}</div>` : '';
     prev = m.authorUid;
     const gx = grMsgs[gi + 1], gEnd = !(gx && gx.authorUid === m.authorUid && new Date(gx.createdAt || Date.now()).toDateString() === dk);
-    const gav = gEnd ? `<span class="bav" style="background-image:url('${cssUrl(uAvatar(m.authorUid))}')"></span>` : '';
+    const gav = gEnd ? `<span class="bav" style="background-image:url('${cssUrl(uAvatar(m.authorUid))}')">${vbadge(m.authorUid)}</span>` : '';
     h += `<div class="b ${mine ? 'out' : 'in'}">${name}<div class="t">${linkify(esc(m.text))}</div><div class="meta">${esc(fmtTime(ts))}</div>${gav}</div>`;
   });
   box.classList.toggle('noav', localStorage.getItem('hm-bav') === 'off');

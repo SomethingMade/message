@@ -289,6 +289,7 @@ input,textarea{font:inherit;color:inherit}
 #menu button .mi{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
 .ck .ico{width:18px;height:18px;stroke-width:2.6}
 .quote .ico{width:13px;height:13px;margin-right:4px}
+.gname .verified-badge,.quote .verified-badge{width:13px;height:13px;vertical-align:-2px;margin-left:3px}
 .b.in{margin-left:34px}.b.out{margin-right:34px}
 .bav{position:absolute;bottom:0;width:28px;height:28px;border-radius:50%;background:var(--input) center/cover no-repeat;pointer-events:none}
 .b.in .bav{left:-34px}.b.out .bav{right:-34px}
@@ -1716,7 +1717,7 @@ async function notifyMsg(uid, c){
   sysNotify(uid, txt);
   notifUid = uid;
   $('#notif-av').style.backgroundImage = `url('${cssUrl(uAvatar(uid))}')`;
-  $('#notif-name').textContent = uName(uid);
+  $('#notif-name').innerHTML = esc(uName(uid)) + vbadge(uid);
   $('#notif-text').textContent = txt;
   const n = $('#notif'); n.style.transform = ''; n.classList.add('show');
   clearTimeout(notifT); notifT = setTimeout(hideNotif, 4500);
@@ -1884,7 +1885,7 @@ async function renderMessages(keepScroll){
     let inner = '';
     if (m.replyToMessage) {
       const rm = m.replyToMessage, isMu = !m._rt && rm.mediaType === 'music', rt = m._rt || (isMu ? 'Song' : rm.mediaType ? '📎 ' + rm.mediaType : 'Message');
-      inner += `<div class="quote"><b>${esc(uName(rm.senderUid))}</b>${isMu ? ic('music') : ''}${esc(rt)}</div>`;
+      inner += `<div class="quote"><b>${esc(uName(rm.senderUid))}${vbadge(rm.senderUid)}</b>${isMu ? ic('music') : ''}${esc(rt)}</div>`;
     }
     if (m.mediaType === 'music' && !m.deleted) { const mu = muFromMsg(m); if (mu) muStore.set(m.key, mu); inner += mu ? muHTML(m.key, mu) : `<div class="t">${ic('music')} Song unavailable</div>`; }
     else if (m._pendMedia) inner += `<div class="t">${m.mediaType === 'audio' ? '🎤 Voice message' : m.mediaType === 'video' ? '🎥 Video' : m.sticker ? '🏷️ Sticker' : '📷 Photo'}</div>`;
@@ -2057,7 +2058,7 @@ function startReply(key){
   const m = rawMsgs[key]; if (!m) return;
   const txt = m.text ? decCache.get(m.text) ?? m.text : m.mediaType === 'music' ? 'Song · ' + (m.musicTitle || 'Song') : (m.mediaType ? '📎 ' + m.mediaType : '');
   replyTo = { key, senderUid: m.senderUid, text: m.text || '', mediaType: m.mediaType || '' };
-  $('#reply-q').innerHTML = `<b>${esc(uName(m.senderUid))}</b><br>${esc(txt)}`;
+  $('#reply-q').innerHTML = `<b>${esc(uName(m.senderUid))}${vbadge(m.senderUid)}</b><br>${esc(txt)}`;
   $('#replybar').classList.remove('hidden'); $('#input').focus();
 }
 $('#reply-x').onclick = () => { replyTo = null; $('#replybar').classList.add('hidden'); };
@@ -4262,7 +4263,7 @@ function grPaint(forceBottom){
   grMsgs.forEach((m, gi) => {
     const mine = m.authorUid === me.uid, ts = m.createdAt || Date.now(), dk = new Date(ts).toDateString();
     if (dk !== day) { day = dk; prev = ''; h += `<div class="day">${esc(grDay(ts))}</div>`; }
-    const name = !mine && prev !== m.authorUid ? `<div class="gname" style="color:hsl(${grHue(m.authorUid)},62%,52%)">${esc(uName(m.authorUid))}</div>` : '';
+    const name = !mine && prev !== m.authorUid ? `<div class="gname" style="color:hsl(${grHue(m.authorUid)},62%,52%)">${esc(uName(m.authorUid))}${vbadge(m.authorUid)}</div>` : '';
     prev = m.authorUid;
     const gx = grMsgs[gi + 1], gEnd = !(gx && gx.authorUid === m.authorUid && new Date(gx.createdAt || Date.now()).toDateString() === dk);
     const gav = gEnd ? `<span class="bav" style="background-image:url('${cssUrl(uAvatar(m.authorUid))}')"></span>` : '';
@@ -4288,7 +4289,7 @@ async function grContacts(exclude){
   await Promise.all(ids.map(loadUser));
   return ids.sort((a, b) => uName(a).localeCompare(uName(b)));
 }
-const grPickRows = ids => ids.length ? ids.map(u => `<label class="res"><div class="av sm" style="background-image:url('${cssUrl(uAvatar(u))}')"></div><div class="mid"><b>${esc(uName(u))}</b></div><input type="checkbox" value="${esc(u)}"></label>`).join('') : '<div class="empty" style="padding:16px">No contacts to add yet</div>';
+const grPickRows = ids => ids.length ? ids.map(u => `<label class="res"><div class="av sm" style="background-image:url('${cssUrl(uAvatar(u))}')"></div><div class="mid"><b>${esc(uName(u))}${vbadge(u)}</b></div><input type="checkbox" value="${esc(u)}"></label>`).join('') : '<div class="empty" style="padding:16px">No contacts to add yet</div>';
 async function grCreate(){
   const ov = modal(`<h3>Create a group</h3><input class="field" id="gc-name" placeholder="Group name" maxlength="60"><input class="field" id="gc-about" placeholder="Description (optional)" maxlength="300"><select class="field" id="gc-vis"><option value="private">Private — only people you add</option><option value="public">Public — anyone can find and join</option></select><div class="csec" style="padding:6px 4px">Add members</div><div class="grpick" id="gc-list"><div class="spin"></div></div><button class="btn" id="gc-go">Create group</button>`);
   const ids = await grContacts(); if (!ov.isConnected) return;
@@ -4313,7 +4314,7 @@ async function grInfo(){
   const ov = modal(`<div style="display:flex;flex-direction:column;align-items:center;text-align:center;margin-bottom:10px">${pgAv(g, 72)}<h3 style="margin:10px 0 2px">${esc(g.name)}</h3><span style="color:var(--muted);font-size:13px">${esc(g.isPublic ? 'Public group' : 'Private group')} · ${esc(grCount(Object.keys(grMembers).length))}</span>${g.about ? `<p style="color:var(--muted);margin:8px 0 0;white-space:pre-wrap">${esc(g.about)}</p>` : ''}</div>${admin ? '<button class="sh" id="gi-add">Add members</button>' : ''}<div class="csec" style="padding:8px 2px 2px">Members</div><div id="gi-list"></div>${owner ? '<button class="sh danger" id="gi-del">Delete group</button>' : '<button class="sh danger" id="gi-leave">Leave group</button>'}`);
   const uids = Object.keys(grMembers); await Promise.all(uids.map(loadUser)); if (!ov.isConnected) return;
   const sorted = uids.sort((a, b) => (grMembers[a] === 'admin' ? 0 : 1) - (grMembers[b] === 'admin' ? 0 : 1) || uName(a).localeCompare(uName(b)));
-  ov.querySelector('#gi-list').innerHTML = sorted.map(u => `<div class="grmem" data-uid="${esc(u)}"><div class="av sm" style="background-image:url('${cssUrl(uAvatar(u))}')"></div><div class="mid"><b>${esc(uName(u))}</b>${grMembers[u] === 'admin' ? '<span>Admin</span>' : ''}</div>${admin && u !== me.uid && u !== g.ownerUid ? '<button class="rm" data-rm>Remove</button>' : ''}</div>`).join('');
+  ov.querySelector('#gi-list').innerHTML = sorted.map(u => `<div class="grmem" data-uid="${esc(u)}"><div class="av sm" style="background-image:url('${cssUrl(uAvatar(u))}')"></div><div class="mid"><b>${esc(uName(u))}${vbadge(u)}</b>${grMembers[u] === 'admin' ? '<span>Admin</span>' : ''}</div>${admin && u !== me.uid && u !== g.ownerUid ? '<button class="rm" data-rm>Remove</button>' : ''}</div>`).join('');
   ov.querySelector('#gi-list').onclick = async e => {
     const b = e.target.closest('[data-rm]'); if (!b) return; const u = b.closest('.grmem').dataset.uid; b.disabled = true;
     try { await update(ref(db), { [`groupMembers/${id}/${u}`]: null, [`userGroups/${u}/${id}`]: null, [`groups/${id}/memberCount`]: increment(-1) }); b.closest('.grmem').remove(); toast('Removed ' + uName(u)); }

@@ -60,7 +60,7 @@ input,textarea{font:inherit;color:inherit}
 #auth .top{position:relative;z-index:2;display:flex;align-items:center;justify-content:center;height:34px}
 #auth .top .brand{font-size:15px;color:#111;letter-spacing:.35em;margin-right:-.35em}
 #auth .top .brand i{color:#111}
-#auth .hero{position:relative;z-index:2;flex:1 1 auto;min-height:clamp(220px,35vh,330px);display:flex;align-items:center;justify-content:center;padding-top:46px}
+#auth .hero{position:relative;z-index:2;flex:1 1 auto;min-height:clamp(190px,27vh,330px);display:flex;align-items:center;justify-content:center;padding-top:40px}
 #auth .env{width:clamp(200px,58vw,250px);height:auto;overflow:visible;animation:aFloat 6s ease-in-out infinite;filter:drop-shadow(0 26px 20px var(--shadow))}
 #auth .envbtn{all:unset;box-sizing:border-box;cursor:pointer;display:block;-webkit-tap-highlight-color:transparent;transition:transform .5s cubic-bezier(.2,.9,.25,1) .15s}
 #auth .envbtn:focus-visible .env{outline:2px solid var(--text);outline-offset:8px;border-radius:12px}
@@ -78,9 +78,16 @@ input,textarea{font:inherit;color:inherit}
 @media (prefers-reduced-motion:reduce){#auth .env *,#auth .envbtn{transition-duration:.01s!important;transition-delay:0s!important}#auth .env-hint{animation:none}}
 #auth .or{display:flex;align-items:center;gap:12px;margin:14px 4px 4px;color:var(--muted);font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase}
 #auth .or::before,#auth .or::after{content:"";flex:1;height:1px;background:var(--fld-b)}
-#auth .btn.fb{display:flex;align-items:center;justify-content:center;gap:11px;background:#1877F2;color:#fff;letter-spacing:.06em;text-transform:none;font-size:14.5px;font-weight:700;padding:15px;margin-top:10px;box-shadow:0 10px 24px rgba(24,119,242,.32)}
-#auth .btn.fb svg{width:21px;height:21px;flex-shrink:0}
-#auth .btn.fb:active{box-shadow:0 4px 12px rgba(24,119,242,.3)}
+#auth .social{display:flex;align-items:center;justify-content:center;gap:18px;margin-top:14px}
+#auth .soc{all:unset;box-sizing:border-box;width:58px;height:58px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .15s,box-shadow .2s,opacity .2s}
+#auth .soc svg{width:23px;height:23px}
+#auth .soc:active{transform:scale(.92)}
+#auth .soc:disabled{opacity:.5;pointer-events:none}
+#auth .soc:focus-visible{outline:2px solid var(--text);outline-offset:3px}
+#auth .soc.fb{background:#1877F2;box-shadow:0 8px 20px rgba(24,119,242,.32)}
+#auth .soc.fb svg{width:27px;height:27px}
+#auth .soc.xx{background:#000;color:#fff;box-shadow:0 8px 20px rgba(0,0,0,.28)}
+:root[data-theme="dark"] #auth .soc.xx{background:#fff;color:#000;box-shadow:0 8px 20px rgba(255,255,255,.12)}
 #auth .headline{position:relative;z-index:2;text-align:center;margin:6px 0 20px}
 #auth .headline h1{margin:0;font-family:var(--brand);font-weight:400;font-size:clamp(18px,5.4vw,23px);letter-spacing:.22em;margin-right:-.22em;text-transform:uppercase;color:var(--text)}
 #auth .headline p{margin:10px 0 0;font-size:12.5px;font-weight:600;letter-spacing:.04em;color:var(--muted)}
@@ -896,11 +903,15 @@ body.gr-chat #bnav{display:none}
           <button class="btn ghost" id="btn-back-phone">Use a different number</button>
         </div>
       </div>
-      <div class="or"><span>or</span></div>
-      <button type="button" class="btn fb" id="btn-fb" aria-label="Continue with Facebook">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#fff" d="M24 12.07C24 5.4 18.63 0 12 0S0 5.4 0 12.07C0 18.1 4.39 23.1 10.13 24v-8.44H7.08v-3.49h3.05V9.41c0-3.02 1.79-4.69 4.53-4.69 1.31 0 2.69.24 2.69.24v2.97h-1.51c-1.49 0-1.96.93-1.96 1.88v2.26h3.33l-.53 3.49h-2.8V24C19.61 23.1 24 18.1 24 12.07Z"/></svg>
-        <span>Continue with Facebook</span>
-      </button>
+      <div class="or"><span>or continue with</span></div>
+      <div class="social">
+        <button type="button" class="soc fb" id="btn-fb" aria-label="Continue with Facebook" title="Facebook">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#fff" d="M24 12.07C24 5.4 18.63 0 12 0S0 5.4 0 12.07C0 18.1 4.39 23.1 10.13 24v-8.44H7.08v-3.49h3.05V9.41c0-3.02 1.79-4.69 4.53-4.69 1.31 0 2.69.24 2.69.24v2.97h-1.51c-1.49 0-1.96.93-1.96 1.88v2.26h3.33l-.53 3.49h-2.8V24C19.61 23.1 24 18.1 24 12.07Z"/></svg>
+        </button>
+        <button type="button" class="soc xx" id="btn-x" aria-label="Continue with X" title="X">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932ZM17.61 20.644h2.039L6.486 3.24H4.298Z"/></svg>
+        </button>
+      </div>
       <div class="err" id="auth-err"></div>
       <div id="recaptcha-container"></div>
     </div>
@@ -1040,7 +1051,7 @@ body.gr-chat #bnav{display:none}
 </script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-import { getAuth, onAuthStateChanged, signOut, RecaptchaVerifier, PhoneAuthProvider, updatePhoneNumber, signInWithPhoneNumber, signInWithEmailAndPassword, sendPasswordResetEmail, FacebookAuthProvider, linkWithCredential, signInWithPopup, signInWithRedirect, getRedirectResult } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+import { getAuth, onAuthStateChanged, signOut, RecaptchaVerifier, PhoneAuthProvider, updatePhoneNumber, signInWithPhoneNumber, signInWithEmailAndPassword, sendPasswordResetEmail, FacebookAuthProvider, TwitterAuthProvider, linkWithCredential, signInWithPopup, signInWithRedirect, getRedirectResult } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 import { getDatabase, ref, onValue, get, push, set, update, off, query, orderByChild, orderByKey, limitToLast, limitToFirst, startAt, endAt, increment, onDisconnect, serverTimestamp, remove, orderByValue, runTransaction } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-functions.js";
 import { getStorage, ref as sRef, uploadBytes, uploadBytesResumable, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-storage.js";
@@ -1338,7 +1349,7 @@ const nice = e => (e && e.code ? ({
   'auth/invalid-verification-code':'That code is wrong.', 'auth/code-expired':'Code expired — request a new one.',
   'auth/unauthorized-domain':'This domain isn’t authorised in Firebase. Add it under Authentication → Settings → Authorized domains.',
   'auth/account-exists-with-different-credential':'An account with this email already exists. Sign in with your email and password instead.',
-  'auth/operation-not-allowed':'Facebook login isn’t switched on in Firebase yet.', 'auth/popup-blocked':'Your browser blocked the Facebook window. Allow pop-ups and try again.',
+  'auth/operation-not-allowed':'This login isn’t switched on in Firebase yet.', 'auth/popup-blocked':'Your browser blocked the sign-in window. Allow pop-ups and try again.',
   'auth/network-request-failed':'No connection. Check your internet and try again.'
 }[e.code] || e.message.replace('Firebase: ', '')) : (e.message || 'Something went wrong.'));
 
@@ -1352,7 +1363,7 @@ async function emailLogin(){
   $('#btn-email').disabled = true; authErr();
   try {
     const cr = await signInWithEmailAndPassword(auth, email, pw);
-    if (pendingFb) { const pf = pendingFb; pendingFb = null; try { await linkWithCredential(cr.user, pf.cred); toast('Facebook linked to your account'); } catch (e2) { console.warn('link facebook', e2); } }
+    if (pendingFb) { const pf = pendingFb; pendingFb = null; try { await linkWithCredential(cr.user, pf.cred); toast('Connected to your account'); } catch (e2) { console.warn('link facebook', e2); } }
   } catch (e) { authErr(nice(e)); }
   $('#btn-email').disabled = false;
 }
@@ -1363,38 +1374,42 @@ $('#btn-reset').onclick = async () => {
   try { await sendPasswordResetEmail(auth, email); authErr(''); toast('Password reset email sent'); } catch (e) { authErr(nice(e)); }
 };
 
-/* ----- Facebook login (Firebase FacebookAuthProvider) ----- */
+/* ----- social login (Facebook + X through Firebase) ----- */
 const fbProvider = new FacebookAuthProvider(); fbProvider.addScope('email'); fbProvider.addScope('public_profile');
-/* a brand-new Facebook account has no Haba profile yet: create a minimal one (name + photo) so chats, statuses and avatars work */
-async function fbEnsureProfile(user){
+const xProvider = new TwitterAuthProvider();
+/* a brand-new social account has no Haba profile yet: create a minimal one (name + photo) so chats, statuses and avatars work */
+async function socialEnsureProfile(user, provider){
   try {
     const r = ref(db, `users/${user.uid}`);
     if ((await get(r)).exists()) return;
-    await set(r, { name: user.displayName || 'Haba user', photoURL: user.photoURL || '', createdAt: Date.now(), provider: 'facebook' });
-  } catch (e) { console.warn('facebook profile', e); }
+    await set(r, { name: user.displayName || 'Haba user', photoURL: user.photoURL || '', createdAt: Date.now(), provider });
+  } catch (e) { console.warn('social profile', e); }
 }
-getRedirectResult(auth).then(r => { if (r && r.user) fbEnsureProfile(r.user); }).catch(e => { if (e && e.code) authErr(nice(e)); });
-$('#btn-fb').onclick = async () => {
-  const btn = $('#btn-fb'); authErr(''); btn.disabled = true;
+getRedirectResult(auth).then(r => { if (r && r.user) socialEnsureProfile(r.user, (r.providerId || '').indexOf('twitter') >= 0 ? 'x' : 'facebook'); }).catch(e => { if (e && e.code) authErr(nice(e)); });
+async function socialLogin(btn, provider, kind){
+  const label = kind === 'x' ? 'X' : 'Facebook';
+  authErr(''); $('#btn-fb').disabled = $('#btn-x').disabled = true;
   try {
-    const res = await signInWithPopup(auth, fbProvider);
-    await fbEnsureProfile(res.user);
+    const res = await signInWithPopup(auth, provider);
+    await socialEnsureProfile(res.user, kind);
   } catch (e) {
     const c = e && e.code;
     if (c === 'auth/popup-closed-by-user' || c === 'auth/cancelled-popup-request') { /* cancelled — stay quiet */ }
-    else if (c === 'auth/popup-blocked' || c === 'auth/operation-not-supported-in-this-environment') { try { await signInWithRedirect(auth, fbProvider); return; } catch (e2) { authErr(nice(e2)); } }
+    else if (c === 'auth/popup-blocked' || c === 'auth/operation-not-supported-in-this-environment') { try { await signInWithRedirect(auth, provider); return; } catch (e2) { authErr(nice(e2)); } }
     else if (c === 'auth/account-exists-with-different-credential') {
-      /* this email already has a Haba account: sign in the usual way once, and Facebook gets linked to it for next time */
-      const cred = FacebookAuthProvider.credentialFromError(e), em = (e.customData && e.customData.email) || '';
+      /* this email already has a Haba account: sign in the usual way once, and the social login gets linked to it for next time */
+      const cred = (kind === 'x' ? TwitterAuthProvider : FacebookAuthProvider).credentialFromError(e), em = (e.customData && e.customData.email) || '';
       if (cred) pendingFb = { cred, email: em };
       $('#tab-email').click(); if (em) $('#email').value = em;
-      authErr('You already have a Haba account' + (em ? ' (' + em + ')' : '') + '. Enter your password once to connect Facebook to it.');
+      authErr('You already have a Haba account' + (em ? ' (' + em + ')' : '') + '. Enter your password once to connect ' + label + ' to it.');
       $('#password').focus();
     }
     else authErr(nice(e));
   }
-  btn.disabled = false;
-};
+  $('#btn-fb').disabled = $('#btn-x').disabled = false;
+}
+$('#btn-fb').onclick = () => socialLogin($('#btn-fb'), fbProvider, 'facebook');
+$('#btn-x').onclick = () => socialLogin($('#btn-x'), xProvider, 'x');
 
 let verifier = null, confirmation = null;
 function getVerifier(){

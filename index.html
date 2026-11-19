@@ -3416,7 +3416,7 @@ function renderSettings(){
     <div class="suser">${u.username ? '@' + esc(u.username) : ''}</div>
     ${premCard(u)}
     ${row('', 'user', 'Account', me.email || 'Signed in with phone')}
-    ${row('mfa', 'shield', 'Two-step verification', mfaSub())}
+    ${mfaFactors().some(x => x.factorId === 'phone') ? row('mfa', 'shield', 'Two-step verification', mfaSub()) : ''}
     ${row('phone', 'phone', 'Phone number', (me.phoneNumber || u.phoneNumber) ? (me.phoneNumber || u.phoneNumber) + ' · tap to change' : 'Not linked · tap to add')}
     ${row('receipts', 'shield', 'Privacy', 'Read receipts', on('hm-receipts'))}
     ${row('online', 'eye', 'Online status', 'Let others see when you’re online', on('hm-online'))}
@@ -3477,52 +3477,16 @@ function changePhone(){
 }
 /* ----- optional two-step verification (SMS) in Settings ----- */
 const mfaFactors = () => { try { return multiFactor(me).enrolledFactors || []; } catch { return []; } };
-function mfaSub(){
-  if (!me.email) return 'Needs an account with an email';
-  const f = mfaFactors().find(x => x.factorId === 'phone');
-  return f ? 'On · code sent to ' + (f.phoneNumber || 'your phone') + ' · tap to manage' : 'Off · add an SMS code at sign-in';
-}
+function mfaSub(){ return 'On · tap to turn off'; }
 function mfaManage(){
-  if (!me.email) return toast('Two-step verification needs an account with an email');
-  const f = mfaFactors().find(x => x.factorId === 'phone');
-  const ov = modal(f
-    ? `<h3>Two-step verification</h3><p style="color:var(--muted);margin:0 0 14px">On. When you sign in, we also text a 6-digit code to <b style="color:var(--text)">${esc(f.phoneNumber || 'your phone')}</b>.</p><div id="mf-err" style="color:var(--danger);font-size:14px;min-height:18px"></div><button class="btn" id="mf-off" style="background:var(--danger);color:#fff">Turn off</button><button class="btn ghost" id="mf-x" style="margin-top:6px">Close</button>`
-    : `<h3>Two-step verification</h3><p style="color:var(--muted);margin:0 0 12px">Add an extra layer of security. After your password, Haba will ask for a code we text to your phone.</p>
-      <div id="mf1"><div class="row" style="display:flex;gap:8px"><input class="field" id="mf-cc" value="+27" inputmode="tel" style="width:84px;flex:none"><input class="field" id="mf-num" type="tel" placeholder="Phone number" inputmode="tel" autocomplete="tel-national"></div><button class="btn" id="mf-send">Send code</button></div>
-      <div id="mf2" class="hidden"><p style="color:var(--muted);margin:0 0 10px">Enter the 6-digit code we sent to <b id="mf-to" style="color:var(--text)"></b>.</p><input class="field" id="mf-code" placeholder="6-digit code" inputmode="numeric" autocomplete="one-time-code" maxlength="6"><button class="btn" id="mf-ok">Turn on</button></div>
-      <div id="mf-err" style="color:var(--danger);font-size:14px;margin-top:8px;min-height:18px"></div><button class="btn ghost" id="mf-x" style="margin-top:6px">Cancel</button>`);
-  const q = id => ov.querySelector(id), err = t => q('#mf-err').textContent = t || '';
-  const nice3 = e => smsErr(e) || ({ 'auth/requires-recent-login': 'For your security, sign out and sign back in, then try again.', 'auth/unverified-email': 'Verify your email first. We just sent you a link; tap it, then try again.', 'auth/second-factor-already-in-use': 'That number is already used for two-step verification on another account.', 'auth/invalid-verification-code': 'That code isn’t right.', 'auth/code-expired': 'That code expired. Send a new one.', 'auth/invalid-phone-number': 'Enter a valid phone number.', 'auth/too-many-requests': 'Too many attempts. Try again later.', 'auth/operation-not-allowed': 'Two-step verification isn’t switched on in Firebase yet.', 'auth/unsupported-first-factor': 'Two-step verification isn’t available for this kind of sign-in.', 'auth/network-request-failed': 'No connection. Try again.' }[e && e.code] || ('Something went wrong' + (e && e.code ? ' (' + e.code + ')' : '') + '.'));
+  const f = mfaFactors().find(x => x.factorId === 'phone'); if (!f) return;
+  const ov = modal(`<h3>Two-step verification</h3><p style="color:var(--muted);margin:0 0 14px">Turn off the SMS code at sign-in for <b style="color:var(--text)">${esc(f.phoneNumber || 'your phone')}</b>?</p><div id="mf-err" style="color:var(--danger);font-size:14px;min-height:18px"></div><button class="btn" id="mf-off" style="background:var(--danger);color:#fff">Turn off</button><button class="btn ghost" id="mf-x" style="margin-top:6px">Cancel</button>`);
+  const q = id => ov.querySelector(id);
   q('#mf-x').onclick = closeModal;
-  if (f) {
-    q('#mf-off').onclick = async () => {
-      q('#mf-off').disabled = true; err();
-      try { await multiFactor(me).unenroll(f); closeModal(); toast('Two-step verification is off'); renderSettings(); }
-      catch (e) { err(nice3(e)); q('#mf-off').disabled = false; }
-    };
-    return;
-  }
-  let vid = '';
-  q('#mf-send').onclick = async () => {
-    let cc = q('#mf-cc').value.trim(), num = q('#mf-num').value.trim().replace(/[\s()-]/g, '');
-    if (!cc.startsWith('+')) cc = '+' + cc; if (num.startsWith('0')) num = num.slice(1); if (num.startsWith('+')) cc = '';
-    if (!num) return err('Enter your phone number.');
-    q('#mf-send').disabled = true; err();
-    try {
-      if (!me.emailVerified) { try { await sendEmailVerification(me); } catch {} throw { code: 'auth/unverified-email' }; }
-      const session = await multiFactor(me).getSession();
-      vid = await new PhoneAuthProvider(auth).verifyPhoneNumber({ phoneNumber: cc + num, session }, getVerifier());
-      q('#mf1').classList.add('hidden'); q('#mf2').classList.remove('hidden'); q('#mf-to').textContent = cc + num; q('#mf-code').focus();
-    } catch (e) { console.error('2SV send code', e); err(nice3(e)); }
-    q('#mf-send').disabled = false;
-  };
-  q('#mf-ok').onclick = async () => {
-    const code = q('#mf-code').value.trim(); if (!code) return err('Enter the code.');
-    q('#mf-ok').disabled = true; err();
-    try {
-      await multiFactor(me).enroll(PhoneMultiFactorGenerator.assertion(PhoneAuthProvider.credential(vid, code)), 'Phone');
-      closeModal(); toast('Two-step verification is on'); renderSettings();
-    } catch (e) { err(nice3(e)); q('#mf-ok').disabled = false; }
+  q('#mf-off').onclick = async () => {
+    q('#mf-off').disabled = true; q('#mf-err').textContent = '';
+    try { await multiFactor(me).unenroll(f); closeModal(); toast('Two-step verification is off'); renderSettings(); }
+    catch (e) { q('#mf-err').textContent = (e && e.code === 'auth/requires-recent-login') ? 'For your security, sign out and sign back in, then try again.' : 'Couldn’t turn it off. Try again.'; q('#mf-off').disabled = false; }
   };
 }
 /* centered empty states: illustration + title + hint + optional action */

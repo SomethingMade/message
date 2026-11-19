@@ -76,6 +76,11 @@ input,textarea{font:inherit;color:inherit}
 #auth .envbtn.open ~ .env-hint{opacity:0;animation:none}
 @keyframes aPulse{0%,100%{transform:translateY(0)}50%{transform:translateY(3px)}}
 @media (prefers-reduced-motion:reduce){#auth .env *,#auth .envbtn{transition-duration:.01s!important;transition-delay:0s!important}#auth .env-hint{animation:none}}
+#auth .or{display:flex;align-items:center;gap:12px;margin:14px 4px 4px;color:var(--muted);font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase}
+#auth .or::before,#auth .or::after{content:"";flex:1;height:1px;background:var(--fld-b)}
+#auth .btn.fb{display:flex;align-items:center;justify-content:center;gap:11px;background:#1877F2;color:#fff;letter-spacing:.06em;text-transform:none;font-size:14.5px;font-weight:700;padding:15px;margin-top:10px;box-shadow:0 10px 24px rgba(24,119,242,.32)}
+#auth .btn.fb svg{width:21px;height:21px;flex-shrink:0}
+#auth .btn.fb:active{box-shadow:0 4px 12px rgba(24,119,242,.3)}
 #auth .headline{position:relative;z-index:2;text-align:center;margin:6px 0 20px}
 #auth .headline h1{margin:0;font-family:var(--brand);font-weight:400;font-size:clamp(18px,5.4vw,23px);letter-spacing:.22em;margin-right:-.22em;text-transform:uppercase;color:var(--text)}
 #auth .headline p{margin:10px 0 0;font-size:12.5px;font-weight:600;letter-spacing:.04em;color:var(--muted)}
@@ -891,6 +896,11 @@ body.gr-chat #bnav{display:none}
           <button class="btn ghost" id="btn-back-phone">Use a different number</button>
         </div>
       </div>
+      <div class="or"><span>or</span></div>
+      <button type="button" class="btn fb" id="btn-fb" aria-label="Continue with Facebook">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#fff" d="M24 12.07C24 5.4 18.63 0 12 0S0 5.4 0 12.07C0 18.1 4.39 23.1 10.13 24v-8.44H7.08v-3.49h3.05V9.41c0-3.02 1.79-4.69 4.53-4.69 1.31 0 2.69.24 2.69.24v2.97h-1.51c-1.49 0-1.96.93-1.96 1.88v2.26h3.33l-.53 3.49h-2.8V24C19.61 23.1 24 18.1 24 12.07Z"/></svg>
+        <span>Continue with Facebook</span>
+      </button>
       <div class="err" id="auth-err"></div>
       <div id="recaptcha-container"></div>
     </div>
@@ -1030,7 +1040,7 @@ body.gr-chat #bnav{display:none}
 </script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-import { getAuth, onAuthStateChanged, signOut, RecaptchaVerifier, PhoneAuthProvider, updatePhoneNumber, signInWithPhoneNumber, signInWithEmailAndPassword, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+import { getAuth, onAuthStateChanged, signOut, RecaptchaVerifier, PhoneAuthProvider, updatePhoneNumber, signInWithPhoneNumber, signInWithEmailAndPassword, sendPasswordResetEmail, FacebookAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 import { getDatabase, ref, onValue, get, push, set, update, off, query, orderByChild, orderByKey, limitToLast, limitToFirst, startAt, endAt, increment, onDisconnect, serverTimestamp, remove, orderByValue, runTransaction } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-functions.js";
 import { getStorage, ref as sRef, uploadBytes, uploadBytesResumable, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-storage.js";
@@ -1326,7 +1336,10 @@ const nice = e => (e && e.code ? ({
   'auth/wrong-password':'Wrong email or password.', 'auth/invalid-email':'That email address looks invalid.',
   'auth/too-many-requests':'Too many attempts. Try again in a bit.', 'auth/invalid-phone-number':'That phone number looks invalid.',
   'auth/invalid-verification-code':'That code is wrong.', 'auth/code-expired':'Code expired — request a new one.',
-  'auth/unauthorized-domain':'This domain isn’t authorised in Firebase. Add it under Authentication → Settings → Authorized domains.'
+  'auth/unauthorized-domain':'This domain isn’t authorised in Firebase. Add it under Authentication → Settings → Authorized domains.',
+  'auth/account-exists-with-different-credential':'An account with this email already exists. Sign in with your email and password instead.',
+  'auth/operation-not-allowed':'Facebook login isn’t switched on in Firebase yet.', 'auth/popup-blocked':'Your browser blocked the Facebook window. Allow pop-ups and try again.',
+  'auth/network-request-failed':'No connection. Check your internet and try again.'
 }[e.code] || e.message.replace('Firebase: ', '')) : (e.message || 'Something went wrong.'));
 
 $('#tab-email').onclick = () => { $('#tab-email').classList.add('on'); $('#tab-phone').classList.remove('on'); $('#pane-email').classList.remove('hidden'); $('#pane-phone').classList.add('hidden'); authErr(); };
@@ -1344,6 +1357,31 @@ $('#password').addEventListener('keydown', e => { if (e.key === 'Enter') emailLo
 $('#btn-reset').onclick = async () => {
   const email = $('#email').value.trim(); if (!email) return authErr('Enter your email above first.');
   try { await sendPasswordResetEmail(auth, email); authErr(''); toast('Password reset email sent'); } catch (e) { authErr(nice(e)); }
+};
+
+/* ----- Facebook login (Firebase FacebookAuthProvider) ----- */
+const fbProvider = new FacebookAuthProvider(); fbProvider.addScope('email'); fbProvider.addScope('public_profile');
+/* a brand-new Facebook account has no Haba profile yet: create a minimal one (name + photo) so chats, statuses and avatars work */
+async function fbEnsureProfile(user){
+  try {
+    const r = ref(db, `users/${user.uid}`);
+    if ((await get(r)).exists()) return;
+    await set(r, { name: user.displayName || 'Haba user', photoURL: user.photoURL || '', createdAt: Date.now(), provider: 'facebook' });
+  } catch (e) { console.warn('facebook profile', e); }
+}
+getRedirectResult(auth).then(r => { if (r && r.user) fbEnsureProfile(r.user); }).catch(e => { if (e && e.code) authErr(nice(e)); });
+$('#btn-fb').onclick = async () => {
+  const btn = $('#btn-fb'); authErr(''); btn.disabled = true;
+  try {
+    const res = await signInWithPopup(auth, fbProvider);
+    await fbEnsureProfile(res.user);
+  } catch (e) {
+    const c = e && e.code;
+    if (c === 'auth/popup-closed-by-user' || c === 'auth/cancelled-popup-request') { /* cancelled — stay quiet */ }
+    else if (c === 'auth/popup-blocked' || c === 'auth/operation-not-supported-in-this-environment') { try { await signInWithRedirect(auth, fbProvider); return; } catch (e2) { authErr(nice(e2)); } }
+    else authErr(nice(e));
+  }
+  btn.disabled = false;
 };
 
 let verifier = null, confirmation = null;

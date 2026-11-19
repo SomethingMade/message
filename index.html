@@ -926,7 +926,6 @@ body.gr-chat #bnav{display:none}
         </button>
       </div>
       <div class="err" id="auth-err"></div>
-      <div id="recaptcha-container"></div>
     </div>
     <p class="legal rv d3">Secured by Haba &middot; End-to-end encrypted</p>
   </div>
@@ -1062,6 +1061,7 @@ body.gr-chat #bnav{display:none}
   ['play', 'playing', 'volumechange'].forEach(ev => document.addEventListener(ev, e => { const t = e.target; if (t && t.tagName && /^(AUDIO|VIDEO)$/.test(t.tagName) && !t.paused) claim(t); }, true));
 })();
 </script>
+<div id="recaptcha-container" style="position:fixed;left:0;bottom:0;z-index:2147483000"></div>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut, multiFactor, PhoneMultiFactorGenerator, getMultiFactorResolver, sendEmailVerification, RecaptchaVerifier, PhoneAuthProvider, updatePhoneNumber, signInWithPhoneNumber, signInWithEmailAndPassword, sendPasswordResetEmail, FacebookAuthProvider, TwitterAuthProvider, linkWithCredential, signInWithPopup, signInWithRedirect, getRedirectResult } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
@@ -1354,8 +1354,20 @@ let otherLastRead = 0, otherTyping = false, iBlocked = false, theyBlocked = fals
 let replyTo = null, renderTok = 0, firstLoad = true, msgUnsub = null, renderedKeys = new Set();
 
 /* =============== AUTH UI =============== */
+/* friendly text for the errors Firebase throws when it can't send the SMS */
+const smsErr = e => { const c = e && e.code; return ({
+  'auth/invalid-app-credential':'Couldn’t verify this browser (reCAPTCHA). Refresh the page and try again.',
+  'auth/captcha-check-failed':'Couldn’t verify this browser (reCAPTCHA). Refresh the page and try again.',
+  'auth/missing-app-credential':'Couldn’t verify this browser (reCAPTCHA). Refresh the page and try again.',
+  'auth/quota-exceeded':'SMS limit reached for now. Try again later.',
+  'auth/billing-not-enabled':'SMS needs billing enabled on the Firebase project (Blaze plan).',
+  'auth/unauthorized-domain':'This domain isn’t authorised in Firebase (Authentication → Settings → Authorized domains).',
+  'auth/missing-phone-number':'Enter your phone number.',
+  'auth/internal-error':'Firebase couldn’t send the SMS (internal error). Check that SMS is allowed for your country in Firebase and try again.',
+  'auth/web-storage-unsupported':'This browser is blocking storage. Allow cookies/storage and try again.'
+})[c] || null; };
 const authErr = m => $('#auth-err').textContent = m || '';
-const nice = e => (e && e.code ? ({
+const nice = e => smsErr(e) || (e && e.code ? ({
   'auth/invalid-credential':'Wrong email or password.', 'auth/user-not-found':'No Haba account with that email — create one in the Haba app first.',
   'auth/wrong-password':'Wrong email or password.', 'auth/invalid-email':'That email address looks invalid.',
   'auth/too-many-requests':'Too many attempts. Try again in a bit.', 'auth/invalid-phone-number':'That phone number looks invalid.',
@@ -1364,7 +1376,7 @@ const nice = e => (e && e.code ? ({
   'auth/account-exists-with-different-credential':'An account with this email already exists. Sign in with your email and password instead.',
   'auth/operation-not-allowed':'This login isn’t switched on in Firebase yet.', 'auth/popup-blocked':'Your browser blocked the sign-in window. Allow pop-ups and try again.',
   'auth/network-request-failed':'No connection. Check your internet and try again.', 'auth/invalid-verification-code':'That code isn’t right. Check it and try again.', 'auth/code-expired':'That code has expired. Go back and sign in again.', 'auth/too-many-requests':'Too many attempts. Wait a few minutes and try again.'
-}[e.code] || e.message.replace('Firebase: ', '')) : (e.message || 'Something went wrong.'));
+}[e.code] || e.message.replace('Firebase: ', '')) : ((e && e.message) || 'Something went wrong.'));
 
 $('#tab-email').onclick = () => { $('#tab-email').classList.add('on'); $('#tab-phone').classList.remove('on'); $('#pane-email').classList.remove('hidden'); $('#pane-phone').classList.add('hidden'); authErr(); };
 $('#tab-phone').onclick = () => { $('#tab-phone').classList.add('on'); $('#tab-email').classList.remove('on'); $('#pane-phone').classList.remove('hidden'); $('#pane-email').classList.add('hidden'); authErr(); };
@@ -1404,7 +1416,7 @@ async function emailLogin(){
   } catch (e) {
     if (e && e.code === 'auth/multi-factor-auth-required') {
       try { await mfaChallenge(e, async cr => { if (pendingFb) { const pf = pendingFb; pendingFb = null; try { await linkWithCredential(cr.user, pf.cred); toast('Connected to your account'); } catch (e2) { console.warn('link', e2); } } }); }
-      catch (e2) { authErr(nice(e2)); }
+      catch (e2) { console.error('2SV sign-in send code', e2); authErr(nice(e2)); }
     } else authErr(nice(e));
   }
   $('#btn-email').disabled = false;
@@ -3480,7 +3492,7 @@ function mfaManage(){
       <div id="mf2" class="hidden"><p style="color:var(--muted);margin:0 0 10px">Enter the 6-digit code we sent to <b id="mf-to" style="color:var(--text)"></b>.</p><input class="field" id="mf-code" placeholder="6-digit code" inputmode="numeric" autocomplete="one-time-code" maxlength="6"><button class="btn" id="mf-ok">Turn on</button></div>
       <div id="mf-err" style="color:var(--danger);font-size:14px;margin-top:8px;min-height:18px"></div><button class="btn ghost" id="mf-x" style="margin-top:6px">Cancel</button>`);
   const q = id => ov.querySelector(id), err = t => q('#mf-err').textContent = t || '';
-  const nice3 = e => ({ 'auth/requires-recent-login': 'For your security, sign out and sign back in, then try again.', 'auth/unverified-email': 'Verify your email first. We just sent you a link; tap it, then try again.', 'auth/second-factor-already-in-use': 'That number is already used for two-step verification on another account.', 'auth/invalid-verification-code': 'That code isn’t right.', 'auth/code-expired': 'That code expired. Send a new one.', 'auth/invalid-phone-number': 'Enter a valid phone number.', 'auth/too-many-requests': 'Too many attempts. Try again later.', 'auth/operation-not-allowed': 'Two-step verification isn’t switched on in Firebase yet.', 'auth/unsupported-first-factor': 'Two-step verification isn’t available for this kind of sign-in.', 'auth/network-request-failed': 'No connection. Try again.' }[e && e.code] || ('Something went wrong' + (e && e.code ? ' (' + e.code + ')' : '') + '.'));
+  const nice3 = e => smsErr(e) || ({ 'auth/requires-recent-login': 'For your security, sign out and sign back in, then try again.', 'auth/unverified-email': 'Verify your email first. We just sent you a link; tap it, then try again.', 'auth/second-factor-already-in-use': 'That number is already used for two-step verification on another account.', 'auth/invalid-verification-code': 'That code isn’t right.', 'auth/code-expired': 'That code expired. Send a new one.', 'auth/invalid-phone-number': 'Enter a valid phone number.', 'auth/too-many-requests': 'Too many attempts. Try again later.', 'auth/operation-not-allowed': 'Two-step verification isn’t switched on in Firebase yet.', 'auth/unsupported-first-factor': 'Two-step verification isn’t available for this kind of sign-in.', 'auth/network-request-failed': 'No connection. Try again.' }[e && e.code] || ('Something went wrong' + (e && e.code ? ' (' + e.code + ')' : '') + '.'));
   q('#mf-x').onclick = closeModal;
   if (f) {
     q('#mf-off').onclick = async () => {
@@ -3501,7 +3513,7 @@ function mfaManage(){
       const session = await multiFactor(me).getSession();
       vid = await new PhoneAuthProvider(auth).verifyPhoneNumber({ phoneNumber: cc + num, session }, getVerifier());
       q('#mf1').classList.add('hidden'); q('#mf2').classList.remove('hidden'); q('#mf-to').textContent = cc + num; q('#mf-code').focus();
-    } catch (e) { err(nice3(e)); }
+    } catch (e) { console.error('2SV send code', e); err(nice3(e)); }
     q('#mf-send').disabled = false;
   };
   q('#mf-ok').onclick = async () => {

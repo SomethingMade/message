@@ -1040,7 +1040,7 @@ body.gr-chat #bnav{display:none}
 </script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-import { getAuth, onAuthStateChanged, signOut, RecaptchaVerifier, PhoneAuthProvider, updatePhoneNumber, signInWithPhoneNumber, signInWithEmailAndPassword, sendPasswordResetEmail, FacebookAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+import { getAuth, onAuthStateChanged, signOut, RecaptchaVerifier, PhoneAuthProvider, updatePhoneNumber, signInWithPhoneNumber, signInWithEmailAndPassword, sendPasswordResetEmail, FacebookAuthProvider, linkWithCredential, signInWithPopup, signInWithRedirect, getRedirectResult } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 import { getDatabase, ref, onValue, get, push, set, update, off, query, orderByChild, orderByKey, limitToLast, limitToFirst, startAt, endAt, increment, onDisconnect, serverTimestamp, remove, orderByValue, runTransaction } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-functions.js";
 import { getStorage, ref as sRef, uploadBytes, uploadBytesResumable, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-storage.js";
@@ -1345,11 +1345,15 @@ const nice = e => (e && e.code ? ({
 $('#tab-email').onclick = () => { $('#tab-email').classList.add('on'); $('#tab-phone').classList.remove('on'); $('#pane-email').classList.remove('hidden'); $('#pane-phone').classList.add('hidden'); authErr(); };
 $('#tab-phone').onclick = () => { $('#tab-phone').classList.add('on'); $('#tab-email').classList.remove('on'); $('#pane-phone').classList.remove('hidden'); $('#pane-email').classList.add('hidden'); authErr(); };
 
+let pendingFb = null;   /* Facebook credential waiting to be linked to an existing account */
 async function emailLogin(){
   const email = $('#email').value.trim(), pw = $('#password').value;
   if (!email || !pw) return authErr('Enter your email and password.');
   $('#btn-email').disabled = true; authErr();
-  try { await signInWithEmailAndPassword(auth, email, pw); } catch (e) { authErr(nice(e)); }
+  try {
+    const cr = await signInWithEmailAndPassword(auth, email, pw);
+    if (pendingFb) { const pf = pendingFb; pendingFb = null; try { await linkWithCredential(cr.user, pf.cred); toast('Facebook linked to your account'); } catch (e2) { console.warn('link facebook', e2); } }
+  } catch (e) { authErr(nice(e)); }
   $('#btn-email').disabled = false;
 }
 $('#btn-email').onclick = emailLogin;
@@ -1379,6 +1383,14 @@ $('#btn-fb').onclick = async () => {
     const c = e && e.code;
     if (c === 'auth/popup-closed-by-user' || c === 'auth/cancelled-popup-request') { /* cancelled — stay quiet */ }
     else if (c === 'auth/popup-blocked' || c === 'auth/operation-not-supported-in-this-environment') { try { await signInWithRedirect(auth, fbProvider); return; } catch (e2) { authErr(nice(e2)); } }
+    else if (c === 'auth/account-exists-with-different-credential') {
+      /* this email already has a Haba account: sign in the usual way once, and Facebook gets linked to it for next time */
+      const cred = FacebookAuthProvider.credentialFromError(e), em = (e.customData && e.customData.email) || '';
+      if (cred) pendingFb = { cred, email: em };
+      $('#tab-email').click(); if (em) $('#email').value = em;
+      authErr('You already have a Haba account' + (em ? ' (' + em + ')' : '') + '. Enter your password once to connect Facebook to it.');
+      $('#password').focus();
+    }
     else authErr(nice(e));
   }
   btn.disabled = false;

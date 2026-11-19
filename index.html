@@ -49,9 +49,9 @@ input,textarea{font:inherit;color:inherit}
 .row .field:first-child{max-width:90px}
 
 /* ===== premium auth (scoped to #auth — follows the app theme: white in light, black in dark; accent = app theme colour) ===== */
-#auth{--tc:var(--accent);--tc-d:#E89A00;--tc-ink:#111;--stage:var(--bg);--fld:var(--input);--fld-b:var(--border);--env:#fff;--env-edge:rgba(0,0,0,.1);--env-ink:#111;--env-shade:rgba(0,0,0,.07);--shadow:rgba(0,0,0,.28);
+#auth{--tc:var(--accent);--tc-d:#E89A00;--tc-ink:#111;--stage:var(--bg);--fld:var(--input);--fld-b:var(--border);--env:#fff;--env-in:#E7E7EB;--env-flapin:#D9D9DE;--letter:#FFF5D8;--env-edge:rgba(0,0,0,.1);--env-ink:#111;--env-shade:rgba(0,0,0,.07);--shadow:rgba(0,0,0,.28);
   display:block;padding:0;background:var(--bg);color:var(--text)}
-:root[data-theme="dark"] #auth{--env:#0A0A0B;--env-edge:rgba(255,255,255,.16);--env-ink:#fff;--env-shade:rgba(255,255,255,.06);--shadow:rgba(0,0,0,.55)}
+:root[data-theme="dark"] #auth{--env:#0A0A0B;--env-in:#19191B;--env-flapin:#232326;--letter:#2B2B2E;--env-edge:rgba(255,255,255,.16);--env-ink:#fff;--env-shade:rgba(255,255,255,.06);--shadow:rgba(0,0,0,.55)}
 #auth .stage{position:relative;width:100%;max-width:430px;min-height:100%;margin:0 auto;display:flex;flex-direction:column;background:var(--stage);overflow:hidden;
   padding:calc(var(--sat) + 14px) 26px calc(var(--sab) + 26px)}
 #auth .blobwrap{position:absolute;left:0;right:0;top:0;height:0;pointer-events:none}
@@ -60,8 +60,22 @@ input,textarea{font:inherit;color:inherit}
 #auth .top{position:relative;z-index:2;display:flex;align-items:center;justify-content:center;height:34px}
 #auth .top .brand{font-size:15px;color:#111;letter-spacing:.35em;margin-right:-.35em}
 #auth .top .brand i{color:#111}
-#auth .hero{position:relative;z-index:2;flex:1 1 auto;min-height:clamp(170px,30vh,300px);display:flex;align-items:center;justify-content:center;padding-top:10px}
+#auth .hero{position:relative;z-index:2;flex:1 1 auto;min-height:clamp(220px,35vh,330px);display:flex;align-items:center;justify-content:center;padding-top:46px}
 #auth .env{width:clamp(200px,58vw,250px);height:auto;overflow:visible;animation:aFloat 6s ease-in-out infinite;filter:drop-shadow(0 26px 20px var(--shadow))}
+#auth .envbtn{all:unset;box-sizing:border-box;cursor:pointer;display:block;-webkit-tap-highlight-color:transparent;transition:transform .5s cubic-bezier(.2,.9,.25,1) .15s}
+#auth .envbtn:focus-visible .env{outline:2px solid var(--text);outline-offset:8px;border-radius:12px}
+#auth .envbtn.open{transform:translateY(22px)}
+#auth .env *{transform-box:view-box}
+#auth .flapf{transform-origin:120px 14px;transition:transform .2s ease-out .55s}
+#auth .flapb{transform-origin:120px 14px;transform:scaleY(0);transition:transform .25s ease-in .3s}
+#auth .letter{transition:transform .45s ease-in 0s}
+#auth .envbtn.open .flapf{transform:scaleY(0);transition:transform .2s ease-in 0s}
+#auth .envbtn.open .flapb{transform:scaleY(-.82);transition:transform .32s ease-out .18s}
+#auth .envbtn.open .letter{transform:translateY(-56px);transition:transform .6s cubic-bezier(.2,.9,.25,1) .4s}
+#auth .env-hint{position:absolute;left:0;right:0;bottom:6px;text-align:center;font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);animation:aPulse 2.4s ease-in-out infinite;transition:opacity .25s;pointer-events:none}
+#auth .envbtn.open ~ .env-hint{opacity:0;animation:none}
+@keyframes aPulse{0%,100%{transform:translateY(0)}50%{transform:translateY(3px)}}
+@media (prefers-reduced-motion:reduce){#auth .env *,#auth .envbtn{transition-duration:.01s!important;transition-delay:0s!important}#auth .env-hint{animation:none}}
 #auth .headline{position:relative;z-index:2;text-align:center;margin:6px 0 20px}
 #auth .headline h1{margin:0;font-family:var(--brand);font-weight:400;font-size:clamp(18px,5.4vw,23px);letter-spacing:.22em;margin-right:-.22em;text-transform:uppercase;color:var(--text)}
 #auth .headline p{margin:10px 0 0;font-size:12.5px;font-weight:600;letter-spacing:.04em;color:var(--muted)}
@@ -87,7 +101,7 @@ input,textarea{font:inherit;color:inherit}
 @keyframes aRise{to{opacity:1;transform:none}}
 @keyframes aFloat{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-9px) rotate(-3deg)}}
 @media (prefers-reduced-motion:reduce){#auth .env{animation:none}#auth .rv{animation:none;opacity:1;transform:none}}
-@media (max-height:640px){#auth .hero{min-height:130px}#auth .env{width:150px}}
+@media (max-height:640px){#auth .hero{min-height:190px;padding-top:40px}#auth .env{width:150px}}
 
 /* app layout */
 #app{height:100%;display:flex}
@@ -818,17 +832,35 @@ body.gr-chat #bnav{display:none}
     <div class="blobwrap"><div class="blob"></div></div>
     <div class="top"><span class="brand">Haba<i>.</i></span></div>
     <div class="hero">
-      <svg class="env" viewBox="0 0 240 170" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-        <rect x="6" y="14" width="228" height="148" rx="16" fill="var(--env)" stroke="var(--env-edge)" stroke-width="1.5"/>
-        <path d="M6 150 L96 82 M234 150 L144 82" stroke="var(--env-edge)" stroke-width="1.5" stroke-linecap="round" fill="none"/>
-        <path d="M6 30a16 16 0 0 1 16-16h196a16 16 0 0 1 16 16L130 110a16 16 0 0 1-20 0z" fill="var(--env)" stroke="var(--env-edge)" stroke-width="1.5" stroke-linejoin="round"/>
-        <path d="M22 14h196a16 16 0 0 1 14 8L130 104a16 16 0 0 1-20 0L8 22a16 16 0 0 1 14-8z" fill="var(--env-shade)"/>
-        <g transform="translate(103 66) scale(.17)">
-          <path d="M54 55a13 13 0 0 1 26 0V200H54Z" fill="var(--env-ink)"/>
-          <path d="M67 114C67 88 88 78 108 78C132 78 142 94 142 116L142 200" fill="none" stroke="var(--env-ink)" stroke-width="26" stroke-linejoin="round"/>
-          <circle cx="148" cy="46" r="13" fill="#FFB020"/>
-        </g>
-      </svg>
+      <button type="button" class="envbtn" id="envbtn" aria-label="Open the envelope" aria-pressed="false">
+        <svg class="env" viewBox="0 0 240 170" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <rect x="6" y="14" width="228" height="148" rx="16" fill="var(--env-in)" stroke="var(--env-edge)" stroke-width="1.5"/>
+          <g class="flapb"><path d="M6 30a16 16 0 0 1 16-16h196a16 16 0 0 1 16 16L130 110a16 16 0 0 1-20 0z" fill="var(--env-flapin)" stroke="var(--env-edge)" stroke-width="1.5" stroke-linejoin="round"/></g>
+          <g class="letter">
+            <rect x="28" y="24" width="184" height="132" rx="10" fill="var(--letter)" stroke="var(--env-edge)" stroke-width="1.5"/>
+            <g transform="translate(108 36) scale(.17)">
+              <path d="M54 55a13 13 0 0 1 26 0V200H54Z" fill="var(--env-ink)"/>
+              <path d="M67 114C67 88 88 78 108 78C132 78 142 94 142 116L142 200" fill="none" stroke="var(--env-ink)" stroke-width="26" stroke-linejoin="round"/>
+              <circle cx="148" cy="46" r="13" fill="#FFB020"/>
+            </g>
+            <text x="120" y="92" text-anchor="middle" font-size="15" font-weight="800" letter-spacing=".5" fill="var(--env-ink)" style="font-family:inherit">Welcome back</text>
+            <rect x="62" y="104" width="116" height="5" rx="2.5" fill="var(--env-ink)" opacity=".18"/>
+            <rect x="76" y="117" width="88" height="5" rx="2.5" fill="var(--env-ink)" opacity=".12"/>
+          </g>
+          <path d="M6 30 L112 104a14 14 0 0 1 16 0L234 30V146a16 16 0 0 1-16 16H22a16 16 0 0 1-16-16Z" fill="var(--env)" stroke="var(--env-edge)" stroke-width="1.5" stroke-linejoin="round"/>
+          <path d="M6 154 L100 90 M234 154 L140 90" stroke="var(--env-edge)" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+          <g class="flapf">
+            <path d="M6 30a16 16 0 0 1 16-16h196a16 16 0 0 1 16 16L130 110a16 16 0 0 1-20 0z" fill="var(--env)" stroke="var(--env-edge)" stroke-width="1.5" stroke-linejoin="round"/>
+            <path d="M22 14h196a16 16 0 0 1 14 8L130 104a16 16 0 0 1-20 0L8 22a16 16 0 0 1 14-8z" fill="var(--env-shade)"/>
+            <g transform="translate(103 44) scale(.17)">
+              <path d="M54 55a13 13 0 0 1 26 0V200H54Z" fill="var(--env-ink)"/>
+              <path d="M67 114C67 88 88 78 108 78C132 78 142 94 142 116L142 200" fill="none" stroke="var(--env-ink)" stroke-width="26" stroke-linejoin="round"/>
+              <circle cx="148" cy="46" r="13" fill="#FFB020"/>
+            </g>
+          </g>
+        </svg>
+      </button>
+      <span class="env-hint" id="env-hint">Tap the envelope</span>
     </div>
     <div class="headline rv d1">
       <h1>Haba Messenger</h1>
@@ -5012,6 +5044,17 @@ window.addEventListener('beforeunload', () => { if (threadId && me) set(ref(db, 
 </script>
 <script>
 if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
+</script>
+<script>
+(function(){
+  var b=document.getElementById('envbtn'); if(!b) return;
+  b.addEventListener('click',function(){
+    var o=b.classList.toggle('open');
+    b.setAttribute('aria-pressed',o?'true':'false');
+    b.setAttribute('aria-label',o?'Close the envelope':'Open the envelope');
+    if(navigator.vibrate){try{navigator.vibrate(12);}catch(e){}}
+  });
+})();
 </script>
 </body>
 </html>

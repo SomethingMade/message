@@ -88,6 +88,12 @@ input,textarea{font:inherit;color:inherit}
 #auth .soc.fb svg{width:27px;height:27px}
 #auth .soc.xx{background:#000;color:#fff;box-shadow:0 8px 20px rgba(0,0,0,.28)}
 :root[data-theme="dark"] #auth .soc.xx{background:#fff;color:#000;box-shadow:0 8px 20px rgba(255,255,255,.12)}
+#auth #pane-mfa{display:none}
+#auth.mfa #pane-mfa{display:block}
+#auth.mfa .tabs,#auth.mfa #pane-email,#auth.mfa #pane-phone,#auth.mfa .or,#auth.mfa .social{display:none!important}
+#auth .mfa-t{margin:2px 0 6px;text-align:center;font-weight:800;font-size:15px;letter-spacing:.04em}
+#auth .mfa-s{margin:0 0 14px;text-align:center;font-size:13px;color:var(--muted)}
+#auth .mfa-s b{color:var(--text)}
 #auth .headline{position:relative;z-index:2;text-align:center;margin:6px 0 20px}
 #auth .headline h1{margin:0;font-family:var(--brand);font-weight:400;font-size:clamp(18px,5.4vw,23px);letter-spacing:.22em;margin-right:-.22em;text-transform:uppercase;color:var(--text)}
 #auth .headline p{margin:10px 0 0;font-size:12.5px;font-weight:600;letter-spacing:.04em;color:var(--muted)}
@@ -903,6 +909,13 @@ body.gr-chat #bnav{display:none}
           <button class="btn ghost" id="btn-back-phone">Use a different number</button>
         </div>
       </div>
+      <div id="pane-mfa">
+        <p class="mfa-t">Two-step verification</p>
+        <p class="mfa-s">Enter the 6-digit code we sent to <b id="mfa-to"></b></p>
+        <input class="field" id="mfa-code" placeholder="6-digit code" inputmode="numeric" autocomplete="one-time-code" maxlength="6">
+        <button class="btn" id="btn-mfa">Verify &amp; sign in</button>
+        <button class="btn ghost" id="btn-mfa-back">Back to sign in</button>
+      </div>
       <div class="or"><span>or continue with</span></div>
       <div class="social">
         <button type="button" class="soc fb" id="btn-fb" aria-label="Continue with Facebook" title="Facebook">
@@ -1051,7 +1064,7 @@ body.gr-chat #bnav{display:none}
 </script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-import { getAuth, onAuthStateChanged, signOut, RecaptchaVerifier, PhoneAuthProvider, updatePhoneNumber, signInWithPhoneNumber, signInWithEmailAndPassword, sendPasswordResetEmail, FacebookAuthProvider, TwitterAuthProvider, linkWithCredential, signInWithPopup, signInWithRedirect, getRedirectResult } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+import { getAuth, onAuthStateChanged, signOut, multiFactor, PhoneMultiFactorGenerator, getMultiFactorResolver, sendEmailVerification, RecaptchaVerifier, PhoneAuthProvider, updatePhoneNumber, signInWithPhoneNumber, signInWithEmailAndPassword, sendPasswordResetEmail, FacebookAuthProvider, TwitterAuthProvider, linkWithCredential, signInWithPopup, signInWithRedirect, getRedirectResult } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 import { getDatabase, ref, onValue, get, push, set, update, off, query, orderByChild, orderByKey, limitToLast, limitToFirst, startAt, endAt, increment, onDisconnect, serverTimestamp, remove, orderByValue, runTransaction } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-functions.js";
 import { getStorage, ref as sRef, uploadBytes, uploadBytesResumable, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-storage.js";
@@ -1350,12 +1363,36 @@ const nice = e => (e && e.code ? ({
   'auth/unauthorized-domain':'This domain isn’t authorised in Firebase. Add it under Authentication → Settings → Authorized domains.',
   'auth/account-exists-with-different-credential':'An account with this email already exists. Sign in with your email and password instead.',
   'auth/operation-not-allowed':'This login isn’t switched on in Firebase yet.', 'auth/popup-blocked':'Your browser blocked the sign-in window. Allow pop-ups and try again.',
-  'auth/network-request-failed':'No connection. Check your internet and try again.'
+  'auth/network-request-failed':'No connection. Check your internet and try again.', 'auth/invalid-verification-code':'That code isn’t right. Check it and try again.', 'auth/code-expired':'That code has expired. Go back and sign in again.', 'auth/too-many-requests':'Too many attempts. Wait a few minutes and try again.'
 }[e.code] || e.message.replace('Firebase: ', '')) : (e.message || 'Something went wrong.'));
 
 $('#tab-email').onclick = () => { $('#tab-email').classList.add('on'); $('#tab-phone').classList.remove('on'); $('#pane-email').classList.remove('hidden'); $('#pane-phone').classList.add('hidden'); authErr(); };
 $('#tab-phone').onclick = () => { $('#tab-phone').classList.add('on'); $('#tab-email').classList.remove('on'); $('#pane-phone').classList.remove('hidden'); $('#pane-email').classList.add('hidden'); authErr(); };
 
+/* ----- two-step verification at sign-in (SMS code) ----- */
+let mfaPending = null;
+function mfaShow(on){ $('#auth').classList.toggle('mfa', on); if (!on) { mfaPending = null; $('#mfa-code').value = ''; } }
+async function mfaChallenge(e, after){
+  const resolver = getMultiFactorResolver(auth, e);
+  const hint = resolver.hints.find(h => h.factorId === PhoneMultiFactorGenerator.FACTOR_ID) || resolver.hints[0];
+  const vid = await new PhoneAuthProvider(auth).verifyPhoneNumber({ multiFactorHint: hint, session: resolver.session }, getVerifier());
+  mfaPending = { resolver, vid, after };
+  $('#mfa-to').textContent = hint.phoneNumber || 'your phone';
+  authErr(''); mfaShow(true); $('#mfa-code').focus();
+}
+$('#btn-mfa-back').onclick = () => { mfaShow(false); authErr(''); };
+async function mfaVerify(){
+  const code = $('#mfa-code').value.trim(); if (!code || !mfaPending) return authErr('Enter the code.');
+  $('#btn-mfa').disabled = true; authErr('');
+  try {
+    const cr = await mfaPending.resolver.resolveSignIn(PhoneMultiFactorGenerator.assertion(PhoneAuthProvider.credential(mfaPending.vid, code)));
+    const after = mfaPending.after; mfaShow(false);
+    if (after) { try { await after(cr); } catch (e2) { console.warn('after mfa', e2); } }
+  } catch (e) { authErr(nice(e)); }
+  $('#btn-mfa').disabled = false;
+}
+$('#btn-mfa').onclick = mfaVerify;
+$('#mfa-code').addEventListener('keydown', e => { if (e.key === 'Enter') mfaVerify(); });
 let pendingFb = null;   /* Facebook credential waiting to be linked to an existing account */
 async function emailLogin(){
   const email = $('#email').value.trim(), pw = $('#password').value;
@@ -1364,7 +1401,12 @@ async function emailLogin(){
   try {
     const cr = await signInWithEmailAndPassword(auth, email, pw);
     if (pendingFb) { const pf = pendingFb; pendingFb = null; try { await linkWithCredential(cr.user, pf.cred); toast('Connected to your account'); } catch (e2) { console.warn('link facebook', e2); } }
-  } catch (e) { authErr(nice(e)); }
+  } catch (e) {
+    if (e && e.code === 'auth/multi-factor-auth-required') {
+      try { await mfaChallenge(e, async cr => { if (pendingFb) { const pf = pendingFb; pendingFb = null; try { await linkWithCredential(cr.user, pf.cred); toast('Connected to your account'); } catch (e2) { console.warn('link', e2); } } }); }
+      catch (e2) { authErr(nice(e2)); }
+    } else authErr(nice(e));
+  }
   $('#btn-email').disabled = false;
 }
 $('#btn-email').onclick = emailLogin;
@@ -1395,6 +1437,7 @@ async function socialLogin(btn, provider, kind){
   } catch (e) {
     const c = e && e.code;
     if (c === 'auth/popup-closed-by-user' || c === 'auth/cancelled-popup-request') { /* cancelled — stay quiet */ }
+    else if (c === 'auth/multi-factor-auth-required') { try { await mfaChallenge(e, cr => socialEnsureProfile(cr.user, kind)); } catch (e2) { authErr(nice(e2)); } }
     else if (c === 'auth/popup-blocked' || c === 'auth/operation-not-supported-in-this-environment') { try { await signInWithRedirect(auth, provider); return; } catch (e2) { authErr(nice(e2)); } }
     else if (c === 'auth/account-exists-with-different-credential') {
       /* this email already has a Haba account: sign in the usual way once, and the social login gets linked to it for next time */
@@ -3361,6 +3404,7 @@ function renderSettings(){
     <div class="suser">${u.username ? '@' + esc(u.username) : ''}</div>
     ${premCard(u)}
     ${row('', 'user', 'Account', me.email || 'Signed in with phone')}
+    ${row('mfa', 'shield', 'Two-step verification', mfaSub())}
     ${row('phone', 'phone', 'Phone number', (me.phoneNumber || u.phoneNumber) ? (me.phoneNumber || u.phoneNumber) + ' · tap to change' : 'Not linked · tap to add')}
     ${row('receipts', 'shield', 'Privacy', 'Read receipts', on('hm-receipts'))}
     ${row('online', 'eye', 'Online status', 'Let others see when you’re online', on('hm-online'))}
@@ -3419,6 +3463,56 @@ function changePhone(){
     } catch (e) { err(nice2(e)); q('#cp-ok').disabled = false; }
   };
 }
+/* ----- optional two-step verification (SMS) in Settings ----- */
+const mfaFactors = () => { try { return multiFactor(me).enrolledFactors || []; } catch { return []; } };
+function mfaSub(){
+  if (!me.email) return 'Needs an account with an email';
+  const f = mfaFactors().find(x => x.factorId === 'phone');
+  return f ? 'On · code sent to ' + (f.phoneNumber || 'your phone') + ' · tap to manage' : 'Off · add an SMS code at sign-in';
+}
+function mfaManage(){
+  if (!me.email) return toast('Two-step verification needs an account with an email');
+  const f = mfaFactors().find(x => x.factorId === 'phone');
+  const ov = modal(f
+    ? `<h3>Two-step verification</h3><p style="color:var(--muted);margin:0 0 14px">On. When you sign in, we also text a 6-digit code to <b style="color:var(--text)">${esc(f.phoneNumber || 'your phone')}</b>.</p><div id="mf-err" style="color:var(--danger);font-size:14px;min-height:18px"></div><button class="btn" id="mf-off" style="background:var(--danger);color:#fff">Turn off</button><button class="btn ghost" id="mf-x" style="margin-top:6px">Close</button>`
+    : `<h3>Two-step verification</h3><p style="color:var(--muted);margin:0 0 12px">Add an extra layer of security. After your password, Haba will ask for a code we text to your phone.</p>
+      <div id="mf1"><div class="row" style="display:flex;gap:8px"><input class="field" id="mf-cc" value="+27" inputmode="tel" style="width:84px;flex:none"><input class="field" id="mf-num" type="tel" placeholder="Phone number" inputmode="tel" autocomplete="tel-national"></div><button class="btn" id="mf-send">Send code</button></div>
+      <div id="mf2" class="hidden"><p style="color:var(--muted);margin:0 0 10px">Enter the 6-digit code we sent to <b id="mf-to" style="color:var(--text)"></b>.</p><input class="field" id="mf-code" placeholder="6-digit code" inputmode="numeric" autocomplete="one-time-code" maxlength="6"><button class="btn" id="mf-ok">Turn on</button></div>
+      <div id="mf-err" style="color:var(--danger);font-size:14px;margin-top:8px;min-height:18px"></div><button class="btn ghost" id="mf-x" style="margin-top:6px">Cancel</button>`);
+  const q = id => ov.querySelector(id), err = t => q('#mf-err').textContent = t || '';
+  const nice3 = e => ({ 'auth/requires-recent-login': 'For your security, sign out and sign back in, then try again.', 'auth/unverified-email': 'Verify your email first. We just sent you a link; tap it, then try again.', 'auth/second-factor-already-in-use': 'That number is already used for two-step verification on another account.', 'auth/invalid-verification-code': 'That code isn’t right.', 'auth/code-expired': 'That code expired. Send a new one.', 'auth/invalid-phone-number': 'Enter a valid phone number.', 'auth/too-many-requests': 'Too many attempts. Try again later.', 'auth/operation-not-allowed': 'Two-step verification isn’t switched on in Firebase yet.', 'auth/unsupported-first-factor': 'Two-step verification isn’t available for this kind of sign-in.', 'auth/network-request-failed': 'No connection. Try again.' }[e && e.code] || ('Something went wrong' + (e && e.code ? ' (' + e.code + ')' : '') + '.'));
+  q('#mf-x').onclick = closeModal;
+  if (f) {
+    q('#mf-off').onclick = async () => {
+      q('#mf-off').disabled = true; err();
+      try { await multiFactor(me).unenroll(f); closeModal(); toast('Two-step verification is off'); renderSettings(); }
+      catch (e) { err(nice3(e)); q('#mf-off').disabled = false; }
+    };
+    return;
+  }
+  let vid = '';
+  q('#mf-send').onclick = async () => {
+    let cc = q('#mf-cc').value.trim(), num = q('#mf-num').value.trim().replace(/[\s()-]/g, '');
+    if (!cc.startsWith('+')) cc = '+' + cc; if (num.startsWith('0')) num = num.slice(1); if (num.startsWith('+')) cc = '';
+    if (!num) return err('Enter your phone number.');
+    q('#mf-send').disabled = true; err();
+    try {
+      if (!me.emailVerified) { try { await sendEmailVerification(me); } catch {} throw { code: 'auth/unverified-email' }; }
+      const session = await multiFactor(me).getSession();
+      vid = await new PhoneAuthProvider(auth).verifyPhoneNumber({ phoneNumber: cc + num, session }, getVerifier());
+      q('#mf1').classList.add('hidden'); q('#mf2').classList.remove('hidden'); q('#mf-to').textContent = cc + num; q('#mf-code').focus();
+    } catch (e) { err(nice3(e)); }
+    q('#mf-send').disabled = false;
+  };
+  q('#mf-ok').onclick = async () => {
+    const code = q('#mf-code').value.trim(); if (!code) return err('Enter the code.');
+    q('#mf-ok').disabled = true; err();
+    try {
+      await multiFactor(me).enroll(PhoneMultiFactorGenerator.assertion(PhoneAuthProvider.credential(vid, code)), 'Phone');
+      closeModal(); toast('Two-step verification is on'); renderSettings();
+    } catch (e) { err(nice3(e)); q('#mf-ok').disabled = false; }
+  };
+}
 /* centered empty states: illustration + title + hint + optional action */
 const ES_ART = {
   chat: '<circle class="a" cx="75" cy="75" r="62" opacity=".22"/><path class="t s" d="M32 48a12 12 0 0 1 12-12h46a12 12 0 0 1 12 12v26a12 12 0 0 1-12 12H62l-16 14V86h-2a12 12 0 0 1-12-12Z"/><path class="a" stroke="var(--text)" stroke-width="2.4" stroke-linejoin="round" d="M60 76a10 10 0 0 1 10-10h40a10 10 0 0 1 10 10v20a10 10 0 0 1-10 10h-2v12l-14-12H70a10 10 0 0 1-10-10Z" transform="translate(4 6)"/><circle cx="76" cy="88" r="3" fill="var(--text)"/><circle cx="88" cy="88" r="3" fill="var(--text)"/><circle cx="100" cy="88" r="3" fill="var(--text)"/>',
@@ -3450,6 +3544,7 @@ $('#settings').addEventListener('click', e => {
     toast(vis ? 'Others can see when you’re online' : 'Your online status is hidden'); renderSettings();
   }
   else if (act === 'phone') changePhone();
+  else if (act === 'mfa') mfaManage();
   else if (act === 'premium') premiumSheet();
   else if (act === 'trlang') { if (!skinOK) toast('Translation is for verified accounts'); trLangSheet(); }
   else if (act === 'tsnd') { toast(flip('hm-tsound') ? 'Typing sounds on' : 'Typing sounds off'); tSndStop(); renderSettings(); }

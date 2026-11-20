@@ -1531,7 +1531,7 @@ onAuthStateChanged(auth, async user => {
   }
   startPresence();
   obInit(); premiumReturn();
-  startChatList(); seedAI();
+  startChatList(); startNicks(); seedAI();
   startStories(); pgDotStart();
   if (keyState === 'locked') promptUnlock(true);
   else if (keyState === 'ready' && freshKey) { freshKey = false; promptCreatePin(); }   // brand-new account: offer a backup PIN right away
@@ -1556,6 +1556,8 @@ function startPresence(){
 function teardown(){
   obQ = []; warmed = false; netUI();
   if (chatsUnsub) { chatsUnsub(); chatsUnsub = null; }
+  if (nicksUnsub) { nicksUnsub(); nicksUnsub = null; }
+  Object.keys(nicks).forEach(k => delete nicks[k]);
   closeThread(true);
   Object.keys(chats).forEach(k => delete chats[k]); Object.keys(previews).forEach(k => delete previews[k]); Object.keys(prevSrc).forEach(k => delete prevSrc[k]);
   Object.values(typingWatch).forEach(f => f()); Object.keys(typingWatch).forEach(k => delete typingWatch[k]); Object.keys(typingMap).forEach(k => delete typingMap[k]); Object.values(disWatch).forEach(f => f()); Object.keys(disWatch).forEach(k => delete disWatch[k]); Object.keys(disMap).forEach(k => delete disMap[k]);
@@ -1779,7 +1781,45 @@ function loadUser(uid){
   if (users[uid]) return Promise.resolve(users[uid]);                       // already on screen from memory/cache; refresh quietly
   return cachedUser(uid).then(() => users[uid] ? users[uid] : net);          // cached profile = instant; otherwise wait for network
 }
-const uName = uid => uid === AI_UID ? AI_NAME : uid === me?.uid ? 'You' : (users[uid]?.name || users[uid]?.username || 'Haba user');
+const nicks = {};   // uid -> name I gave this contact (only I see it)
+const realName = uid => users[uid]?.name || users[uid]?.username || 'Haba user';
+const uName = uid => uid === AI_UID ? AI_NAME : uid === me?.uid ? 'You' : (nicks[uid] || realName(uid));
+let nicksUnsub = null;
+const nickKey = () => 'hb_nick|' + (me && me.uid);
+function nickSaveLocal(){ try { localStorage.setItem(nickKey(), JSON.stringify(nicks)); } catch {} }
+function nickRefresh(){
+  renderChatList();
+  if (activeUid) { paintHeader(); renderMessages(); }
+}
+function startNicks(){
+  try { Object.assign(nicks, JSON.parse(localStorage.getItem(nickKey()) || '{}')); } catch {}
+  const r = ref(db, `user_nicknames/${me.uid}`);
+  const cb = onValue(r, snap => {
+    const v = snap.val() || {};
+    Object.keys(nicks).forEach(k => delete nicks[k]);
+    Object.entries(v).forEach(([k, n]) => { if (typeof n === 'string' && n) nicks[k] = n; });
+    nickSaveLocal(); nickRefresh();
+  }, () => {});
+  nicksUnsub = () => off(r, 'value', cb);
+  nickRefresh();
+}
+function setNick(uid, name){
+  name = (name || '').trim().slice(0, 40);
+  if (!name || name === realName(uid)) delete nicks[uid]; else nicks[uid] = name;
+  nickSaveLocal(); nickRefresh();
+  set(ref(db, `user_nicknames/${me.uid}/${uid}`), nicks[uid] || null).then(() => toast(nicks[uid] ? 'Name updated' : 'Name reset')).catch(() => toast('Saved on this device only'));
+}
+function editNickname(uid){
+  if (!uid || uid === AI_UID || uid === me.uid) return;
+  const real = realName(uid);
+  const ov = modal(`<h3>Edit name</h3><p style="color:var(--muted);margin:0 0 12px;font-size:14px">Only you can see this name. ${esc(real)} won’t be told about it.</p><input class="field" id="nk-in" maxlength="40" placeholder="${esc(real)}" value="${esc(nicks[uid] || '')}" autocomplete="off"><button class="btn" id="nk-save" style="margin-top:12px">Save</button>${nicks[uid] ? `<button class="btn ghost" id="nk-reset" style="margin-top:8px">Reset to ${esc(real)}</button>` : ''}<button class="btn ghost" id="nk-no" style="margin-top:8px">Cancel</button>`);
+  const inp = ov.querySelector('#nk-in'); inp.focus(); inp.select();
+  const save = () => { closeModal(); setNick(uid, inp.value); };
+  ov.querySelector('#nk-save').onclick = save;
+  inp.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); save(); } });
+  const rs = ov.querySelector('#nk-reset'); if (rs) rs.onclick = () => { closeModal(); setNick(uid, ''); };
+  ov.querySelector('#nk-no').onclick = closeModal;
+}
 const uAvatar = uid => { if (uid === AI_UID) return AI_AVATAR; const u = users[uid]?.photoURL; return u ? (avObj.get(u) || u) : DEFAULT_AVATAR; };
 
 /* =============== CHAT LIST =============== */
@@ -1824,7 +1864,7 @@ let chatFilter = 'all';
 const TMR_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9.2" stroke-dasharray="2.3 2.5"/><path d="M12 7.2V12l3.2 2"/></svg>';
 function renderChatList(){
   const q = $('#filter').value.trim().toLowerCase();
-  const list = Object.entries(chats).filter(([uid]) => !q || uName(uid).toLowerCase().includes(q) || (users[uid]?.username || '').toLowerCase().includes(q))
+  const list = Object.entries(chats).filter(([uid]) => !q || uName(uid).toLowerCase().includes(q) || realName(uid).toLowerCase().includes(q) || (users[uid]?.username || '').toLowerCase().includes(q))
     .filter(([uid, c]) => !c.hidden)
     .filter(([uid, c]) => chatFilter === 'all' || (chatFilter === 'unread' ? c.unreadCount > 0 : users[uid]?.status === 'online'))
     .sort((a, b) => (b[1].pinned ? 1 : 0) - (a[1].pinned ? 1 : 0) || (b[1].timestamp || 0) - (a[1].timestamp || 0));
@@ -1909,10 +1949,12 @@ async function chatSheet(uid){
   const bl = (await get(ref(db, `blocks/${me.uid}/${uid}`)).catch(() => null))?.val() === true;
   const ov = modal(`<div style="display:flex;gap:12px;align-items:center;margin-bottom:8px"><div class="av sm" style="background-image:url('${cssUrl(uAvatar(uid))}')"></div><b>${esc(uName(uid))}${vbadge(uid)}</b></div>
     <button class="sh" id="cs-pin">${c.pinned ? 'Unpin from top' : '📌 Pin to top'}</button>
+    ${uid === AI_UID || uid === me.uid ? '' : `<button class="sh" id="cs-nick">✏️ Edit name</button>`}
     ${uid === AI_UID ? '' : `<button class="sh" id="cs-block">${bl ? 'Unblock' : 'Block'}</button>`}
     <button class="sh danger" id="cs-del">Delete chat</button>`);
   const base = `user_chats/${me.uid}/${uid}`;
   ov.querySelector('#cs-pin').onclick = () => { closeModal(); update(ref(db, base), { pinned: c.pinned ? null : Date.now() }).catch(() => toast('Couldn’t update')); };
+  const csn = ov.querySelector('#cs-nick'); if (csn) csn.onclick = () => { closeModal(); editNickname(uid); };
   const csb = ov.querySelector('#cs-block'); if (csb) csb.onclick = () => { closeModal(); set(ref(db, `blocks/${me.uid}/${uid}`), bl ? null : true).then(() => toast(bl ? 'Unblocked' : 'Blocked')).catch(() => toast('Couldn’t update')); };
   ov.querySelector('#cs-del').onclick = () => {
     const o2 = modal(`<h3>Delete chat with ${esc(uName(uid))}?</h3><p style="color:var(--muted);margin:0 0 14px">It disappears from your side only and stays hidden even if they message you again. They keep their copy.</p><button class="btn" id="d-yes" style="background:var(--danger);color:#fff">Delete permanently</button><button class="btn ghost" id="d-no" style="margin-top:8px">Cancel</button>`);
@@ -3207,6 +3249,7 @@ const SIC = {
   shield: '<path d="M12 3 4 6v6c0 5 3.4 8.4 8 9 4.6-.6 8-4 8-9V6Z"/><path d="m9 12 2 2 4-4"/>',
   key: '<circle cx="8" cy="15" r="4"/><path d="m11 12 9-9M16 7l3 3"/>',
   out: '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>',
+  pen: '<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5Z"/>',
   user: '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
   bell: '<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.9 1.9 0 0 0 3.4 0"/>',
   ban: '<circle cx="12" cy="12" r="9"/><path d="m5.6 5.6 12.8 12.8"/>',
@@ -3655,6 +3698,7 @@ $('#btn-thread-menu').onclick = e => {
   showMenu(r.right - 180, r.bottom + 4, [
     ['Refresh chat', () => { renderMessages(); }, false, 'refresh'],
     ...(activeUid === AI_UID || iBlocked || theyBlocked ? [] : [['Send music', openMusicForDM, false, 'music']]),
+    ...(activeUid === AI_UID || activeUid === me.uid ? [] : [['Edit name', () => editNickname(activeUid), false, 'pen']]),
     ...(activeUid === AI_UID ? [] : [['Disappearing messages' + (disappearing ? ' · ' + fmtTimer(disappearing) : ''), openDisappearing, false, 'timer']]),
     ...(activeUid === AI_UID ? [] : [[iBlocked ? 'Unblock' : 'Block', () => set(ref(db, `blocks/${me.uid}/${activeUid}`), iBlocked ? null : true), false, 'ban']]),
     ['Close chat', exitChat, false, 'xmark']
@@ -5074,13 +5118,16 @@ async function showProfile(uid){
   const ov = modal(`<div style="text-align:center">
     <div class="av" id="pf-av" title="View photo" style="width:104px;height:104px;margin:4px auto 12px;cursor:pointer;background-image:url('${cssUrl(uAvatar(uid))}')"></div>
     <h3 style="margin:0">${esc(uid === me.uid ? 'My Account' : uName(uid))}${vbadge(uid)}</h3>
+    ${nicks[uid] ? `<div style="color:var(--muted);margin-top:2px;font-size:13px">Their name: ${esc(realName(uid))}</div>` : ''}
     ${u.username ? `<div style="color:var(--muted);margin-top:2px">@${esc(u.username)}</div>` : ''}
     ${st ? `<div style="font-size:13px;margin-top:4px;color:${online ? '#34C759' : 'var(--muted)'}">${esc(st)}</div>` : ''}
     ${u.bio ? `<p style="margin:14px 0 0;line-height:1.4;white-space:pre-wrap">${esc(u.bio)}</p>` : ''}
   </div>
   <button class="btn" id="pf-msg" style="margin-top:18px">Message</button>
+  ${uid === me.uid || uid === AI_UID ? '' : '<button class="btn ghost" id="pf-nick" style="margin-top:8px">Edit name</button>'}
   <button class="btn ghost" id="pf-close" style="margin-top:8px">Close</button>`);
   ov.querySelector('#pf-msg').onclick = () => { closeModal(); if (activeUid !== uid) openThread(uid); };
+  const pfn = ov.querySelector('#pf-nick'); if (pfn) pfn.onclick = () => { closeModal(); editNickname(uid); };
   ov.querySelector('#pf-close').onclick = closeModal;
   ov.querySelector('#pf-av').onclick = () => openAvatarViewer(uid);
 }

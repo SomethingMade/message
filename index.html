@@ -1354,7 +1354,8 @@ const prevSrc = {}, prevBusy = {};   // uid -> raw text the cached preview came 
 /* Disappearing messages: when the chat's latest message has expired, the list shows the last message from before the timer
    was switched on (keepText), or an empty preview if there was none. */
 const chatExpired = c => !!(c && c.expiresAt && c.expiresAt <= Date.now());
-const chatEffText = c => chatExpired(c) ? (c.keepText || '') : ((c && c.text) || '');
+const keepGone = c => !c.keepText || (c.clearedAt && (c.keepTs || 0) <= c.clearedAt);   // fallback was deleted, or belongs to a conversation that was cleared
+const chatEffText = c => chatExpired(c) ? (keepGone(c) ? '' : c.keepText) : ((c && c.text) || '');
 async function refreshPreview(uid, force){
   const c = chats[uid]; if (!c) return;
   const t = chatEffText(c);
@@ -1842,7 +1843,7 @@ function renderChatList(){
   if (!list.length) { el.innerHTML = q || chatFilter !== 'all' ? emptyState('search', 'No chats found', 'Try a different search or filter.') : emptyState('chat', 'No conversations yet', 'Start a chat with a friend. Your messages are end-to-end encrypted.', 'Start a chat', 'newchat'); return; }
   el.innerHTML = list.map(([uid, c]) => {
     const exp = chatExpired(c), eff = chatEffText(c);
-    const own = (exp ? c.keepSender : c.senderUid) === me.uid && (exp ? !!c.keepText : true);
+    const own = (exp ? c.keepSender : c.senderUid) === me.uid && (exp ? !!eff : true);
     const online = users[uid]?.status === 'online';
     if (prevSrc[uid] !== eff) refreshPreview(uid);
     const pv = prevSrc[uid] === eff ? (previews[uid] ?? '') : (exp ? '' : (previews[uid] ?? (isE2E(eff) ? '…' : eff)));
@@ -1850,7 +1851,7 @@ function renderChatList(){
     const sf = uid === AI_UID ? [] : liveStories(uid).map(storySeen);
     return `<div class="ci ${uid === activeUid ? 'active' : ''}" data-uid="${esc(uid)}">
       <div class="av${disMap[uid] > 0 ? ' hastmr' : ''}${sf.length ? ' hasst' : ''}" style="background-image:url('${cssUrl(uAvatar(uid))}')">${sf.length ? ringSvg(sf).replace('<svg ', '<svg class="stg" ') : ''}${online ? '<span class="dot"></span>' : ''}${disMap[uid] > 0 ? `<span class="tmr" title="Disappearing messages: ${esc(fmtTimer(disMap[uid]))}">${TMR_SVG}</span>` : ''}</div>
-      <div class="mid"><div class="top"><span class="name">${esc(uid === me.uid ? 'My Account' : uName(uid))}${vbadge(uid)}</span><span class="time">${c.pinned ? '📌 ' : ''}${fmtListTime(exp && c.keepTs ? c.keepTs : c.timestamp)}</span></div>
+      <div class="mid"><div class="top"><span class="name">${esc(uid === me.uid ? 'My Account' : uName(uid))}${vbadge(uid)}</span><span class="time">${c.pinned ? '📌 ' : ''}${fmtListTime(exp && eff && c.keepTs ? c.keepTs : c.timestamp)}</span></div>
       <div class="prev">${typingMap[uid] ? '<span class="tp">typing…</span>' : `<span>${own ? 'You: ' : ''}${esc(pv)}</span>`}${c.unreadCount > 0 ? `<div class="badge">${c.unreadCount > 99 ? '99+' : c.unreadCount}</div>` : ''}</div></div></div>`;
   }).join('');
 }
@@ -1919,7 +1920,7 @@ async function chatSheet(uid){
     o2.querySelector('#d-yes').onclick = async () => {
       closeModal();
       try {
-        await update(ref(db), { [base + '/hidden']: true, [base + '/clearedAt']: Date.now(), [base + '/pinned']: null, [base + '/unreadCount']: 0, [base + '/text']: '' });
+        await update(ref(db), { [base + '/hidden']: true, [base + '/clearedAt']: Date.now(), [base + '/pinned']: null, [base + '/unreadCount']: 0, [base + '/text']: '', [base + '/expiresAt']: null, [base + '/keepText']: null, [base + '/keepTs']: null, [base + '/keepSender']: null });
         if (activeUid === uid) exitChat();
         toast('Chat deleted');
       } catch { toast('Couldn’t delete chat'); }
@@ -2369,6 +2370,10 @@ async function deleteMsg(key){
   if (peer && dm && Object.values(rawMsgs).every(x => !x || (x.createdAt || 0) <= (dm.createdAt || 0))) {
     u[`user_chats/${me.uid}/${peer}/text`] = DEL_PREVIEW;
     u[`user_chats/${peer}/${me.uid}/text`] = DEL_PREVIEW;
+  }
+  /* if this was the message the list falls back to after disappearing messages expire, the fallback goes empty */
+  if (peer && dm && chats[peer] && chats[peer].keepTs && chats[peer].keepTs === dm.createdAt) {
+    [`user_chats/${me.uid}/${peer}`, `user_chats/${peer}/${me.uid}`].forEach(b => { u[b + '/keepText'] = ''; u[b + '/keepTs'] = null; u[b + '/keepSender'] = null; });
   }
   try { await update(ref(db), u); } catch { toast('Couldn’t delete message'); }
 }

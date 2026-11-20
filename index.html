@@ -601,6 +601,9 @@ body.pg-chat #bnav{display:none}
 .cchips{display:flex;gap:8px;padding:8px 14px 4px;overflow-x:auto;scrollbar-width:none}.cchips::-webkit-scrollbar{display:none}
 .cchip{flex-shrink:0;padding:7px 14px;border-radius:50px;background:var(--input);color:var(--text);font-weight:600;font-size:13px}
 .cchip.on{background:var(--ch-green);color:var(--inverse)}
+.cchip{display:inline-flex;align-items:center;gap:6px}
+.cicon{flex-shrink:0;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.chc .cat{display:inline-flex;align-items:center;gap:5px}
 .chc{display:flex;gap:12px;align-items:center;margin:8px 12px;padding:14px;border-radius:18px;background:var(--alt);cursor:pointer}
 .chc:active{opacity:.85}
 .chc .mid{flex:1;min-width:0}
@@ -4367,6 +4370,23 @@ let pagesHist = false, pgTab = 'fol', pgTabChosen = false, pgCat = 'all', pgCur 
 const meVerified = () => { const u = users[me.uid] || {}; return !!(u.paidVerifiedAt || u.isBusinessAccount); };
 const chLocked = p => !!(p && p.verifiedOnly === true && p.ownerUid !== me.uid && !meVerified());
 const PG_CATS = ['Business','Brand','Creator','Community','Local business','Education','Entertainment','Food & drink','News & media','Non-profit','Sports','Tech','Other'];
+const PG_CAT_ICONS = {
+  all: '<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>',
+  'Business': '<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2M3 13h18"/>',
+  'Brand': '<path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9L12 3Z"/>',
+  'Creator': '<path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3Z"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/>',
+  'Community': '<circle cx="9" cy="8" r="3.2"/><path d="M3 20a6 6 0 0 1 12 0"/><circle cx="17" cy="9" r="2.5"/><path d="M17 14.5a5 5 0 0 1 4 5.5"/>',
+  'Local business': '<path d="M4 9l1.5-5h13L20 9M4 9v11h16V9M4 9a2.7 2.7 0 0 0 5.3 0 2.7 2.7 0 0 0 5.4 0A2.7 2.7 0 0 0 20 9"/><path d="M10 20v-5h4v5"/>',
+  'Education': '<path d="M2 9l10-5 10 5-10 5L2 9Z"/><path d="M6 11.5V16c0 1.4 2.7 3 6 3s6-1.6 6-3v-4.5M22 9v6"/>',
+  'Entertainment': '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9.5v5l4.5-2.5L10 9.5Z"/>',
+  'Food & drink': '<path d="M7 3v8a2 2 0 0 0 2 2v8M7 3v5M11 3v5M9 3v5M17 21V3c-2.2 1-3.5 3.5-3.5 7v3H17"/>',
+  'News & media': '<path d="M5 4h12a2 2 0 0 1 2 2v14H7a2 2 0 0 1-2-2V4Z"/><path d="M19 9h2v9a2 2 0 0 1-2 2M8.5 8h7M8.5 12h7M8.5 16h4"/>',
+  'Non-profit': '<path d="M12 20.5s-8-4.6-8-10.7A4.6 4.6 0 0 1 12 7a4.6 4.6 0 0 1 8 2.8c0 6.1-8 10.7-8 10.7Z"/>',
+  'Sports': '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/>',
+  'Tech': '<path d="M8 8l-5 4 5 4M16 8l5 4-5 4M13.5 5l-3 14"/>',
+  'Other': '<circle cx="5.5" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="18.5" cy="12" r="1.3"/>'
+};
+const pgCatIcon = (c, sz = 15) => `<svg class="cicon" viewBox="0 0 24 24" width="${sz}" height="${sz}">${PG_CAT_ICONS[c] || PG_CAT_ICONS.Other}</svg>`;
 function hidePages(){ $('#pages').classList.add('hidden'); $('#pages').classList.remove('chan'); document.body.classList.remove('pg-chat'); pgSyncDot(); }
 function closePages(){ hidePages(); if (pagesHist) { pagesHist = false; skipPop = true; history.back(); } }
 function pgAv(p, sz){
@@ -4435,7 +4455,7 @@ async function renderPages(load){
   const folRow = p => { const n = pgUnreadN(p.id), last = p.lastPostAt || p.createdAt || 0;
     return `<div class="ci" data-pid="${esc(p.id)}">${pgAv(p, 52)}<div class="mid"><div class="top">${nm(p)}<span class="time">${last ? fmtListTime(last) : ''}</span></div><div class="prev"><span${n ? ' class="un"' : ''}>${esc(p.lastPostText || p.about || 'No posts yet')}</span>${n ? `<div class="badge">${n > 99 ? '99+' : n}</div>` : ''}</div></div></div>`; };
   /* Explore / Yours: cards */
-  const card = (p, mine) => `<div class="chc" data-pid="${esc(p.id)}">${pgAv(p, 56)}<div class="mid">${nm(p)}<span class="cat">${esc(p.category || 'Channel')}${p.verifiedOnly ? ' · Verified only' : ''}</span>${p.about ? `<p>${esc(p.about)}</p>` : ''}<small>${esc(mine ? stat(p) : pgFollowers(p.followerCount))}</small></div>${mine ? '<button class="ch-fbtn on" data-open>Manage</button>' : `<button class="ch-fbtn${pgFollow.has(p.id) ? ' on' : ''}" data-fol>${pgFollow.has(p.id) ? 'Following' : chLocked(p) && !pgFollow.has(p.id) ? 'Join' : 'Follow'}</button>`}</div>`;
+  const card = (p, mine) => `<div class="chc" data-pid="${esc(p.id)}">${pgAv(p, 56)}<div class="mid">${nm(p)}<span class="cat">${pgCatIcon(p.category || 'Other', 12)}${esc(p.category || 'Channel')}${p.verifiedOnly ? ' · Verified only' : ''}</span>${p.about ? `<p>${esc(p.about)}</p>` : ''}<small>${esc(mine ? stat(p) : pgFollowers(p.followerCount))}</small></div>${mine ? '<button class="ch-fbtn on" data-open>Manage</button>' : `<button class="ch-fbtn${pgFollow.has(p.id) ? ' on' : ''}" data-fol>${pgFollow.has(p.id) ? 'Following' : chLocked(p) && !pgFollow.has(p.id) ? 'Join' : 'Follow'}</button>`}</div>`;
   if (pgTab === 'fol') {
     const f = all.filter(p => pgFollow.has(p.id) && !pgMine.has(p.id)).sort((x, y) => (y.lastPostAt || y.createdAt || 0) - (x.lastPostAt || x.createdAt || 0));
     body.innerHTML = f.length ? f.map(folRow).join('') : (q ? '<div class="empty">No channels match your search.</div>' : emptyState('pages', 'You’re not following any channels', 'Follow channels from brands, creators and communities to get their updates here.', 'Explore channels', 'chexplore'));
@@ -4444,7 +4464,7 @@ async function renderPages(load){
     if (!cats.includes(pgCat)) pgCat = 'all';
     const l = all.filter(p => !pgMine.has(p.id) && (pgCat === 'all' || p.category === pgCat)).sort((x, y) => (y.followerCount || 0) - (x.followerCount || 0) || (y.createdAt || 0) - (x.createdAt || 0));
     body.innerHTML = `<div class="chhero"><h3>Find channels to follow</h3><p>Brands, creators and communities share their updates here. Follow a channel to get new posts.</p></div>`
-      + `<div class="cchips">${cats.map(c => `<button class="cchip${c === pgCat ? ' on' : ''}" data-cat="${esc(c)}">${c === 'all' ? 'All' : esc(c)}</button>`).join('')}</div>`
+      + `<div class="cchips">${cats.map(c => `<button class="cchip${c === pgCat ? ' on' : ''}" data-cat="${esc(c)}">${pgCatIcon(c)}<span>${c === 'all' ? 'All' : esc(c)}</span></button>`).join('')}</div>`
       + (l.length ? l.map(p => card(p)).join('') : (q || pgCat !== 'all' ? '<div class="empty">No channels match.</div>' : emptyState('pages', 'No channels to explore yet', 'Be the first to create a channel for your business, brand or community.', 'Create a channel', 'page')));
   } else {
     const m = all.filter(p => pgMine.has(p.id)).sort((x, y) => (y.createdAt || 0) - (x.createdAt || 0));

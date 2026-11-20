@@ -1350,6 +1350,24 @@ let me = null;
 const users = {};          // uid -> profile
 const chats = {};          // uid -> user_chats meta
 const previews = {};       // uid -> decrypted preview text
+const prevSrc = {}, prevBusy = {};   // uid -> raw text the cached preview came from / refresh in flight
+/* Disappearing messages: when the chat's latest message has expired, the list shows the last message from before the timer
+   was switched on (keepText), or an empty preview if there was none. */
+const chatExpired = c => !!(c && c.expiresAt && c.expiresAt <= Date.now());
+const chatEffText = c => chatExpired(c) ? (c.keepText || '') : ((c && c.text) || '');
+async function refreshPreview(uid, force){
+  const c = chats[uid]; if (!c) return;
+  const t = chatEffText(c);
+  if (!force && prevSrc[uid] === t) return;
+  if (prevBusy[uid] === t) return;
+  prevBusy[uid] = t;
+  try {
+    const p = isE2E(t) ? await decText(uid, t) : (t || '');
+    prevSrc[uid] = t;
+    if (previews[uid] !== p || force) { previews[uid] = p; renderChatList(); }
+  } finally { if (prevBusy[uid] === t) delete prevBusy[uid]; }
+}
+let chatExpT = null;
 const typingMap = {}, typingWatch = {}, disMap = {}, disWatch = {};   // uid -> is typing to me / listener unsubs
 let chatsUnsub = null;
 let activeUid = null, threadId = null, msgLimit = PAGE, rawMsgs = {};
@@ -1508,7 +1526,7 @@ onAuthStateChanged(auth, async user => {
   renderBanner(); checkBackup();
   if (Object.keys(chats).length) {
     decCache.clear(); renderChatList(); if (activeUid) renderMessages(true);
-    Object.keys(chats).forEach(async u => { const t = chats[u].text; const p = isE2E(t) ? await decText(u, t) : (t || ''); if (previews[u] !== p) { previews[u] = p; renderChatList(); } });
+    Object.keys(chats).forEach(u => refreshPreview(u));
   }
   startPresence();
   obInit(); premiumReturn();
@@ -1538,7 +1556,7 @@ function teardown(){
   obQ = []; warmed = false; netUI();
   if (chatsUnsub) { chatsUnsub(); chatsUnsub = null; }
   closeThread(true);
-  Object.keys(chats).forEach(k => delete chats[k]); Object.keys(previews).forEach(k => delete previews[k]);
+  Object.keys(chats).forEach(k => delete chats[k]); Object.keys(previews).forEach(k => delete previews[k]); Object.keys(prevSrc).forEach(k => delete prevSrc[k]);
   Object.values(typingWatch).forEach(f => f()); Object.keys(typingWatch).forEach(k => delete typingWatch[k]); Object.keys(typingMap).forEach(k => delete typingMap[k]); Object.values(disWatch).forEach(f => f()); Object.keys(disWatch).forEach(k => delete disWatch[k]); Object.keys(disMap).forEach(k => delete disMap[k]);
   chatsLoaded = false; hideNotif(); hideSettings(); hideContacts(); hidePages(); hideGroups(); hideStory(); hideUpdates(); stopStories(); cancelAllUploads();
   kp = null; Object.keys(shared).forEach(k => delete shared[k]); decCache.clear();
@@ -1788,11 +1806,7 @@ function startChatList(){
       disWatch[uid] = () => off(dr, 'value', dcb);
     });
     Promise.all(uids.map(loadUser)).then(renderChatList);
-    uids.forEach(async uid => {
-      const t = chats[uid].text;
-      const p = isE2E(t) ? await decText(uid, t) : (t || '');
-      if (previews[uid] !== p) { previews[uid] = p; renderChatList(); }
-    });
+    uids.forEach(uid => refreshPreview(uid));
     renderChatList();
   }, err => { $('#chatlist').innerHTML = `<div class="empty">Couldn’t load chats.<br>${esc(err.message)}</div>`; });
   chatsUnsub = () => off(r, 'value', cb);
@@ -1819,18 +1833,24 @@ function renderChatList(){
   Object.values(chats).forEach(c => unread += (c.unreadCount > 0 && !c.hidden) ? c.unreadCount : 0);
   document.title = (unread ? `(${unread}) ` : '') + 'Haba Messenger';
   setNavBadge(unreadChats);
+  clearTimeout(chatExpT);
+  { const nowT = Date.now(); let nx = Infinity;
+    Object.values(chats).forEach(c => { if (c && c.expiresAt && c.expiresAt > nowT) nx = Math.min(nx, c.expiresAt); });
+    if (nx < Infinity) chatExpT = setTimeout(renderChatList, Math.min(nx - nowT + 400, 2147483000)); }
   const el = $('#chatlist');
   if (chatFilter === 'groups') return renderGroupList(el, q);
   if (!list.length) { el.innerHTML = q || chatFilter !== 'all' ? emptyState('search', 'No chats found', 'Try a different search or filter.') : emptyState('chat', 'No conversations yet', 'Start a chat with a friend. Your messages are end-to-end encrypted.', 'Start a chat', 'newchat'); return; }
   el.innerHTML = list.map(([uid, c]) => {
-    const own = c.senderUid === me.uid;
+    const exp = chatExpired(c), eff = chatEffText(c);
+    const own = (exp ? c.keepSender : c.senderUid) === me.uid && (exp ? !!c.keepText : true);
     const online = users[uid]?.status === 'online';
-    const pv = previews[uid] ?? (isE2E(c.text) ? '…' : c.text || '');
+    if (prevSrc[uid] !== eff) refreshPreview(uid);
+    const pv = prevSrc[uid] === eff ? (previews[uid] ?? '') : (exp ? '' : (previews[uid] ?? (isE2E(eff) ? '…' : eff)));
     if (storyAuthors[uid]) watchAuthor(uid);   /* load their live statuses so the avatar can show a status ring */
     const sf = uid === AI_UID ? [] : liveStories(uid).map(storySeen);
     return `<div class="ci ${uid === activeUid ? 'active' : ''}" data-uid="${esc(uid)}">
       <div class="av${disMap[uid] > 0 ? ' hastmr' : ''}${sf.length ? ' hasst' : ''}" style="background-image:url('${cssUrl(uAvatar(uid))}')">${sf.length ? ringSvg(sf).replace('<svg ', '<svg class="stg" ') : ''}${online ? '<span class="dot"></span>' : ''}${disMap[uid] > 0 ? `<span class="tmr" title="Disappearing messages: ${esc(fmtTimer(disMap[uid]))}">${TMR_SVG}</span>` : ''}</div>
-      <div class="mid"><div class="top"><span class="name">${esc(uid === me.uid ? 'My Account' : uName(uid))}${vbadge(uid)}</span><span class="time">${c.pinned ? '📌 ' : ''}${fmtListTime(c.timestamp)}</span></div>
+      <div class="mid"><div class="top"><span class="name">${esc(uid === me.uid ? 'My Account' : uName(uid))}${vbadge(uid)}</span><span class="time">${c.pinned ? '📌 ' : ''}${fmtListTime(exp && c.keepTs ? c.keepTs : c.timestamp)}</span></div>
       <div class="prev">${typingMap[uid] ? '<span class="tp">typing…</span>' : `<span>${own ? 'You: ' : ''}${esc(pv)}</span>`}${c.unreadCount > 0 ? `<div class="badge">${c.unreadCount > 99 ? '99+' : c.unreadCount}</div>` : ''}</div></div></div>`;
   }).join('');
 }
@@ -2387,6 +2407,14 @@ async function pushMessage(peer, payload, previewEncrypted, fixedKey){
   u[`user_chats/${peer}/${me.uid}/timestamp`] = ts;
   u[`user_chats/${peer}/${me.uid}/unreadCount`] = increment(1);
   u[`user_chats/${peer}/${me.uid}/senderUid`] = me.uid;
+  // disappearing messages: remember when the latest one expires, and the last permanent message to fall back to
+  const cur = chats[peer] || {}, sides = [`user_chats/${me.uid}/${peer}`, `user_chats/${peer}/${me.uid}`];
+  if (payload.expiresAt) {
+    sides.forEach(b => { u[`${b}/expiresAt`] = payload.expiresAt; });
+    if (!cur.expiresAt) sides.forEach(b => { u[`${b}/keepText`] = cur.text || ''; u[`${b}/keepTs`] = cur.timestamp || 0; u[`${b}/keepSender`] = cur.senderUid || ''; });
+  } else if (cur.expiresAt || cur.keepText != null) {
+    sides.forEach(b => { u[`${b}/expiresAt`] = null; u[`${b}/keepText`] = null; u[`${b}/keepTs`] = null; u[`${b}/keepSender`] = null; });
+  }
   await update(ref(db), u);
 }
 /* ---------- disappearing messages ---------- */
@@ -5124,7 +5152,7 @@ function unlockSheet(auto, retry){
     const r = await restoreFromPin(pin.value);
     if (r === 'ok') {
       closeModal(); renderBanner(); decCache.clear(); toast(retry ? 'Unlocked — sending…' : 'Unlocked'); renderSettings();
-      Object.keys(chats).forEach(async uid => { previews[uid] = await decText(uid, chats[uid].text); renderChatList(); }); if (activeUid) renderMessages();
+      Object.keys(chats).forEach(uid => refreshPreview(uid, true)); if (activeUid) renderMessages();
       if (retry) { try { retry(); } catch (e) { console.error(e); } }
     }
     else { ov.querySelector('#pin-go').disabled = false; ov.querySelector('#pin-err').textContent = r === 'mismatch' ? 'This backup doesn’t match your current key.' : r === 'nobackup' ? 'No backup found.' : 'Wrong PIN. Try again.'; }
@@ -5157,7 +5185,7 @@ function createPinSheet(o){
       if (o.reset) await resetKeys(a); else await saveBackup(a);
     } catch (e) { console.error(e); q('#np-go').disabled = false; return err(e && e.message === 'LOCKED' ? 'Unlock your chats first.' : 'Couldn’t save the backup. Check your connection and try again.'); }
     closeModal(); renderBanner(); renderSettings(); toast(o.reset ? 'New key and backup PIN created' : 'Backup PIN saved');
-    if (o.reset) { Object.keys(chats).forEach(async uid => { previews[uid] = await decText(uid, chats[uid].text); renderChatList(); }); if (activeUid) renderMessages(); }
+    if (o.reset) { Object.keys(chats).forEach(uid => refreshPreview(uid, true)); if (activeUid) renderMessages(); }
     if (o.retry) { try { o.retry(); } catch (e) { console.error(e); } }
   };
   q('#np-go').onclick = go;
